@@ -19,8 +19,16 @@ module RobotLab
   #   )
   #   result = network.run(message: "I have a billing question", customer: customer)
   #
+  # @example Network with MCP and tools configuration
+  #   network = Network.new(
+  #     name: "support",
+  #     robots: [robot1, robot2],
+  #     mcp: :inherit,           # Use RobotLab.configuration.mcp
+  #     tools: %w[search refund] # Only these tools available in network
+  #   )
+  #
   class Network
-    attr_reader :name, :robots, :default_model, :router, :max_iter, :history
+    attr_reader :name, :robots, :default_model, :router, :max_iter, :history, :mcp, :tools
 
     def initialize(
       name:,
@@ -29,7 +37,9 @@ module RobotLab
       default_model: nil,
       router: nil,
       max_iter: nil,
-      history: nil
+      history: nil,
+      mcp: :none,
+      tools: :none
     )
       @name = name.to_s
       @robots = normalize_robots(robots)
@@ -38,6 +48,8 @@ module RobotLab
       @router = router
       @max_iter = max_iter || RobotLab.configuration.max_iterations
       @history = history
+      @mcp = resolve_mcp(mcp)
+      @tools = resolve_tools(tools)
     end
 
     # Get the base state (clone for execution)
@@ -100,11 +112,21 @@ module RobotLab
         robots: robots.keys,
         default_model: default_model.respond_to?(:model_id) ? default_model.model_id : default_model,
         max_iter: max_iter,
+        mcp: mcp,
+        tools: tools,
         history: history ? true : nil
       }.compact
     end
 
     private
+
+    def resolve_mcp(value)
+      ToolConfig.resolve_mcp(value, parent_value: RobotLab.configuration.mcp)
+    end
+
+    def resolve_tools(value)
+      ToolConfig.resolve_tools(value, parent_value: RobotLab.configuration.tools)
+    end
 
     def normalize_robots(robots)
       case robots

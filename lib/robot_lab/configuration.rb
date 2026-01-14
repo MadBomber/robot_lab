@@ -9,6 +9,14 @@ module RobotLab
   #     config.default_model = "claude-sonnet-4"
   #     config.template_path = "app/prompts"
   #     config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
+  #
+  #     # Global MCP servers available to all networks and robots
+  #     config.mcp = [
+  #       { name: "github", transport: { type: "stdio", command: "github-mcp" } }
+  #     ]
+  #
+  #     # Global tools whitelist (only these tools are available)
+  #     config.tools = %w[search_code create_issue]
   #   end
   #
   class Configuration
@@ -17,7 +25,9 @@ module RobotLab
                   :max_iterations,
                   :max_tool_iterations,
                   :streaming_enabled,
-                  :logger
+                  :logger,
+                  :mcp,
+                  :tools
 
     def initialize
       @default_provider = :anthropic
@@ -27,6 +37,8 @@ module RobotLab
       @streaming_enabled = true
       @logger = default_logger
       @template_path = nil
+      @mcp = :none
+      @tools = :none
     end
 
     # API key setters that configure RubyLLM internally

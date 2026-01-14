@@ -8,6 +8,7 @@ module RobotLab
   # - Build-time context (static robot configuration)
   # - Run-time context (per-request dynamic data)
   # - Tool integration via RubyLLM::Tool
+  # - Hierarchical MCP and tools configuration
   #
   # @example Simple robot with template
   #   robot = Robot.new(
@@ -25,17 +26,30 @@ module RobotLab
   #     tools: [OrderLookup, RefundProcessor]
   #   )
   #
+  # @example Robot with hierarchical MCP/tools config
+  #   robot = Robot.new(
+  #     name: "assistant",
+  #     template: :assistant,
+  #     mcp: :inherit,              # Inherit from network/config
+  #     tools: %w[search_code]      # Only allow search_code tool
+  #   )
+  #
   class Robot
-    attr_reader :name, :description, :template, :model, :tools, :mcp_clients, :mcp_tools
+    attr_reader :name, :description, :template, :model, :local_tools, :mcp_clients, :mcp_tools
+
+    # Build-time MCP and tools configuration (raw, unresolved values)
+    attr_reader :mcp_config, :tools_config
 
     def initialize(
       name:,
       template:,
       context: {},
       description: nil,
-      tools: [],
+      local_tools: [],
       model: nil,
       mcp_servers: [],
+      mcp: :none,
+      tools: :none,
       on_tool_call: nil,
       on_tool_result: nil
     )
@@ -43,33 +57,52 @@ module RobotLab
       @template = template
       @build_context = context
       @description = description
-      @tools = Array(tools)
+      @local_tools = Array(local_tools)
       @model = model || RobotLab.configuration.default_model
-      @mcp_servers = Array(mcp_servers)
-      @mcp_clients = {}
-      @mcp_tools = []
       @on_tool_call = on_tool_call
       @on_tool_result = on_tool_result
 
-      init_mcp_clients if @mcp_servers.any?
+      # Store raw config values for hierarchical resolution
+      # mcp_servers is legacy parameter, mcp is the new hierarchical one
+      @mcp_config = mcp_servers.any? ? mcp_servers : mcp
+      @tools_config = tools
+
+      # MCP state
+      @mcp_clients = {}
+      @mcp_tools = []
+      @mcp_initialized = false
+    end
+
+    # Backward compatibility: expose tools as alias for local_tools
+    def tools
+      @local_tools
     end
 
     # Run the robot with the given context
     #
     # @param network [NetworkRun, nil] Network context if running in network
     # @param state [State, nil] Shared state
+    # @param mcp [Symbol, Array, nil] Runtime MCP override (:inherit, :none, nil, [], or array of servers)
+    # @param tools [Symbol, Array, nil] Runtime tools override (:inherit, :none, nil, [], or array of tool names)
     # @param run_context [Hash] Context for rendering user template
     # @return [RobotResult]
     #
-    def run(network: nil, state: nil, **run_context)
+    def run(network: nil, state: nil, mcp: :none, tools: :none, **run_context)
       state ||= network&.state || State.new
+
+      # Resolve hierarchical MCP and tools configuration
+      resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
+      resolved_tools = resolve_tools_hierarchy(tools, network: network)
+
+      # Initialize or update MCP clients based on resolved config
+      ensure_mcp_clients(resolved_mcp)
 
       # Merge build context + run context
       full_context = resolve_context(@build_context, network: network)
                        .merge(run_context)
 
-      # Build chat with template and tools
-      chat = build_chat(full_context)
+      # Build chat with template and filtered tools
+      chat = build_chat(full_context, allowed_tools: resolved_tools)
 
       # Execute and return result
       response = chat.complete
@@ -93,8 +126,10 @@ module RobotLab
         name: name,
         description: description,
         template: template,
-        tools: tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
+        local_tools: local_tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
         mcp_tools: mcp_tools.map(&:name),
+        mcp_config: @mcp_config,
+        tools_config: @tools_config,
         mcp_servers: @mcp_clients.keys,
         model: model.respond_to?(:model_id) ? model.model_id : model
       }.compact
@@ -110,12 +145,15 @@ module RobotLab
       end
     end
 
-    def build_chat(context)
+    def build_chat(context, allowed_tools:)
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
       chat = RubyLLM.chat(model: model_id)
       chat = chat.with_template(@template, **context)
-      chat = chat.with_tools(*all_tools) if all_tools.any?
+
+      # Get filtered tools based on whitelist
+      filtered = filtered_tools(allowed_tools)
+      chat = chat.with_tools(*filtered) if filtered.any?
 
       # Add callbacks if provided
       chat = chat.on_tool_call(&@on_tool_call) if @on_tool_call
@@ -156,22 +194,83 @@ module RobotLab
       end
     end
 
-    # Initialize MCP clients for all configured servers
+    # Resolve MCP hierarchy: runtime -> robot build -> network -> config
     #
-    def init_mcp_clients
-      @mcp_servers.each do |server_config|
-        client = MCP::Client.new(server_config)
-        client.connect
+    # @param runtime_value [Symbol, Array, nil] Runtime MCP override
+    # @param network [NetworkRun, nil] Network context
+    # @return [Array] Resolved MCP server configurations
+    #
+    def resolve_mcp_hierarchy(runtime_value, network:)
+      # Get parent value (network or config)
+      parent_value = network&.network&.mcp || RobotLab.configuration.mcp
 
-        if client.connected?
-          server_name = client.server.name
-          @mcp_clients[server_name] = client
-          discover_mcp_tools(client, server_name)
-        else
-          RobotLab.configuration.logger.warn(
-            "Robot '#{@name}' failed to connect to MCP server: #{server_config[:name] || server_config}"
-          )
-        end
+      # Resolve robot build config against parent
+      build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
+
+      # Resolve runtime against build
+      ToolConfig.resolve_mcp(runtime_value, parent_value: build_resolved)
+    end
+
+    # Resolve tools hierarchy: runtime -> robot build -> network -> config
+    #
+    # @param runtime_value [Symbol, Array, nil] Runtime tools override
+    # @param network [NetworkRun, nil] Network context
+    # @return [Array<String>] Resolved tool names whitelist
+    #
+    def resolve_tools_hierarchy(runtime_value, network:)
+      # Get parent value (network or config)
+      parent_value = network&.network&.tools || RobotLab.configuration.tools
+
+      # Resolve robot build config against parent
+      build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
+
+      # Resolve runtime against build
+      ToolConfig.resolve_tools(runtime_value, parent_value: build_resolved)
+    end
+
+    # Ensure MCP clients are initialized for the given server configs
+    #
+    # @param mcp_servers [Array] MCP server configurations
+    #
+    def ensure_mcp_clients(mcp_servers)
+      return if mcp_servers.empty?
+
+      # Get server names from configs
+      needed_servers = mcp_servers.map { |s| s.is_a?(Hash) ? s[:name] : s.to_s }.compact
+
+      # Skip if already initialized with same servers
+      return if @mcp_initialized && (@mcp_clients.keys.sort == needed_servers.sort)
+
+      # Disconnect existing clients if config changed
+      disconnect if @mcp_initialized
+
+      # Initialize new clients
+      @mcp_clients = {}
+      @mcp_tools = []
+
+      mcp_servers.each do |server_config|
+        init_mcp_client(server_config)
+      end
+
+      @mcp_initialized = true
+    end
+
+    # Initialize a single MCP client
+    #
+    # @param server_config [Hash] MCP server configuration
+    #
+    def init_mcp_client(server_config)
+      client = MCP::Client.new(server_config)
+      client.connect
+
+      if client.connected?
+        server_name = client.server.name
+        @mcp_clients[server_name] = client
+        discover_mcp_tools(client, server_name)
+      else
+        RobotLab.configuration.logger.warn(
+          "Robot '#{@name}' failed to connect to MCP server: #{server_config[:name] || server_config}"
+        )
       end
     end
 
@@ -209,7 +308,19 @@ module RobotLab
     # @return [Array] Combined array of local and MCP tools
     #
     def all_tools
-      @tools + @mcp_tools
+      @local_tools + @mcp_tools
+    end
+
+    # Filter tools based on allowed tool names whitelist
+    #
+    # @param allowed_names [Array<String>] Whitelist of tool names (empty = all allowed)
+    # @return [Array] Filtered tools
+    #
+    def filtered_tools(allowed_names)
+      available = all_tools
+      return available if allowed_names.empty?
+
+      ToolConfig.filter_tools(available, allowed_names: allowed_names)
     end
   end
 end
