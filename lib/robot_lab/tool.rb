@@ -43,13 +43,17 @@ module RobotLab
 
     # Execute the tool with input and context
     #
+    # Supports two calling conventions:
+    # - Direct: tool.call(input, robot: robot, network: network)
+    # - ruby_llm: tool.call(args) - called without keyword args
+    #
     # @param input [Hash] The input parameters (validated against schema)
-    # @param robot [Robot] The robot invoking this tool
+    # @param robot [Robot, nil] The robot invoking this tool
     # @param network [NetworkRun, nil] The network context if running in a network
     # @param step [Object, nil] Durable execution step context
     # @return [Object] The tool's output
     #
-    def call(input, robot:, network: nil, step: nil)
+    def call(input, robot: nil, network: nil, step: nil)
       raise Error, "Tool '#{name}' has no handler defined" unless handler
 
       validated_input = validate_input(input)
@@ -137,6 +141,26 @@ module RobotLab
     #
     def mcp?
       !mcp.nil?
+    end
+
+    # Return parameters schema for ruby_llm compatibility
+    #
+    # @return [Hash, nil] JSON Schema for tool parameters
+    #
+    def params_schema
+      if parameters.respond_to?(:to_json_schema)
+        parameters.new.to_json_schema[:schema]
+      elsif parameters.is_a?(Hash)
+        parameters
+      end
+    end
+
+    # Provider-specific parameters for ruby_llm compatibility
+    #
+    # @return [Hash] Empty hash (no provider-specific params)
+    #
+    def provider_params
+      {}
     end
 
     private

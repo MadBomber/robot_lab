@@ -26,7 +26,7 @@ module RobotLab
   #   )
   #
   class Robot
-    attr_reader :name, :description, :template, :model, :tools
+    attr_reader :name, :description, :template, :model, :tools, :mcp_clients, :mcp_tools
 
     def initialize(
       name:,
@@ -35,6 +35,7 @@ module RobotLab
       description: nil,
       tools: [],
       model: nil,
+      mcp_servers: [],
       on_tool_call: nil,
       on_tool_result: nil
     )
@@ -44,8 +45,13 @@ module RobotLab
       @description = description
       @tools = Array(tools)
       @model = model || RobotLab.configuration.default_model
+      @mcp_servers = Array(mcp_servers)
+      @mcp_clients = {}
+      @mcp_tools = []
       @on_tool_call = on_tool_call
       @on_tool_result = on_tool_result
+
+      init_mcp_clients if @mcp_servers.any?
     end
 
     # Run the robot with the given context
@@ -71,12 +77,25 @@ module RobotLab
       build_result(response, state)
     end
 
+    # Disconnect all MCP clients
+    #
+    # Call this method when done using the robot to clean up MCP connections.
+    #
+    # @return [self]
+    #
+    def disconnect
+      @mcp_clients.each_value(&:disconnect)
+      self
+    end
+
     def to_h
       {
         name: name,
         description: description,
         template: template,
         tools: tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
+        mcp_tools: mcp_tools.map(&:name),
+        mcp_servers: @mcp_clients.keys,
         model: model.respond_to?(:model_id) ? model.model_id : model
       }.compact
     end
@@ -96,7 +115,7 @@ module RobotLab
 
       chat = RubyLLM.chat(model: model_id)
       chat = chat.with_template(@template, **context)
-      chat = chat.with_tools(*@tools) if @tools.any?
+      chat = chat.with_tools(*all_tools) if all_tools.any?
 
       # Add callbacks if provided
       chat = chat.on_tool_call(&@on_tool_call) if @on_tool_call
@@ -135,6 +154,62 @@ module RobotLab
           tc
         end
       end
+    end
+
+    # Initialize MCP clients for all configured servers
+    #
+    def init_mcp_clients
+      @mcp_servers.each do |server_config|
+        client = MCP::Client.new(server_config)
+        client.connect
+
+        if client.connected?
+          server_name = client.server.name
+          @mcp_clients[server_name] = client
+          discover_mcp_tools(client, server_name)
+        else
+          RobotLab.configuration.logger.warn(
+            "Robot '#{@name}' failed to connect to MCP server: #{server_config[:name] || server_config}"
+          )
+        end
+      end
+    end
+
+    # Discover tools from an MCP server and add them to @mcp_tools
+    #
+    # @param client [MCP::Client] Connected MCP client
+    # @param server_name [String] Name of the MCP server
+    #
+    def discover_mcp_tools(client, server_name)
+      tools = client.list_tools
+
+      tools.each do |tool_def|
+        tool_name = tool_def[:name]
+        mcp_client = client
+
+        # Create a Tool that delegates to the MCP client
+        tool = Tool.new(
+          name: tool_name,
+          description: tool_def[:description],
+          parameters: tool_def[:inputSchema],
+          mcp: server_name,
+          handler: ->(input, **_opts) { mcp_client.call_tool(tool_name, input) }
+        )
+
+        @mcp_tools << tool
+      end
+
+      RobotLab.configuration.logger.info(
+        "Robot '#{@name}' discovered #{tools.size} tools from MCP server '#{server_name}'"
+      )
+    end
+
+    # Get all tools (local + MCP)
+    #
+    # @return [Array] Combined array of local and MCP tools
+    #
+    def all_tools
+      @tools + @mcp_tools
     end
   end
 end

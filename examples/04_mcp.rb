@@ -64,6 +64,13 @@ unless ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
   exit 1
 end
 
+# ============================================================================
+# Part 1: Direct MCP Client Usage
+# ============================================================================
+
+puts "PART 1: Direct MCP Client Usage"
+puts "-" * 40
+puts
 puts "Connecting to GitHub MCP server..."
 
 begin
@@ -91,7 +98,6 @@ begin
 
   tools = client.list_tools
   if tools.empty?
-    # Debug: show raw response
     puts "  (No tools returned - check server connection)"
   else
     tools.each do |tool|
@@ -123,9 +129,76 @@ begin
 
   puts
 
-  # Clean up
+  # Clean up direct client
   client.disconnect
-  puts "Disconnected from GitHub MCP server."
+  puts "Disconnected from direct MCP client."
+
+  # ============================================================================
+  # Part 2: Robot + MCP Integration
+  # ============================================================================
+
+  puts
+  puts "=" * 40
+  puts "PART 2: Robot + MCP Integration"
+  puts "-" * 40
+  puts
+
+  puts "Creating Robot with MCP server integration..."
+  puts
+
+  # Create a Robot with MCP server - tools are automatically discovered
+  robot = RobotLab.build(
+    name: "github_assistant",
+    template: :github_assistant,
+    mcp_servers: [github_server],
+    model: "claude-sonnet-4-20250514"
+  )
+
+  puts "Robot created: #{robot.name}"
+  puts "  Model: #{robot.model}"
+  puts "  MCP Servers: #{robot.mcp_clients.keys.join(", ")}"
+  puts "  MCP Tools discovered: #{robot.mcp_tools.size}"
+  puts
+
+  # Show discovered MCP tools
+  puts "Discovered MCP Tools:"
+  puts "-" * 40
+  robot.mcp_tools.first(10).each do |tool|
+    puts "  #{tool.name}"
+    puts "    #{tool.description&.slice(0, 60)}..." if tool.description
+  end
+  puts "  ... and #{robot.mcp_tools.size - 10} more" if robot.mcp_tools.size > 10
+  puts
+
+  # Run the robot with a query that will use MCP tools
+  puts "Running Robot with a GitHub query..."
+  puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
+  puts "-" * 40
+
+  result = robot.run(message: "What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.")
+
+  puts
+  puts "Robot Response:"
+  puts "-" * 40
+  result.output.each do |msg|
+    puts msg.content if msg.respond_to?(:content)
+  end
+  puts
+
+  # Show tool calls if any were made
+  if result.tool_calls.any?
+    puts "Tool Calls Made:"
+    puts "-" * 40
+    result.tool_calls.each do |tc|
+      tool_info = tc.respond_to?(:tool) ? tc.tool : tc
+      puts "  #{tool_info[:name] || tool_info}"
+    end
+    puts
+  end
+
+  # Clean up robot's MCP connections
+  robot.disconnect
+  puts "Robot MCP connections disconnected."
 
 rescue RobotLab::MCPError => e
   puts "MCP Error: #{e.message}"
@@ -143,20 +216,4 @@ end
 
 puts
 puts "=" * 40
-puts
-
-# Show how to use with a Robot
-puts <<~ROBOT_EXAMPLE
-  Using GitHub MCP with a Robot:
-
-    robot = RobotLab.build(
-      name: "github_assistant",
-      template: :github_assistant,
-      mcp_servers: [github_server],
-      model: "claude-sonnet-4"
-    )
-
-    # The robot now has access to all GitHub MCP tools
-    result = robot.run(message: "Find the top 5 Ruby web frameworks on GitHub")
-
-ROBOT_EXAMPLE
+puts "Example complete!"
