@@ -1,0 +1,41 @@
+# frozen_string_literal: true
+
+# RobotLab Configuration
+#
+# Configure your AI robot framework settings here.
+#
+RobotLab.configure do |config|
+  # Default model for robots (optional)
+  # config.default_model = "claude-sonnet-4"
+  # config.default_provider = :anthropic
+
+  # Logger configuration
+  config.logger = Rails.logger
+
+  # Maximum iterations per robot run
+  # config.max_iterations = 10
+
+  # Enable debug mode in development
+  # config.debug = Rails.env.development?
+end
+
+# Configure Ruby LLM (required for LLM interactions)
+#
+# RubyLLM.configure do |config|
+#   config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
+#   config.openai_api_key = ENV["OPENAI_API_KEY"]
+#   config.gemini_api_key = ENV["GEMINI_API_KEY"]
+# end
+
+# History Persistence (optional)
+#
+# Uncomment to enable conversation history storage:
+#
+# Rails.application.config.after_initialize do
+#   adapter = RobotLab::History::ActiveRecordAdapter.new(
+#     thread_model: RobotLabThread,
+#     result_model: RobotLabResult
+#   )
+#
+#   RobotLab.configuration.history = adapter.to_config
+# end

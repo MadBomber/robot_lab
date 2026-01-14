@@ -1,0 +1,53 @@
+# frozen_string_literal: true
+
+# <%= class_name %> Routing Robot
+#
+# <%= robot_description %>
+#
+# This robot routes requests to other robots based on classification.
+#
+class <%= class_name %>Robot
+  include RobotLab::Lifecycle
+
+  SYSTEM_PROMPT = <<~PROMPT
+    You are a routing robot that classifies user requests and directs them
+    to the appropriate specialist robot.
+
+    Analyze the user's request and determine which robot should handle it.
+    Respond with your classification decision.
+  PROMPT
+
+  def self.build
+    RobotLab.create_routing_robot(
+      name: "<%= file_name %>",
+      description: "<%= robot_description %>",
+      system: SYSTEM_PROMPT,
+      on_route: method(:route_decision)
+    )
+  end
+
+  # Determine which robot should handle the request
+  #
+  # @param result [RobotLab::RobotResult] Classification result
+  # @param robot [RobotLab::Robot] This robot
+  # @param network [RobotLab::Network] Parent network
+  # @return [Array<String>, nil] Robot names to route to
+  #
+  def self.route_decision(result:, robot:, network:)
+    # Extract classification from the result
+    output = result.output.last&.content.to_s.downcase
+
+    # Route based on classification
+    # Example routing logic:
+    # case output
+    # when /billing|payment|invoice/
+    #   ["billing_robot"]
+    # when /technical|bug|error/
+    #   ["technical_robot"]
+    # else
+    #   ["general_robot"]
+    # end
+
+    nil # Return nil to end the network run
+  end
+end

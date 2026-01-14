@@ -1,0 +1,32 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class <%= class_name %>RobotTest < ActiveSupport::TestCase
+  def setup
+    @robot = <%= class_name %>Robot.build
+  end
+
+  test "robot has correct name" do
+    assert_equal "<%= file_name %>", @robot.name
+  end
+
+  test "robot has description" do
+    assert_not_nil @robot.description
+  end
+
+  test "robot has system prompt" do
+    assert_not_nil @robot.instance_variable_get(:@system)
+  end
+
+  # Add more tests as needed:
+  #
+  # test "robot runs successfully" do
+  #   result = @robot.run("Hello, I need help")
+  #   assert result.is_a?(RobotLab::RobotResult)
+  # end
+  #
+  # test "robot uses correct tools" do
+  #   # Test tool invocation
+  # end
+end

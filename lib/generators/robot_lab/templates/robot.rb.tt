@@ -1,0 +1,46 @@
+# frozen_string_literal: true
+
+# <%= class_name %> Robot
+#
+# <%= robot_description %>
+#
+class <%= class_name %>Robot
+  include RobotLab::Lifecycle
+
+  SYSTEM_PROMPT = <<~PROMPT
+    You are a helpful <%= class_name.titleize %> assistant.
+
+    Your role is to assist users with their requests in a friendly and efficient manner.
+  PROMPT
+
+  def self.build
+    RobotLab.create_robot(
+      name: "<%= file_name %>",
+      description: "<%= robot_description %>",
+      system: SYSTEM_PROMPT,
+      tools: tools,
+      lifecycle: lifecycle_hooks
+    )
+  end
+
+  def self.tools
+    [
+      <%- robot_tools.each do |tool| -%>
+      # <%= tool.camelize %>Tool.build,
+      <%- end -%>
+    ]
+  end
+
+  def self.lifecycle_hooks
+    RobotLab::Lifecycle::Hooks.new(
+      on_start: ->(robot:, network:, prompt:, history:) {
+        # Called before robot execution
+        { prompt: prompt, history: history }
+      },
+      on_finish: ->(robot:, network:, result:) {
+        # Called after robot execution
+        result
+      }
+    )
+  end
+end

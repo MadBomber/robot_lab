@@ -1,0 +1,32 @@
+# frozen_string_literal: true
+
+class CreateRobotLabTables < ActiveRecord::Migration[7.0]
+  def change
+    create_table :robot_lab_threads do |t|
+      t.string :thread_id, null: false, index: { unique: true }
+      t.text :initial_input
+      t.json :input_metadata, default: {}
+      t.json :state_data, default: {}
+      t.text :last_user_message
+      t.datetime :last_user_message_at
+
+      t.timestamps
+    end
+
+    create_table :robot_lab_results do |t|
+      t.string :thread_id, null: false, index: true
+      t.string :robot_name, null: false
+      t.integer :sequence_number, null: false, default: 0
+      t.json :output_data, default: []
+      t.json :tool_calls_data, default: []
+      t.string :stop_reason
+      t.string :checksum
+
+      t.timestamps
+    end
+
+    add_index :robot_lab_results, [:thread_id, :sequence_number]
+    add_foreign_key :robot_lab_results, :robot_lab_threads,
+                    column: :thread_id, primary_key: :thread_id
+  end
+end

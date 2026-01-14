@@ -1,0 +1,52 @@
+# frozen_string_literal: true
+
+# RobotLab Result Model
+#
+# Stores robot execution results for history persistence.
+#
+class RobotLabResult < ApplicationRecord
+  belongs_to :thread,
+             class_name: "RobotLabThread",
+             foreign_key: :thread_id,
+             primary_key: :thread_id
+
+  validates :thread_id, presence: true
+  validates :robot_name, presence: true
+  validates :sequence_number, presence: true,
+                              numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+
+  default_scope { order(sequence_number: :asc) }
+
+  # Get output messages as RobotLab::Message objects
+  #
+  # @return [Array<RobotLab::Message>]
+  #
+  def output_messages
+    (output_data || []).map do |data|
+      RobotLab::Message.from_hash(data.symbolize_keys)
+    end
+  end
+
+  # Get tool calls as RobotLab::Message objects
+  #
+  # @return [Array<RobotLab::Message>]
+  #
+  def tool_call_messages
+    (tool_calls_data || []).map do |data|
+      RobotLab::Message.from_hash(data.symbolize_keys)
+    end
+  end
+
+  # Convert to RobotLab::RobotResult
+  #
+  # @return [RobotLab::RobotResult]
+  #
+  def to_robot_result
+    RobotLab::RobotResult.new(
+      robot_name: robot_name,
+      output: output_messages,
+      tool_calls: tool_call_messages,
+      stop_reason: stop_reason
+    )
+  end
+end

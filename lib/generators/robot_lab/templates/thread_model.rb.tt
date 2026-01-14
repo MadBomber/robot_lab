@@ -1,0 +1,40 @@
+# frozen_string_literal: true
+
+# RobotLab Thread Model
+#
+# Stores conversation threads for history persistence.
+#
+class RobotLabThread < ApplicationRecord
+  has_many :results,
+           class_name: "RobotLabResult",
+           foreign_key: :thread_id,
+           primary_key: :thread_id,
+           dependent: :destroy
+
+  validates :thread_id, presence: true, uniqueness: true
+
+  # Find or create a thread by ID
+  #
+  # @param id [String] Thread ID
+  # @return [RobotLabThread]
+  #
+  def self.find_or_create_by_thread_id(id)
+    find_or_create_by(thread_id: id)
+  end
+
+  # Get the last result for this thread
+  #
+  # @return [RobotLabResult, nil]
+  #
+  def last_result
+    results.order(sequence_number: :desc).first
+  end
+
+  # Get message count for this thread
+  #
+  # @return [Integer]
+  #
+  def message_count
+    results.count
+  end
+end
