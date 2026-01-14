@@ -92,7 +92,7 @@ module RobotLab
           @execution_state = :executing_robot
 
           # Create robot-specific streaming context
-          robot_streaming = @streaming_context&.create_child_context(@run_id)
+          _robot_streaming = @streaming_context&.create_child_context(@run_id)
 
           # Run the robot with context
           result = robot.run(

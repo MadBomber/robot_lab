@@ -180,7 +180,7 @@ module RobotLab
 
     def build_captured_tool_results(tools)
       ToolExecutionCapture.captured.map do |capture|
-        tool = tools.find { |t| t.name == capture[:tool_name] }
+        _tool = tools.find { |t| t.name == capture[:tool_name] }
         tool_message = ToolMessage.new(
           id: capture[:tool_id],
           name: capture[:tool_name],
