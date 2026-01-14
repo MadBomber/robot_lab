@@ -48,6 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm-template"
   spec.add_dependency "ruby_llm-schema"
   spec.add_dependency "ruby_llm-semantic_cache"
+  spec.add_dependency "fastembed"
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "simple_flow"
   spec.add_dependency "state_machines"

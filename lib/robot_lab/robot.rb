@@ -57,7 +57,7 @@ module RobotLab
       @tools = ToolManifest.new(tools)
       @model = model
       @mcp_servers = Array(mcp_servers)
-      @lifecycle = lifecycle || Lifecycle::Hooks.new
+      @lifecycle = lifecycle || Lifecycle.new
       @tool_choice = tool_choice
       @assistant_message = assistant_message
       @mcp_clients = []
@@ -142,11 +142,16 @@ module RobotLab
           # Perform inference
           inference = perform_inference(prompt + history)
 
+          # Collect any tool results that were auto-executed by RubyLLM
+          if inference.respond_to?(:captured_tool_results) && inference.captured_tool_results.any?
+            all_tool_results.concat(inference.captured_tool_results)
+          end
+
           # Lifecycle: on_response
           inference_result = RobotResult.new(
             robot_name: @name,
             output: inference.output,
-            tool_calls: []
+            tool_calls: all_tool_results
           )
           @lifecycle.call_on_response(robot: self, network: network, memory: memory(state), result: inference_result)
 

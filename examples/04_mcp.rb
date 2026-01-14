@@ -1,98 +1,161 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example 4: MCP (Model Context Protocol) Integration
+# Example 4: MCP (Model Context Protocol) Integration with GitHub
 #
-# Demonstrates connecting to MCP servers for external tools.
+# Demonstrates connecting to the GitHub MCP server and using its tools
+# to interact with GitHub repositories.
+#
+# Prerequisites:
+#   1. Install the GitHub MCP server: brew install github-mcp-server
+#   2. Set environment variables:
+#      - ANTHROPIC_API_KEY: Your Anthropic API key
+#      - GITHUB_PERSONAL_ACCESS_TOKEN: Your GitHub personal access token
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/04_mcp.rb
+#   ANTHROPIC_API_KEY=your_key GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
 #
-# Note: This example requires an MCP server to be running.
-# You can use the Neon database MCP server or any compatible server.
+# The GitHub MCP server provides tools for:
+#   - Searching repositories, code, issues, and users
+#   - Creating and managing issues and pull requests
+#   - Reading file contents and repository information
+#   - Managing branches and commits
 
 require_relative "../lib/robot_lab"
 
-# Configure Ruby LLM
+# Configure RubyLLM
 RubyLLM.configure do |config|
   config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
 end
 
-# MCP server configuration
-# This example shows different transport options
-
-# WebSocket transport (most common)
-websocket_server = {
-  name: "database",
-  transport: {
-    type: "ws",
-    url: "ws://localhost:8080/mcp"
-  }
-}
-
-# HTTP transport with session management
-http_server = {
-  name: "api_tools",
-  transport: {
-    type: "streamable-http",
-    url: "https://api.example.com/mcp",
-    session_id: nil # Will be assigned on connect
-  }
-}
-
-# StdIO transport (for local tools)
-stdio_server = {
-  name: "local_tools",
+# GitHub MCP server configuration using StdIO transport
+github_server = {
+  name: "github",
   transport: {
     type: "stdio",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    command: "github-mcp-server",
+    args: ["stdio"],
+    env: {
+      "GITHUB_PERSONAL_ACCESS_TOKEN" => ENV.fetch("GITHUB_PERSONAL_ACCESS_TOKEN", "")
+    }
   }
 }
 
-puts "MCP Integration Example"
-puts "-" * 40
-puts ""
-puts "This example demonstrates MCP server configuration."
-puts "MCP servers provide external tools to robots via the Model Context Protocol."
-puts ""
-puts "Supported transports:"
-puts "  - WebSocket (ws://)"
-puts "  - Streamable HTTP (https://)"
-puts "  - StdIO (local processes)"
-puts "  - SSE (Server-Sent Events)"
-puts ""
+puts <<~HEADER
+  MCP Integration Example: GitHub
+  #{"=" * 40}
 
-# Create robot with MCP servers
-# (Uncomment and configure when you have a running MCP server)
+  This example demonstrates using the GitHub MCP server to interact
+  with GitHub repositories through the Model Context Protocol.
 
-# robot = RobotLab.build(
-#   name: "mcp_robot",
-#   system: "You have access to database tools via MCP.",
-#   mcp_servers: [websocket_server],
-#   model: RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
-# )
+HEADER
 
-# Example: Using MCP client directly
-puts "MCP Client Usage:"
-puts ""
-puts <<~CODE
-  # Create MCP client
-  client = RobotLab::MCP::Client.new(websocket_server)
+# Verify prerequisites
+unless ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
+  puts <<~ERROR
+    ERROR: GITHUB_PERSONAL_ACCESS_TOKEN environment variable not set.
 
-  # Connect to server
+    To use this example:
+      1. Create a GitHub Personal Access Token at https://github.com/settings/tokens
+      2. Grant appropriate permissions (repo, read:user, etc.)
+      3. Run: GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
+  ERROR
+  exit 1
+end
+
+puts "Connecting to GitHub MCP server..."
+
+begin
+  # Create MCP client and connect
+  client = RobotLab::MCP::Client.new(github_server)
   client.connect
 
+  unless client.connected?
+    puts <<~ERROR
+
+      ERROR: Failed to connect to the GitHub MCP server.
+
+      Make sure you have installed it:
+        brew install github-mcp-server
+    ERROR
+    exit 1
+  end
+
+  puts "Connected successfully!"
+  puts
+
   # List available tools
+  puts "Available GitHub Tools:"
+  puts "-" * 40
+
   tools = client.list_tools
-  puts "Available tools: \#{tools.map { |t| t[:name] }.join(', ')}"
+  if tools.empty?
+    # Debug: show raw response
+    puts "  (No tools returned - check server connection)"
+  else
+    tools.each do |tool|
+      puts "  #{tool[:name]}"
+      puts "    #{tool[:description]}" if tool[:description]
+    end
+  end
 
-  # Call a tool
-  result = client.call_tool("query", { sql: "SELECT * FROM users LIMIT 5" })
-  puts "Query result: \#{result}"
+  puts "-" * 40
+  puts "Total: #{tools.size} tools available"
+  puts
 
-  # Disconnect
-  client.close
-CODE
+  # Demonstrate a simple tool call: search for repositories
+  puts "Demo: Searching for popular Ruby repositories..."
+  puts
 
-puts "-" * 40
+  result = client.call_tool("search_repositories", {
+    query: "language:ruby stars:>1000",
+    per_page: 5
+  })
+
+  # Extract and pretty print the JSON result
+  if result.is_a?(Array) && result.first.is_a?(Hash) && result.first[:text]
+    data = JSON.parse(result.first[:text])
+    puts JSON.pretty_generate(data)
+  else
+    puts JSON.pretty_generate(result)
+  end
+
+  puts
+
+  # Clean up
+  client.disconnect
+  puts "Disconnected from GitHub MCP server."
+
+rescue RobotLab::MCPError => e
+  puts "MCP Error: #{e.message}"
+  exit 1
+rescue Errno::ENOENT
+  puts <<~ERROR
+
+    ERROR: Could not find the github-mcp-server command.
+
+    Install it with:
+      brew install github-mcp-server
+  ERROR
+  exit 1
+end
+
+puts
+puts "=" * 40
+puts
+
+# Show how to use with a Robot
+puts <<~ROBOT_EXAMPLE
+  Using GitHub MCP with a Robot:
+
+    robot = RobotLab.build(
+      name: "github_assistant",
+      system: "You help users interact with GitHub repositories.",
+      mcp_servers: [github_server],
+      model: RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
+    )
+
+    # The robot now has access to all GitHub MCP tools
+    result = robot.run("Find the top 5 Ruby web frameworks on GitHub")
+
+ROBOT_EXAMPLE

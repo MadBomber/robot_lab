@@ -69,23 +69,23 @@ general_robot = RobotLab.build(
 )
 
 # Create router function
-router = lambda do |input:, network:, last_result:, call_count:|
+router = lambda do |args|
   # First call: run classifier
-  return ["classifier"] if call_count.zero?
+  return ["classifier"] if args.call_count.zero?
 
   # Second call: route based on classification
-  if call_count == 1
-    classification = last_result&.output&.last&.content.to_s.downcase.strip
+  if args.call_count == 1
+    classification = args.last_result&.output&.last&.content.to_s.downcase.strip
 
     case classification
     when /billing/
-      network.state.data[:category] = "billing"
+      args.network.state.data[:category] = "billing"
       return ["billing"]
     when /technical/
-      network.state.data[:category] = "technical"
+      args.network.state.data[:category] = "technical"
       return ["technical"]
     else
-      network.state.data[:category] = "general"
+      args.network.state.data[:category] = "general"
       return ["general"]
     end
   end

@@ -1,6 +1,26 @@
 # frozen_string_literal: true
 
 module RobotLab
+  # Thread-local storage for capturing tool executions during RubyLLM auto-execution
+  class ToolExecutionCapture
+    def self.captured
+      Thread.current[:robot_lab_tool_executions] ||= []
+    end
+
+    def self.clear!
+      Thread.current[:robot_lab_tool_executions] = []
+    end
+
+    def self.record(tool_name:, tool_id:, input:, output:)
+      captured << {
+        tool_name: tool_name,
+        tool_id: tool_id,
+        input: input,
+        output: output
+      }
+    end
+  end
+
   # Wrapper around ruby_llm for LLM inference
   #
   # RoboticModel provides a unified interface for LLM calls, handling:
@@ -44,28 +64,38 @@ module RobotLab
 
       # Add system message if present
       system_content = @adapter.extract_system_message(messages)
+      chat = chat.with_instructions(system_content) if system_content
 
-      # Build conversation
+      # Build conversation (excluding the last user message since ask() will add it)
       conversation = @adapter.conversation_messages(messages)
-      conversation.each do |msg|
+      conversation[0...-1].each do |msg|
         add_message_to_chat(chat, msg)
       end
 
-      # Make the request
+      # Make the request (ask adds the user message)
+      user_content = conversation.last&.content || ""
+
+      # Clear tool execution capture before making the request
+      ToolExecutionCapture.clear!
+
       response = if block_given? || streaming
-                   chat.ask(conversation.last&.content || "", &(block || streaming))
+                   chat.ask(user_content, &(block || streaming))
                  else
-                   chat.ask(conversation.last&.content || "")
+                   chat.ask(user_content)
                  end
 
       # Parse response
       output = @adapter.parse_response(response)
 
+      # Build captured tool results from auto-executed tools
+      captured_tool_results = build_captured_tool_results(tools)
+
       InferenceResponse.new(
         output: output,
         raw: response,
         model: model_id,
-        provider: provider
+        provider: provider,
+        captured_tool_results: captured_tool_results
       )
     end
 
@@ -100,6 +130,7 @@ module RobotLab
     def create_tool_class(tool)
       # Build a RubyLLM::Tool subclass dynamically
       tool_definition = tool
+      tool_name = tool.name
 
       klass = Class.new(RubyLLM::Tool) do
         description tool_definition.description || ""
@@ -118,14 +149,48 @@ module RobotLab
 
         define_method(:execute) do |**kwargs|
           # This is called by ruby_llm when the tool is invoked
-          # We return the kwargs for now - actual execution happens in Robot
-          kwargs
+          # Call the handler directly (bypassing Tool#call which requires context)
+          # Handlers should use **_context pattern to accept but ignore context
+          output = tool_definition.handler.call(kwargs, robot: nil, network: nil, step: nil)
+
+          # Record the execution for later retrieval
+          ToolExecutionCapture.record(
+            tool_name: tool_name,
+            tool_id: SecureRandom.uuid,
+            input: kwargs,
+            output: output
+          )
+
+          output
         end
       end
+
+      # Set the class name so RubyLLM can identify the tool
+      # RubyLLM converts class names to snake_case for tool identification
+      class_name = tool_name.split("_").map(&:capitalize).join
+      klass.define_singleton_method(:name) { class_name }
+
+      # Also define instance method for name (used by some RubyLLM code paths)
+      klass.define_method(:name) { tool_name }
 
       # Store reference to our tool for later execution
       klass.define_singleton_method(:robot_lab_tool) { tool_definition }
       klass
+    end
+
+    def build_captured_tool_results(tools)
+      ToolExecutionCapture.captured.map do |capture|
+        tool = tools.find { |t| t.name == capture[:tool_name] }
+        tool_message = ToolMessage.new(
+          id: capture[:tool_id],
+          name: capture[:tool_name],
+          input: capture[:input]
+        )
+        ToolResultMessage.new(
+          tool: tool_message,
+          content: { data: capture[:output] }
+        )
+      end
     end
 
     def add_message_to_chat(chat, msg)
@@ -160,13 +225,14 @@ module RobotLab
   # Response from LLM inference
   #
   class InferenceResponse
-    attr_reader :output, :raw, :model, :provider
+    attr_reader :output, :raw, :model, :provider, :captured_tool_results
 
-    def initialize(output:, raw:, model:, provider:)
+    def initialize(output:, raw:, model:, provider:, captured_tool_results: [])
       @output = output
       @raw = raw
       @model = model
       @provider = provider
+      @captured_tool_results = captured_tool_results
     end
 
     # Get the stop reason from the last output message

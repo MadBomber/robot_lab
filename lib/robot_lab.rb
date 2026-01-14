@@ -9,6 +9,10 @@ require "digest"
 require "ruby_llm"
 require "async"
 
+# Define the module first so Zeitwerk can populate it
+module RobotLab
+end
+
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
 loader.ignore("#{__dir__}/generators")
 loader.ignore("#{__dir__}/robot_lab/rails")

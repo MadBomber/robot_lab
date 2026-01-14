@@ -33,32 +33,60 @@ calculator_tool = RobotLab.create_tool(
     required: %w[operation a b]
   }
 ) do |input, **_context|
-  case input[:operation]
+  result = case input[:operation]
   when "add" then input[:a] + input[:b]
   when "subtract" then input[:a] - input[:b]
   when "multiply" then input[:a] * input[:b]
   when "divide" then input[:a].to_f / input[:b]
   else "Unknown operation"
   end
+  result
 end
 
-weather_tool = RobotLab.create_tool(
-  name: "get_weather",
-  description: "Get the current weather for a location",
+fortune_tool = RobotLab.create_tool(
+  name: "fortune_cookie",
+  description: "Get a fortune cookie message with wisdom and lucky numbers",
   parameters: {
     type: "object",
     properties: {
-      location: { type: "string", description: "City name" }
+      category: {
+        type: "string",
+        enum: %w[wisdom love career adventure],
+        description: "The category of fortune to receive"
+      }
     },
-    required: ["location"]
+    required: ["category"]
   }
 ) do |input, **_context|
-  # Simulated weather data
-  {
-    location: input[:location],
-    temperature: rand(60..85),
-    conditions: %w[sunny cloudy rainy].sample
+  fortunes = {
+    "wisdom" => [
+      "The obstacle in the path becomes the path.",
+      "A journey of a thousand miles begins with a single step.",
+      "The best time to plant a tree was 20 years ago. The second best time is now."
+    ],
+    "love" => [
+      "The heart that loves is always young.",
+      "To love and be loved is to feel the sun from both sides.",
+      "Love is not about finding the right person, but being the right person."
+    ],
+    "career" => [
+      "Opportunity dances with those already on the dance floor.",
+      "Your work is your signature. Sign it with excellence.",
+      "The expert in anything was once a beginner."
+    ],
+    "adventure" => [
+      "Life shrinks or expands in proportion to one's courage.",
+      "Not all who wander are lost.",
+      "The biggest adventure you can take is to live the life of your dreams."
+    ]
+  }
+
+  result = {
+    category: input[:category],
+    fortune: fortunes[input[:category]].sample,
+    lucky_numbers: Array.new(6) { rand(1..49) }.sort
   }.to_json
+  result
 end
 
 # Create robot with tools
@@ -66,9 +94,9 @@ robot = RobotLab.build(
   name: "assistant",
   system: <<~PROMPT,
     You are a helpful assistant with access to tools.
-    Use the calculator for math and get_weather for weather queries.
+    Use the calculator for math and fortune_cookie for fortune requests.
   PROMPT
-  tools: [calculator_tool, weather_tool],
+  tools: [calculator_tool, fortune_tool],
   model: RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
 )
 
@@ -76,7 +104,7 @@ puts "Running robot with tools..."
 puts "-" * 40
 
 # Run the robot
-result = robot.run("What is 15 multiplied by 7? Also, what's the weather in Tokyo?")
+result = robot.run("What is 15 multiplied by 7? Also, give me a fortune about my career.")
 
 # Display results
 puts "Robot: #{robot.name}"
@@ -92,7 +120,7 @@ end
 
 puts "\nTool Results:"
 result.tool_calls.each do |tool_result|
-  puts "  #{tool_result.tool_name}: #{tool_result.content}"
+  puts "  #{tool_result.tool.name}: #{tool_result.data}"
 end
 
 puts "-" * 40

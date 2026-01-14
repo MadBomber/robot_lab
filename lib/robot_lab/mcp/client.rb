@@ -177,7 +177,7 @@ module RobotLab
       end
 
       def parse_response(response)
-        return response if response.is_a?(Hash) && response[:result]
+        return response[:result] if response.is_a?(Hash) && response[:result]
 
         case response
         when String

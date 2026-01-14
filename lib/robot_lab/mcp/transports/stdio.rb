@@ -54,11 +54,19 @@ module RobotLab
           @stdin.puts(json)
           @stdin.flush
 
-          # Read response
-          response_line = @stdout.gets
-          raise MCPError, "No response from MCP server" unless response_line
+          # Read response, skipping notifications
+          loop do
+            response_line = @stdout.gets
+            raise MCPError, "No response from MCP server" unless response_line
 
-          JSON.parse(response_line, symbolize_names: true)
+            parsed = JSON.parse(response_line, symbolize_names: true)
+
+            # Skip notifications (messages without an id)
+            next if parsed[:method] && !parsed.key?(:id)
+
+            # Return responses (messages with an id)
+            return parsed
+          end
         end
 
         def close
