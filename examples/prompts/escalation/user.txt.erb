@@ -1,0 +1,32 @@
+Customer <%= customer.name %> (escalated case): <%= message %>
+
+## Case Context
+<% if context.previous_interactions&.any? %>
+### Previous Interactions
+<% context.previous_interactions.each do |interaction| %>
+- <%= interaction.date %> (<%= interaction.channel %>): <%= interaction.summary %>
+<% end %>
+<% end %>
+
+<% if context.related_orders&.any? %>
+### Related Orders
+<% context.related_orders.each do |order| %>
+- Order #<%= order.id %>: $<%= order.total %> - <%= order.status %>
+<% end %>
+<% end %>
+
+<% if context.compensation_history&.any? %>
+### Previous Compensation
+<% context.compensation_history.each do |comp| %>
+- <%= comp.date %>: <%= comp.type %> - $<%= comp.amount %> (<%= comp.reason %>)
+<% end %>
+<% end %>
+
+### Escalation Reason
+<%= context.escalation_reason || "Not specified" %>
+
+### Sentiment Analysis
+- Detected Sentiment: <%= context.sentiment || "Unknown" %>
+- Urgency Level: <%= context.urgency || "Normal" %>
+
+Please resolve this escalated case with empathy and authority.
