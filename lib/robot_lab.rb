@@ -50,20 +50,12 @@ module RobotLab
     end
 
     # Factory methods for creating robots and networks
-    def build(name:, system:, **options)
-      Robot.new(name: name, system: system, **options)
-    end
-
-    def create_routing_robot(name:, system:, on_route:, **options)
-      RoutingRobot.new(name: name, system: system, on_route: on_route, **options)
+    def build(name:, template:, context: {}, **options)
+      Robot.new(name: name, template: template, context: context, **options)
     end
 
     def create_network(name:, robots:, **options)
       Network.new(name: name, robots: robots, **options)
-    end
-
-    def create_tool(name:, description: nil, parameters: nil, &handler)
-      Tool.new(name: name, description: description, parameters: parameters, handler: handler)
     end
 
     def create_state(data: {}, **options)

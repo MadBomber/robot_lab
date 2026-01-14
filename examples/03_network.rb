@@ -10,62 +10,35 @@
 
 require_relative "../lib/robot_lab"
 
-# Configure Ruby LLM
-RubyLLM.configure do |config|
+# Configure RobotLab
+RobotLab.configure do |config|
   config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
+  config.template_path = File.join(__dir__, "prompts")
 end
 
-model = RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
-
-# Create specialized robots
+# Create specialized robots using templates
 classifier = RobotLab.build(
   name: "classifier",
-  system: <<~PROMPT,
-    You are a request classifier. Analyze the user's request and classify it
-    as either "billing", "technical", or "general".
-
-    Respond with ONLY the category name, nothing else.
-  PROMPT
-  model: model
+  template: :classifier,
+  model: "claude-sonnet-4"
 )
 
 billing_robot = RobotLab.build(
   name: "billing",
-  system: <<~PROMPT,
-    You are a billing support specialist. Help users with:
-    - Invoice questions
-    - Payment issues
-    - Subscription management
-    - Refunds
-
-    Be professional and helpful.
-  PROMPT
-  model: model
+  template: :billing,
+  model: "claude-sonnet-4"
 )
 
 technical_robot = RobotLab.build(
   name: "technical",
-  system: <<~PROMPT,
-    You are a technical support specialist. Help users with:
-    - Bug reports
-    - Feature questions
-    - Integration help
-    - Troubleshooting
-
-    Be technical but clear.
-  PROMPT
-  model: model
+  template: :technical,
+  model: "claude-sonnet-4"
 )
 
 general_robot = RobotLab.build(
   name: "general",
-  system: <<~PROMPT,
-    You are a general support robot. Help users with any questions
-    that don't fit into billing or technical categories.
-
-    Be friendly and helpful.
-  PROMPT
-  model: model
+  template: :general,
+  model: "claude-sonnet-4"
 )
 
 # Create router function
@@ -99,7 +72,6 @@ network = RobotLab.create_network(
   name: "support_network",
   robots: [classifier, billing_robot, technical_robot, general_robot],
   router: router,
-  default_model: model,
   state: RobotLab.create_state(data: { category: nil })
 )
 
@@ -107,7 +79,7 @@ puts "Running multi-robot network..."
 puts "-" * 40
 
 # Run the network with a billing question
-result = network.run("I was charged twice for my subscription last month. Can you help?")
+result = network.run(message: "I was charged twice for my subscription last month. Can you help?")
 
 # Display results
 puts "Network: #{network.name}"

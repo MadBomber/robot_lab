@@ -1,16 +1,16 @@
 Customer Message: <%= message %>
 
-<% if customer.recent_orders&.any? %>
+<% if customer && customer[:recent_orders]&.any? %>
 Recent Order Activity:
-<% customer.recent_orders.each do |order| %>
-- Order #<%= order.id %> (<%= order.date %>): <%= order.status %> - $<%= order.total %>
+<% customer[:recent_orders].each do |order| %>
+- Order #<%= order[:id] %> (<%= order[:date] %>): <%= order[:status] %> - $<%= order[:total] %>
 <% end %>
 <% end %>
 
-<% if customer.open_tickets&.any? %>
+<% if customer && customer[:open_tickets]&.any? %>
 Open Support Tickets:
-<% customer.open_tickets.each do |ticket| %>
-- Ticket #<%= ticket.id %>: <%= ticket.subject %> (<%= ticket.status %>)
+<% customer[:open_tickets].each do |ticket| %>
+- Ticket #<%= ticket[:id] %>: <%= ticket[:subject] %> (<%= ticket[:status] %>)
 <% end %>
 <% end %>
 

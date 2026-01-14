@@ -10,9 +10,6 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/06_prompt_templates.rb
 #
-# Dependencies:
-#   gem install ruby_llm-template
-#
 # Template Structure:
 #   examples/prompts/
 #   ├── triage/
@@ -29,60 +26,6 @@
 #       └── user.txt.erb
 
 require_relative "../lib/robot_lab"
-require "erb"
-require "ostruct"
-
-# =============================================================================
-# Template Renderer
-# =============================================================================
-# A simple ERB template renderer that mimics ruby_llm-template behavior.
-# In production, use the actual ruby_llm-template gem.
-
-class PromptTemplate
-  attr_reader :template_dir
-
-  def initialize(template_dir)
-    @template_dir = template_dir
-  end
-
-  def render(template_name, **context)
-    dir = File.join(@template_dir, template_name.to_s)
-
-    {
-      system: render_file(File.join(dir, "system.txt.erb"), context),
-      user: render_file(File.join(dir, "user.txt.erb"), context)
-    }
-  end
-
-  private
-
-  def render_file(path, variables)
-    return nil unless File.exist?(path)
-
-    template = File.read(path)
-    binding_obj = create_binding(variables)
-    ERB.new(template, trim_mode: "-").result(binding_obj)
-  end
-
-  def create_binding(variables)
-    # Convert all values to OpenStructs first, then create the namespace
-    converted = variables.transform_values { |v| deep_to_ostruct(v) }
-    namespace = OpenStruct.new(converted)
-    # Use a clean binding without local variable pollution
-    namespace.instance_exec { binding }
-  end
-
-  def deep_to_ostruct(obj)
-    case obj
-    when Hash
-      OpenStruct.new(obj.transform_values { |v| deep_to_ostruct(v) })
-    when Array
-      obj.map { |item| deep_to_ostruct(item) }
-    else
-      obj
-    end
-  end
-end
 
 # =============================================================================
 # Sample Data
@@ -209,102 +152,65 @@ puts "E-Commerce Support Network with Dynamic Context"
 puts "=" * 70
 puts
 
-# Configure RubyLLM
-RubyLLM.configure do |config|
+# Configure RobotLab
+RobotLab.configure do |config|
   config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
+  config.template_path = File.join(__dir__, "prompts")
 end
 
-# Initialize template renderer
-template_dir = File.join(__dir__, "prompts")
-templates = PromptTemplate.new(template_dir)
-
-# Create model
-model = RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
-
 # -----------------------------------------------------------------------------
-# Build Robots with Template-Generated Prompts
+# Build Robots with Template-Based Prompts
 # -----------------------------------------------------------------------------
 
-# Triage Robot - Uses dynamic system prompt based on customer context
+# Triage Robot - Classifies incoming requests
 triage_robot = RobotLab.build(
   name: "triage",
   description: "Classifies incoming requests to route to specialists",
-  system: lambda { |network:|
-    # Render template with current context
-    rendered = templates.render(:triage,
-      company_name: COMPANY_NAME,
-      customer: SAMPLE_CUSTOMER,
-      categories: CATEGORIES,
-      message: network&.state&.data&.[](:current_message) || ""
-    )
-    rendered[:system]
+  template: :triage,
+  context: {
+    company_name: COMPANY_NAME,
+    categories: CATEGORIES
   },
-  model: model
+  model: "claude-sonnet-4"
 )
 
 # Order Support Robot
 order_robot = RobotLab.build(
   name: "order",
   description: "Handles order-related inquiries with full order history",
-  system: lambda { |network:|
-    rendered = templates.render(:order_support,
-      company_name: COMPANY_NAME,
-      customer: SAMPLE_CUSTOMER,
-      orders: ORDERS,
-      policies: POLICIES,
-      capabilities: ORDER_CAPABILITIES,
-      message: network&.state&.data&.[](:current_message) || ""
-    )
-    rendered[:system]
+  template: :order_support,
+  context: {
+    company_name: COMPANY_NAME,
+    policies: POLICIES,
+    capabilities: ORDER_CAPABILITIES
   },
-  model: model
+  model: "claude-sonnet-4"
 )
 
 # Product Support Robot
 product_robot = RobotLab.build(
   name: "product",
   description: "Answers product questions with catalog knowledge",
-  system: lambda { |network:|
-    rendered = templates.render(:product_support,
-      company_name: COMPANY_NAME,
-      customer: SAMPLE_CUSTOMER,
-      products: PRODUCTS,
-      promotions: PROMOTIONS,
-      product_categories: PRODUCT_CATEGORIES,
-      message: network&.state&.data&.[](:current_message) || ""
-    )
-    rendered[:system]
+  template: :product_support,
+  context: {
+    company_name: COMPANY_NAME,
+    products: PRODUCTS,
+    promotions: PROMOTIONS,
+    product_categories: PRODUCT_CATEGORIES
   },
-  model: model
+  model: "claude-sonnet-4"
 )
 
 # Escalation Robot
 escalation_robot = RobotLab.build(
   name: "escalation",
   description: "Handles complex cases requiring special authority",
-  system: lambda { |network:|
-    context = {
-      previous_interactions: [
-        { date: "2024-01-12", channel: "Chat", summary: "Asked about order delay" },
-        { date: "2024-01-14", channel: "Email", summary: "Followed up on shipping" }
-      ],
-      related_orders: ORDERS,
-      compensation_history: [],
-      escalation_reason: network&.state&.data&.[](:escalation_reason),
-      sentiment: "Frustrated",
-      urgency: "High"
-    }
-
-    rendered = templates.render(:escalation,
-      company_name: COMPANY_NAME,
-      customer: SAMPLE_CUSTOMER,
-      authorities: ESCALATION_AUTHORITIES,
-      context: context,
-      message: network&.state&.data&.[](:current_message) || ""
-    )
-    rendered[:system]
+  template: :escalation,
+  context: {
+    company_name: COMPANY_NAME,
+    authorities: ESCALATION_AUTHORITIES
   },
-  model: model
+  model: "claude-sonnet-4"
 )
 
 # -----------------------------------------------------------------------------
@@ -339,9 +245,7 @@ network = RobotLab.create_network(
   name: "ecommerce_support",
   robots: [triage_robot, order_robot, product_robot, escalation_robot],
   router: router,
-  default_model: model,
   state: RobotLab.create_state(data: {
-    current_message: nil,
     category: nil,
     classification_result: nil
   })
@@ -374,15 +278,12 @@ demo_queries.each_with_index do |query, index|
   puts "Customer: #{query[:message]}"
   puts
 
-  # Update state with current message
-  state = RobotLab.create_state(data: {
-    current_message: query[:message],
-    category: nil,
-    classification_result: nil
-  })
-
-  # Run the network
-  result = network.run(query[:message], state: state)
+  # Run the network with context
+  result = network.run(
+    message: query[:message],
+    customer: SAMPLE_CUSTOMER,
+    orders: ORDERS
+  )
 
   # Display results
   puts "Routing Decision: #{result.state.data[:category]&.upcase || 'N/A'}"
@@ -414,10 +315,10 @@ puts
 puts "Demo Complete!"
 puts
 puts "This example demonstrates:"
-puts "  - ERB templates for organized, reusable prompts"
-puts "  - Dynamic context injection (customer data, order history, etc.)"
-puts "  - Lambda-based system prompts that render at runtime"
+puts "  - ruby_llm-template for organized, reusable prompts"
+puts "  - Build-time context (robot identity/capabilities)"
+puts "  - Run-time context (customer data, order history)"
 puts "  - Multi-robot network with intelligent routing"
 puts "  - State sharing between robots"
 puts
-puts "Template files are located in: #{template_dir}"
+puts "Template files are located in: #{File.join(__dir__, 'prompts')}"

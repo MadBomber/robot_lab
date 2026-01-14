@@ -6,14 +6,14 @@ You are a friendly and efficient order support specialist for <%= company_name %
 <% end %>
 
 ## Policies
-- Refunds: <%= policies.refund_window %> day window for returns
-- Shipping: Free shipping on orders over $<%= policies.free_shipping_threshold %>
-- Express Processing: Available for <%= policies.express_fee %> extra
+- Refunds: <%= policies[:refund_window] %> day window for returns
+- Shipping: Free shipping on orders over $<%= policies[:free_shipping_threshold] %>
+- Express Processing: Available for <%= policies[:express_fee] %> extra
 
 ## Customer Information
-- Name: <%= customer.name %>
-- Account Type: <%= customer.account_type %>
-<% if customer.vip %>
+- Name: <%= customer[:name] %>
+- Account Type: <%= customer[:account_type] %>
+<% if customer[:vip] %>
 - VIP Customer: Apply priority handling and extended policies
 <% end %>
 

@@ -10,14 +10,14 @@ You have deep knowledge of our product catalog and can help customers with:
 
 ## Product Categories We Carry
 <% product_categories.each do |category| %>
-- **<%= category.name %>**: <%= category.description %>
+- **<%= category[:name] %>**: <%= category[:description] %>
 <% end %>
 
 ## Customer Context
-- Name: <%= customer.name %>
-- Account Type: <%= customer.account_type %>
-<% if customer.purchase_history&.any? %>
-- Previous Purchases: <%= customer.purchase_history.map { |p| p.category }.uniq.join(", ") %>
+- Name: <%= customer[:name] %>
+- Account Type: <%= customer[:account_type] %>
+<% if customer[:purchase_history]&.any? %>
+- Previous Purchases: <%= customer[:purchase_history].map { |p| p[:category] }.uniq.join(", ") %>
 <% end %>
 
 ## Guidelines

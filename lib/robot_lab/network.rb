@@ -14,17 +14,10 @@ module RobotLab
   #     robots: [classifier, billing_robot, technical_robot],
   #     router: ->(args) {
   #       return nil if args.call_count > 0
-  #       args.network.state.data[:category] == "billing" ? billing_robot : technical_robot
+  #       args.network.state.data[:category] == "billing" ? "billing_robot" : "technical_robot"
   #     }
   #   )
-  #   result = network.run("I have a billing question")
-  #
-  # @example With routing robot
-  #   network = Network.new(
-  #     name: "support",
-  #     robots: [billing_robot, technical_robot],
-  #     router: RoutingRobot.new(...)
-  #   )
+  #   result = network.run(message: "I have a billing question", customer: customer)
   #
   class Network
     attr_reader :name, :robots, :default_model, :router, :max_iter, :history
@@ -55,15 +48,15 @@ module RobotLab
       @state.clone
     end
 
-    # Run the network with input
+    # Run the network with context
     #
-    # @param input [String, UserMessage] User input
-    # @param router [Proc, RoutingRobot, nil] Override router
+    # @param router [Proc, nil] Override router
     # @param state [State, Hash, nil] Override state
     # @param streaming [Proc, nil] Streaming callback
+    # @param run_context [Hash] Context passed to all robots
     # @return [NetworkRun]
     #
-    def run(input, router: nil, state: nil, streaming: nil, &block)
+    def run(router: nil, state: nil, streaming: nil, **run_context, &block)
       # Prepare state
       run_state = case state
                   when State
@@ -77,21 +70,18 @@ module RobotLab
       # Create and execute network run
       network_run = NetworkRun.new(self, run_state)
       network_run.execute(
-        input,
         router: router || @router,
-        streaming: streaming || block
+        streaming: streaming || block,
+        **run_context
       )
     end
 
-    # Get available robots (respects lifecycle.enabled)
+    # Get available robots
     #
-    # @param network_run [NetworkRun, nil]
     # @return [Array<Robot>]
     #
-    def available_robots(network_run = nil)
-      @robots.values.select do |robot|
-        robot.enabled?(network: network_run)
-      end
+    def available_robots
+      @robots.values
     end
 
     # Get robot by name

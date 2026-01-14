@@ -1,21 +1,21 @@
-Customer <%= customer.name %> asks: <%= message %>
+Customer <%= customer[:name] %> asks: <%= message %>
 
 ## Relevant Products
 <% if products&.any? %>
 <% products.each do |product| %>
-### <%= product.name %>
-- SKU: <%= product.sku %>
-- Price: $<%= product.price %>
-- Category: <%= product.category %>
-- In Stock: <%= product.in_stock ? "Yes (#{product.quantity} available)" : "No" %>
-<% if product.features&.any? %>
+### <%= product[:name] %>
+- SKU: <%= product[:sku] %>
+- Price: $<%= product[:price] %>
+- Category: <%= product[:category] %>
+- In Stock: <%= product[:in_stock] ? "Yes (#{product[:quantity]} available)" : "No" %>
+<% if product[:features]&.any? %>
 - Features:
-<% product.features.each do |feature| %>
+<% product[:features].each do |feature| %>
   - <%= feature %>
 <% end %>
 <% end %>
-<% if product.compatible_with&.any? %>
-- Compatible With: <%= product.compatible_with.join(", ") %>
+<% if product[:compatible_with]&.any? %>
+- Compatible With: <%= product[:compatible_with].join(", ") %>
 <% end %>
 <% end %>
 <% else %>
@@ -25,7 +25,7 @@ No specific products matched the query. Provide general guidance.
 <% if promotions&.any? %>
 ## Current Promotions
 <% promotions.each do |promo| %>
-- **<%= promo.name %>**: <%= promo.description %> (Code: <%= promo.code %>)
+- **<%= promo[:name] %>**: <%= promo[:description] %> (Code: <%= promo[:code] %>)
 <% end %>
 <% end %>
 

@@ -9,19 +9,19 @@ You handle situations that require:
 
 ## Escalation Authorities
 <% authorities.each do |auth| %>
-- **<%= auth.name %>**: <%= auth.description %> (Limit: <%= auth.limit %>)
+- **<%= auth[:name] %>**: <%= auth[:description] %> (Limit: <%= auth[:limit] %>)
 <% end %>
 
 ## Customer Information
-- Name: <%= customer.name %>
-- Account Type: <%= customer.account_type %>
-- Customer Since: <%= customer.member_since %>
-- Lifetime Value: $<%= customer.lifetime_value %>
-<% if customer.vip %>
+- Name: <%= customer[:name] %>
+- Account Type: <%= customer[:account_type] %>
+- Customer Since: <%= customer[:member_since] %>
+- Lifetime Value: $<%= customer[:lifetime_value] %>
+<% if customer[:vip] %>
 - VIP Status: Yes
 <% end %>
-<% if customer.escalation_history&.any? %>
-- Previous Escalations: <%= customer.escalation_history.count %>
+<% if customer[:escalation_history]&.any? %>
+- Previous Escalations: <%= customer[:escalation_history].count %>
 <% end %>
 
 ## Guidelines

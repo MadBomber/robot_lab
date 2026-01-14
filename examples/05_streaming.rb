@@ -10,9 +10,10 @@
 
 require_relative "../lib/robot_lab"
 
-# Configure Ruby LLM
-RubyLLM.configure do |config|
+# Configure RobotLab
+RobotLab.configure do |config|
   config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
+  config.template_path = File.join(__dir__, "prompts")
 end
 
 # Create a streaming handler
@@ -89,18 +90,18 @@ context.publish_event(
 puts ""
 puts "=" * 40
 puts ""
-puts "Using streaming with an robot:"
+puts "Using streaming with a robot:"
 puts ""
 puts <<~CODE
-  # Create robot with streaming
+  # Create robot with template
   robot = RobotLab.build(
     name: "streamer",
-    system: "You are helpful",
-    model: model
+    template: :helper,
+    model: "claude-sonnet-4"
   )
 
   # Run with streaming callback
-  result = robot.run("Tell me a story") do |event|
+  result = robot.run(message: "Tell me a story") do |event|
     case event[:event]
     when "text.delta"
       print event[:data][:delta]
@@ -117,7 +118,7 @@ puts <<~CODE
   streaming_handler = ->(event) { broadcast_to_websocket(event) }
 
   network.run(
-    "Process this request",
+    message: "Process this request",
     streaming: streaming_handler
   )
 CODE

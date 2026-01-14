@@ -1,18 +1,18 @@
-Customer <%= customer.name %> asks: <%= message %>
+Customer <%= customer[:name] %> asks: <%= message %>
 
 ## Order History
 <% if orders&.any? %>
 <% orders.each do |order| %>
-### Order #<%= order.id %>
-- Date: <%= order.date %>
-- Status: <%= order.status %>
-- Total: $<%= order.total %>
+### Order #<%= order[:id] %>
+- Date: <%= order[:date] %>
+- Status: <%= order[:status] %>
+- Total: $<%= order[:total] %>
 - Items:
-<% order.items.each do |item| %>
-  - <%= item.name %> (x<%= item.quantity %>) - $<%= item.price %>
+<% order[:items].each do |item| %>
+  - <%= item[:name] %> (x<%= item[:quantity] %>) - $<%= item[:price] %>
 <% end %>
-<% if order.tracking %>
-- Tracking: <%= order.tracking %>
+<% if order[:tracking] %>
+- Tracking: <%= order[:tracking] %>
 <% end %>
 <% end %>
 <% else %>

@@ -23,9 +23,10 @@
 
 require_relative "../lib/robot_lab"
 
-# Configure RubyLLM
-RubyLLM.configure do |config|
+# Configure RobotLab
+RobotLab.configure do |config|
   config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
+  config.template_path = File.join(__dir__, "prompts")
 end
 
 # GitHub MCP server configuration using StdIO transport
@@ -150,12 +151,12 @@ puts <<~ROBOT_EXAMPLE
 
     robot = RobotLab.build(
       name: "github_assistant",
-      system: "You help users interact with GitHub repositories.",
+      template: :github_assistant,
       mcp_servers: [github_server],
-      model: RobotLab::RoboticModel.new("claude-sonnet-4", provider: :anthropic)
+      model: "claude-sonnet-4"
     )
 
     # The robot now has access to all GitHub MCP tools
-    result = robot.run("Find the top 5 Ruby web frameworks on GitHub")
+    result = robot.run(message: "Find the top 5 Ruby web frameworks on GitHub")
 
 ROBOT_EXAMPLE

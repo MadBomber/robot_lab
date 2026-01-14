@@ -23,8 +23,7 @@ module RobotLab
       @run_id = SecureRandom.uuid
       @stack = []
       @counter = 0
-      @input = nil
-      @user_message = nil
+      @run_context = {}
       @streaming_context = nil
       @initial_result_count = 0
       @execution_state = :pending
@@ -40,16 +39,15 @@ module RobotLab
       @network.default_model
     end
 
-    # Execute the network with input
+    # Execute the network with context
     #
-    # @param input [String, UserMessage]
-    # @param router [Proc, RoutingRobot, nil]
+    # @param router [Proc, nil]
     # @param streaming [Proc, nil]
+    # @param run_context [Hash] Context passed to all robots
     # @return [self]
     #
-    def execute(input, router:, streaming: nil)
-      @input = input.is_a?(UserMessage) ? input.content : input.to_s
-      @user_message = UserMessage.from(input)
+    def execute(router:, streaming: nil, **run_context)
+      @run_context = run_context
       @streaming_context = create_streaming_context(streaming) if streaming
 
       @execution_state = :initializing
@@ -96,12 +94,11 @@ module RobotLab
           # Create robot-specific streaming context
           robot_streaming = @streaming_context&.create_child_context(@run_id)
 
-          # Run the robot
+          # Run the robot with context
           result = robot.run(
-            @input,
             network: self,
             state: @state,
-            streaming_context: robot_streaming
+            **@run_context
           )
 
           # Store result
@@ -173,9 +170,9 @@ module RobotLab
           step robot.name.to_sym, ->(result) {
             # Execute robot and return result
             robot_result = robot.run(
-              result.context[:input],
               network: result.context[:network],
-              state: result.context[:state]
+              state: result.context[:state],
+              **result.context[:run_context]
             )
             result.with_context(:last_result, robot_result).continue(robot_result)
           }
@@ -207,8 +204,7 @@ module RobotLab
 
     def build_router_args(last_result)
       Router::Args.new(
-        input: @input,
-        user_message: @user_message,
+        context: @run_context,
         network: self,
         stack: @stack.map { |n| robots[n] }.compact,
         call_count: @counter,
@@ -232,7 +228,7 @@ module RobotLab
       if @network.history.create_thread && !@state.thread_id
         result = @network.history.create_thread.call(
           state: @state,
-          input: @input,
+          context: @run_context,
           network: self
         )
         @state.thread_id = result[:thread_id] if result
@@ -249,7 +245,7 @@ module RobotLab
         thread_id: @state.thread_id,
         state: @state,
         network: self,
-        input: @input
+        context: @run_context
       )
 
       @state.set_results(existing_results) if existing_results&.any?
@@ -265,7 +261,7 @@ module RobotLab
         thread_id: @state.thread_id,
         state: @state,
         network: self,
-        input: @input,
+        context: @run_context,
         new_results: new_results
       )
     end

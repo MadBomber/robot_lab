@@ -4,35 +4,35 @@ module RobotLab
   # Router module for robot selection strategies
   #
   # Routers determine which robot(s) should run at each step
-  # in a network execution. Two router types are supported:
-  #
-  # 1. Function router (Proc) - Explicit, code-based routing
-  # 2. Robot router (RoutingRobot) - LLM-based routing decisions
+  # in a network execution using lambda functions.
   #
   module Router
     # Arguments passed to function routers
     #
     # @example
     #   router = ->(args) {
-    #     args[:call_count] == 0 ? classifier_robot : nil
+    #     args.call_count == 0 ? classifier_robot : nil
     #   }
     #
     class Args
-      attr_reader :input, :user_message, :network, :stack, :call_count, :last_result
+      attr_reader :context, :network, :stack, :call_count, :last_result
 
-      def initialize(input:, network:, call_count:, user_message: nil, stack: [], last_result: nil)
-        @input = input
-        @user_message = user_message
+      def initialize(context:, network:, call_count:, stack: [], last_result: nil)
+        @context = context
         @network = network
         @stack = stack
         @call_count = call_count
         @last_result = last_result
       end
 
+      # Convenience accessor for message in context
+      def message
+        @context[:message]
+      end
+
       def to_h
         {
-          input: input,
-          user_message: user_message&.to_h,
+          context: context,
           call_count: call_count,
           stack: stack.map(&:name),
           last_result: last_result&.export
@@ -43,7 +43,7 @@ module RobotLab
     class << self
       # Call a router to get next robots
       #
-      # @param router [Proc, RoutingRobot, nil] The router
+      # @param router [Proc, nil] The router lambda
       # @param args [Args] Router arguments
       # @return [Array<Robot>, nil]
       #
@@ -53,8 +53,6 @@ module RobotLab
         result = case router
                  when Proc
                    router.call(args)
-                 when RoutingRobot
-                   call_routing_robot(router, args)
                  when Robot
                    # Single robot as router - just return it once
                    args.call_count.zero? ? router : nil
@@ -66,18 +64,6 @@ module RobotLab
       end
 
       private
-
-      def call_routing_robot(router, args)
-        # Run the routing robot
-        result = router.run(
-          args.input,
-          network: args.network,
-          state: args.network.state
-        )
-
-        # Get routing decision
-        router.route(result: result, network: args.network, state: args.network.state)
-      end
 
       def normalize_result(result, network)
         return nil if result.nil?
