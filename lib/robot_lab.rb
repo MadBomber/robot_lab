@@ -89,20 +89,40 @@ module RobotLab
     # Factory method to create a new Robot instance.
     #
     # @param name [String] the unique identifier for the robot
-    # @param template [String] the ERB template file path for the robot's prompt
+    # @param template [Symbol, nil] the ERB template for the robot's prompt
+    # @param system_prompt [String, nil] inline system prompt (can be used alone or with template)
     # @param context [Hash] variables to pass to the template
     # @param options [Hash] additional options passed to Robot.new
     # @return [Robot] a new Robot instance
+    # @raise [ArgumentError] if neither template nor system_prompt is provided
     #
-    # @example
+    # @example Robot with template
     #   robot = RobotLab.build(
     #     name: "assistant",
-    #     template: "chat.erb",
-    #     context: { tone: "friendly" },
-    #     model: "claude-sonnet-4-20250514"
+    #     template: :assistant,
+    #     context: { tone: "friendly" }
     #   )
-    def build(name:, template:, context: {}, **options)
-      Robot.new(name: name, template: template, context: context, **options)
+    #
+    # @example Robot with inline system prompt
+    #   robot = RobotLab.build(
+    #     name: "helper",
+    #     system_prompt: "You are a helpful assistant."
+    #   )
+    #
+    # @example Robot with both template and system prompt
+    #   robot = RobotLab.build(
+    #     name: "support",
+    #     template: :support_agent,
+    #     system_prompt: "Today's date is #{Date.today}."
+    #   )
+    def build(name:, template: nil, system_prompt: nil, context: {}, **options)
+      Robot.new(
+        name: name,
+        template: template,
+        system_prompt: system_prompt,
+        context: context,
+        **options
+      )
     end
 
     # Factory method to create a new Network of robots.

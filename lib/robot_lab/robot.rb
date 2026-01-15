@@ -18,6 +18,19 @@ module RobotLab
   #   )
   #   result = robot.run(message: "Hello!", user_name: "Alice")
   #
+  # @example Robot with inline system prompt (no template file needed)
+  #   robot = Robot.new(
+  #     name: "quick_bot",
+  #     system_prompt: "You are a helpful assistant. Be concise."
+  #   )
+  #
+  # @example Robot with template and additional system prompt
+  #   robot = Robot.new(
+  #     name: "support",
+  #     template: :support_agent,
+  #     system_prompt: "Today is #{Date.today}. Current promotion: 20% off."
+  #   )
+  #
   # @example Robot with tools
   #   robot = Robot.new(
   #     name: "support",
@@ -40,7 +53,9 @@ module RobotLab
     # @!attribute [r] description
     #   @return [String, nil] an optional description of the robot's purpose
     # @!attribute [r] template
-    #   @return [Symbol, String] the ERB template for the robot's prompt
+    #   @return [Symbol, nil] the ERB template for the robot's prompt
+    # @!attribute [r] system_prompt
+    #   @return [String, nil] inline system prompt (used alone or appended to template)
     # @!attribute [r] model
     #   @return [String, Object] the LLM model identifier or model object
     # @!attribute [r] local_tools
@@ -49,7 +64,7 @@ module RobotLab
     #   @return [Hash<String, MCP::Client>] connected MCP clients by server name
     # @!attribute [r] mcp_tools
     #   @return [Array<Tool>] tools discovered from MCP servers
-    attr_reader :name, :description, :template, :model, :local_tools, :mcp_clients, :mcp_tools
+    attr_reader :name, :description, :template, :system_prompt, :model, :local_tools, :mcp_clients, :mcp_tools
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -60,7 +75,8 @@ module RobotLab
     # Creates a new Robot instance.
     #
     # @param name [String] the unique identifier for the robot
-    # @param template [Symbol, String] the ERB template for the robot's prompt
+    # @param template [Symbol, nil] the ERB template for the robot's prompt
+    # @param system_prompt [String, nil] inline system prompt (can be used alone or with template)
     # @param context [Hash, Proc] variables to pass to the template at build time
     # @param description [String, nil] an optional description of the robot's purpose
     # @param local_tools [Array] tools defined locally for this robot
@@ -71,8 +87,14 @@ module RobotLab
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
     #
-    # @example Basic robot
+    # @example Basic robot with template
     #   Robot.new(name: "helper", template: :helper)
+    #
+    # @example Robot with inline system prompt
+    #   Robot.new(name: "bot", system_prompt: "You are helpful.")
+    #
+    # @example Robot with template and additional system prompt
+    #   Robot.new(name: "bot", template: :base, system_prompt: "Extra context here.")
     #
     # @example Robot with tools and callbacks
     #   Robot.new(
@@ -81,9 +103,12 @@ module RobotLab
     #     local_tools: [OrderLookup],
     #     on_tool_call: ->(call) { puts "Calling #{call.name}" }
     #   )
+    #
+    # @raise [ArgumentError] if neither template nor system_prompt is provided
     def initialize(
       name:,
-      template:,
+      template: nil,
+      system_prompt: nil,
       context: {},
       description: nil,
       local_tools: [],
@@ -94,8 +119,13 @@ module RobotLab
       on_tool_call: nil,
       on_tool_result: nil
     )
+      unless template || system_prompt
+        raise ArgumentError, "Must provide either template or system_prompt"
+      end
+
       @name = name.to_s
       @template = template
+      @system_prompt = system_prompt
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
@@ -174,6 +204,7 @@ module RobotLab
         name: name,
         description: description,
         template: template,
+        system_prompt: system_prompt,
         local_tools: local_tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
         mcp_tools: mcp_tools.map(&:name),
         mcp_config: @mcp_config,
@@ -197,7 +228,17 @@ module RobotLab
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
       chat = RubyLLM.chat(model: model_id)
-      chat = chat.with_template(@template, **context)
+
+      # Apply template and/or system_prompt
+      # - Template only: use with_template
+      # - system_prompt only: use with_instructions
+      # - Both: use with_template, then append with_instructions
+      if @template
+        chat = chat.with_template(@template, **context)
+        chat = chat.with_instructions(@system_prompt) if @system_prompt
+      else
+        chat = chat.with_instructions(@system_prompt)
+      end
 
       # Get filtered tools based on whitelist
       filtered = filtered_tools(allowed_tools)

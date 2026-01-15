@@ -89,6 +89,57 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal RobotLab.configuration.default_model, robot.model
   end
 
+  # system_prompt tests
+  def test_initialization_with_system_prompt_only
+    robot = RobotLab::Robot.new(
+      name: "quick_bot",
+      system_prompt: "You are a helpful assistant."
+    )
+
+    assert_equal "quick_bot", robot.name
+    assert_nil robot.template
+    assert_equal "You are a helpful assistant.", robot.system_prompt
+  end
+
+  def test_initialization_with_template_and_system_prompt
+    robot = RobotLab::Robot.new(
+      name: "enhanced_bot",
+      template: :assistant,
+      system_prompt: "Additional context for today."
+    )
+
+    assert_equal :assistant, robot.template
+    assert_equal "Additional context for today.", robot.system_prompt
+  end
+
+  def test_initialization_raises_without_template_or_system_prompt
+    error = assert_raises(ArgumentError) do
+      RobotLab::Robot.new(name: "incomplete_bot")
+    end
+
+    assert_equal "Must provide either template or system_prompt", error.message
+  end
+
+  def test_to_h_includes_system_prompt
+    robot = RobotLab::Robot.new(
+      name: "helper",
+      system_prompt: "You are helpful."
+    )
+
+    hash = robot.to_h
+    assert_equal "You are helpful.", hash[:system_prompt]
+  end
+
+  def test_to_h_excludes_nil_system_prompt
+    robot = RobotLab::Robot.new(
+      name: "helper",
+      template: :assistant
+    )
+
+    hash = robot.to_h
+    refute hash.key?(:system_prompt)
+  end
+
   def test_initialization_with_mcp_inherit
     robot = RobotLab::Robot.new(
       name: "helper",
