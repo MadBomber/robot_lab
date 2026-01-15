@@ -88,6 +88,7 @@ module RobotLab
     # @param tools [Symbol, Array] hierarchical tools config (:none, :inherit, or array of tool names)
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     #
     # @example Basic robot with template
     #   Robot.new(name: "helper", template: :helper)
@@ -119,7 +120,8 @@ module RobotLab
       mcp: :none,
       tools: :none,
       on_tool_call: nil,
-      on_tool_result: nil
+      on_tool_result: nil,
+      enable_cache: true
     )
       unless template || system_prompt
         raise ArgumentError, "Must provide either template or system_prompt"
@@ -146,7 +148,7 @@ module RobotLab
       @mcp_initialized = false
 
       # Inherent memory (used when standalone, not in a network)
-      @memory = Memory.new
+      @memory = Memory.new(enable_cache: enable_cache)
     end
 
     # Returns the robot's local tools (alias for local_tools).
@@ -199,8 +201,8 @@ module RobotLab
       full_context = resolve_context(@build_context, network: network)
                        .merge(run_context)
 
-      # Build chat with template and filtered tools
-      chat = build_chat(full_context, allowed_tools: resolved_tools)
+      # Build chat with template, filtered tools, and semantic cache
+      chat = build_chat(full_context, allowed_tools: resolved_tools, memory: run_memory)
 
       # Execute and return result
       response = chat.complete
@@ -256,10 +258,13 @@ module RobotLab
       end
     end
 
-    def build_chat(context, allowed_tools:)
+    def build_chat(context, allowed_tools:, memory:)
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
       chat = RubyLLM.chat(model: model_id)
+
+      # Wrap with semantic cache for automatic caching (if enabled)
+      chat = memory.cache.wrap(chat) if memory.cache
 
       # Apply template and/or system_prompt
       # - Template only: use with_template

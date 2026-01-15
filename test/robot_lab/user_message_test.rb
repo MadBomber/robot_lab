@@ -95,10 +95,10 @@ class RobotLab::UserMessageTest < Minitest::Test
     assert message.created_at.is_a?(Time)
   end
 
-  def test_user_message_with_thread_id
-    message = RobotLab::UserMessage.new("Test", thread_id: "thread_123")
+  def test_user_message_with_session_id
+    message = RobotLab::UserMessage.new("Test", session_id: "thread_123")
 
-    assert_equal "thread_123", message.thread_id
+    assert_equal "thread_123", message.session_id
   end
 
   def test_user_message_with_system_prompt
@@ -131,7 +131,7 @@ class RobotLab::UserMessageTest < Minitest::Test
     message = RobotLab::UserMessage.new("Test")
     hash = message.to_h
 
-    refute hash.key?(:thread_id)
+    refute hash.key?(:session_id)
     refute hash.key?(:system_prompt)
   end
 
@@ -144,7 +144,7 @@ class RobotLab::UserMessageTest < Minitest::Test
   def test_user_message_from_hash_with_all_fields
     hash = {
       content: "Test",
-      thread_id: "thread_1",
+      session_id: "thread_1",
       system_prompt: "Be helpful",
       metadata: { key: "value" },
       id: "msg_123"
@@ -152,7 +152,7 @@ class RobotLab::UserMessageTest < Minitest::Test
     message = RobotLab::UserMessage.from(hash)
 
     assert_equal "Test", message.content
-    assert_equal "thread_1", message.thread_id
+    assert_equal "thread_1", message.session_id
     assert_equal "Be helpful", message.system_prompt
     assert_equal({ key: "value" }, message.metadata)
     assert_equal "msg_123", message.id

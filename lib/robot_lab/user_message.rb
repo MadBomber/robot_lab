@@ -14,7 +14,7 @@ module RobotLab
   # @example With metadata
   #   message = UserMessage.new(
   #     "What is the weather?",
-  #     thread_id: "thread_123",
+  #     session_id: "thread_123",
   #     system_prompt: "Respond in Spanish",
   #     metadata: { user_id: "user_456" }
   #   )
@@ -22,7 +22,7 @@ module RobotLab
   class UserMessage
     # @!attribute [r] content
     #   @return [String] the message content
-    # @!attribute [r] thread_id
+    # @!attribute [r] session_id
     #   @return [String, nil] the conversation thread identifier
     # @!attribute [r] system_prompt
     #   @return [String, nil] additional system prompt to inject
@@ -32,18 +32,18 @@ module RobotLab
     #   @return [String] unique message identifier
     # @!attribute [r] created_at
     #   @return [Time] when the message was created
-    attr_reader :content, :thread_id, :system_prompt, :metadata, :id, :created_at
+    attr_reader :content, :session_id, :system_prompt, :metadata, :id, :created_at
 
     # Creates a new UserMessage instance.
     #
     # @param content [String] the message content
-    # @param thread_id [String, nil] conversation thread identifier
+    # @param session_id [String, nil] conversation thread identifier
     # @param system_prompt [String, nil] additional system prompt
     # @param metadata [Hash, nil] additional metadata
     # @param id [String, nil] unique identifier (defaults to UUID)
-    def initialize(content, thread_id: nil, system_prompt: nil, metadata: nil, id: nil)
+    def initialize(content, session_id: nil, system_prompt: nil, metadata: nil, id: nil)
       @content = content.to_s
-      @thread_id = thread_id
+      @session_id = session_id
       @system_prompt = system_prompt
       @metadata = metadata || {}
       @id = id || SecureRandom.uuid
@@ -72,7 +72,7 @@ module RobotLab
     def to_h
       {
         content: content,
-        thread_id: thread_id,
+        session_id: session_id,
         system_prompt: system_prompt,
         metadata: metadata,
         id: id,
@@ -103,7 +103,7 @@ module RobotLab
         input = input.transform_keys(&:to_sym)
         new(
           input[:content],
-          thread_id: input[:thread_id],
+          session_id: input[:session_id],
           system_prompt: input[:system_prompt],
           metadata: input[:metadata],
           id: input[:id]

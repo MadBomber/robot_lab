@@ -236,6 +236,137 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal @robot1, network["robot1"]
   end
 
+  # Add and remove robots
+  def test_add_robot
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+
+    network.add_robot(@robot2)
+
+    assert_equal 2, network.robots.size
+    assert_equal @robot2, network.robot("robot2")
+  end
+
+  def test_add_robot_returns_self
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+
+    result = network.add_robot(@robot2)
+
+    assert_equal network, result
+  end
+
+  def test_add_robot_raises_if_name_exists
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+    duplicate = build_robot(name: "robot1", description: "Duplicate")
+
+    error = assert_raises(ArgumentError) do
+      network.add_robot(duplicate)
+    end
+
+    assert_match(/robot1/, error.message)
+    assert_match(/already exists/, error.message)
+  end
+
+  def test_replace_robot
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+    replacement = build_robot(name: "robot1", description: "Replacement")
+
+    old_robot = network.replace_robot(replacement)
+
+    assert_equal @robot1, old_robot
+    assert_equal 1, network.robots.size
+    assert_equal "Replacement", network.robot("robot1").description
+  end
+
+  def test_replace_robot_raises_if_not_exists
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+    new_robot = build_robot(name: "unknown", description: "New")
+
+    error = assert_raises(ArgumentError) do
+      network.replace_robot(new_robot)
+    end
+
+    assert_match(/unknown/, error.message)
+    assert_match(/does not exist/, error.message)
+  end
+
+  def test_remove_robot_by_string
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1, @robot2]
+    )
+
+    removed = network.remove_robot("robot1")
+
+    assert_equal @robot1, removed
+    assert_equal 1, network.robots.size
+    assert_nil network.robot("robot1")
+  end
+
+  def test_remove_robot_by_symbol
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1, @robot2]
+    )
+
+    removed = network.remove_robot(:robot1)
+
+    assert_equal @robot1, removed
+    assert_nil network.robot("robot1")
+  end
+
+  def test_remove_robot_by_instance
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1, @robot2]
+    )
+
+    removed = network.remove_robot(@robot1)
+
+    assert_equal @robot1, removed
+    assert_equal 1, network.robots.size
+    assert_nil network.robot("robot1")
+  end
+
+  def test_remove_robot_returns_nil_for_unknown
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+
+    removed = network.remove_robot("unknown")
+
+    assert_nil removed
+    assert_equal 1, network.robots.size
+  end
+
+  def test_remove_robot_raises_for_invalid_type
+    network = RobotLab::Network.new(
+      name: "test",
+      robots: [@robot1]
+    )
+
+    error = assert_raises(ArgumentError) do
+      network.remove_robot(123)
+    end
+
+    assert_match(/Expected String, Symbol, or Robot/, error.message)
+  end
+
   # Serialization
   def test_to_h_exports_network_config
     network = RobotLab::Network.new(

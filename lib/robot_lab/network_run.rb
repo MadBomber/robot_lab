@@ -243,24 +243,24 @@ module RobotLab
       return unless @network.history
 
       # Create thread if needed
-      if @network.history.create_thread && !@memory.thread_id
+      if @network.history.create_thread && !@memory.session_id
         result = @network.history.create_thread.call(
           state: @memory,
           context: @run_context,
           network: self
         )
-        @memory.thread_id = result[:thread_id] if result
+        @memory.session_id = result[:session_id] if result
       end
 
       # Load existing history
-      load_from_history if @memory.thread_id && @network.history.get
+      load_from_history if @memory.session_id && @network.history.get
     end
 
     def load_from_history
       return unless @network.history&.get
 
       existing_results = @network.history.get.call(
-        thread_id: @memory.thread_id,
+        session_id: @memory.session_id,
         state: @memory,
         network: self,
         context: @run_context
@@ -276,7 +276,7 @@ module RobotLab
       return if new_results.empty?
 
       @network.history.append_results.call(
-        thread_id: @memory.thread_id,
+        session_id: @memory.session_id,
         state: @memory,
         network: self,
         context: @run_context,

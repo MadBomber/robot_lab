@@ -92,6 +92,7 @@ module RobotLab
     # @param template [Symbol, nil] the ERB template for the robot's prompt
     # @param system_prompt [String, nil] inline system prompt (can be used alone or with template)
     # @param context [Hash] variables to pass to the template
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     # @param options [Hash] additional options passed to Robot.new
     # @return [Robot] a new Robot instance
     # @raise [ArgumentError] if neither template nor system_prompt is provided
@@ -115,12 +116,20 @@ module RobotLab
     #     template: :support_agent,
     #     system_prompt: "Today's date is #{Date.today}."
     #   )
-    def build(name:, template: nil, system_prompt: nil, context: {}, **options)
+    #
+    # @example Robot with caching disabled
+    #   robot = RobotLab.build(
+    #     name: "simple",
+    #     system_prompt: "You are helpful.",
+    #     enable_cache: false
+    #   )
+    def build(name:, template: nil, system_prompt: nil, context: {}, enable_cache: true, **options)
       Robot.new(
         name: name,
         template: template,
         system_prompt: system_prompt,
         context: context,
+        enable_cache: enable_cache,
         **options
       )
     end
@@ -129,22 +138,31 @@ module RobotLab
     #
     # @param name [String] the unique identifier for the network
     # @param robots [Array<Robot, Hash>] the robots to include in the network
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     # @param options [Hash] additional options passed to Network.new
     # @return [Network] a new Network instance
     #
-    # @example
+    # @example Basic network
     #   network = RobotLab.create_network(
     #     name: "pipeline",
     #     robots: [analyzer, writer, reviewer],
     #     default_model: "claude-sonnet-4-20250514"
     #   )
-    def create_network(name:, robots:, **options)
-      Network.new(name: name, robots: robots, **options)
+    #
+    # @example Network with caching disabled
+    #   network = RobotLab.create_network(
+    #     name: "pipeline",
+    #     robots: [robot1, robot2],
+    #     enable_cache: false
+    #   )
+    def create_network(name:, robots:, enable_cache: true, **options)
+      Network.new(name: name, robots: robots, enable_cache: enable_cache, **options)
     end
 
     # Factory method to create a new Memory object.
     #
     # @param data [Hash] initial runtime data
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     # @param options [Hash] additional options passed to Memory.new
     # @return [Memory] a new Memory instance
     #
@@ -154,8 +172,11 @@ module RobotLab
     # @example Memory with custom values
     #   memory = RobotLab.create_memory(data: { category: nil })
     #   memory[:session_id] = "abc123"
-    def create_memory(data: {}, **options)
-      Memory.new(data: data, **options)
+    #
+    # @example Memory with caching disabled
+    #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
+    def create_memory(data: {}, enable_cache: true, **options)
+      Memory.new(data: data, enable_cache: enable_cache, **options)
     end
   end
 end

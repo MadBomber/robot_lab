@@ -46,7 +46,7 @@ class RobotLab::MemoryTest < Minitest::Test
     assert @memory.key?(:data)
     assert @memory.key?(:results)
     assert @memory.key?(:messages)
-    assert @memory.key?(:thread_id)
+    assert @memory.key?(:session_id)
     assert @memory.key?(:cache)
   end
 
@@ -72,17 +72,39 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal [], @memory.messages
   end
 
-  def test_thread_id_nil_by_default
-    assert_nil @memory.thread_id
+  def test_session_id_nil_by_default
+    assert_nil @memory.session_id
   end
 
-  def test_thread_id_setter
-    @memory.thread_id = "thread-123"
-    assert_equal "thread-123", @memory.thread_id
+  def test_session_id_setter
+    @memory.session_id = "thread-123"
+    assert_equal "thread-123", @memory.session_id
   end
 
-  def test_cache_nil_by_default
-    assert_nil @memory.cache
+  def test_cache_is_semantic_cache_module
+    assert_equal RubyLLM::SemanticCache, @memory.cache
+  end
+
+  def test_cache_nil_when_disabled
+    memory = RobotLab::Memory.new(enable_cache: false)
+    assert_nil memory.cache
+  end
+
+  def test_cache_enabled_by_default
+    memory = RobotLab::Memory.new
+    assert_equal RubyLLM::SemanticCache, memory.cache
+  end
+
+  def test_clone_preserves_enable_cache_true
+    memory = RobotLab::Memory.new(enable_cache: true)
+    cloned = memory.clone
+    assert_equal RubyLLM::SemanticCache, cloned.cache
+  end
+
+  def test_clone_preserves_enable_cache_false
+    memory = RobotLab::Memory.new(enable_cache: false)
+    cloned = memory.clone
+    assert_nil cloned.cache
   end
 
   # Keys management
@@ -161,7 +183,7 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal [], @memory.keys
     assert_equal({}, @memory.data.to_h)
     assert_equal [], @memory.results
-    assert_nil @memory.thread_id
+    assert_nil @memory.session_id
   end
 
   # Results management
@@ -238,14 +260,14 @@ class RobotLab::MemoryTest < Minitest::Test
   def test_from_hash
     hash = {
       data: { category: "billing" },
-      thread_id: "thread-123",
+      session_id: "thread-123",
       custom: { user_id: 456 }
     }
 
     memory = RobotLab::Memory.from_hash(hash)
 
     assert_equal "billing", memory.data[:category]
-    assert_equal "thread-123", memory.thread_id
+    assert_equal "thread-123", memory.session_id
     assert_equal 456, memory[:user_id]
   end
 
@@ -255,9 +277,9 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal "billing", memory.data[:category]
   end
 
-  def test_initialize_with_thread_id
-    memory = RobotLab::Memory.new(thread_id: "thread-123")
-    assert_equal "thread-123", memory.thread_id
+  def test_initialize_with_session_id
+    memory = RobotLab::Memory.new(session_id: "thread-123")
+    assert_equal "thread-123", memory.session_id
   end
 
   def test_initialize_with_messages

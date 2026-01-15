@@ -7,10 +7,10 @@
 class RobotLabResult < ApplicationRecord
   belongs_to :thread,
              class_name: "RobotLabThread",
-             foreign_key: :thread_id,
-             primary_key: :thread_id
+             foreign_key: :session_id,
+             primary_key: :session_id
 
-  validates :thread_id, presence: true
+  validates :session_id, presence: true
   validates :robot_name, presence: true
   validates :sequence_number, presence: true,
                               numericality: { only_integer: true, greater_than_or_equal_to: 0 }

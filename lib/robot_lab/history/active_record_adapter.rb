@@ -44,34 +44,34 @@ module RobotLab
         input_metadata = input.is_a?(UserMessage) ? input.metadata : {}
 
         thread = @thread_model.create!(
-          thread_id: SecureRandom.uuid,
+          session_id: SecureRandom.uuid,
           initial_input: input_content,
           input_metadata: input_metadata,
           state_data: state.data.to_h
         )
 
-        { thread_id: thread.thread_id, created_at: thread.created_at }
+        { session_id: thread.session_id, created_at: thread.created_at }
       end
 
       # Retrieve results for a thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @return [Array<RobotResult>] History of results
       #
-      def get(thread_id:, **)
+      def get(session_id:, **)
         @result_model
-          .where(thread_id: thread_id)
+          .where(session_id: session_id)
           .order(:sequence_number, :created_at)
           .map { |record| deserialize_result(record) }
       end
 
       # Append user message to thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param message [UserMessage] Message to append
       #
-      def append_user_message(thread_id:, message:, **)
-        @thread_model.where(thread_id: thread_id).update_all(
+      def append_user_message(session_id:, message:, **)
+        @thread_model.where(session_id: session_id).update_all(
           last_user_message: message.content,
           last_user_message_at: Time.current
         )
@@ -79,15 +79,15 @@ module RobotLab
 
       # Append results to thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param new_results [Array<RobotResult>] Results to append
       #
-      def append_results(thread_id:, new_results:, **)
-        base_sequence = @result_model.where(thread_id: thread_id).maximum(:sequence_number) || 0
+      def append_results(session_id:, new_results:, **)
+        base_sequence = @result_model.where(session_id: session_id).maximum(:sequence_number) || 0
 
         new_results.each_with_index do |result, index|
           @result_model.create!(
-            thread_id: thread_id,
+            session_id: session_id,
             robot_name: result.robot_name,
             sequence_number: base_sequence + index + 1,
             output_data: serialize_messages(result.output),
@@ -98,7 +98,7 @@ module RobotLab
         end
 
         # Update thread timestamp
-        @thread_model.where(thread_id: thread_id).update_all(
+        @thread_model.where(session_id: session_id).update_all(
           updated_at: Time.current
         )
       end

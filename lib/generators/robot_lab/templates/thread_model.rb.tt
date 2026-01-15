@@ -7,19 +7,19 @@
 class RobotLabThread < ApplicationRecord
   has_many :results,
            class_name: "RobotLabResult",
-           foreign_key: :thread_id,
-           primary_key: :thread_id,
+           foreign_key: :session_id,
+           primary_key: :session_id,
            dependent: :destroy
 
-  validates :thread_id, presence: true, uniqueness: true
+  validates :session_id, presence: true, uniqueness: true
 
   # Find or create a thread by ID
   #
   # @param id [String] Thread ID
   # @return [RobotLabThread]
   #
-  def self.find_or_create_by_thread_id(id)
-    find_or_create_by(thread_id: id)
+  def self.find_or_create_by_session_id(id)
+    find_or_create_by(session_id: id)
   end
 
   # Get the last result for this thread

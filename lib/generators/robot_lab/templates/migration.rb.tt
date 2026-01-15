@@ -3,7 +3,7 @@
 class CreateRobotLabTables < ActiveRecord::Migration[7.0]
   def change
     create_table :robot_lab_threads do |t|
-      t.string :thread_id, null: false, index: { unique: true }
+      t.string :session_id, null: false, index: { unique: true }
       t.text :initial_input
       t.json :input_metadata, default: {}
       t.json :state_data, default: {}
@@ -14,7 +14,7 @@ class CreateRobotLabTables < ActiveRecord::Migration[7.0]
     end
 
     create_table :robot_lab_results do |t|
-      t.string :thread_id, null: false, index: true
+      t.string :session_id, null: false, index: true
       t.string :robot_name, null: false
       t.integer :sequence_number, null: false, default: 0
       t.json :output_data, default: []
@@ -25,8 +25,8 @@ class CreateRobotLabTables < ActiveRecord::Migration[7.0]
       t.timestamps
     end
 
-    add_index :robot_lab_results, [:thread_id, :sequence_number]
+    add_index :robot_lab_results, [:session_id, :sequence_number]
     add_foreign_key :robot_lab_results, :robot_lab_threads,
-                    column: :thread_id, primary_key: :thread_id
+                    column: :session_id, primary_key: :session_id
   end
 end

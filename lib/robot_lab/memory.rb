@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ruby_llm/semantic_cache"
+
 module RobotLab
   # Unified memory system for Robot and Network execution
   #
@@ -8,11 +10,11 @@ module RobotLab
   # history, and arbitrary user-defined values.
   #
   # Reserved keys with special accessors:
-  # - :data      - runtime data (StateProxy for method-style access)
-  # - :results   - accumulated robot results
-  # - :messages  - conversation history
-  # - :thread_id - conversation thread identifier
-  # - :cache     - semantic cache instance (when ruby_llm-semantic_cache is available)
+  # - :data       - runtime data (StateProxy for method-style access)
+  # - :results    - accumulated robot results
+  # - :messages   - conversation history
+  # - :session_id - conversation session identifier for history persistence
+  # - :cache      - semantic cache instance (RubyLLM::SemanticCache)
   #
   # @example Basic usage
   #   memory = Memory.new
@@ -23,37 +25,40 @@ module RobotLab
   #   memory.data[:category] = "billing"
   #   memory.data.category  # => "billing"
   #   memory.results  # => []
+  #   memory.cache  # => RubyLLM::SemanticCache instance
   #
   # @example Runtime injection
-  #   memory.merge!(magic_word: "xyzzy", session_id: "abc123")
+  #   memory.merge!(magic_word: "xyzzy", user_session: "abc123")
   #
   class Memory
     # Reserved keys that have special behavior
-    RESERVED_KEYS = %i[data results messages thread_id cache].freeze
+    RESERVED_KEYS = %i[data results messages session_id cache].freeze
 
     # Creates a new Memory instance.
     #
     # @param data [Hash] initial runtime data
     # @param results [Array<RobotResult>] pre-loaded robot results
     # @param messages [Array<Message, Hash>] pre-loaded conversation messages
-    # @param thread_id [String, nil] conversation thread identifier
+    # @param session_id [String, nil] conversation session identifier
     # @param backend [Symbol] storage backend (:auto, :redis, :hash)
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     #
-    # @example Basic memory
+    # @example Basic memory with caching enabled
     #   Memory.new(data: { category: nil, resolved: false })
     #
-    # @example Memory with pre-loaded history
-    #   Memory.new(messages: [{ role: "user", content: "Hello" }])
-    def initialize(data: {}, results: [], messages: [], thread_id: nil, backend: :auto)
+    # @example Memory with caching disabled
+    #   Memory.new(enable_cache: false)
+    def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true)
       @backend = select_backend(backend)
       @mutex = Mutex.new
+      @enable_cache = enable_cache
 
       # Initialize reserved keys
       set_internal(:data, data.is_a?(Hash) ? data.transform_keys(&:to_sym) : data)
       set_internal(:results, Array(results))
       set_internal(:messages, Array(messages).map { |m| normalize_message(m) })
-      set_internal(:thread_id, thread_id)
-      set_internal(:cache, nil)
+      set_internal(:session_id, session_id)
+      set_internal(:cache, @enable_cache ? RubyLLM::SemanticCache : nil)
 
       # Data proxy for method-style access
       @data_proxy = nil
@@ -89,10 +94,11 @@ module RobotLab
         set_internal(:results, Array(value))
       when :messages
         set_internal(:messages, Array(value).map { |m| normalize_message(m) })
-      when :thread_id
-        set_internal(:thread_id, value)
+      when :session_id
+        set_internal(:session_id, value)
       when :cache
-        set_internal(:cache, value)
+        # Cache is read-only after initialization
+        raise ArgumentError, "Cannot reassign cache - it is initialized automatically"
       else
         set_internal(key, value)
       end
@@ -124,27 +130,40 @@ module RobotLab
       (get_internal(:messages) || []).dup
     end
 
-    # Get thread identifier
+    # Get session identifier
     #
     # @return [String, nil]
     #
-    def thread_id
-      get_internal(:thread_id)
+    def session_id
+      get_internal(:session_id)
     end
 
-    # Set thread identifier
+    # Set session identifier
     #
     # @param id [String, nil]
     # @return [self]
     #
-    def thread_id=(id)
-      set_internal(:thread_id, id)
+    def session_id=(id)
+      set_internal(:session_id, id)
       self
     end
 
-    # Get semantic cache instance
+    # Get the semantic cache module
     #
-    # @return [Object, nil] semantic cache or nil if not configured
+    # The cache is always active and provides semantic similarity matching
+    # for LLM responses, reducing costs and latency by returning cached
+    # responses for semantically equivalent queries.
+    #
+    # @example Using the cache with fetch
+    #   response = memory.cache.fetch("What is Ruby?") do
+    #     RubyLLM.chat.ask("What is Ruby?")
+    #   end
+    #
+    # @example Wrapping a chat instance
+    #   chat = memory.cache.wrap(RubyLLM.chat(model: "gpt-4"))
+    #   chat.ask("What is Ruby?")  # Cached on semantic similarity
+    #
+    # @return [RubyLLM::SemanticCache] the semantic cache module
     #
     def cache
       get_internal(:cache)
@@ -260,13 +279,14 @@ module RobotLab
     # @return [self]
     #
     def reset
+      cached = get_internal(:cache)  # Preserve cache instance
       @mutex.synchronize do
         @backend.clear
         @backend[:data] = {}
         @backend[:results] = []
         @backend[:messages] = []
-        @backend[:thread_id] = nil
-        # Preserve cache configuration
+        @backend[:session_id] = nil
+        @backend[:cache] = cached  # Restore cache instance
       end
       @data_proxy = nil
       self
@@ -286,26 +306,28 @@ module RobotLab
 
     # Clone memory for isolated execution
     #
-    # @param share_cache [Boolean] whether to share the cache instance
+    # The semantic cache setting is preserved in clones.
+    #
     # @return [Memory]
     #
-    def clone(share_cache: true)
-      Memory.new(
+    def clone
+      cloned = Memory.new(
         data: deep_dup(data.to_h),
         results: results.dup,
         messages: messages.dup,
-        thread_id: thread_id,
-        backend: @backend.is_a?(Hash) ? :hash : :auto
-      ).tap do |mem|
-        # Copy non-reserved keys
-        keys.each { |k| mem[k] = deep_dup(self[k]) }
-        # Optionally share cache
-        mem[:cache] = cache if share_cache && cache
-      end
+        session_id: session_id,
+        backend: @backend.is_a?(Hash) ? :hash : :auto,
+        enable_cache: @enable_cache
+      )
+      # Copy non-reserved keys
+      keys.each { |k| cloned[k] = deep_dup(self[k]) }
+      cloned
     end
     alias dup clone
 
     # Export memory to hash for serialization
+    #
+    # Note: The cache is not serialized as it is recreated on initialization.
     #
     # @return [Hash]
     #
@@ -314,7 +336,7 @@ module RobotLab
         data: data.to_h,
         results: results.map(&:export),
         messages: messages.map(&:to_h),
-        thread_id: thread_id,
+        session_id: session_id,
         custom: keys.each_with_object({}) { |k, h| h[k] = self[k] }
       }.compact
     end
@@ -330,6 +352,8 @@ module RobotLab
 
     # Reconstruct memory from hash
     #
+    # A new semantic cache instance is created automatically.
+    #
     # @param hash [Hash]
     # @return [Memory]
     #
@@ -339,7 +363,7 @@ module RobotLab
         data: hash[:data] || {},
         results: (hash[:results] || []).map { |r| RobotResult.from_hash(r) },
         messages: (hash[:messages] || []).map { |m| Message.from_hash(m) },
-        thread_id: hash[:thread_id]
+        session_id: hash[:session_id]
       )
 
       # Restore custom keys
@@ -357,6 +381,10 @@ module RobotLab
     end
 
     private
+
+    def create_semantic_cache
+      RubyLLM::SemanticCache
+    end
 
     def select_backend(preference)
       case preference

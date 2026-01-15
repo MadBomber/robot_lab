@@ -63,6 +63,7 @@ module RobotLab
     # @param history [Object, nil] history adapter for persistence
     # @param mcp [Symbol, Array] hierarchical MCP config (:none, :inherit, or server array)
     # @param tools [Symbol, Array] hierarchical tools config (:none, :inherit, or tool names)
+    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     #
     # @example Network with router logic
     #   Network.new(
@@ -79,11 +80,12 @@ module RobotLab
       max_iter: nil,
       history: nil,
       mcp: :none,
-      tools: :none
+      tools: :none,
+      enable_cache: true
     )
       @name = name.to_s
       @robots = normalize_robots(robots)
-      @memory = memory || Memory.new
+      @memory = memory || Memory.new(enable_cache: enable_cache)
       @default_model = default_model || RobotLab.configuration.default_model
       @router = router
       @max_iter = max_iter || RobotLab.configuration.max_iterations
@@ -163,6 +165,69 @@ module RobotLab
     #   @param name [String, Symbol] the robot name
     #   @return [Robot, nil]
     alias [] robot
+
+    # Add a robot to the network
+    #
+    # @param robot [Robot] the robot instance to add
+    # @return [self]
+    # @raise [ArgumentError] if a robot with the same name already exists
+    #
+    # @example
+    #   network.add_robot(new_robot)
+    #
+    def add_robot(robot)
+      if @robots.key?(robot.name)
+        raise ArgumentError, "Robot '#{robot.name}' already exists in network '#{@name}'"
+      end
+
+      @robots[robot.name] = robot
+      self
+    end
+
+    # Replace an existing robot in the network
+    #
+    # @param robot [Robot] the robot instance to replace with
+    # @return [Robot] the old robot that was replaced
+    # @raise [ArgumentError] if no robot with that name exists
+    #
+    # @example
+    #   old_robot = network.replace_robot(updated_billing)
+    #
+    def replace_robot(robot)
+      unless @robots.key?(robot.name)
+        raise ArgumentError, "Robot '#{robot.name}' does not exist in network '#{@name}'"
+      end
+
+      old_robot = @robots[robot.name]
+      @robots[robot.name] = robot
+      old_robot
+    end
+
+    # Remove a robot from the network
+    #
+    # @param name_or_robot [String, Symbol, Robot] the robot name or instance to remove
+    # @return [Robot, nil] the removed robot, or nil if not found
+    # @raise [ArgumentError] if parameter is neither a String, Symbol, nor Robot
+    #
+    # @example Remove by name
+    #   removed = network.remove_robot("billing")
+    #   network.remove_robot(:technical)
+    #
+    # @example Remove by instance
+    #   network.remove_robot(billing_robot)
+    #
+    def remove_robot(name_or_robot)
+      name = case name_or_robot
+             when String, Symbol
+               name_or_robot.to_s
+             when Robot
+               name_or_robot.name
+             else
+               raise ArgumentError, "Expected String, Symbol, or Robot, got #{name_or_robot.class}"
+             end
+
+      @robots.delete(name)
+    end
 
     # Converts the network to a hash representation.
     #

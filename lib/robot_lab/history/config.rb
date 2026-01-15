@@ -10,13 +10,13 @@ module RobotLab
     # @example
     #   config = History::Config.new(
     #     create_thread: ->(state:, input:, **) {
-    #       { thread_id: SecureRandom.uuid }
+    #       { session_id: SecureRandom.uuid }
     #     },
-    #     get: ->(thread_id:, **) {
-    #       database.find_results(thread_id)
+    #     get: ->(session_id:, **) {
+    #       database.find_results(session_id)
     #     },
-    #     append_results: ->(thread_id:, new_results:, **) {
-    #       database.insert_results(thread_id, new_results)
+    #     append_results: ->(session_id:, new_results:, **) {
+    #       database.insert_results(session_id, new_results)
     #     }
     #   )
     #
@@ -58,15 +58,15 @@ module RobotLab
       # @param state [State] Current state
       # @param input [String, UserMessage] Initial input
       # @param kwargs [Hash] Additional arguments
-      # @return [Hash] Must include :thread_id
+      # @return [Hash] Must include :session_id
       #
       def create_thread!(state:, input:, **kwargs)
         raise HistoryError, "create_thread callback not configured" unless @create_thread
 
         result = @create_thread.call(state: state, input: input, **kwargs)
 
-        unless result.is_a?(Hash) && result[:thread_id]
-          raise HistoryError, "create_thread must return a hash with :thread_id"
+        unless result.is_a?(Hash) && result[:session_id]
+          raise HistoryError, "create_thread must return a hash with :session_id"
         end
 
         result
@@ -74,38 +74,38 @@ module RobotLab
 
       # Retrieve history for a thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param kwargs [Hash] Additional arguments
       # @return [Array<RobotResult>] History of results
       #
-      def get!(thread_id:, **kwargs)
+      def get!(session_id:, **kwargs)
         raise HistoryError, "get callback not configured" unless @get
 
-        @get.call(thread_id: thread_id, **kwargs)
+        @get.call(session_id: session_id, **kwargs)
       end
 
       # Append a user message to the thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param message [UserMessage] Message to append
       # @param kwargs [Hash] Additional arguments
       #
-      def append_user_message!(thread_id:, message:, **kwargs)
+      def append_user_message!(session_id:, message:, **kwargs)
         return unless @append_user_message
 
-        @append_user_message.call(thread_id: thread_id, message: message, **kwargs)
+        @append_user_message.call(session_id: session_id, message: message, **kwargs)
       end
 
       # Append robot results to the thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param new_results [Array<RobotResult>] Results to append
       # @param kwargs [Hash] Additional arguments
       #
-      def append_results!(thread_id:, new_results:, **kwargs)
+      def append_results!(session_id:, new_results:, **kwargs)
         return unless @append_results
 
-        @append_results.call(thread_id: thread_id, new_results: new_results, **kwargs)
+        @append_results.call(session_id: session_id, new_results: new_results, **kwargs)
       end
     end
 

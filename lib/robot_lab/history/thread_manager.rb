@@ -9,8 +9,8 @@ module RobotLab
     #
     # @example
     #   manager = ThreadManager.new(config)
-    #   thread_id = manager.create_thread(state: state, input: "Hello")
-    #   history = manager.get_history(thread_id)
+    #   session_id = manager.create_thread(state: state, input: "Hello")
+    #   history = manager.get_history(session_id)
     #
     class ThreadManager
       # @!attribute [r] config
@@ -33,46 +33,46 @@ module RobotLab
       #
       def create_thread(state:, input:)
         result = @config.create_thread!(state: state, input: input)
-        result[:thread_id]
+        result[:session_id]
       end
 
       # Get history for a thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @return [Array<RobotResult>] History of results
       #
-      def get_history(thread_id)
-        @config.get!(thread_id: thread_id)
+      def get_history(session_id)
+        @config.get!(session_id: session_id)
       end
 
       # Append user message to thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param message [UserMessage] Message to append
       #
-      def append_user_message(thread_id:, message:)
-        @config.append_user_message!(thread_id: thread_id, message: message)
+      def append_user_message(session_id:, message:)
+        @config.append_user_message!(session_id: session_id, message: message)
       end
 
       # Append results to thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param results [Array<RobotResult>] Results to append
       #
-      def append_results(thread_id:, results:)
-        @config.append_results!(thread_id: thread_id, new_results: results)
+      def append_results(session_id:, results:)
+        @config.append_results!(session_id: session_id, new_results: results)
       end
 
       # Load state from thread history
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param state [State, Memory] State/Memory to populate
       # @return [State, Memory] State/Memory with loaded history
       #
-      def load_state(thread_id:, state:)
-        results = get_history(thread_id)
+      def load_state(session_id:, state:)
+        results = get_history(session_id)
 
-        state.thread_id = thread_id
+        state.session_id = session_id
         results.each { |r| state.append_result(r) }
 
         state
@@ -80,13 +80,13 @@ module RobotLab
 
       # Save state results to thread
       #
-      # @param thread_id [String] Thread identifier
+      # @param session_id [String] Thread identifier
       # @param state [State] State with results to save
       # @param since_index [Integer] Save results from this index
       #
-      def save_state(thread_id:, state:, since_index: 0)
+      def save_state(session_id:, state:, since_index: 0)
         new_results = state.results[since_index..]
-        append_results(thread_id: thread_id, results: new_results) if new_results.any?
+        append_results(session_id: session_id, results: new_results) if new_results.any?
       end
     end
   end
