@@ -11,8 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Needs Refactoring
+
+- **Network concept is unhinged and needs complete refactoring.** The current implementation has several design issues:
+  - Robots have separate memory when standalone vs in a network, causing confusion about what `robot.reset_memory` affects
+  - Sequential execution only - no concurrent robot support despite infrastructure hints
+  - Memory thread-safety is implemented but untested in practice
+  - Unclear ownership model - robots don't know they're in a network
+  - The relationship between Robot, Network, NetworkRun, and Memory needs simplification
+
 ### Added
 
+- `Network#add_robot(robot)` - adds a robot, raises if name already exists
+- `Network#replace_robot(robot)` - replaces existing robot, raises if not found
+- `Network#remove_robot(name_or_robot)` - removes by name (String/Symbol) or Robot instance
+- `Memory#enable_cache` parameter - allows disabling semantic caching
+- `RobotLab.build`, `RobotLab.create_network`, `RobotLab.create_memory` now accept `enable_cache:` parameter
+- Documentation for memory behavior (standalone vs network contexts)
+- Documentation explaining what a Network is and when to use one
 - Full MkDocs documentation site with Material theme
   - Getting Started guides (installation, quick start, configuration)
   - Architecture documentation (core concepts, robot execution, network orchestration, state management, message flow)
