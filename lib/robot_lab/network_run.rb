@@ -6,8 +6,8 @@ module RobotLab
   # Stateful execution of a network
   #
   # NetworkRun represents a single execution of a Network with its own
-  # isolated state. It manages the robot execution loop, routing decisions,
-  # and state updates.
+  # isolated memory. It manages the robot execution loop, routing decisions,
+  # and memory updates.
   #
   # Uses SimpleFlow for potential parallel robot execution.
   #
@@ -18,21 +18,21 @@ module RobotLab
 
     # @!attribute [r] network
     #   @return [Network] the network being executed
-    # @!attribute [r] state
-    #   @return [State] the execution state
+    # @!attribute [r] memory
+    #   @return [Memory] the execution memory
     # @!attribute [r] run_id
     #   @return [String] unique identifier for this run
     # @!attribute [r] execution_state
     #   @return [Symbol] current execution state
-    attr_reader :network, :state, :run_id, :execution_state
+    attr_reader :network, :memory, :run_id, :execution_state
 
     # Creates a new NetworkRun instance.
     #
     # @param network [Network] the network to execute
-    # @param state [State] the initial state
-    def initialize(network, state)
+    # @param memory [Memory] the initial memory
+    def initialize(network, memory)
       @network = network
-      @state = state
+      @memory = memory
       @run_id = SecureRandom.uuid
       @stack = []
       @counter = 0
@@ -72,7 +72,7 @@ module RobotLab
       begin
         # Initialize thread and load history
         initialize_thread
-        @initial_result_count = @state.results.size
+        @initial_result_count = @memory.results.size
 
         # Publish run started event
         @streaming_context&.publish_event(
@@ -114,12 +114,11 @@ module RobotLab
           # Run the robot with context
           result = robot.run(
             network: self,
-            state: @state,
             **@run_context
           )
 
           # Store result
-          @state.append_result(result)
+          @memory.append_result(result)
           @counter += 1
 
           @execution_state = :robot_complete
@@ -158,7 +157,7 @@ module RobotLab
     # @return [Array<RobotResult>]
     #
     def results
-      @state.results
+      @memory.results
     end
 
     # Get new results (since initial load)
@@ -166,7 +165,7 @@ module RobotLab
     # @return [Array<RobotResult>]
     #
     def new_results
-      @state.results_from(@initial_result_count)
+      @memory.results_from(@initial_result_count)
     end
 
     # Get the last result
@@ -174,7 +173,7 @@ module RobotLab
     # @return [RobotResult, nil]
     #
     def last_result
-      @state.results.last
+      @memory.results.last
     end
 
     # Build execution pipeline using SimpleFlow
@@ -188,7 +187,6 @@ module RobotLab
             # Execute robot and return result
             robot_result = robot.run(
               network: result.context[:network],
-              state: result.context[:state],
               **result.context[:run_context]
             )
             result.with_context(:last_result, robot_result).continue(robot_result)
@@ -245,41 +243,41 @@ module RobotLab
       return unless @network.history
 
       # Create thread if needed
-      if @network.history.create_thread && !@state.thread_id
+      if @network.history.create_thread && !@memory.thread_id
         result = @network.history.create_thread.call(
-          state: @state,
+          state: @memory,
           context: @run_context,
           network: self
         )
-        @state.thread_id = result[:thread_id] if result
+        @memory.thread_id = result[:thread_id] if result
       end
 
       # Load existing history
-      load_from_history if @state.thread_id && @network.history.get
+      load_from_history if @memory.thread_id && @network.history.get
     end
 
     def load_from_history
       return unless @network.history&.get
 
       existing_results = @network.history.get.call(
-        thread_id: @state.thread_id,
-        state: @state,
+        thread_id: @memory.thread_id,
+        state: @memory,
         network: self,
         context: @run_context
       )
 
-      @state.set_results(existing_results) if existing_results&.any?
+      @memory.set_results(existing_results) if existing_results&.any?
     end
 
     def save_to_history
       return unless @network.history&.append_results
 
-      new_results = @state.results_from(@initial_result_count)
+      new_results = @memory.results_from(@initial_result_count)
       return if new_results.empty?
 
       @network.history.append_results.call(
-        thread_id: @state.thread_id,
-        state: @state,
+        thread_id: @memory.thread_id,
+        state: @memory,
         network: self,
         context: @run_context,
         new_results: new_results

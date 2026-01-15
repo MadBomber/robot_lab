@@ -65,16 +65,16 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal({}, network.robots)
   end
 
-  def test_initialization_with_custom_state
-    state = RobotLab::State.new(data: { key: "value" })
+  def test_initialization_with_custom_memory
+    memory = RobotLab::Memory.new(data: { key: "value" })
     network = RobotLab::Network.new(
       name: "test",
       robots: [@robot1],
-      state: state
+      memory: memory
     )
 
-    cloned_state = network.state
-    assert_equal "value", cloned_state.data[:key]
+    cloned_memory = network.memory
+    assert_equal "value", cloned_memory.data[:key]
   end
 
   def test_initialization_with_custom_model
@@ -172,17 +172,17 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal %w[search refund], network.tools
   end
 
-  # State access
-  def test_state_returns_clone
-    state = RobotLab::State.new(data: { key: "value" })
+  # Memory access
+  def test_memory_returns_clone
+    memory = RobotLab::Memory.new(data: { key: "value" })
     network = RobotLab::Network.new(
       name: "test",
       robots: [@robot1],
-      state: state
+      memory: memory
     )
 
-    cloned1 = network.state
-    cloned2 = network.state
+    cloned1 = network.memory
+    cloned2 = network.memory
 
     refute_same cloned1, cloned2
   end

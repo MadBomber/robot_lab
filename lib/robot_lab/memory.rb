@@ -1,389 +1,485 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # Shared memory for robots within a network
+  # Unified memory system for Robot and Network execution
   #
-  # Memory provides a key-value store that robots can use to share
-  # information during network execution. It supports both shared
-  # memory (accessible by all robots) and namespaced memory (scoped
-  # to individual robots).
+  # Memory is a key-value store backed by Redis (if available) or an internal
+  # Hash object. It provides persistent storage for runtime data, conversation
+  # history, and arbitrary user-defined values.
+  #
+  # Reserved keys with special accessors:
+  # - :data      - runtime data (StateProxy for method-style access)
+  # - :results   - accumulated robot results
+  # - :messages  - conversation history
+  # - :thread_id - conversation thread identifier
+  # - :cache     - semantic cache instance (when ruby_llm-semantic_cache is available)
   #
   # @example Basic usage
   #   memory = Memory.new
-  #   memory.remember(:user_name, "Alice")
-  #   memory.recall(:user_name)  # => "Alice"
+  #   memory[:user_id] = 123
+  #   memory[:user_id]  # => 123
   #
-  # @example Namespaced memory
-  #   memory.remember(:finding, "User prefers email", namespace: "classifier")
-  #   memory.recall(:finding, namespace: "classifier")  # => "User prefers email"
-  #   memory.recall(:finding)  # => nil (not in shared namespace)
+  # @example Using reserved keys
+  #   memory.data[:category] = "billing"
+  #   memory.data.category  # => "billing"
+  #   memory.results  # => []
   #
-  # @example Listing memories
-  #   memory.all  # => { user_name: { value: "Alice", ... } }
-  #   memory.all(namespace: "classifier")  # => { finding: { value: "...", ... } }
+  # @example Runtime injection
+  #   memory.merge!(magic_word: "xyzzy", session_id: "abc123")
   #
   class Memory
-    # The default namespace used for shared memory
-    SHARED_NAMESPACE = :shared
+    # Reserved keys that have special behavior
+    RESERVED_KEYS = %i[data results messages thread_id cache].freeze
 
-    # Creates a new Memory instance with an empty shared namespace.
+    # Creates a new Memory instance.
     #
-    # @return [Memory]
-    def initialize
-      @store = { SHARED_NAMESPACE => {} }
+    # @param data [Hash] initial runtime data
+    # @param results [Array<RobotResult>] pre-loaded robot results
+    # @param messages [Array<Message, Hash>] pre-loaded conversation messages
+    # @param thread_id [String, nil] conversation thread identifier
+    # @param backend [Symbol] storage backend (:auto, :redis, :hash)
+    #
+    # @example Basic memory
+    #   Memory.new(data: { category: nil, resolved: false })
+    #
+    # @example Memory with pre-loaded history
+    #   Memory.new(messages: [{ role: "user", content: "Hello" }])
+    def initialize(data: {}, results: [], messages: [], thread_id: nil, backend: :auto)
+      @backend = select_backend(backend)
       @mutex = Mutex.new
+
+      # Initialize reserved keys
+      set_internal(:data, data.is_a?(Hash) ? data.transform_keys(&:to_sym) : data)
+      set_internal(:results, Array(results))
+      set_internal(:messages, Array(messages).map { |m| normalize_message(m) })
+      set_internal(:thread_id, thread_id)
+      set_internal(:cache, nil)
+
+      # Data proxy for method-style access
+      @data_proxy = nil
     end
 
-    # Store a value in memory
+    # Get value by key
     #
-    # @param key [Symbol, String] Memory key
-    # @param value [Object] Value to store
-    # @param namespace [Symbol, String, nil] Optional namespace (defaults to shared)
-    # @param metadata [Hash] Additional metadata to store with the value
-    # @return [Object] The stored value
+    # @param key [Symbol, String] the key to retrieve
+    # @return [Object] the stored value
     #
-    def remember(key, value, namespace: nil, **metadata)
-      ns = normalize_namespace(namespace)
+    def [](key)
+      key = key.to_sym
+      return send(key) if RESERVED_KEYS.include?(key) && key != :cache
+
+      get_internal(key)
+    end
+
+    # Set value by key
+    #
+    # @param key [Symbol, String] the key to set
+    # @param value [Object] the value to store
+    # @return [Object] the stored value
+    #
+    def []=(key, value)
       key = key.to_sym
 
-      @mutex.synchronize do
-        @store[ns] ||= {}
-        @store[ns][key] = {
-          value: value,
-          stored_at: Time.now,
-          updated_at: Time.now,
-          access_count: 0,
-          **metadata
-        }
+      # Reserved keys have special handling
+      case key
+      when :data
+        @data_proxy = nil  # Reset proxy
+        set_internal(:data, value.is_a?(Hash) ? value.transform_keys(&:to_sym) : value)
+      when :results
+        set_internal(:results, Array(value))
+      when :messages
+        set_internal(:messages, Array(value).map { |m| normalize_message(m) })
+      when :thread_id
+        set_internal(:thread_id, value)
+      when :cache
+        set_internal(:cache, value)
+      else
+        set_internal(key, value)
       end
 
       value
     end
 
-    # @!method []=(key, value)
-    #   Alias for {#remember}.
-    #   @param key [Symbol, String] Memory key
-    #   @param value [Object] Value to store
-    alias []= remember
-
-    # Retrieve a value from memory
+    # Access runtime data through StateProxy
     #
-    # @param key [Symbol, String] Memory key
-    # @param namespace [Symbol, String, nil] Optional namespace (defaults to shared)
-    # @param default [Object] Default value if key not found
-    # @return [Object, nil] The stored value or default
+    # @return [StateProxy] proxy for method-style data access
     #
-    def recall(key, namespace: nil, default: nil)
-      ns = normalize_namespace(namespace)
-      key = key.to_sym
-
-      @mutex.synchronize do
-        entry = @store.dig(ns, key)
-        return default unless entry
-
-        entry[:access_count] += 1
-        entry[:last_accessed_at] = Time.now
-        entry[:value]
-      end
+    def data
+      @data_proxy ||= StateProxy.new(get_internal(:data) || {})
     end
 
-    # @!method [](key, namespace: nil, default: nil)
-    #   Alias for {#recall}.
-    #   @param key [Symbol, String] Memory key
-    #   @return [Object, nil]
-    alias [] recall
-
-    # Check if a key exists in memory
+    # Get copy of results (immutable access)
     #
-    # @param key [Symbol, String] Memory key
-    # @param namespace [Symbol, String, nil] Optional namespace
+    # @return [Array<RobotResult>]
+    #
+    def results
+      (get_internal(:results) || []).dup
+    end
+
+    # Get copy of messages (immutable access)
+    #
+    # @return [Array<Message>]
+    #
+    def messages
+      (get_internal(:messages) || []).dup
+    end
+
+    # Get thread identifier
+    #
+    # @return [String, nil]
+    #
+    def thread_id
+      get_internal(:thread_id)
+    end
+
+    # Set thread identifier
+    #
+    # @param id [String, nil]
+    # @return [self]
+    #
+    def thread_id=(id)
+      set_internal(:thread_id, id)
+      self
+    end
+
+    # Get semantic cache instance
+    #
+    # @return [Object, nil] semantic cache or nil if not configured
+    #
+    def cache
+      get_internal(:cache)
+    end
+
+    # Append a robot result to history
+    #
+    # @param result [RobotResult]
+    # @return [self]
+    #
+    def append_result(result)
+      @mutex.synchronize do
+        results_array = @backend[:results] || []
+        results_array << result
+        @backend[:results] = results_array
+      end
+      self
+    end
+
+    # Set results (used when loading from persistence)
+    #
+    # @param results [Array<RobotResult>]
+    # @return [self]
+    #
+    def set_results(results)
+      set_internal(:results, Array(results))
+      self
+    end
+
+    # Get results from a specific index (for incremental save)
+    #
+    # @param start_index [Integer]
+    # @return [Array<RobotResult>]
+    #
+    def results_from(start_index)
+      (get_internal(:results) || [])[start_index..] || []
+    end
+
+    # Merge additional values into memory
+    #
+    # @param values [Hash] key-value pairs to merge
+    # @return [self]
+    #
+    def merge!(values)
+      values.each { |k, v| self[k] = v }
+      self
+    end
+
+    # Check if key exists
+    #
+    # @param key [Symbol, String]
     # @return [Boolean]
     #
-    def exists?(key, namespace: nil)
-      ns = normalize_namespace(namespace)
+    def key?(key)
       key = key.to_sym
+      return true if RESERVED_KEYS.include?(key)
 
       @mutex.synchronize do
-        @store.dig(ns, key) != nil
+        @backend.key?(key)
+      end
+    end
+    alias has_key? key?
+    alias include? key?
+
+    # Get all keys (excluding reserved keys)
+    #
+    # @return [Array<Symbol>]
+    #
+    def keys
+      @mutex.synchronize do
+        @backend.keys.map(&:to_sym) - RESERVED_KEYS
       end
     end
 
-    # @!method has?(key, namespace: nil)
-    #   Alias for {#exists?}.
-    #   @return [Boolean]
-    alias has? exists?
+    # Get all keys including reserved
+    #
+    # @return [Array<Symbol>]
+    #
+    def all_keys
+      @mutex.synchronize do
+        @backend.keys.map(&:to_sym)
+      end
+    end
 
-    # Remove a value from memory
+    # Delete a key
     #
-    # @param key [Symbol, String] Memory key
-    # @param namespace [Symbol, String, nil] Optional namespace
-    # @return [Object, nil] The removed value
+    # @param key [Symbol, String]
+    # @return [Object] the deleted value
     #
-    def forget(key, namespace: nil)
-      ns = normalize_namespace(namespace)
+    def delete(key)
       key = key.to_sym
+      raise ArgumentError, "Cannot delete reserved key: #{key}" if RESERVED_KEYS.include?(key)
 
       @mutex.synchronize do
-        entry = @store[ns]&.delete(key)
-        entry&.dig(:value)
+        @backend.delete(key)
       end
     end
 
-    # Get all memories in a namespace
-    #
-    # @param namespace [Symbol, String, nil] Optional namespace (defaults to shared)
-    # @return [Hash] All memories in the namespace
-    #
-    def all(namespace: nil)
-      ns = normalize_namespace(namespace)
-
-      @mutex.synchronize do
-        (@store[ns] || {}).dup
-      end
-    end
-
-    # Get all namespaces
-    #
-    # @return [Array<Symbol>] List of namespace names
-    #
-    def namespaces
-      @mutex.synchronize do
-        @store.keys
-      end
-    end
-
-    # Clear all memories in a namespace
-    #
-    # @param namespace [Symbol, String, nil] Namespace to clear (nil clears shared)
-    # @return [self]
-    #
-    def clear(namespace: nil)
-      ns = normalize_namespace(namespace)
-
-      @mutex.synchronize do
-        @store[ns] = {}
-      end
-
-      self
-    end
-
-    # Clear all memories in all namespaces
+    # Clear all non-reserved keys
     #
     # @return [self]
     #
-    def clear_all
+    def clear
       @mutex.synchronize do
-        @store = { SHARED_NAMESPACE => {} }
+        keys_to_delete = @backend.keys.map(&:to_sym) - RESERVED_KEYS
+        keys_to_delete.each { |k| @backend.delete(k) }
       end
-
       self
     end
 
-    # Search memories by value pattern
+    # Reset memory to initial state
     #
-    # @param pattern [Regexp, String] Pattern to match against values
-    # @param namespace [Symbol, String, nil] Optional namespace to search
-    # @return [Hash] Matching memories with their keys
+    # @return [self]
     #
-    def search(pattern, namespace: nil)
-      ns = normalize_namespace(namespace)
-      pattern = Regexp.new(pattern.to_s, Regexp::IGNORECASE) unless pattern.is_a?(Regexp)
-
+    def reset
       @mutex.synchronize do
-        (@store[ns] || {}).select do |_key, entry|
-          value = entry[:value]
-          value.to_s.match?(pattern)
-        end
+        @backend.clear
+        @backend[:data] = {}
+        @backend[:results] = []
+        @backend[:messages] = []
+        @backend[:thread_id] = nil
+        # Preserve cache configuration
       end
+      @data_proxy = nil
+      self
     end
 
-    # Get memory statistics
+    # Format history for robot prompts
     #
-    # @return [Hash] Statistics about memory usage
+    # Combines pre-loaded messages with formatted results.
     #
-    def stats
-      @mutex.synchronize do
-        total_entries = @store.values.sum { |ns| ns.size }
-        namespaces_count = @store.size
+    # @param formatter [Proc, nil] custom result formatter
+    # @return [Array<Message>]
+    #
+    def format_history(formatter: nil)
+      formatter ||= default_formatter
+      messages + results.flat_map { |r| formatter.call(r) }
+    end
 
-        {
-          total_entries: total_entries,
-          namespaces: namespaces_count,
-          shared_entries: @store[SHARED_NAMESPACE]&.size || 0,
-          by_namespace: @store.transform_values(&:size)
-        }
+    # Clone memory for isolated execution
+    #
+    # @param share_cache [Boolean] whether to share the cache instance
+    # @return [Memory]
+    #
+    def clone(share_cache: true)
+      Memory.new(
+        data: deep_dup(data.to_h),
+        results: results.dup,
+        messages: messages.dup,
+        thread_id: thread_id,
+        backend: @backend.is_a?(Hash) ? :hash : :auto
+      ).tap do |mem|
+        # Copy non-reserved keys
+        keys.each { |k| mem[k] = deep_dup(self[k]) }
+        # Optionally share cache
+        mem[:cache] = cache if share_cache && cache
       end
     end
+    alias dup clone
 
     # Export memory to hash for serialization
     #
     # @return [Hash]
     #
     def to_h
-      @mutex.synchronize do
-        @store.transform_values do |namespace_data|
-          namespace_data.transform_values do |entry|
-            {
-              value: entry[:value],
-              stored_at: entry[:stored_at]&.iso8601,
-              updated_at: entry[:updated_at]&.iso8601,
-              last_accessed_at: entry[:last_accessed_at]&.iso8601,
-              access_count: entry[:access_count]
-            }.compact
-          end
-        end
-      end
+      {
+        data: data.to_h,
+        results: results.map(&:export),
+        messages: messages.map(&:to_h),
+        thread_id: thread_id,
+        custom: keys.each_with_object({}) { |k, h| h[k] = self[k] }
+      }.compact
     end
 
-    # Converts memory to JSON.
+    # Convert to JSON
     #
     # @param args [Array] arguments passed to to_json
-    # @return [String] JSON representation
+    # @return [String]
+    #
     def to_json(*args)
       to_h.to_json(*args)
     end
 
-    # Import memory from hash
+    # Reconstruct memory from hash
     #
-    # @param hash [Hash] Previously exported memory
-    # @return [self]
+    # @param hash [Hash]
+    # @return [Memory]
     #
     def self.from_hash(hash)
-      memory = new
-      hash.each do |namespace, entries|
-        entries.each do |key, entry|
-          entry = entry.transform_keys(&:to_sym)
-          memory.remember(
-            key,
-            entry[:value],
-            namespace: namespace,
-            stored_at: entry[:stored_at] ? Time.parse(entry[:stored_at]) : Time.now,
-            access_count: entry[:access_count] || 0
-          )
-        end
-      end
+      hash = hash.transform_keys(&:to_sym)
+      memory = new(
+        data: hash[:data] || {},
+        results: (hash[:results] || []).map { |r| RobotResult.from_hash(r) },
+        messages: (hash[:messages] || []).map { |m| Message.from_hash(m) },
+        thread_id: hash[:thread_id]
+      )
+
+      # Restore custom keys
+      (hash[:custom] || {}).each { |k, v| memory[k] = v }
+
       memory
     end
 
-    # Create a scoped memory accessor for a specific namespace
+    # Check if using Redis backend
     #
-    # @param namespace [Symbol, String] The namespace to scope to
-    # @return [ScopedMemory] A scoped accessor
+    # @return [Boolean]
     #
-    def scoped(namespace)
-      ScopedMemory.new(self, namespace)
+    def redis?
+      @backend.is_a?(RedisBackend)
     end
 
     private
 
-    def normalize_namespace(namespace)
-      return SHARED_NAMESPACE if namespace.nil?
+    def select_backend(preference)
+      case preference
+      when :redis
+        create_redis_backend || create_hash_backend
+      when :hash
+        create_hash_backend
+      else # :auto
+        create_redis_backend || create_hash_backend
+      end
+    end
 
-      namespace.to_sym
+    def create_redis_backend
+      return nil unless redis_available?
+
+      RedisBackend.new
+    rescue StandardError
+      nil
+    end
+
+    def create_hash_backend
+      {}
+    end
+
+    def redis_available?
+      return false unless defined?(Redis)
+
+      # Check if Redis is configured in RobotLab
+      redis_config = RobotLab.configuration.respond_to?(:redis) ? RobotLab.configuration.redis : nil
+      redis_config || ENV["REDIS_URL"]
+    end
+
+    def get_internal(key)
+      @mutex.synchronize do
+        @backend[key.to_sym]
+      end
+    end
+
+    def set_internal(key, value)
+      @mutex.synchronize do
+        @backend[key.to_sym] = value
+      end
+    end
+
+    def normalize_message(msg)
+      case msg
+      when Message
+        msg
+      when Hash
+        Message.from_hash(msg)
+      else
+        raise ArgumentError, "Invalid message: must be Message or Hash"
+      end
+    end
+
+    def default_formatter
+      ->(result) { result.output + result.tool_calls }
+    end
+
+    def deep_dup(obj)
+      case obj
+      when Hash
+        obj.transform_values { |v| deep_dup(v) }
+      when Array
+        obj.map { |v| deep_dup(v) }
+      else
+        obj.dup rescue obj
+      end
     end
   end
 
-  # Scoped memory accessor for a specific namespace
+  # Redis backend for Memory (optional, loaded when Redis is available)
   #
-  # Provides convenient access to a specific namespace without
-  # having to pass the namespace parameter every time.
-  #
-  # @example
-  #   robot_memory = memory.scoped(:billing_robot)
-  #   robot_memory.remember(:customer_id, "12345")
-  #   robot_memory.recall(:customer_id)  # => "12345"
-  #
-  class ScopedMemory
-    # Creates a new ScopedMemory accessor.
-    #
-    # @param memory [Memory] the parent memory instance
-    # @param namespace [Symbol, String] the namespace to scope to
-    def initialize(memory, namespace)
-      @memory = memory
-      @namespace = namespace.to_sym
+  # @api private
+  class RedisBackend
+    def initialize
+      @redis = create_redis_connection
+      @namespace = "robot_lab:memory:#{SecureRandom.uuid}"
     end
 
-    # Store a value in the scoped namespace.
-    #
-    # @param key [Symbol, String] memory key
-    # @param value [Object] value to store
-    # @param metadata [Hash] additional metadata
-    # @return [Object] the stored value
-    def remember(key, value, **metadata)
-      @memory.remember(key, value, namespace: @namespace, **metadata)
-    end
-    # @!method []=(key, value)
-    #   Alias for {#remember}.
-    alias []= remember
-
-    # Retrieve a value from the scoped namespace.
-    #
-    # @param key [Symbol, String] memory key
-    # @param default [Object] default value if not found
-    # @return [Object, nil] the stored value or default
-    def recall(key, default: nil)
-      @memory.recall(key, namespace: @namespace, default: default)
+    def [](key)
+      value = @redis.get("#{@namespace}:#{key}")
+      value ? JSON.parse(value, symbolize_names: true) : nil
+    rescue JSON::ParserError
+      value
     end
 
-    # @!method [](key, default: nil)
-    #   Alias for {#recall}.
-    alias [] recall
-
-    # Check if a key exists in the scoped namespace.
-    #
-    # @param key [Symbol, String] memory key
-    # @return [Boolean]
-    def exists?(key)
-      @memory.exists?(key, namespace: @namespace)
+    def []=(key, value)
+      serialized = value.is_a?(String) ? value : value.to_json
+      @redis.set("#{@namespace}:#{key}", serialized)
+      value
     end
 
-    # @!method has?(key)
-    #   Alias for {#exists?}.
-    alias has? exists?
-
-    # Remove a value from the scoped namespace.
-    #
-    # @param key [Symbol, String] memory key
-    # @return [Object, nil] the removed value
-    def forget(key)
-      @memory.forget(key, namespace: @namespace)
+    def key?(key)
+      @redis.exists?("#{@namespace}:#{key}")
     end
 
-    # Get all memories in the scoped namespace.
-    #
-    # @return [Hash] all memories in this namespace
-    def all
-      @memory.all(namespace: @namespace)
+    def keys
+      @redis.keys("#{@namespace}:*").map { |k| k.sub("#{@namespace}:", "").to_sym }
     end
 
-    # Clear all memories in the scoped namespace.
-    #
-    # @return [self]
+    def delete(key)
+      value = self[key]
+      @redis.del("#{@namespace}:#{key}")
+      value
+    end
+
     def clear
-      @memory.clear(namespace: @namespace)
+      keys.each { |k| delete(k) }
     end
 
-    # Search memories in the scoped namespace.
-    #
-    # @param pattern [Regexp, String] pattern to match
-    # @return [Hash] matching memories
-    def search(pattern)
-      @memory.search(pattern, namespace: @namespace)
-    end
+    private
 
-    # Access shared memory from scoped context
-    #
-    # @return [ScopedMemory] Accessor for shared namespace
-    #
-    def shared
-      @memory.scoped(Memory::SHARED_NAMESPACE)
-    end
+    def create_redis_connection
+      redis_config = RobotLab.configuration.respond_to?(:redis) ? RobotLab.configuration.redis : nil
 
-    # Converts the scoped memory to a hash.
-    #
-    # @return [Hash] all memories in this namespace
-    def to_h
-      all
+      if redis_config.is_a?(Hash)
+        Redis.new(**redis_config)
+      elsif ENV["REDIS_URL"]
+        Redis.new(url: ENV["REDIS_URL"])
+      else
+        Redis.new
+      end
     end
   end
 end

@@ -141,25 +141,36 @@ robot = RobotLab.build(
 
 ```ruby
 # Define tools using RubyLLM::Tool
-class GetWeather < RubyLLM::Tool
-  description "Get current weather for a location"
+class Magic8Ball < RubyLLM::Tool
+  description "Consult the mystical Magic 8-Ball for guidance on yes/no questions"
 
-  param :location, type: "string", desc: "City name or location"
+  param :question, type: "string", desc: "A yes/no question to ask the oracle"
 
-  def execute(location:)
-    # Your weather API logic here
-    { temperature: 72, conditions: "sunny", location: location }
+  RESPONSES = [
+    { answer: "It is certain", certainty: 0.95, vibe: "positive" },
+    { answer: "Ask again later", certainty: 0.10, vibe: "evasive" },
+    { answer: "Don't count on it", certainty: 0.85, vibe: "negative" },
+    { answer: "Signs point to yes", certainty: 0.75, vibe: "positive" },
+    { answer: "Reply hazy, try again", certainty: 0.05, vibe: "evasive" },
+    { answer: "My sources say no", certainty: 0.80, vibe: "negative" },
+    { answer: "Outlook good", certainty: 0.70, vibe: "positive" },
+    { answer: "Cannot predict now", certainty: 0.00, vibe: "evasive" }
+  ].freeze
+
+  def execute(question:)
+    response = RESPONSES.sample
+    { question: question, **response }
   end
 end
 
-# Create robot with tools (uses app/prompts/weather_bot.erb)
+# Create robot with tools
 robot = RobotLab.build(
-  name: "weather_bot",
-  template: :weather_bot,
-  tools: [GetWeather]
+  name: "oracle",
+  system_prompt: "You are a mystical oracle. Use the Magic 8-Ball to answer questions about the future.",
+  tools: [Magic8Ball]
 )
 
-result = robot.run(message: "What's the weather in Paris?")
+result = robot.run(message: "Should I start learning Rust?")
 ```
 
 ## Orchestrating Multiple Robots
@@ -202,26 +213,45 @@ network = RobotLab.create_network(
 result = network.run(message: "I was charged twice for my subscription")
 ```
 
-## Shared Memory
+## Memory
 
-Robots in a network can share information through memory:
+Both robots and networks have inherent memory that persists across runs:
 
 ```ruby
-# Create state with memory
-state = RobotLab.create_state(data: { user_id: 123 })
+# Standalone robot with inherent memory
+robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
 
-# Access memory from state
-state.memory.remember(:user_name, "Alice")
-state.memory.recall(:user_name)  # => "Alice"
+robot.run(message: "My name is Alice")
+robot.run(message: "What's my name?")  # Memory persists automatically
 
-# Scoped memory for isolation
-user_memory = state.memory.scoped("user:123")
-user_memory.remember(:preference, "dark_mode")
-user_memory.recall(:preference)  # => "dark_mode"
+# Access robot's memory
+robot.memory[:user_id] = 123
+robot.memory.data[:category] = "billing"
 
-# Memory persists across robot runs in a network
-network.run(message: "Remember my name is Alice", state: state)
-network.run(message: "What's my name?", state: state)
+# Runtime memory injection
+robot.run(message: "Help me", memory: { session_id: "abc123", tier: "premium" })
+
+# Reset memory when needed
+robot.reset_memory
+```
+
+Networks share memory with all robots:
+
+```ruby
+# Create network with specialized robots
+network = RobotLab.create_network(
+  name: "support",
+  robots: [classifier, billing_robot, technical_robot],
+  router: router
+)
+
+# Runtime memory injection for network
+network.run(message: "I have a billing question", memory: { ticket_id: 456 })
+
+# Access network memory
+network.memory[:ticket_id]  # => 456
+
+# All robots in the network share the same memory during execution
 ```
 
 ## MCP Integration

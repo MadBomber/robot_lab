@@ -11,49 +11,49 @@ class RobotLab::NetworkRunTest < Minitest::Test
       robots: [@robot1, @robot2],
       max_iter: 10
     )
-    @state = RobotLab::State.new
+    @memory = RobotLab::Memory.new
   end
 
   # Initialization tests
   def test_initialization
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     assert_equal @network, run.network
-    assert_equal @state, run.state
+    assert_equal @memory, run.memory
     assert run.run_id.is_a?(String)
     assert_equal :pending, run.execution_state
   end
 
   def test_run_id_is_uuid_format
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     # UUID format validation
     assert_match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i, run.run_id)
   end
 
   def test_each_run_has_unique_id
-    run1 = RobotLab::NetworkRun.new(@network, @state)
-    run2 = RobotLab::NetworkRun.new(@network, @state)
+    run1 = RobotLab::NetworkRun.new(@network, @memory)
+    run2 = RobotLab::NetworkRun.new(@network, @memory)
 
     refute_equal run1.run_id, run2.run_id
   end
 
   # Delegation tests
   def test_robots_delegates_to_network
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     assert_equal @network.robots, run.robots
   end
 
   def test_default_model_delegates_to_network
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     assert_equal @network.default_model, run.default_model
   end
 
   # Execute with no router
   def test_execute_with_no_router_returns_self
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     result = run.execute(router: nil)
 
@@ -62,7 +62,7 @@ class RobotLab::NetworkRunTest < Minitest::Test
   end
 
   def test_execute_with_empty_router_completes_immediately
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
     router = ->(_args) { nil }
 
     run.execute(router: router)
@@ -72,35 +72,35 @@ class RobotLab::NetworkRunTest < Minitest::Test
   end
 
   # Results tests
-  def test_results_returns_state_results
-    run = RobotLab::NetworkRun.new(@network, @state)
+  def test_results_returns_memory_results
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
-    assert_equal @state.results, run.results
+    assert_equal @memory.results, run.results
   end
 
   def test_last_result_nil_when_no_results
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     assert_nil run.last_result
   end
 
   def test_new_results_empty_when_no_execution
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
     run.execute(router: nil)
 
     assert_equal [], run.new_results
   end
 
   def test_new_results_excludes_pre_existing_results
-    # Pre-populate state with existing result
+    # Pre-populate memory with existing result
     existing_result = RobotLab::RobotResult.new(
       robot_name: "previous",
       output: [],
       tool_calls: []
     )
-    @state.append_result(existing_result)
+    @memory.append_result(existing_result)
 
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
     run.execute(router: nil)
 
     # new_results should not include the pre-existing result
@@ -110,7 +110,7 @@ class RobotLab::NetworkRunTest < Minitest::Test
 
   # Serialization
   def test_to_h_exports_run_state
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
     run.execute(router: nil)
 
     hash = run.to_h
@@ -124,7 +124,7 @@ class RobotLab::NetworkRunTest < Minitest::Test
   end
 
   def test_to_h_includes_run_id
-    run = RobotLab::NetworkRun.new(@network, @state)
+    run = RobotLab::NetworkRun.new(@network, @memory)
 
     hash = run.to_h
 
@@ -140,7 +140,7 @@ class RobotLab::RouterTest < Minitest::Test
       name: "test",
       robots: [@robot]
     )
-    @network_run = RobotLab::NetworkRun.new(@network, RobotLab::State.new)
+    @network_run = RobotLab::NetworkRun.new(@network, RobotLab::Memory.new)
   end
 
   # Router::Args tests
@@ -254,7 +254,7 @@ class RobotLab::RouterTest < Minitest::Test
   def test_call_with_proc_returning_array_of_names
     robot2 = build_robot(name: "robot2")
     network = RobotLab::Network.new(name: "test", robots: [@robot, robot2])
-    network_run = RobotLab::NetworkRun.new(network, RobotLab::State.new)
+    network_run = RobotLab::NetworkRun.new(network, RobotLab::Memory.new)
 
     router = ->(_args) { %w[robot1 robot2] }
     args = build_router_args(network_run: network_run)

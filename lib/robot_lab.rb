@@ -142,16 +142,20 @@ module RobotLab
       Network.new(name: name, robots: robots, **options)
     end
 
-    # Factory method to create a new State object.
+    # Factory method to create a new Memory object.
     #
-    # @param data [Hash] initial state data
-    # @param options [Hash] additional options passed to State.new
-    # @return [State] a new State instance
+    # @param data [Hash] initial runtime data
+    # @param options [Hash] additional options passed to Memory.new
+    # @return [Memory] a new Memory instance
     #
-    # @example
-    #   state = RobotLab.create_state(data: { user_id: 123, preferences: {} })
-    def create_state(data: {}, **options)
-      State.new(data: data, **options)
+    # @example Basic memory
+    #   memory = RobotLab.create_memory(data: { user_id: 123 })
+    #
+    # @example Memory with custom values
+    #   memory = RobotLab.create_memory(data: { category: nil })
+    #   memory[:session_id] = "abc123"
+    def create_memory(data: {}, **options)
+      Memory.new(data: data, **options)
     end
   end
 end

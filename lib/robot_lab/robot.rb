@@ -64,7 +64,9 @@ module RobotLab
     #   @return [Hash<String, MCP::Client>] connected MCP clients by server name
     # @!attribute [r] mcp_tools
     #   @return [Array<Tool>] tools discovered from MCP servers
-    attr_reader :name, :description, :template, :system_prompt, :model, :local_tools, :mcp_clients, :mcp_tools
+    # @!attribute [r] memory
+    #   @return [Memory] the robot's inherent memory (used when standalone, not in network)
+    attr_reader :name, :description, :template, :system_prompt, :model, :local_tools, :mcp_clients, :mcp_tools, :memory
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -142,6 +144,9 @@ module RobotLab
       @mcp_clients = {}
       @mcp_tools = []
       @mcp_initialized = false
+
+      # Inherent memory (used when standalone, not in a network)
+      @memory = Memory.new
     end
 
     # Returns the robot's local tools (alias for local_tools).
@@ -156,14 +161,32 @@ module RobotLab
     # Run the robot with the given context
     #
     # @param network [NetworkRun, nil] Network context if running in network
-    # @param state [State, nil] Shared state
+    # @param memory [Memory, Hash, nil] Runtime memory to merge
     # @param mcp [Symbol, Array, nil] Runtime MCP override (:inherit, :none, nil, [], or array of servers)
     # @param tools [Symbol, Array, nil] Runtime tools override (:inherit, :none, nil, [], or array of tool names)
     # @param run_context [Hash] Context for rendering user template
     # @return [RobotResult]
     #
-    def run(network: nil, state: nil, mcp: :none, tools: :none, **run_context)
-      state ||= network&.state || State.new
+    # @example Standalone robot with inherent memory
+    #   robot.run(message: "My name is Alice")
+    #   robot.run(message: "What's my name?")  # Memory persists
+    #
+    # @example Runtime memory injection
+    #   robot.run(message: "Hello", memory: { user_id: 123, session: "abc" })
+    #
+    def run(network: nil, memory: nil, mcp: :none, tools: :none, **run_context)
+      # Determine which memory to use:
+      # 1. Network memory if running in a network
+      # 2. Otherwise, use robot's inherent memory
+      run_memory = network&.memory || @memory
+
+      # Merge runtime memory if provided
+      case memory
+      when Memory
+        run_memory = memory
+      when Hash
+        run_memory.merge!(memory)
+      end
 
       # Resolve hierarchical MCP and tools configuration
       resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
@@ -182,7 +205,16 @@ module RobotLab
       # Execute and return result
       response = chat.complete
 
-      build_result(response, state)
+      build_result(response, run_memory)
+    end
+
+    # Reset the robot's inherent memory
+    #
+    # @return [self]
+    #
+    def reset_memory
+      @memory.reset
+      self
     end
 
     # Disconnect all MCP clients
@@ -251,7 +283,7 @@ module RobotLab
       chat
     end
 
-    def build_result(response, _state)
+    def build_result(response, _memory)
       output = if response.respond_to?(:content) && response.content
                  [TextMessage.new(role: "assistant", content: response.content)]
                else

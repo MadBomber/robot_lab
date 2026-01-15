@@ -66,13 +66,13 @@ module RobotLab
       # Load state from thread history
       #
       # @param thread_id [String] Thread identifier
-      # @param state [State] State to populate
-      # @return [State] State with loaded history
+      # @param state [State, Memory] State/Memory to populate
+      # @return [State, Memory] State/Memory with loaded history
       #
       def load_state(thread_id:, state:)
         results = get_history(thread_id)
 
-        state.instance_variable_set(:@thread_id, thread_id)
+        state.thread_id = thread_id
         results.each { |r| state.append_result(r) }
 
         state

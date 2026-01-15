@@ -5,7 +5,7 @@ require "state_machines"
 module RobotLab
   # Orchestrates multiple robots in a coordinated workflow
   #
-  # Network manages robot coordination, state sharing, and routing.
+  # Network manages robot coordination, memory sharing, and routing.
   # It provides the high-level interface for running multi-robot workflows.
   #
   # @example Simple network
@@ -14,7 +14,7 @@ module RobotLab
   #     robots: [classifier, billing_robot, technical_robot],
   #     router: ->(args) {
   #       return nil if args.call_count > 0
-  #       args.network.state.data[:category] == "billing" ? "billing_robot" : "technical_robot"
+  #       args.network.memory.data[:category] == "billing" ? "billing_robot" : "technical_robot"
   #     }
   #   )
   #   result = network.run(message: "I have a billing question", customer: customer)
@@ -26,6 +26,9 @@ module RobotLab
   #     mcp: :inherit,           # Use RobotLab.configuration.mcp
   #     tools: %w[search refund] # Only these tools available in network
   #   )
+  #
+  # @example Runtime memory injection
+  #   network.run(message: "Help me", memory: { user_id: 123, tier: "premium" })
   #
   class Network
     # @!attribute [r] name
@@ -46,11 +49,14 @@ module RobotLab
     #   @return [Array<String>] the resolved tool names whitelist for this network
     attr_reader :name, :robots, :default_model, :router, :max_iter, :history, :mcp, :tools
 
+    # @!attribute [r] memory
+    #   @return [Memory] the network's inherent memory (shared with all robots)
+
     # Creates a new Network instance.
     #
     # @param name [String] the unique identifier for the network
     # @param robots [Array<Robot>, Hash<String, Robot>] the robots to include
-    # @param state [State, nil] the initial state for network runs
+    # @param memory [Memory, nil] the initial memory for network runs
     # @param default_model [String, nil] the default LLM model (defaults to config)
     # @param router [Proc, nil] routing logic to select robots for messages
     # @param max_iter [Integer, nil] maximum iterations (defaults to config)
@@ -67,7 +73,7 @@ module RobotLab
     def initialize(
       name:,
       robots:,
-      state: nil,
+      memory: nil,
       default_model: nil,
       router: nil,
       max_iter: nil,
@@ -77,7 +83,7 @@ module RobotLab
     )
       @name = name.to_s
       @robots = normalize_robots(robots)
-      @state = state || State.new
+      @memory = memory || Memory.new
       @default_model = default_model || RobotLab.configuration.default_model
       @router = router
       @max_iter = max_iter || RobotLab.configuration.max_iterations
@@ -86,35 +92,48 @@ module RobotLab
       @tools = resolve_tools(tools)
     end
 
-    # Get the base state (clone for execution)
+    # Get the network's memory (returns a clone for isolated execution)
     #
-    # @return [State]
+    # @return [Memory]
     #
-    def state
-      @state.clone
+    def memory
+      @memory.clone
+    end
+
+    # Reset the network's inherent memory
+    #
+    # @return [self]
+    #
+    def reset_memory
+      @memory.reset
+      self
     end
 
     # Run the network with context
     #
     # @param router [Proc, nil] Override router
-    # @param state [State, Hash, nil] Override state
+    # @param memory [Memory, Hash, nil] Runtime memory to merge
     # @param streaming [Proc, nil] Streaming callback
     # @param run_context [Hash] Context passed to all robots
     # @return [NetworkRun]
     #
-    def run(router: nil, state: nil, streaming: nil, **run_context, &block)
-      # Prepare state
-      run_state = case state
-                  when State
-                    state
-                  when Hash
-                    State.new(**state)
-                  else
-                    @state.clone
-                  end
+    # @example Runtime memory injection
+    #   network.run(message: "Help me", memory: { ticket_id: 456, user_tier: "premium" })
+    #
+    def run(router: nil, memory: nil, streaming: nil, **run_context, &block)
+      # Prepare memory - use a clone of the network's memory
+      run_memory = @memory.clone
+
+      # Merge runtime memory if provided
+      case memory
+      when Memory
+        run_memory = memory
+      when Hash
+        run_memory.merge!(memory)
+      end
 
       # Create and execute network run
-      network_run = NetworkRun.new(self, run_state)
+      network_run = NetworkRun.new(self, run_memory)
       network_run.execute(
         router: router || @router,
         streaming: streaming || block,

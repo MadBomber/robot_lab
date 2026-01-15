@@ -27,7 +27,7 @@ class RobotLab::History::ConfigTest < Minitest::Test
       }
     )
 
-    state = RobotLab::State.new
+    state = RobotLab::Memory.new
     result = config.create_thread!(state: state, input: "Hello")
 
     assert_equal state, called_with[:state]
@@ -39,7 +39,7 @@ class RobotLab::History::ConfigTest < Minitest::Test
     config = RobotLab::History::Config.new
 
     assert_raises(RobotLab::History::HistoryError) do
-      config.create_thread!(state: RobotLab::State.new, input: "test")
+      config.create_thread!(state: RobotLab::Memory.new, input: "test")
     end
   end
 
@@ -49,7 +49,7 @@ class RobotLab::History::ConfigTest < Minitest::Test
     )
 
     assert_raises(RobotLab::History::HistoryError) do
-      config.create_thread!(state: RobotLab::State.new, input: "test")
+      config.create_thread!(state: RobotLab::Memory.new, input: "test")
     end
   end
 
@@ -134,7 +134,7 @@ class RobotLab::History::ThreadManagerTest < Minitest::Test
   end
 
   def test_create_thread
-    state = RobotLab::State.new
+    state = RobotLab::Memory.new
     thread_id = @manager.create_thread(state: state, input: "Hello")
 
     assert_equal "thread_1", thread_id
@@ -166,7 +166,7 @@ class RobotLab::History::ThreadManagerTest < Minitest::Test
     result = RobotLab::RobotResult.new(robot_name: "robot", output: [])
     @results["t1"] << result
 
-    state = RobotLab::State.new
+    state = RobotLab::Memory.new
     loaded = @manager.load_state(thread_id: "t1", state: state)
 
     assert_equal "t1", loaded.thread_id
@@ -174,7 +174,7 @@ class RobotLab::History::ThreadManagerTest < Minitest::Test
   end
 
   def test_save_state
-    state = RobotLab::State.new
+    state = RobotLab::Memory.new
     state.append_result(RobotLab::RobotResult.new(robot_name: "robot", output: []))
 
     @manager.save_state(thread_id: "t1", state: state)
@@ -183,7 +183,7 @@ class RobotLab::History::ThreadManagerTest < Minitest::Test
   end
 
   def test_save_state_with_offset
-    state = RobotLab::State.new
+    state = RobotLab::Memory.new
     state.append_result(RobotLab::RobotResult.new(robot_name: "old", output: []))
     state.append_result(RobotLab::RobotResult.new(robot_name: "new1", output: []))
     state.append_result(RobotLab::RobotResult.new(robot_name: "new2", output: []))
