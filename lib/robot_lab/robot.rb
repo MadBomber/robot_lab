@@ -10,6 +10,19 @@ module RobotLab
   # - Tool integration via RubyLLM::Tool
   # - Hierarchical MCP and tools configuration
   #
+  # == Memory Behavior
+  #
+  # Robots have two memory contexts depending on how they're used:
+  #
+  # *Standalone*: Robot uses its own inherent memory (`robot.memory`).
+  # Use `robot.reset_memory` to clear it.
+  #
+  # *In a Network*: Robot uses the network's shared memory (`network.memory`).
+  # The robot's inherent memory is ignored. Use `network.reset_memory` to clear it.
+  #
+  # This allows the same robot instance to work both standalone and as part
+  # of a network, with appropriate memory isolation in each context.
+  #
   # @example Simple robot with template
   #   robot = Robot.new(
   #     name: "helper",
@@ -212,7 +225,22 @@ module RobotLab
 
     # Reset the robot's inherent memory
     #
+    # NOTE: This only affects the robot's standalone memory. When a robot runs
+    # as part of a network, it uses the network's shared memory instead.
+    # To reset memory for network execution, use `network.reset_memory`.
+    #
     # @return [self]
+    #
+    # @example Standalone robot
+    #   robot.run(message: "My name is Alice")
+    #   robot.reset_memory  # Clears the conversation
+    #   robot.run(message: "What's my name?")  # Won't remember Alice
+    #
+    # @example Robot in network (reset_memory has no effect on network runs)
+    #   network.run(message: "Hello")
+    #   robot.reset_memory  # Does NOT affect network memory
+    #   network.run(message: "Hi")  # Network memory still intact
+    #   network.reset_memory  # Use this to reset network memory
     #
     def reset_memory
       @memory.reset

@@ -1,0 +1,52 @@
+name: Deploy YARD Documentation to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "lib/**"
+      - "docs/assets/**"
+      - ".yardopts"
+      - "*.gemspec"
+      - ".github/workflows/deploy-yard-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install YARD
+        run: gem install yard
+
+      - name: Build YARD documentation
+        run: yard doc
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc
+          destination_dir: yard
+          keep_files: true

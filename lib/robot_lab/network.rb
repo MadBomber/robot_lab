@@ -8,6 +8,26 @@ module RobotLab
   # Network manages robot coordination, memory sharing, and routing.
   # It provides the high-level interface for running multi-robot workflows.
   #
+  # == When to Use a Network
+  #
+  # Use a Network when a task requires multiple specialized robots working
+  # together. For simple tasks, a single Robot is sufficient.
+  #
+  # - *Single Robot*: Simple Q&A, single specialty tasks
+  # - *Network*: Multi-step workflows, triage→specialist patterns, tasks
+  #   requiring different expertise
+  #
+  # == How It Works
+  #
+  # 1. Router selects which robot handles the current step
+  # 2. Robot executes using shared memory
+  # 3. Result is stored in memory
+  # 4. Router selects next robot (or nil to complete)
+  # 5. Repeat until done or max_iter reached
+  #
+  # Robots execute sequentially, not concurrently. Each robot sees all
+  # previous results and can read/write shared memory.
+  #
   # @example Simple network
   #   network = Network.new(
   #     name: "support",
@@ -102,9 +122,18 @@ module RobotLab
       @memory.clone
     end
 
-    # Reset the network's inherent memory
+    # Reset the network's shared memory
+    #
+    # This clears the memory used by all robots when running in this network.
+    # Individual robots have their own inherent memory for standalone use,
+    # but that memory is NOT used during network execution.
     #
     # @return [self]
+    #
+    # @example
+    #   network.run(message: "Remember this")
+    #   network.reset_memory  # Clears shared memory for all robots
+    #   network.run(message: "What did I say?")  # Won't remember
     #
     def reset_memory
       @memory.reset
