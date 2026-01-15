@@ -10,6 +10,9 @@ module RobotLab
     # Thread-safe via Mutex.
     #
     class SequenceCounter
+      # Creates a new SequenceCounter.
+      #
+      # @param start [Integer] the starting value (default: 0)
       def initialize(start: 0)
         @value = start
         @mutex = Mutex.new

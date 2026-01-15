@@ -17,6 +17,10 @@ module RobotLab
     #   network = RobotLab.create_network(history: config)
     #
     class ActiveRecordAdapter
+      # @!attribute [r] thread_model
+      #   @return [Class] ActiveRecord model class for threads
+      # @!attribute [r] result_model
+      #   @return [Class] ActiveRecord model class for results
       attr_reader :thread_model, :result_model
 
       # Initialize adapter with ActiveRecord models

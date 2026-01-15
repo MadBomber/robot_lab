@@ -11,8 +11,13 @@ module RobotLab
     # @abstract Subclass and implement {#format_messages} and {#parse_response}
     #
     class Base
+      # @!attribute [r] provider
+      #   @return [Symbol] the provider name
       attr_reader :provider
 
+      # Creates a new adapter instance.
+      #
+      # @param provider [Symbol] the provider name
       def initialize(provider)
         @provider = provider
       end

@@ -28,8 +28,42 @@ module RobotLab
   #   )
   #
   class Network
+    # @!attribute [r] name
+    #   @return [String] the unique identifier for the network
+    # @!attribute [r] robots
+    #   @return [Hash<String, Robot>] the robots in this network, keyed by name
+    # @!attribute [r] default_model
+    #   @return [String, Object] the default LLM model for robots without explicit models
+    # @!attribute [r] router
+    #   @return [Proc, nil] the routing logic to determine which robot handles each message
+    # @!attribute [r] max_iter
+    #   @return [Integer] the maximum number of iterations before stopping
+    # @!attribute [r] history
+    #   @return [Object, nil] the history adapter for conversation persistence
+    # @!attribute [r] mcp
+    #   @return [Array] the resolved MCP server configurations for this network
+    # @!attribute [r] tools
+    #   @return [Array<String>] the resolved tool names whitelist for this network
     attr_reader :name, :robots, :default_model, :router, :max_iter, :history, :mcp, :tools
 
+    # Creates a new Network instance.
+    #
+    # @param name [String] the unique identifier for the network
+    # @param robots [Array<Robot>, Hash<String, Robot>] the robots to include
+    # @param state [State, nil] the initial state for network runs
+    # @param default_model [String, nil] the default LLM model (defaults to config)
+    # @param router [Proc, nil] routing logic to select robots for messages
+    # @param max_iter [Integer, nil] maximum iterations (defaults to config)
+    # @param history [Object, nil] history adapter for persistence
+    # @param mcp [Symbol, Array] hierarchical MCP config (:none, :inherit, or server array)
+    # @param tools [Symbol, Array] hierarchical tools config (:none, :inherit, or tool names)
+    #
+    # @example Network with router logic
+    #   Network.new(
+    #     name: "support",
+    #     robots: [classifier, handler],
+    #     router: ->(args) { args.call_count.zero? ? "classifier" : nil }
+    #   )
     def initialize(
       name:,
       robots:,
@@ -104,8 +138,16 @@ module RobotLab
     def robot(name)
       @robots[name.to_s]
     end
+
+    # @!method [](name)
+    #   Alias for {#robot}.
+    #   @param name [String, Symbol] the robot name
+    #   @return [Robot, nil]
     alias [] robot
 
+    # Converts the network to a hash representation.
+    #
+    # @return [Hash] a hash containing the network's configuration
     def to_h
       {
         name: name,

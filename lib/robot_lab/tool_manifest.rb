@@ -14,6 +14,12 @@ module RobotLab
   class ToolManifest
     include Enumerable
 
+    # Creates a new ToolManifest instance.
+    #
+    # @param tools [Array<Tool>] initial tools to add to the manifest
+    #
+    # @example
+    #   manifest = ToolManifest.new([weather_tool, calculator_tool])
     def initialize(tools = [])
       @tools = {}
       Array(tools).each { |tool| add(tool) }
@@ -28,6 +34,11 @@ module RobotLab
       @tools[tool.name] = tool
       self
     end
+
+    # @!method <<(tool)
+    #   Alias for {#add}.
+    #   @param tool [Tool] the tool to add
+    #   @return [self]
     alias << add
 
     # Remove a tool from the manifest
@@ -68,6 +79,11 @@ module RobotLab
     def include?(name)
       @tools.key?(name.to_s)
     end
+
+    # @!method has?(name)
+    #   Alias for {#include?}.
+    #   @param name [String, Symbol] the tool name
+    #   @return [Boolean]
     alias has? include?
 
     # Get all tool names
@@ -85,7 +101,15 @@ module RobotLab
     def values
       @tools.values
     end
+
+    # @!method all
+    #   Alias for {#values}.
+    #   @return [Array<Tool>]
     alias all values
+
+    # @!method to_a
+    #   Alias for {#values}.
+    #   @return [Array<Tool>]
     alias to_a values
 
     # Number of tools
@@ -95,7 +119,15 @@ module RobotLab
     def size
       @tools.size
     end
+
+    # @!method count
+    #   Alias for {#size}.
+    #   @return [Integer]
     alias count size
+
+    # @!method length
+    #   Alias for {#size}.
+    #   @return [Integer]
     alias length size
 
     # Check if manifest is empty
@@ -167,10 +199,17 @@ module RobotLab
       @tools.values.map(&:to_ruby_llm_tool)
     end
 
+    # Converts the manifest to a hash representation.
+    #
+    # @return [Hash<String, Hash>] map of tool names to their hash representations
     def to_h
       @tools.transform_values(&:to_h)
     end
 
+    # Converts the manifest to JSON.
+    #
+    # @param args [Array] arguments passed to to_json
+    # @return [String] JSON representation
     def to_json(*args)
       to_h.to_json(*args)
     end

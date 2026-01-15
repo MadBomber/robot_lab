@@ -16,6 +16,10 @@ module RobotLab
   #   proxy.to_h        # => { count: 1, name: "test" }
   #
   class StateProxy
+    # Creates a new StateProxy.
+    #
+    # @param data [Hash] the initial data
+    # @param on_change [Proc, nil] callback invoked when a value changes
     def initialize(data = {}, on_change: nil)
       @data = data.transform_keys(&:to_sym)
       @on_change = on_change
@@ -51,7 +55,12 @@ module RobotLab
     def key?(key)
       @data.key?(key.to_sym)
     end
+    # @!method has_key?(key)
+    #   Alias for {#key?}.
     alias has_key? key?
+
+    # @!method include?(key)
+    #   Alias for {#key?}.
     alias include? key?
 
     # Get all keys

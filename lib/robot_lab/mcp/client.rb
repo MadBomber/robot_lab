@@ -14,8 +14,16 @@ module RobotLab
     #   result = client.call_tool("createBranch", { project_id: "abc" })
     #
     class Client
+      # @!attribute [r] server
+      #   @return [Server] the MCP server configuration
+      # @!attribute [r] connected
+      #   @return [Boolean] whether currently connected
       attr_reader :server, :connected
 
+      # Creates a new MCP Client instance.
+      #
+      # @param server_or_config [Server, Hash] the server or configuration hash
+      # @raise [ArgumentError] if config is invalid
       def initialize(server_or_config)
         @server = case server_or_config
                   when Server
@@ -130,10 +138,16 @@ module RobotLab
         response
       end
 
+      # Checks if the client is connected to the server.
+      #
+      # @return [Boolean]
       def connected?
         @connected
       end
 
+      # Converts the client to a hash representation.
+      #
+      # @return [Hash]
       def to_h
         {
           server: @server.to_h,

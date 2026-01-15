@@ -11,6 +11,10 @@ module RobotLab
       #   transport = WebSocket.new(url: "ws://localhost:8080")
       #
       class WebSocket < Base
+        # Creates a new WebSocket transport.
+        #
+        # @param config [Hash] transport configuration
+        # @option config [String] :url WebSocket server URL
         def initialize(config)
           super
           @connection = nil
@@ -18,6 +22,10 @@ module RobotLab
           @pending_requests = {}
         end
 
+        # Connect to the MCP server via WebSocket.
+        #
+        # @return [self]
+        # @raise [MCPError] if async-websocket gem is not available
         def connect
           return self if @connected
 
@@ -40,6 +48,11 @@ module RobotLab
           raise MCPError, "async-websocket gem required for WebSocket transport: #{e.message}"
         end
 
+        # Send a JSON-RPC request to the MCP server.
+        #
+        # @param message [Hash] JSON-RPC message
+        # @return [Hash] the response
+        # @raise [MCPError] if not connected
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 
@@ -52,6 +65,9 @@ module RobotLab
           end.wait
         end
 
+        # Close the WebSocket connection.
+        #
+        # @return [self]
         def close
           return self unless @connected
 
@@ -62,6 +78,9 @@ module RobotLab
           self
         end
 
+        # Check if the transport is connected.
+        #
+        # @return [Boolean] true if connected
         def connected?
           @connected
         end

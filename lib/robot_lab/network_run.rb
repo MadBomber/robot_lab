@@ -13,10 +13,23 @@ module RobotLab
   #
   class NetworkRun
     # Execution states
+    # @return [Array<Symbol>] valid execution state values
     EXECUTION_STATES = %i[pending initializing routing executing_robot robot_complete completed failed].freeze
 
+    # @!attribute [r] network
+    #   @return [Network] the network being executed
+    # @!attribute [r] state
+    #   @return [State] the execution state
+    # @!attribute [r] run_id
+    #   @return [String] unique identifier for this run
+    # @!attribute [r] execution_state
+    #   @return [Symbol] current execution state
     attr_reader :network, :state, :run_id, :execution_state
 
+    # Creates a new NetworkRun instance.
+    #
+    # @param network [Network] the network to execute
+    # @param state [State] the initial state
     def initialize(network, state)
       @network = network
       @state = state
@@ -29,12 +42,16 @@ module RobotLab
       @execution_state = :pending
     end
 
-    # Delegate robot access to network
+    # Delegate robot access to network.
+    #
+    # @return [Hash<String, Robot>] the network's robots
     def robots
       @network.robots
     end
 
-    # Delegate default_model to network
+    # Delegate default_model to network.
+    #
+    # @return [String] the network's default model
     def default_model
       @network.default_model
     end
@@ -180,6 +197,9 @@ module RobotLab
       end
     end
 
+    # Converts the run to a hash representation.
+    #
+    # @return [Hash] hash with run_id, network, state, counter, stack, results
     def to_h
       {
         run_id: run_id,

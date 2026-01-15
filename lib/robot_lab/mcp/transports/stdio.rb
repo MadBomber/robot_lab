@@ -18,6 +18,12 @@ module RobotLab
       #   )
       #
       class Stdio < Base
+        # Creates a new Stdio transport.
+        #
+        # @param config [Hash] transport configuration
+        # @option config [String] :command the command to execute
+        # @option config [Array<String>] :args command arguments
+        # @option config [Hash] :env environment variables
         def initialize(config)
           super
           @stdin = nil
@@ -27,6 +33,10 @@ module RobotLab
           @connected = false
         end
 
+        # Connect to the MCP server via stdio.
+        #
+        # @return [self]
+        # @raise [MCPError] if connection fails
         def connect
           return self if @connected
 
@@ -46,6 +56,11 @@ module RobotLab
           self
         end
 
+        # Send a JSON-RPC request to the MCP server.
+        #
+        # @param message [Hash] JSON-RPC message
+        # @return [Hash] the response
+        # @raise [MCPError] if not connected or no response
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 
@@ -69,6 +84,9 @@ module RobotLab
           end
         end
 
+        # Close the connection to the MCP server.
+        #
+        # @return [self]
         def close
           return self unless @connected
 
@@ -81,6 +99,9 @@ module RobotLab
           self
         end
 
+        # Check if the transport is connected.
+        #
+        # @return [Boolean] true if connected and process is alive
         def connected?
           @connected && @wait_thread&.alive?
         end

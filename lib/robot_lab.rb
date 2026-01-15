@@ -10,6 +10,29 @@ require "ruby_llm"
 require "async"
 
 # Define the module first so Zeitwerk can populate it
+#
+# RobotLab is a Ruby framework for building and orchestrating multi-robot LLM workflows.
+# It provides a modular architecture with adapters for multiple LLM providers (Anthropic,
+# OpenAI, Gemini), MCP (Model Context Protocol) integration, streaming support, and
+# history management.
+#
+# @example Basic usage with a single robot
+#   robot = RobotLab.build(name: "assistant", template: "chat.erb")
+#   result = robot.run("Hello, world!")
+#
+# @example Creating a network of robots
+#   network = RobotLab.create_network(
+#     name: "pipeline",
+#     robots: [analyzer, writer, reviewer]
+#   )
+#   result = network.run("Process this document")
+#
+# @example Configuration
+#   RobotLab.configure do |config|
+#     config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
+#     config.template_path = "app/templates"
+#   end
+#
 module RobotLab
 end
 
@@ -39,25 +62,74 @@ module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb
 
   class << self
+    # @!attribute [w] configuration
+    #   @return [Configuration] the configuration object
     attr_writer :configuration
 
+    # Returns the current configuration object.
+    #
+    # @return [Configuration] the configuration instance
     def configuration
       @configuration ||= Configuration.new
     end
 
+    # Yields the configuration object for modification.
+    #
+    # @yield [Configuration] the configuration object
+    # @return [void]
+    #
+    # @example
+    #   RobotLab.configure do |config|
+    #     config.anthropic_api_key = "sk-..."
+    #   end
     def configure
       yield(configuration)
     end
 
-    # Factory methods for creating robots and networks
+    # Factory method to create a new Robot instance.
+    #
+    # @param name [String] the unique identifier for the robot
+    # @param template [String] the ERB template file path for the robot's prompt
+    # @param context [Hash] variables to pass to the template
+    # @param options [Hash] additional options passed to Robot.new
+    # @return [Robot] a new Robot instance
+    #
+    # @example
+    #   robot = RobotLab.build(
+    #     name: "assistant",
+    #     template: "chat.erb",
+    #     context: { tone: "friendly" },
+    #     model: "claude-sonnet-4-20250514"
+    #   )
     def build(name:, template:, context: {}, **options)
       Robot.new(name: name, template: template, context: context, **options)
     end
 
+    # Factory method to create a new Network of robots.
+    #
+    # @param name [String] the unique identifier for the network
+    # @param robots [Array<Robot, Hash>] the robots to include in the network
+    # @param options [Hash] additional options passed to Network.new
+    # @return [Network] a new Network instance
+    #
+    # @example
+    #   network = RobotLab.create_network(
+    #     name: "pipeline",
+    #     robots: [analyzer, writer, reviewer],
+    #     default_model: "claude-sonnet-4-20250514"
+    #   )
     def create_network(name:, robots:, **options)
       Network.new(name: name, robots: robots, **options)
     end
 
+    # Factory method to create a new State object.
+    #
+    # @param data [Hash] initial state data
+    # @param options [Hash] additional options passed to State.new
+    # @return [State] a new State instance
+    #
+    # @example
+    #   state = RobotLab.create_state(data: { user_id: 123, preferences: {} })
     def create_state(data: {}, **options)
       State.new(data: data, **options)
     end

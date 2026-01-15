@@ -10,6 +10,7 @@ module RobotLab
     # - Content block structure
     #
     class Anthropic < Base
+      # Creates a new Anthropic adapter instance.
       def initialize
         super(:anthropic)
       end

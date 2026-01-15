@@ -10,6 +10,7 @@ module RobotLab
     # - finish_reason to stop_reason mapping
     #
     class OpenAI < Base
+      # Creates a new OpenAI adapter instance.
       def initialize
         super(:openai)
       end

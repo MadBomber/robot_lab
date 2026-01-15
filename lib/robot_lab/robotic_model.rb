@@ -1,16 +1,33 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # Thread-local storage for capturing tool executions during RubyLLM auto-execution
+  # Thread-local storage for capturing tool executions during RubyLLM auto-execution.
+  #
+  # Stores tool execution records in thread-local storage so they can be
+  # retrieved after an LLM inference call completes.
+  #
   class ToolExecutionCapture
+    # Returns the captured tool executions for the current thread.
+    #
+    # @return [Array<Hash>] array of execution records
     def self.captured
       Thread.current[:robot_lab_tool_executions] ||= []
     end
 
+    # Clears the captured tool executions for the current thread.
+    #
+    # @return [Array] empty array
     def self.clear!
       Thread.current[:robot_lab_tool_executions] = []
     end
 
+    # Records a tool execution.
+    #
+    # @param tool_name [String] name of the executed tool
+    # @param tool_id [String] unique identifier for this execution
+    # @param input [Hash] input parameters passed to the tool
+    # @param output [Object] the tool's return value
+    # @return [Array<Hash>] the updated captured array
     def self.record(tool_name:, tool_id:, input:, output:)
       captured << {
         tool_name: tool_name,
@@ -37,8 +54,18 @@ module RobotLab
   #   model.infer(messages, [weather_tool], tool_choice: "auto")
   #
   class RoboticModel
+    # @!attribute [r] model_id
+    #   @return [String] the LLM model identifier
+    # @!attribute [r] provider
+    #   @return [Symbol] the LLM provider (:anthropic, :openai, :gemini, etc.)
+    # @!attribute [r] adapter
+    #   @return [Adapters::Base] the adapter for message conversion
     attr_reader :model_id, :provider, :adapter
 
+    # Creates a new RoboticModel instance.
+    #
+    # @param model_id [String] the model identifier
+    # @param provider [Symbol, nil] the provider (auto-detected if not specified)
     def initialize(model_id, provider: nil)
       @model_id = model_id
       @provider = provider || detect_provider(model_id)
@@ -222,11 +249,30 @@ module RobotLab
     end
   end
 
-  # Response from LLM inference
+  # Response from LLM inference.
+  #
+  # Contains the parsed output, raw response, and any captured tool results.
   #
   class InferenceResponse
+    # @!attribute [r] output
+    #   @return [Array<Message>] parsed output messages
+    # @!attribute [r] raw
+    #   @return [Object] the raw response from RubyLLM
+    # @!attribute [r] model
+    #   @return [String] the model that generated the response
+    # @!attribute [r] provider
+    #   @return [Symbol] the provider that handled the request
+    # @!attribute [r] captured_tool_results
+    #   @return [Array<ToolResultMessage>] tool executions that were auto-executed
     attr_reader :output, :raw, :model, :provider, :captured_tool_results
 
+    # Creates a new InferenceResponse instance.
+    #
+    # @param output [Array<Message>] parsed output messages
+    # @param raw [Object] raw response from RubyLLM
+    # @param model [String] model identifier
+    # @param provider [Symbol] provider identifier
+    # @param captured_tool_results [Array<ToolResultMessage>] captured results
     def initialize(output:, raw:, model:, provider:, captured_tool_results: [])
       @output = output
       @raw = raw

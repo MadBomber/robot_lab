@@ -18,8 +18,24 @@ module RobotLab
     #   context.publish_event(event: "text.delta", data: { delta: "Hello" })
     #
     class Context
+      # @!attribute [r] run_id
+      #   @return [String] the unique run identifier
+      # @!attribute [r] parent_run_id
+      #   @return [String, nil] the parent run identifier for nested contexts
+      # @!attribute [r] message_id
+      #   @return [String] the current message identifier
+      # @!attribute [r] scope
+      #   @return [String] the context scope (network, robot, etc.)
       attr_reader :run_id, :parent_run_id, :message_id, :scope
 
+      # Creates a new streaming Context.
+      #
+      # @param run_id [String] unique run identifier
+      # @param message_id [String] current message identifier
+      # @param scope [String, Symbol] context scope
+      # @param publish [Proc] callback for publishing events
+      # @param parent_run_id [String, nil] parent run identifier
+      # @param sequence_counter [SequenceCounter, nil] shared sequence counter
       def initialize(run_id:, message_id:, scope:, publish:, parent_run_id: nil, sequence_counter: nil)
         @run_id = run_id
         @parent_run_id = parent_run_id

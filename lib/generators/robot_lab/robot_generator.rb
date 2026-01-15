@@ -23,6 +23,9 @@ module RobotLab
       class_option :tools, type: :array, default: [],
                            desc: "List of tools to include"
 
+      # Creates the robot class file.
+      #
+      # @return [void]
       def create_robot_file
         if options[:routing]
           template "routing_robot.rb.tt", "app/robots/#{file_name}_robot.rb"
@@ -31,6 +34,9 @@ module RobotLab
         end
       end
 
+      # Creates the robot test file.
+      #
+      # @return [void]
       def create_test_file
         template "robot_test.rb.tt", "test/robots/#{file_name}_robot_test.rb"
       end

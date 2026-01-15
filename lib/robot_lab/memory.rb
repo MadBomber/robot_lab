@@ -23,8 +23,12 @@ module RobotLab
   #   memory.all(namespace: "classifier")  # => { finding: { value: "...", ... } }
   #
   class Memory
+    # The default namespace used for shared memory
     SHARED_NAMESPACE = :shared
 
+    # Creates a new Memory instance with an empty shared namespace.
+    #
+    # @return [Memory]
     def initialize
       @store = { SHARED_NAMESPACE => {} }
       @mutex = Mutex.new
@@ -55,6 +59,11 @@ module RobotLab
 
       value
     end
+
+    # @!method []=(key, value)
+    #   Alias for {#remember}.
+    #   @param key [Symbol, String] Memory key
+    #   @param value [Object] Value to store
     alias []= remember
 
     # Retrieve a value from memory
@@ -77,6 +86,11 @@ module RobotLab
         entry[:value]
       end
     end
+
+    # @!method [](key, namespace: nil, default: nil)
+    #   Alias for {#recall}.
+    #   @param key [Symbol, String] Memory key
+    #   @return [Object, nil]
     alias [] recall
 
     # Check if a key exists in memory
@@ -93,6 +107,10 @@ module RobotLab
         @store.dig(ns, key) != nil
       end
     end
+
+    # @!method has?(key, namespace: nil)
+    #   Alias for {#exists?}.
+    #   @return [Boolean]
     alias has? exists?
 
     # Remove a value from memory
@@ -217,6 +235,10 @@ module RobotLab
       end
     end
 
+    # Converts memory to JSON.
+    #
+    # @param args [Array] arguments passed to to_json
+    # @return [String] JSON representation
     def to_json(*args)
       to_h.to_json(*args)
     end
@@ -272,38 +294,79 @@ module RobotLab
   #   robot_memory.recall(:customer_id)  # => "12345"
   #
   class ScopedMemory
+    # Creates a new ScopedMemory accessor.
+    #
+    # @param memory [Memory] the parent memory instance
+    # @param namespace [Symbol, String] the namespace to scope to
     def initialize(memory, namespace)
       @memory = memory
       @namespace = namespace.to_sym
     end
 
+    # Store a value in the scoped namespace.
+    #
+    # @param key [Symbol, String] memory key
+    # @param value [Object] value to store
+    # @param metadata [Hash] additional metadata
+    # @return [Object] the stored value
     def remember(key, value, **metadata)
       @memory.remember(key, value, namespace: @namespace, **metadata)
     end
+    # @!method []=(key, value)
+    #   Alias for {#remember}.
     alias []= remember
 
+    # Retrieve a value from the scoped namespace.
+    #
+    # @param key [Symbol, String] memory key
+    # @param default [Object] default value if not found
+    # @return [Object, nil] the stored value or default
     def recall(key, default: nil)
       @memory.recall(key, namespace: @namespace, default: default)
     end
+
+    # @!method [](key, default: nil)
+    #   Alias for {#recall}.
     alias [] recall
 
+    # Check if a key exists in the scoped namespace.
+    #
+    # @param key [Symbol, String] memory key
+    # @return [Boolean]
     def exists?(key)
       @memory.exists?(key, namespace: @namespace)
     end
+
+    # @!method has?(key)
+    #   Alias for {#exists?}.
     alias has? exists?
 
+    # Remove a value from the scoped namespace.
+    #
+    # @param key [Symbol, String] memory key
+    # @return [Object, nil] the removed value
     def forget(key)
       @memory.forget(key, namespace: @namespace)
     end
 
+    # Get all memories in the scoped namespace.
+    #
+    # @return [Hash] all memories in this namespace
     def all
       @memory.all(namespace: @namespace)
     end
 
+    # Clear all memories in the scoped namespace.
+    #
+    # @return [self]
     def clear
       @memory.clear(namespace: @namespace)
     end
 
+    # Search memories in the scoped namespace.
+    #
+    # @param pattern [Regexp, String] pattern to match
+    # @return [Hash] matching memories
     def search(pattern)
       @memory.search(pattern, namespace: @namespace)
     end
@@ -316,6 +379,9 @@ module RobotLab
       @memory.scoped(Memory::SHARED_NAMESPACE)
     end
 
+    # Converts the scoped memory to a hash.
+    #
+    # @return [Hash] all memories in this namespace
     def to_h
       all
     end

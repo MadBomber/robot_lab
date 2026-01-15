@@ -21,8 +21,25 @@ module RobotLab
   #   state.memory.recall(:user_name)  # => "Alice"
   #
   class State
+    # @!attribute [r] thread_id
+    #   @return [String, nil] the thread identifier for persistence
+    # @!attribute [r] memory
+    #   @return [Memory] the shared memory store
     attr_reader :thread_id, :memory
 
+    # Creates a new State instance.
+    #
+    # @param data [Hash] initial state data accessible via the data proxy
+    # @param results [Array<RobotResult>] pre-loaded robot results
+    # @param messages [Array<Message, Hash>] pre-loaded messages for conversation history
+    # @param thread_id [String, nil] thread identifier for persistence
+    # @param memory [Memory, nil] shared memory store (creates new if nil)
+    #
+    # @example Basic state
+    #   State.new(data: { category: nil, resolved: false })
+    #
+    # @example State with pre-loaded history
+    #   State.new(messages: [{ role: "user", content: "Hello" }])
     def initialize(data: {}, results: [], messages: [], thread_id: nil, memory: nil)
       @_data = data.is_a?(Hash) ? data.transform_keys(&:to_sym) : data
       @_results = Array(results)
@@ -125,8 +142,15 @@ module RobotLab
         memory: share_memory ? @memory : nil
       )
     end
+    # @!method dup(share_memory: true)
+    #   Alias for {#clone}.
+    #   @param share_memory [Boolean] whether to share memory
+    #   @return [State]
     alias dup clone
 
+    # Converts the state to a hash representation.
+    #
+    # @return [Hash] a hash containing all state data
     def to_h
       {
         data: data.to_h,
@@ -137,6 +161,10 @@ module RobotLab
       }.compact
     end
 
+    # Converts the state to JSON.
+    #
+    # @param args [Array] arguments passed to to_json
+    # @return [String] JSON representation of the state
     def to_json(*args)
       to_h.to_json(*args)
     end

@@ -14,6 +14,12 @@ module RobotLab
       #   )
       #
       class StreamableHTTP < Base
+        # Creates a new StreamableHTTP transport.
+        #
+        # @param config [Hash] transport configuration
+        # @option config [String] :url HTTP server URL
+        # @option config [String] :session_id optional session identifier
+        # @option config [Proc] :auth_provider optional authentication callback
         def initialize(config)
           super
           @client = nil
@@ -21,6 +27,10 @@ module RobotLab
           @session_id = config[:session_id]
         end
 
+        # Connect to the MCP server via HTTP.
+        #
+        # @return [self]
+        # @raise [MCPError] if async-http gem is not available
         def connect
           return self if @connected
 
@@ -45,6 +55,11 @@ module RobotLab
           raise MCPError, "async-http gem required for HTTP transport: #{e.message}"
         end
 
+        # Send a JSON-RPC request to the MCP server.
+        #
+        # @param message [Hash] JSON-RPC message
+        # @return [Hash] the response
+        # @raise [MCPError] if not connected
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 
@@ -74,6 +89,9 @@ module RobotLab
           end.wait
         end
 
+        # Close the HTTP connection.
+        #
+        # @return [self]
         def close
           return self unless @connected
 
@@ -84,10 +102,16 @@ module RobotLab
           self
         end
 
+        # Check if the transport is connected.
+        #
+        # @return [Boolean] true if connected
         def connected?
           @connected
         end
 
+        # Returns the session identifier.
+        #
+        # @return [String, nil] the session ID
         def session_id
           @session_id
         end

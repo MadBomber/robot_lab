@@ -66,14 +66,26 @@ module RobotLab
       ].freeze
 
       class << self
+        # Checks if the event is a lifecycle event.
+        #
+        # @param event [String] the event type
+        # @return [Boolean]
         def lifecycle?(event)
           LIFECYCLE_EVENTS.include?(event)
         end
 
+        # Checks if the event is a delta (content streaming) event.
+        #
+        # @param event [String] the event type
+        # @return [Boolean]
         def delta?(event)
           DELTA_EVENTS.include?(event)
         end
 
+        # Checks if the event is a valid event type.
+        #
+        # @param event [String] the event type
+        # @return [Boolean]
         def valid?(event)
           ALL_EVENTS.include?(event)
         end

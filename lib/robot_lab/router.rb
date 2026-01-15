@@ -15,8 +15,25 @@ module RobotLab
     #   }
     #
     class Args
+      # @!attribute [r] context
+      #   @return [Hash] the current execution context
+      # @!attribute [r] network
+      #   @return [Network] the network being executed
+      # @!attribute [r] stack
+      #   @return [Array<Robot>] robots that have been called in this iteration
+      # @!attribute [r] call_count
+      #   @return [Integer] number of times the router has been called
+      # @!attribute [r] last_result
+      #   @return [RobotResult, nil] the result from the last robot execution
       attr_reader :context, :network, :stack, :call_count, :last_result
 
+      # Creates a new Args instance.
+      #
+      # @param context [Hash] execution context
+      # @param network [Network] the network
+      # @param call_count [Integer] number of router calls
+      # @param stack [Array<Robot>] robots called so far
+      # @param last_result [RobotResult, nil] last result
       def initialize(context:, network:, call_count:, stack: [], last_result: nil)
         @context = context
         @network = network
@@ -25,11 +42,16 @@ module RobotLab
         @last_result = last_result
       end
 
-      # Convenience accessor for message in context
+      # Convenience accessor for message in context.
+      #
+      # @return [String, nil] the current message
       def message
         @context[:message]
       end
 
+      # Converts the args to a hash representation.
+      #
+      # @return [Hash]
       def to_h
         {
           context: context,

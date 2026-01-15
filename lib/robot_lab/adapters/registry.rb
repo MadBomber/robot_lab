@@ -11,6 +11,7 @@ module RobotLab
     #   adapter.format_messages(messages)
     #
     module Registry
+      # @return [Hash<Symbol, Class>] mapping of provider symbols to adapter classes
       ADAPTERS = {
         anthropic: Anthropic,
         openai: OpenAI,

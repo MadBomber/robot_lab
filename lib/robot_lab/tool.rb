@@ -30,8 +30,34 @@ module RobotLab
   #   )
   #
   class Tool
+    # @!attribute [r] name
+    #   @return [String] the unique identifier for the tool
+    # @!attribute [r] description
+    #   @return [String, nil] a description of what the tool does
+    # @!attribute [r] parameters
+    #   @return [Class, Hash, nil] the parameter schema (RubyLLM::Schema or JSON Schema hash)
+    # @!attribute [r] handler
+    #   @return [Proc, nil] the callable that executes the tool logic
+    # @!attribute [r] mcp
+    #   @return [String, nil] the MCP server name if this is an MCP-provided tool
+    # @!attribute [r] strict
+    #   @return [Boolean, nil] whether strict mode is enabled
     attr_reader :name, :description, :parameters, :handler, :mcp, :strict
 
+    # Creates a new Tool instance.
+    #
+    # @param name [String] the unique identifier for the tool
+    # @param description [String, nil] a description of what the tool does
+    # @param parameters [Class, Hash, nil] parameter schema (RubyLLM::Schema or JSON Schema)
+    # @param handler [Proc, nil] the callable that executes the tool logic
+    # @param mcp [String, nil] MCP server name if this is an MCP tool
+    # @param strict [Boolean, nil] whether strict mode is enabled
+    # @yield [input, **opts] optional block as handler
+    #
+    # @example Tool with block handler
+    #   Tool.new(name: "greet", description: "Greet user") do |input, **opts|
+    #     "Hello, #{input[:name]}!"
+    #   end
     def initialize(name:, description: nil, parameters: nil, handler: nil, mcp: nil, strict: nil, &block)
       @name = name.to_s
       @description = description
@@ -121,6 +147,9 @@ module RobotLab
       end
     end
 
+    # Converts the tool to a hash representation.
+    #
+    # @return [Hash] a hash containing the tool configuration
     def to_h
       {
         name: name,
@@ -131,6 +160,10 @@ module RobotLab
       }.compact
     end
 
+    # Converts the tool to JSON.
+    #
+    # @param args [Array] arguments passed to to_json
+    # @return [String] JSON representation of the tool
     def to_json(*args)
       to_h.to_json(*args)
     end

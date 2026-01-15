@@ -8,8 +8,13 @@ module RobotLab
       # @abstract Subclass and implement {#connect}, {#send_request}, {#close}
       #
       class Base
+        # @!attribute [r] config
+        #   @return [Hash] the transport configuration
         attr_reader :config
 
+        # Creates a new transport instance.
+        #
+        # @param config [Hash] transport configuration options
         def initialize(config)
           @config = config.transform_keys(&:to_sym)
         end
@@ -39,6 +44,9 @@ module RobotLab
           raise NotImplementedError
         end
 
+        # Check if the transport is connected.
+        #
+        # @return [Boolean] true if connected
         def connected?
           false
         end

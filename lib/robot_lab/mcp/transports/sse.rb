@@ -11,6 +11,10 @@ module RobotLab
       #   transport = SSE.new(url: "http://localhost:8080/sse")
       #
       class SSE < Base
+        # Creates a new SSE transport.
+        #
+        # @param config [Hash] transport configuration
+        # @option config [String] :url SSE server URL
         def initialize(config)
           super
           @client = nil
@@ -18,6 +22,10 @@ module RobotLab
           @event_queue = []
         end
 
+        # Connect to the MCP server via SSE.
+        #
+        # @return [self]
+        # @raise [MCPError] if async-http gem is not available
         def connect
           return self if @connected
 
@@ -41,6 +49,11 @@ module RobotLab
           raise MCPError, "async-http gem required for SSE transport: #{e.message}"
         end
 
+        # Send a JSON-RPC request to the MCP server.
+        #
+        # @param message [Hash] JSON-RPC message
+        # @return [Hash] the response
+        # @raise [MCPError] if not connected
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 
@@ -61,6 +74,9 @@ module RobotLab
           end.wait
         end
 
+        # Close the SSE connection.
+        #
+        # @return [self]
         def close
           return self unless @connected
 
@@ -71,6 +87,9 @@ module RobotLab
           self
         end
 
+        # Check if the transport is connected.
+        #
+        # @return [Boolean] true if connected
         def connected?
           @connected
         end

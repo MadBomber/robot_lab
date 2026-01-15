@@ -16,9 +16,39 @@ module RobotLab
   #   result.checksum  # => "a1b2c3d4..."
   #
   class RobotResult
+    # @!attribute [r] robot_name
+    #   @return [String] the name of the robot that produced this result
+    # @!attribute [r] output
+    #   @return [Array<Message>] the output messages from the robot
+    # @!attribute [r] tool_calls
+    #   @return [Array<ToolResultMessage>] the tool call results
+    # @!attribute [r] created_at
+    #   @return [Time] when the result was created
+    # @!attribute [r] id
+    #   @return [String] unique identifier for this result
+    # @!attribute [r] stop_reason
+    #   @return [String, nil] reason execution stopped
     attr_reader :robot_name, :output, :tool_calls, :created_at, :id, :stop_reason
+
+    # @!attribute [rw] prompt
+    #   @return [Array<Message>, nil] the prompt messages used (debug)
+    # @!attribute [rw] history
+    #   @return [Array<Message>, nil] the history used (debug)
+    # @!attribute [rw] raw
+    #   @return [Object, nil] the raw LLM response (debug)
     attr_accessor :prompt, :history, :raw
 
+    # Creates a new RobotResult instance.
+    #
+    # @param robot_name [String] the name of the robot
+    # @param output [Array<Message, Hash>] the output messages
+    # @param tool_calls [Array<ToolResultMessage, Hash>] tool call results
+    # @param created_at [Time, nil] creation timestamp (defaults to now)
+    # @param id [String, nil] unique ID (defaults to UUID)
+    # @param prompt [Array<Message>, nil] prompt messages (debug)
+    # @param history [Array<Message>, nil] history messages (debug)
+    # @param raw [Object, nil] raw LLM response (debug)
+    # @param stop_reason [String, nil] reason for stopping
     def initialize(
       robot_name:,
       output:,
@@ -75,6 +105,11 @@ module RobotLab
       }.compact
     end
 
+    # Converts the result to a full hash representation.
+    #
+    # Includes debug fields (prompt, history, raw).
+    #
+    # @return [Hash] full result data including debug fields
     def to_h
       export.merge(
         prompt: prompt&.map(&:to_h),
@@ -83,6 +118,12 @@ module RobotLab
       ).compact
     end
 
+    # Converts the result to JSON.
+    #
+    # Uses export format (excludes debug fields).
+    #
+    # @param args [Array] arguments passed to to_json
+    # @return [String] JSON representation
     def to_json(*args)
       export.to_json(*args)
     end

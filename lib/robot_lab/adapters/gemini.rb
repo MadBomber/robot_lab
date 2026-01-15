@@ -10,6 +10,7 @@ module RobotLab
     # - functionCall/functionResponse format
     #
     class Gemini < Base
+      # Creates a new Gemini adapter instance.
       def initialize
         super(:gemini)
       end

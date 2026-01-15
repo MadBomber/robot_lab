@@ -35,11 +35,52 @@ module RobotLab
   #   )
   #
   class Robot
+    # @!attribute [r] name
+    #   @return [String] the unique identifier for the robot
+    # @!attribute [r] description
+    #   @return [String, nil] an optional description of the robot's purpose
+    # @!attribute [r] template
+    #   @return [Symbol, String] the ERB template for the robot's prompt
+    # @!attribute [r] model
+    #   @return [String, Object] the LLM model identifier or model object
+    # @!attribute [r] local_tools
+    #   @return [Array] the locally defined tools for this robot
+    # @!attribute [r] mcp_clients
+    #   @return [Hash<String, MCP::Client>] connected MCP clients by server name
+    # @!attribute [r] mcp_tools
+    #   @return [Array<Tool>] tools discovered from MCP servers
     attr_reader :name, :description, :template, :model, :local_tools, :mcp_clients, :mcp_tools
 
-    # Build-time MCP and tools configuration (raw, unresolved values)
+    # @!attribute [r] mcp_config
+    #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
+    # @!attribute [r] tools_config
+    #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
     attr_reader :mcp_config, :tools_config
 
+    # Creates a new Robot instance.
+    #
+    # @param name [String] the unique identifier for the robot
+    # @param template [Symbol, String] the ERB template for the robot's prompt
+    # @param context [Hash, Proc] variables to pass to the template at build time
+    # @param description [String, nil] an optional description of the robot's purpose
+    # @param local_tools [Array] tools defined locally for this robot
+    # @param model [String, nil] the LLM model to use (defaults to config.default_model)
+    # @param mcp_servers [Array] legacy parameter for MCP server configurations
+    # @param mcp [Symbol, Array] hierarchical MCP config (:none, :inherit, or array of servers)
+    # @param tools [Symbol, Array] hierarchical tools config (:none, :inherit, or array of tool names)
+    # @param on_tool_call [Proc, nil] callback invoked when a tool is called
+    # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
+    #
+    # @example Basic robot
+    #   Robot.new(name: "helper", template: :helper)
+    #
+    # @example Robot with tools and callbacks
+    #   Robot.new(
+    #     name: "support",
+    #     template: :support,
+    #     local_tools: [OrderLookup],
+    #     on_tool_call: ->(call) { puts "Calling #{call.name}" }
+    #   )
     def initialize(
       name:,
       template:,
@@ -73,7 +114,11 @@ module RobotLab
       @mcp_initialized = false
     end
 
-    # Backward compatibility: expose tools as alias for local_tools
+    # Returns the robot's local tools (alias for local_tools).
+    #
+    # Provided for backward compatibility with earlier API versions.
+    #
+    # @return [Array] the locally defined tools
     def tools
       @local_tools
     end
@@ -121,6 +166,9 @@ module RobotLab
       self
     end
 
+    # Converts the robot to a hash representation.
+    #
+    # @return [Hash] a hash containing the robot's configuration
     def to_h
       {
         name: name,

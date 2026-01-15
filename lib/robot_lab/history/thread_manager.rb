@@ -13,6 +13,8 @@ module RobotLab
     #   history = manager.get_history(thread_id)
     #
     class ThreadManager
+      # @!attribute [r] config
+      #   @return [Config] the history configuration
       attr_reader :config
 
       # Initialize thread manager

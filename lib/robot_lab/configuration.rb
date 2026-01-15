@@ -20,6 +20,22 @@ module RobotLab
   #   end
   #
   class Configuration
+    # @!attribute [rw] default_provider
+    #   @return [Symbol] the default LLM provider (defaults to :anthropic)
+    # @!attribute [rw] default_model
+    #   @return [String] the default model to use (defaults to "claude-sonnet-4")
+    # @!attribute [rw] max_iterations
+    #   @return [Integer] maximum robot iterations per network run (defaults to 10)
+    # @!attribute [rw] max_tool_iterations
+    #   @return [Integer] maximum tool iterations per robot run (defaults to 10)
+    # @!attribute [rw] streaming_enabled
+    #   @return [Boolean] whether streaming is enabled by default (defaults to true)
+    # @!attribute [rw] logger
+    #   @return [Logger] the logger instance
+    # @!attribute [rw] mcp
+    #   @return [Symbol, Array] global MCP server configuration (:none, :inherit, or array)
+    # @!attribute [rw] tools
+    #   @return [Symbol, Array] global tools whitelist (:none, :inherit, or array)
     attr_accessor :default_provider,
                   :default_model,
                   :max_iterations,
@@ -29,6 +45,7 @@ module RobotLab
                   :mcp,
                   :tools
 
+    # Creates a new Configuration with default values.
     def initialize
       @default_provider = :anthropic
       @default_model = "claude-sonnet-4"
@@ -41,23 +58,42 @@ module RobotLab
       @tools = :none
     end
 
-    # API key setters that configure RubyLLM internally
+    # Sets the Anthropic API key.
+    #
+    # @param key [String] the API key
+    # @return [void]
     def anthropic_api_key=(key)
       RubyLLM.configure { |c| c.anthropic_api_key = key }
     end
 
+    # Sets the OpenAI API key.
+    #
+    # @param key [String] the API key
+    # @return [void]
     def openai_api_key=(key)
       RubyLLM.configure { |c| c.openai_api_key = key }
     end
 
+    # Sets the Google Gemini API key.
+    #
+    # @param key [String] the API key
+    # @return [void]
     def gemini_api_key=(key)
       RubyLLM.configure { |c| c.gemini_api_key = key }
     end
 
+    # Sets the AWS Bedrock API key.
+    #
+    # @param key [String] the API key
+    # @return [void]
     def bedrock_api_key=(key)
       RubyLLM.configure { |c| c.bedrock_api_key = key }
     end
 
+    # Sets the OpenRouter API key.
+    #
+    # @param key [String] the API key
+    # @return [void]
     def openrouter_api_key=(key)
       RubyLLM.configure { |c| c.openrouter_api_key = key }
     end
@@ -71,6 +107,9 @@ module RobotLab
       configure_template_library if path
     end
 
+    # Returns the template path.
+    #
+    # @return [String] the configured template path or default
     def template_path
       @template_path || default_template_path
     end

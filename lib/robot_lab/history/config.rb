@@ -21,6 +21,14 @@ module RobotLab
     #   )
     #
     class Config
+      # @!attribute [rw] create_thread
+      #   @return [Proc, nil] callback to create a new conversation thread
+      # @!attribute [rw] get
+      #   @return [Proc, nil] callback to retrieve history for a thread
+      # @!attribute [rw] append_user_message
+      #   @return [Proc, nil] callback to append user messages
+      # @!attribute [rw] append_results
+      #   @return [Proc, nil] callback to append robot results
       attr_accessor :create_thread, :get, :append_user_message, :append_results
 
       # Initialize history configuration
