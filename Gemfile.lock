@@ -106,6 +106,7 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     debug_me (1.1.3)
+    docile (1.4.1)
     drb (2.2.3)
     erb (6.0.1)
     erubi (1.13.1)
@@ -266,6 +267,12 @@ GEM
       ruby_llm-schema (>= 0.2.0)
     securerandom (0.4.1)
     simple_flow (0.2.0)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.2)
+    simplecov_json_formatter (0.1.4)
     sqlite3 (2.9.0-arm64-darwin)
     state_machines (0.100.4)
     state_machines-activemodel (0.101.0)
@@ -307,6 +314,7 @@ DEPENDENCIES
   rake
   robot_lab!
   rubocop
+  simplecov
   sqlite3
   state_machines-activerecord
   vcr
@@ -337,6 +345,7 @@ CHECKSUMS
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
   debug_me (1.1.3) sha256=ae8cf61993350d9b3cbe337a7f9a0f595be5b4976c10891a4e1eacc63d09f717
+  docile (1.4.1) sha256=96159be799bfa73cdb721b840e9802126e4e03dfc26863db73647204c727f21e
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   erb (6.0.1) sha256=28ecdd99c5472aebd5674d6061e3c6b0a45c049578b071e5a52c2a7f13c197e5
   erubi (1.13.1) sha256=a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9
@@ -412,6 +421,9 @@ CHECKSUMS
   ruby_llm-template (0.1.6) sha256=163e1f195276df31596af1862a43cb4b7ed256e9fa7a7802690c728748c1702a
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   simple_flow (0.2.0) sha256=ec99d6ece749d014eae2afd290288b15809eff9430d0ad87a9d4cea6dd6beaf9
+  simplecov (0.22.0) sha256=fe2622c7834ff23b98066bb0a854284b2729a569ac659f82621fc22ef36213a5
+  simplecov-html (0.13.2) sha256=bd0b8e54e7c2d7685927e8d6286466359b6f16b18cb0df47b508e8d73c777246
+  simplecov_json_formatter (0.1.4) sha256=529418fbe8de1713ac2b2d612aa3daa56d316975d307244399fa4838c601b428
   sqlite3 (2.9.0-arm64-darwin) sha256=a917bd9b84285766ff3300b7d79cd583f5a067594c8c1263e6441618c04a6ed3
   state_machines (0.100.4) sha256=dd4e555ebb061569dd8fe18a5f39b51d10be6306b89a0c315a9697671d752565
   state_machines-activemodel (0.101.0) sha256=6798c6bf5aa4be2b1a00ca633949c999ebee7a148bd4ea8f6858b189e2cdf72d

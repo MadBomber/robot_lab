@@ -290,4 +290,140 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 3, robot.local_tools.size
     assert_equal %w[search calculate format], robot.local_tools.map(&:name)
   end
+
+  # Private method: resolve_context
+  def test_resolve_context_with_hash
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    result = robot.send(:resolve_context, { key: "value" }, network: nil)
+
+    assert_equal({ key: "value" }, result)
+  end
+
+  def test_resolve_context_with_proc
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    context_proc = ->(network:) { { computed: "data", has_network: !network.nil? } }
+    result = robot.send(:resolve_context, context_proc, network: nil)
+
+    assert_equal({ computed: "data", has_network: false }, result)
+  end
+
+  def test_resolve_context_with_nil
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    result = robot.send(:resolve_context, nil, network: nil)
+
+    assert_equal({}, result)
+  end
+
+  def test_resolve_context_with_invalid_type
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    result = robot.send(:resolve_context, "invalid", network: nil)
+
+    assert_equal({}, result)
+  end
+
+  # Private method: normalize_tool_calls
+  def test_normalize_tool_calls_with_nil
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    result = robot.send(:normalize_tool_calls, nil)
+
+    assert_equal [], result
+  end
+
+  def test_normalize_tool_calls_with_empty_array
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    result = robot.send(:normalize_tool_calls, [])
+
+    assert_equal [], result
+  end
+
+  def test_normalize_tool_calls_with_hash
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    tool_calls = [{ name: "search", result: "found" }]
+    result = robot.send(:normalize_tool_calls, tool_calls)
+
+    assert_equal 1, result.size
+    assert result.first.is_a?(RobotLab::ToolResultMessage)
+  end
+
+  def test_normalize_tool_calls_preserves_non_hash_items
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    existing_message = RobotLab::ToolResultMessage.new(
+      tool: { name: "test" },
+      content: "result"
+    )
+    result = robot.send(:normalize_tool_calls, [existing_message])
+
+    assert_equal [existing_message], result
+  end
+
+  # Private method: all_tools
+  def test_all_tools_combines_local_and_mcp_tools
+    tool = build_tool(name: "local") { |i| i }
+    robot = RobotLab::Robot.new(
+      name: "test",
+      template: :assistant,
+      local_tools: [tool]
+    )
+
+    # Simulate adding an MCP tool
+    mcp_tool = build_tool(name: "mcp_tool") { |i| i }
+    robot.instance_variable_get(:@mcp_tools) << mcp_tool
+
+    all = robot.send(:all_tools)
+    assert_equal 2, all.size
+    assert_includes all.map(&:name), "local"
+    assert_includes all.map(&:name), "mcp_tool"
+  end
+
+  # Private method: filtered_tools
+  def test_filtered_tools_returns_all_when_empty_whitelist
+    tool1 = build_tool(name: "tool1") { |i| i }
+    tool2 = build_tool(name: "tool2") { |i| i }
+    robot = RobotLab::Robot.new(
+      name: "test",
+      template: :assistant,
+      local_tools: [tool1, tool2]
+    )
+
+    result = robot.send(:filtered_tools, [])
+    assert_equal 2, result.size
+  end
+
+  def test_filtered_tools_filters_by_name
+    tool1 = build_tool(name: "search") { |i| i }
+    tool2 = build_tool(name: "delete") { |i| i }
+    robot = RobotLab::Robot.new(
+      name: "test",
+      template: :assistant,
+      local_tools: [tool1, tool2]
+    )
+
+    result = robot.send(:filtered_tools, ["search"])
+    assert_equal 1, result.size
+    assert_equal "search", result.first.name
+  end
+
+  # Private method: ensure_mcp_clients
+  def test_ensure_mcp_clients_with_empty_servers
+    robot = RobotLab::Robot.new(name: "test", template: :assistant)
+    robot.send(:ensure_mcp_clients, [])
+
+    # Should not modify mcp state
+    refute robot.instance_variable_get(:@mcp_initialized)
+  end
+
+  # MCP hierarchy resolution
+  def test_resolve_mcp_hierarchy_with_none
+    robot = RobotLab::Robot.new(name: "test", template: :assistant, mcp: :none)
+    result = robot.send(:resolve_mcp_hierarchy, :none, network: nil)
+
+    assert_equal [], result
+  end
+
+  def test_resolve_tools_hierarchy_with_none
+    robot = RobotLab::Robot.new(name: "test", template: :assistant, tools: :none)
+    result = robot.send(:resolve_tools_hierarchy, :none, network: nil)
+
+    assert_equal [], result
+  end
 end

@@ -1,5 +1,20 @@
 # frozen_string_literal: true
 
+require "simplecov"
+SimpleCov.start do
+  add_filter "/test/"
+  add_filter "/vendor/"
+
+  add_group "Core", "lib/robot_lab"
+  add_group "Adapters", "lib/robot_lab/adapters"
+  add_group "MCP", "lib/robot_lab/mcp"
+  add_group "History", "lib/robot_lab/history"
+  add_group "Streaming", "lib/robot_lab/streaming"
+  add_group "Rails", "lib/robot_lab/rails"
+
+  enable_coverage :branch
+end
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "robot_lab"

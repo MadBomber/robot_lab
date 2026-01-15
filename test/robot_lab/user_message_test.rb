@@ -67,4 +67,94 @@ class RobotLab::UserMessageTest < Minitest::Test
     assert_instance_of RobotLab::UserMessage, result
     assert_equal "From text", result.content
   end
+
+  def test_user_message_to_s
+    message = RobotLab::UserMessage.new("Test content")
+
+    assert_equal "Test content", message.to_s
+  end
+
+  def test_user_message_to_json
+    message = RobotLab::UserMessage.new("Test", metadata: { key: "value" })
+    json = message.to_json
+
+    assert json.is_a?(String)
+    parsed = JSON.parse(json)
+    assert_equal "Test", parsed["content"]
+  end
+
+  def test_user_message_auto_generates_id
+    message = RobotLab::UserMessage.new("Test")
+
+    assert_match(/\A[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\z/, message.id)
+  end
+
+  def test_user_message_auto_sets_created_at
+    message = RobotLab::UserMessage.new("Test")
+
+    assert message.created_at.is_a?(Time)
+  end
+
+  def test_user_message_with_thread_id
+    message = RobotLab::UserMessage.new("Test", thread_id: "thread_123")
+
+    assert_equal "thread_123", message.thread_id
+  end
+
+  def test_user_message_with_system_prompt
+    message = RobotLab::UserMessage.new("Test", system_prompt: "Be helpful")
+
+    assert_equal "Be helpful", message.system_prompt
+  end
+
+  def test_user_message_with_custom_id
+    message = RobotLab::UserMessage.new("Test", id: "custom-id")
+
+    assert_equal "custom-id", message.id
+  end
+
+  def test_user_message_from_hash_with_string_keys
+    hash = { "content" => "Test", "metadata" => { "key" => "value" } }
+    message = RobotLab::UserMessage.from(hash)
+
+    assert_equal "Test", message.content
+  end
+
+  def test_user_message_from_other_object
+    # Objects that respond to to_s
+    result = RobotLab::UserMessage.from(123)
+
+    assert_equal "123", result.content
+  end
+
+  def test_user_message_to_h_excludes_nil_values
+    message = RobotLab::UserMessage.new("Test")
+    hash = message.to_h
+
+    refute hash.key?(:thread_id)
+    refute hash.key?(:system_prompt)
+  end
+
+  def test_user_message_content_converted_to_string
+    message = RobotLab::UserMessage.new(123)
+
+    assert_equal "123", message.content
+  end
+
+  def test_user_message_from_hash_with_all_fields
+    hash = {
+      content: "Test",
+      thread_id: "thread_1",
+      system_prompt: "Be helpful",
+      metadata: { key: "value" },
+      id: "msg_123"
+    }
+    message = RobotLab::UserMessage.from(hash)
+
+    assert_equal "Test", message.content
+    assert_equal "thread_1", message.thread_id
+    assert_equal "Be helpful", message.system_prompt
+    assert_equal({ key: "value" }, message.metadata)
+    assert_equal "msg_123", message.id
+  end
 end

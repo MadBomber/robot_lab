@@ -21,4 +21,5 @@ group :test do
   gem "sqlite3"
   gem "activerecord", ">= 7.0"
   gem "state_machines-activerecord"
+  gem "simplecov", require: false
 end
