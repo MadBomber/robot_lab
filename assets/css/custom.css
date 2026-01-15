@@ -1,0 +1,56 @@
+/* Custom styles for RobotLab documentation */
+
+/* Robot-themed accent colors */
+:root {
+  --md-primary-fg-color: #673ab7;
+  --md-primary-fg-color--light: #9575cd;
+  --md-primary-fg-color--dark: #512da8;
+  --md-accent-fg-color: #ffc107;
+}
+
+/* Code block styling */
+.md-typeset code {
+  background-color: rgba(103, 58, 183, 0.1);
+}
+
+/* Admonition customization */
+.md-typeset .admonition.robot,
+.md-typeset details.robot {
+  border-color: #673ab7;
+}
+
+.md-typeset .robot > .admonition-title,
+.md-typeset .robot > summary {
+  background-color: rgba(103, 58, 183, 0.1);
+}
+
+.md-typeset .robot > .admonition-title::before,
+.md-typeset .robot > summary::before {
+  background-color: #673ab7;
+  -webkit-mask-image: var(--md-admonition-icon--robot);
+  mask-image: var(--md-admonition-icon--robot);
+}
+
+/* Grid cards spacing */
+.md-typeset .grid.cards > ul > li {
+  margin-bottom: 1em;
+}
+
+/* API reference table styling */
+.md-typeset table:not([class]) th {
+  background-color: rgba(103, 58, 183, 0.1);
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  background: transparent !important;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] {
+  --md-code-bg-color: #1e1e2e;
+}
+
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: rgba(149, 117, 205, 0.2);
+}
