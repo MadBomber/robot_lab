@@ -1,6 +1,6 @@
 # Creating Networks
 
-Networks orchestrate multiple robots using [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with DAG-based execution and optional step activation.
+Networks orchestrate multiple robots using [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with DAG-based execution and optional task activation.
 
 ## Basic Network
 
@@ -8,9 +8,9 @@ Create a network with a sequential pipeline:
 
 ```ruby
 network = RobotLab.create_network(name: "pipeline") do
-  step :analyzer, analyzer_robot, depends_on: :none
-  step :writer, writer_robot, depends_on: [:analyzer]
-  step :reviewer, reviewer_robot, depends_on: [:writer]
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot, depends_on: [:analyzer]
+  task :reviewer, reviewer_robot, depends_on: [:writer]
 end
 
 result = network.run(message: "Analyze this document")
@@ -38,54 +38,81 @@ network = RobotLab.create_network(name: "parallel", concurrency: :threads) do
 end
 ```
 
-## Adding Steps
+## Adding Tasks
 
-### Sequential Steps
+### Sequential Tasks
 
-Each step depends on the previous:
+Each task depends on the previous:
 
 ```ruby
 network = RobotLab.create_network(name: "pipeline") do
-  step :first, robot1, depends_on: :none
-  step :second, robot2, depends_on: [:first]
-  step :third, robot3, depends_on: [:second]
+  task :first, robot1, depends_on: :none
+  task :second, robot2, depends_on: [:first]
+  task :third, robot3, depends_on: [:second]
 end
 ```
 
-### Parallel Steps
+### Parallel Tasks
 
-Steps with the same dependencies run in parallel:
+Tasks with the same dependencies run in parallel:
 
 ```ruby
 network = RobotLab.create_network(name: "parallel_analysis") do
-  step :fetch, fetcher, depends_on: :none
+  task :fetch, fetcher, depends_on: :none
 
   # These run in parallel after :fetch
-  step :sentiment, sentiment_bot, depends_on: [:fetch]
-  step :entities, entity_bot, depends_on: [:fetch]
-  step :keywords, keyword_bot, depends_on: [:fetch]
+  task :sentiment, sentiment_bot, depends_on: [:fetch]
+  task :entities, entity_bot, depends_on: [:fetch]
+  task :keywords, keyword_bot, depends_on: [:fetch]
 
   # This waits for all three to complete
-  step :merge, merger, depends_on: [:sentiment, :entities, :keywords]
+  task :merge, merger, depends_on: [:sentiment, :entities, :keywords]
 end
 ```
 
-### Optional Steps
+### Optional Tasks
 
-Optional steps only run when explicitly activated:
+Optional tasks only run when explicitly activated:
 
 ```ruby
 network = RobotLab.create_network(name: "router") do
-  step :classifier, classifier_robot, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 ```
 
+## Per-Task Configuration
+
+Tasks can have individual context and configuration that's deep-merged with the network's run parameters:
+
+```ruby
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot,
+       context: { department: "billing", escalation_level: 2 },
+       depends_on: :optional
+  task :technical, technical_robot,
+       context: { department: "technical" },
+       tools: [DebugTool, LogTool],
+       depends_on: :optional
+end
+```
+
+### Task Options
+
+| Option | Description |
+|--------|-------------|
+| `context` | Hash merged with run params (task values override) |
+| `mcp` | MCP servers for this task |
+| `tools` | Tools available to this task |
+| `memory` | Task-specific memory |
+| `depends_on` | `:none`, `[:task1]`, or `:optional` |
+
 ## Conditional Routing
 
-Use optional steps with custom Robot subclasses for intelligent routing:
+Use optional tasks with custom Robot subclasses for intelligent routing:
 
 ```ruby
 class ClassifierRobot < RobotLab::Robot
@@ -113,10 +140,10 @@ classifier = ClassifierRobot.new(
 )
 
 network = RobotLab.create_network(name: "support") do
-  step :classifier, classifier, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 ```
 
@@ -141,7 +168,7 @@ result = network.run(
 )
 ```
 
-### Accessing Step Results
+### Accessing Task Results
 
 ```ruby
 result = network.run(message: "Process this")
@@ -161,8 +188,8 @@ Networks return a `SimpleFlow::Result` object:
 ```ruby
 result = network.run(message: "Hello")
 
-result.value      # The final step's output (RobotResult)
-result.context    # Hash of all step results and metadata
+result.value      # The final task's output (RobotResult)
+result.context    # Hash of all task results and metadata
 result.halted?    # Whether execution was halted early
 result.continued? # Whether execution continued normally
 ```
@@ -187,11 +214,11 @@ class SupportClassifier < RobotLab::Robot
 end
 
 network = RobotLab.create_network(name: "support") do
-  step :classifier, SupportClassifier.new(name: "classifier", template: :classifier),
+  task :classifier, SupportClassifier.new(name: "classifier", template: :classifier),
        depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 ```
 
@@ -201,9 +228,9 @@ Process through sequential stages:
 
 ```ruby
 network = RobotLab.create_network(name: "document_processor") do
-  step :extract, extractor, depends_on: :none
-  step :analyze, analyzer, depends_on: [:extract]
-  step :format, formatter, depends_on: [:analyze]
+  task :extract, extractor, depends_on: :none
+  task :analyze, analyzer, depends_on: [:extract]
+  task :format, formatter, depends_on: [:analyze]
 end
 ```
 
@@ -213,15 +240,15 @@ Parallel processing with aggregation:
 
 ```ruby
 network = RobotLab.create_network(name: "multi_analysis") do
-  step :prepare, preparer, depends_on: :none
+  task :prepare, preparer, depends_on: :none
 
   # Fan-out: parallel analysis
-  step :sentiment, sentiment_analyzer, depends_on: [:prepare]
-  step :topics, topic_extractor, depends_on: [:prepare]
-  step :entities, entity_recognizer, depends_on: [:prepare]
+  task :sentiment, sentiment_analyzer, depends_on: [:prepare]
+  task :topics, topic_extractor, depends_on: [:prepare]
+  task :entities, entity_recognizer, depends_on: [:prepare]
 
   # Fan-in: aggregate results
-  step :aggregate, aggregator, depends_on: [:sentiment, :topics, :entities]
+  task :aggregate, aggregator, depends_on: [:sentiment, :topics, :entities]
 end
 ```
 
@@ -238,7 +265,7 @@ class ValidatorRobot < RobotLab::Robot
       # Stop the pipeline
       result.halt(robot_result)
     else
-      # Continue to next step
+      # Continue to next task
       result
         .with_context(@name.to_sym, robot_result)
         .continue(robot_result)
@@ -289,11 +316,11 @@ Each robot should have a single responsibility:
 
 ```ruby
 # Good: focused robots
-step :classify, classifier, depends_on: :none
-step :respond, responder, depends_on: [:classify]
+task :classify, classifier, depends_on: :none
+task :respond, responder, depends_on: [:classify]
 
 # Bad: one robot doing everything
-step :do_everything, mega_robot, depends_on: :none
+task :do_everything, mega_robot, depends_on: :none
 ```
 
 ### 2. Use Context for Data Passing
@@ -319,11 +346,11 @@ end
 
 ### 3. Handle Missing Results
 
-Guard against missing optional step results:
+Guard against missing optional task results:
 
 ```ruby
 def call(result)
-  # Check if optional step ran
+  # Check if optional task ran
   if result.context[:validator]
     # Use validator result
   else

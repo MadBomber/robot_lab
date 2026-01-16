@@ -304,23 +304,40 @@ module RobotLab
     # Extract run context from SimpleFlow::Result
     #
     # Merges original run params (preserved in context) with current value.
+    # Extracts special parameters (mcp, tools, memory) for Robot#run.
     #
     # @param result [SimpleFlow::Result] the incoming result
-    # @return [Hash] context for run method
+    # @return [Hash] context for run method including mcp/tools config
     #
     def extract_run_context(result)
-      base = result.context[:run_params] || {}
+      run_params = result.context[:run_params] || {}
 
-      case result.value
-      when Hash
-        base.merge(result.value.transform_keys(&:to_sym))
-      when RobotResult
-        base.merge(message: result.value.last_text_content)
-      when String
-        base.merge(message: result.value)
-      else
-        base.merge(message: result.value.to_s)
-      end
+      # Extract robot-specific params that should be passed to run()
+      mcp = run_params.delete(:mcp) || :none
+      tools = run_params.delete(:tools) || :none
+      memory = run_params.delete(:memory)
+
+      # Build base context from remaining run params
+      base = run_params.dup
+
+      # Merge current value into context
+      merged = case result.value
+               when Hash
+                 base.merge(result.value.transform_keys(&:to_sym))
+               when RobotResult
+                 base.merge(message: result.value.last_text_content)
+               when String
+                 base.merge(message: result.value)
+               else
+                 base.merge(message: result.value.to_s)
+               end
+
+      # Add back the special params for run()
+      merged[:mcp] = mcp
+      merged[:tools] = tools
+      merged[:memory] = memory if memory
+
+      merged
     end
 
     def resolve_context(context, network:)

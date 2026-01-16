@@ -6,8 +6,8 @@ Orchestrates multiple robots using SimpleFlow pipelines with DAG-based execution
 
 ```ruby
 network = RobotLab.create_network(name: "support") do
-  step :classifier, classifier_robot, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
 end
 ```
 
@@ -61,29 +61,33 @@ Execute the network pipeline.
 
 **Returns:** `SimpleFlow::Result`
 
-### step
+### task
 
 ```ruby
-network.step(name, robot, depends_on:)
+network.task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)
 # => self
 ```
 
-Add a step to the pipeline.
+Add a task to the pipeline with optional per-task configuration.
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `name` | `Symbol` | Step identifier |
+| `name` | `Symbol` | Task identifier |
 | `robot` | `Robot` | Robot instance to execute |
-| `depends_on` | `:none`, `Array<Symbol>`, `:optional` | Step dependencies |
+| `context` | `Hash` | Task-specific context (deep-merged with run params) |
+| `mcp` | `:none`, Array | MCP server config (`:none` or array of servers) |
+| `tools` | `:none`, Array | Tools config (`:none` or array of tools) |
+| `memory` | `Memory`, `nil` | Task-specific memory |
+| `depends_on` | `:none`, `Array<Symbol>`, `:optional` | Task dependencies |
 
 **Dependency Types:**
 
 | Value | Description |
 |-------|-------------|
 | `:none` | No dependencies, runs first |
-| `[:step1, :step2]` | Waits for listed steps to complete |
+| `[:task1, :task2]` | Waits for listed tasks to complete |
 | `:optional` | Only runs when explicitly activated |
 
 ### add_robot
@@ -93,7 +97,7 @@ network.add_robot(robot)
 # => self
 ```
 
-Add a robot without creating a pipeline step. Useful for robots referenced by other steps.
+Add a robot without creating a pipeline task. Useful for robots referenced by other tasks.
 
 ### robot / []
 
@@ -148,8 +152,8 @@ Hash representation of network configuration.
 {
   name: "support",
   robots: ["classifier", "billing", "technical"],
-  steps: [:classifier, :billing, :technical],
-  optional_steps: [:billing, :technical]
+  tasks: ["classifier", "billing", "technical"],
+  optional_tasks: [:billing, :technical]
 }
 ```
 
@@ -160,8 +164,8 @@ When `run` is called, a `SimpleFlow::Result` is returned:
 ### Attributes
 
 ```ruby
-result.value      # Final step's output (RobotResult)
-result.context    # Hash of all step results
+result.value      # Final task's output (RobotResult)
+result.context    # Hash of all task results
 result.halted?    # Whether execution stopped early
 result.continued? # Whether execution continues
 ```
@@ -176,13 +180,28 @@ result.context[:billing]      # Billing robot's RobotResult (if activated)
 
 ## Builder DSL
 
-### step
+### task
 
 ```ruby
 network = RobotLab.create_network(name: "pipeline") do
-  step :first, robot1, depends_on: :none
-  step :second, robot2, depends_on: [:first]
-  step :optional, robot3, depends_on: :optional
+  task :first, robot1, depends_on: :none
+  task :second, robot2, depends_on: [:first]
+  task :optional, robot3, depends_on: :optional
+end
+```
+
+### task with context
+
+```ruby
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot,
+       context: { department: "billing", escalation_level: 2 },
+       depends_on: :optional
+  task :technical, technical_robot,
+       context: { department: "technical" },
+       tools: [DebugTool, LogTool],
+       depends_on: :optional
 end
 ```
 
@@ -192,9 +211,9 @@ end
 
 ```ruby
 network = RobotLab.create_network(name: "pipeline") do
-  step :extract, extractor, depends_on: :none
-  step :transform, transformer, depends_on: [:extract]
-  step :load, loader, depends_on: [:transform]
+  task :extract, extractor, depends_on: :none
+  task :transform, transformer, depends_on: [:extract]
+  task :load, loader, depends_on: [:transform]
 end
 
 result = network.run(message: "Process this document")
@@ -205,14 +224,14 @@ puts result.value.last_text_content
 
 ```ruby
 network = RobotLab.create_network(name: "analysis", concurrency: :threads) do
-  step :fetch, fetcher, depends_on: :none
+  task :fetch, fetcher, depends_on: :none
 
   # Run in parallel
-  step :sentiment, sentiment_bot, depends_on: [:fetch]
-  step :entities, entity_bot, depends_on: [:fetch]
+  task :sentiment, sentiment_bot, depends_on: [:fetch]
+  task :entities, entity_bot, depends_on: [:fetch]
 
   # Wait for both
-  step :merge, merger, depends_on: [:sentiment, :entities]
+  task :merge, merger, depends_on: [:sentiment, :entities]
 end
 ```
 
@@ -237,27 +256,27 @@ class ClassifierRobot < RobotLab::Robot
 end
 
 network = RobotLab.create_network(name: "support") do
-  step :classifier, ClassifierRobot.new(name: "classifier", template: :classifier),
+  task :classifier, ClassifierRobot.new(name: "classifier", template: :classifier),
        depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 
 result = network.run(message: "I have a billing question")
 puts result.value.last_text_content
 ```
 
-### Accessing Step Results
+### Accessing Task Results
 
 ```ruby
 result = network.run(message: "Hello")
 
-# Access individual step results
+# Access individual task results
 classifier_result = result.context[:classifier]
 puts "Classification: #{classifier_result.last_text_content}"
 
-# Check which optional step ran
+# Check which optional task ran
 if result.context[:billing]
   puts "Billing handled the request"
 elsif result.context[:technical]

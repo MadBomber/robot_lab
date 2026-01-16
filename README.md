@@ -175,7 +175,7 @@ result = robot.run(message: "Should I start learning Rust?")
 
 ## Orchestrating Multiple Robots
 
-Networks use [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with optional step activation for intelligent routing:
+Networks use [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with optional task activation for intelligent routing:
 
 ```ruby
 # Custom classifier that activates the appropriate specialist
@@ -207,12 +207,12 @@ billing_robot = RobotLab.build(name: "billing", template: :billing)
 technical_robot = RobotLab.build(name: "technical", template: :technical)
 general_robot = RobotLab.build(name: "general", template: :general)
 
-# Create network with optional step routing
+# Create network with optional task routing
 network = RobotLab.create_network(name: "support") do
-  step :classifier, classifier, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 
 # Run the network
@@ -247,8 +247,8 @@ Networks pass context through SimpleFlow::Result:
 ```ruby
 # Create network with specialized robots
 network = RobotLab.create_network(name: "support") do
-  step :classifier, classifier, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
 end
 
 # Run with context - available to all robots

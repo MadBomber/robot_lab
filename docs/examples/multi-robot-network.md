@@ -4,7 +4,7 @@ Customer service system with intelligent routing using SimpleFlow pipelines.
 
 ## Overview
 
-This example demonstrates a multi-robot network where a classifier routes customer inquiries to specialized support robots using optional step activation.
+This example demonstrates a multi-robot network where a classifier routes customer inquiries to specialized support robots using optional task activation.
 
 ## Complete Example
 
@@ -117,13 +117,13 @@ general_agent = RobotLab.build(
   PROMPT
 )
 
-# Create the network with optional step routing
+# Create the network with optional task routing
 network = RobotLab.create_network(name: "customer_service") do
-  step :classifier, classifier, depends_on: :none
-  step :billing_agent, billing_agent, depends_on: :optional
-  step :tech_agent, tech_agent, depends_on: :optional
-  step :account_agent, account_agent, depends_on: :optional
-  step :general_agent, general_agent, depends_on: :optional
+  task :classifier, classifier, depends_on: :none
+  task :billing_agent, billing_agent, depends_on: :optional
+  task :tech_agent, tech_agent, depends_on: :optional
+  task :account_agent, account_agent, depends_on: :optional
+  task :general_agent, general_agent, depends_on: :optional
 end
 
 # Run the support system
@@ -204,14 +204,31 @@ class BillingAgent < RobotLab::Robot
 end
 ```
 
+## Per-Task Configuration
+
+```ruby
+# Tasks with individual context and tools
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing_agent, billing_agent,
+       context: { department: "billing", escalation_level: 2 },
+       tools: [RefundTool, InvoiceTool],
+       depends_on: :optional
+  task :tech_agent, tech_agent,
+       context: { department: "technical" },
+       mcp: [FilesystemServer],
+       depends_on: :optional
+end
+```
+
 ## Pipeline Pattern
 
 ```ruby
 # Sequential processing pipeline
 network = RobotLab.create_network(name: "document_processor") do
-  step :extract, extractor, depends_on: :none
-  step :analyze, analyzer, depends_on: [:extract]
-  step :format, formatter, depends_on: [:analyze]
+  task :extract, extractor, depends_on: :none
+  task :analyze, analyzer, depends_on: [:extract]
+  task :format, formatter, depends_on: [:analyze]
 end
 
 result = network.run(message: "Process this document")
@@ -223,15 +240,15 @@ puts result.value.last_text_content
 ```ruby
 # Fan-out / fan-in pattern
 network = RobotLab.create_network(name: "multi_analysis", concurrency: :threads) do
-  step :prepare, preparer, depends_on: :none
+  task :prepare, preparer, depends_on: :none
 
   # These run in parallel
-  step :sentiment, sentiment_analyzer, depends_on: [:prepare]
-  step :entities, entity_extractor, depends_on: [:prepare]
-  step :keywords, keyword_extractor, depends_on: [:prepare]
+  task :sentiment, sentiment_analyzer, depends_on: [:prepare]
+  task :entities, entity_extractor, depends_on: [:prepare]
+  task :keywords, keyword_extractor, depends_on: [:prepare]
 
   # Waits for all three
-  step :summarize, summarizer, depends_on: [:sentiment, :entities, :keywords]
+  task :summarize, summarizer, depends_on: [:sentiment, :entities, :keywords]
 end
 
 result = network.run(message: "Analyze this text")
@@ -260,8 +277,8 @@ class ValidatorRobot < RobotLab::Robot
 end
 
 network = RobotLab.create_network(name: "validated_pipeline") do
-  step :validate, validator, depends_on: :none
-  step :process, processor, depends_on: [:validate]  # Only runs if not halted
+  task :validate, validator, depends_on: :none
+  task :process, processor, depends_on: [:validate]  # Only runs if not halted
 end
 
 result = network.run(message: "Process this")
@@ -282,10 +299,11 @@ ruby examples/customer_service.rb
 ## Key Concepts
 
 1. **SimpleFlow Pipeline**: DAG-based execution with dependency management
-2. **Optional Steps**: Activated dynamically based on classification
+2. **Optional Tasks**: Activated dynamically based on classification
 3. **Robot#call**: Custom routing logic in classifier robots
 4. **Context Flow**: Data passed through `result.context`
-5. **Parallel Execution**: Steps with same dependencies run concurrently
+5. **Parallel Execution**: Tasks with same dependencies run concurrently
+6. **Per-Task Configuration**: Each task can have its own context, tools, and MCP servers
 
 ## See Also
 

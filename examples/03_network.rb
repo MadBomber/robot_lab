@@ -65,12 +65,12 @@ general_robot = RobotLab.build(
   model: "claude-sonnet-4"
 )
 
-# Create network with optional step routing
+# Create network with optional task routing
 network = RobotLab.create_network(name: "support_network") do
-  step :classifier, classifier, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
-  step :general, general_robot, depends_on: :optional
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 
 puts "Running multi-robot network..."

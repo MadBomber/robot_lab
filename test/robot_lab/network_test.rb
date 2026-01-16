@@ -25,7 +25,7 @@ class RobotLab::NetworkTest < Minitest::Test
   def test_initialization_with_block
     robot = @robot1
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot, depends_on: :none
+      task :robot1, robot, depends_on: :none
     end
 
     assert_equal 1, network.robots.size
@@ -44,51 +44,73 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal :threads, network.pipeline.concurrency
   end
 
-  # Step tests
-  def test_step_adds_robot_to_robots_hash
+  # Task tests
+  def test_task_adds_robot_to_robots_hash
     network = RobotLab::Network.new(name: "test")
-    network.step(:robot1, @robot1, depends_on: :none)
+    network.task(:robot1, @robot1, depends_on: :none)
 
     assert_equal 1, network.robots.size
     assert_equal @robot1, network.robots["robot1"]
   end
 
-  def test_step_adds_to_pipeline
+  def test_task_adds_to_pipeline
     network = RobotLab::Network.new(name: "test")
-    network.step(:robot1, @robot1, depends_on: :none)
+    network.task(:robot1, @robot1, depends_on: :none)
 
     assert_equal 1, network.pipeline.steps.size
     assert_equal :robot1, network.pipeline.steps.first[:name]
   end
 
-  def test_step_returns_self_for_chaining
+  def test_task_returns_self_for_chaining
     network = RobotLab::Network.new(name: "test")
-    result = network.step(:robot1, @robot1, depends_on: :none)
+    result = network.task(:robot1, @robot1, depends_on: :none)
 
     assert_equal network, result
   end
 
-  def test_step_with_dependencies
+  def test_task_with_dependencies
     network = RobotLab::Network.new(name: "test")
-    network.step(:robot1, @robot1, depends_on: :none)
-    network.step(:robot2, @robot2, depends_on: [:robot1])
+    network.task(:robot1, @robot1, depends_on: :none)
+    network.task(:robot2, @robot2, depends_on: [:robot1])
 
     assert_equal 2, network.robots.size
     assert_equal [:robot1], network.pipeline.step_dependencies[:robot2]
   end
 
-  def test_step_with_optional_dependency
+  def test_task_with_optional_dependency
     network = RobotLab::Network.new(name: "test")
-    network.step(:robot1, @robot1, depends_on: :optional)
+    network.task(:robot1, @robot1, depends_on: :optional)
 
     assert_includes network.pipeline.optional_steps, :robot1
+  end
+
+  def test_task_with_context
+    network = RobotLab::Network.new(name: "test")
+    network.task(:robot1, @robot1, context: { department: "billing" }, depends_on: :none)
+
+    assert_equal 1, network.robots.size
+  end
+
+  def test_task_with_mcp_config
+    network = RobotLab::Network.new(name: "test")
+    mcp_config = [{ name: "test", transport: { type: "stdio", command: "test" } }]
+    network.task(:robot1, @robot1, mcp: mcp_config, depends_on: :none)
+
+    assert_equal 1, network.robots.size
+  end
+
+  def test_task_with_tools_config
+    network = RobotLab::Network.new(name: "test")
+    network.task(:robot1, @robot1, tools: %w[tool1 tool2], depends_on: :none)
+
+    assert_equal 1, network.robots.size
   end
 
   # Robot access tests
   def test_robot_by_name_string
     robot = @robot1
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot, depends_on: :none
+      task :robot1, robot, depends_on: :none
     end
 
     assert_equal robot, network.robot("robot1")
@@ -97,7 +119,7 @@ class RobotLab::NetworkTest < Minitest::Test
   def test_robot_by_name_symbol
     robot = @robot1
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot, depends_on: :none
+      task :robot1, robot, depends_on: :none
     end
 
     assert_equal robot, network.robot(:robot1)
@@ -112,7 +134,7 @@ class RobotLab::NetworkTest < Minitest::Test
   def test_bracket_alias_for_robot
     robot = @robot1
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot, depends_on: :none
+      task :robot1, robot, depends_on: :none
     end
 
     assert_equal robot, network["robot1"]
@@ -122,8 +144,8 @@ class RobotLab::NetworkTest < Minitest::Test
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot1, depends_on: :none
-      step :robot2, robot2, depends_on: [:robot1]
+      task :robot1, robot1, depends_on: :none
+      task :robot2, robot2, depends_on: [:robot1]
     end
 
     robots = network.available_robots
@@ -166,29 +188,29 @@ class RobotLab::NetworkTest < Minitest::Test
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test_network") do
-      step :robot1, robot1, depends_on: :none
-      step :robot2, robot2, depends_on: [:robot1]
+      task :robot1, robot1, depends_on: :none
+      task :robot2, robot2, depends_on: [:robot1]
     end
 
     hash = network.to_h
 
     assert_equal "test_network", hash[:name]
     assert_equal %w[robot1 robot2], hash[:robots].sort
-    assert_equal [:robot1, :robot2], hash[:steps]
-    assert_equal [], hash[:optional_steps]
+    assert_equal %w[robot1 robot2], hash[:tasks].sort
+    assert_equal [], hash[:optional_tasks]
   end
 
-  def test_to_h_includes_optional_steps
+  def test_to_h_includes_optional_tasks
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test") do
-      step :classifier, robot1, depends_on: :none
-      step :billing, robot2, depends_on: :optional
+      task :classifier, robot1, depends_on: :none
+      task :billing, robot2, depends_on: :optional
     end
 
     hash = network.to_h
 
-    assert_equal [:billing], hash[:optional_steps]
+    assert_equal [:billing], hash[:optional_tasks]
   end
 
   # Visualization tests
@@ -196,8 +218,8 @@ class RobotLab::NetworkTest < Minitest::Test
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot1, depends_on: :none
-      step :robot2, robot2, depends_on: [:robot1]
+      task :robot1, robot1, depends_on: :none
+      task :robot2, robot2, depends_on: [:robot1]
     end
 
     result = network.visualize
@@ -209,8 +231,8 @@ class RobotLab::NetworkTest < Minitest::Test
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot1, depends_on: :none
-      step :robot2, robot2, depends_on: [:robot1]
+      task :robot1, robot1, depends_on: :none
+      task :robot2, robot2, depends_on: [:robot1]
     end
 
     result = network.to_mermaid
@@ -223,8 +245,8 @@ class RobotLab::NetworkTest < Minitest::Test
     robot1 = @robot1
     robot2 = @robot2
     network = RobotLab::Network.new(name: "test") do
-      step :robot1, robot1, depends_on: :none
-      step :robot2, robot2, depends_on: [:robot1]
+      task :robot1, robot1, depends_on: :none
+      task :robot2, robot2, depends_on: [:robot1]
     end
 
     result = network.execution_plan

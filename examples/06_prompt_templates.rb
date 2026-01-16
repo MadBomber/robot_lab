@@ -5,7 +5,7 @@
 #
 # Demonstrates using ruby_llm-template for organized, reusable prompts
 # within a RobotLab network. This example shows an e-commerce support
-# system with dynamic context injection using SimpleFlow's optional steps.
+# system with dynamic context injection using SimpleFlow's optional task routing.
 #
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/06_prompt_templates.rb
@@ -244,14 +244,14 @@ escalation_robot = RobotLab.build(
 )
 
 # -----------------------------------------------------------------------------
-# Create Network with Optional Step Routing
+# Create Network with Optional Task Routing
 # -----------------------------------------------------------------------------
 
 network = RobotLab.create_network(name: "ecommerce_support") do
-  step :triage, triage_robot, depends_on: :none
-  step :order, order_robot, depends_on: :optional
-  step :product, product_robot, depends_on: :optional
-  step :escalation, escalation_robot, depends_on: :optional
+  task :triage, triage_robot, depends_on: :none
+  task :order, order_robot, depends_on: :optional
+  task :product, product_robot, depends_on: :optional
+  task :escalation, escalation_robot, depends_on: :optional
 end
 
 # -----------------------------------------------------------------------------
@@ -318,7 +318,7 @@ puts "This example demonstrates:"
 puts "  - ruby_llm-template for organized, reusable prompts"
 puts "  - Build-time context (robot identity/capabilities)"
 puts "  - Run-time context (customer data, order history)"
-puts "  - Multi-robot network with optional step routing"
+puts "  - Multi-robot network with optional task routing"
 puts "  - SimpleFlow::Result for passing context between robots"
 puts
 puts "Template files are located in: #{File.join(__dir__, 'prompts')}"

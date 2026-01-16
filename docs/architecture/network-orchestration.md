@@ -7,14 +7,32 @@ Networks coordinate multiple robots using [SimpleFlow](https://github.com/MadBom
 A network is a thin wrapper around `SimpleFlow::Pipeline`:
 
 - **Pipeline**: DAG-based execution engine
-- **Robots**: Named collection of step handlers
-- **Steps**: Define dependencies and execution order
+- **Robots**: Named collection of task handlers
+- **Tasks**: Define dependencies and execution order
 
 ```ruby
 network = RobotLab.create_network(name: "customer_service") do
-  step :classifier, classifier_robot, depends_on: :none
-  step :billing, billing_robot, depends_on: :optional
-  step :technical, technical_robot, depends_on: :optional
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+end
+```
+
+## Task Configuration
+
+Tasks can have per-task configuration that's deep-merged with network run params:
+
+```ruby
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot,
+       context: { department: "billing", escalation_level: 2 },
+       tools: [RefundTool],
+       depends_on: :optional
+  task :technical, technical_robot,
+       context: { department: "technical" },
+       mcp: [FilesystemServer],
+       depends_on: :optional
 end
 ```
 
@@ -23,21 +41,21 @@ end
 ```mermaid
 stateDiagram-v2
     [*] --> Start
-    Start --> ExecuteStep: next ready step
-    ExecuteStep --> CheckDependents: step complete
-    CheckDependents --> ExecuteStep: more steps ready
-    CheckDependents --> Complete: all steps done
-    ExecuteStep --> Halted: step halts
+    Start --> ExecuteTask: next ready task
+    ExecuteTask --> CheckDependents: task complete
+    CheckDependents --> ExecuteTask: more tasks ready
+    CheckDependents --> Complete: all tasks done
+    ExecuteTask --> Halted: task halts
     Complete --> [*]
     Halted --> [*]
 ```
 
-### Step Dependency Types
+### Task Dependency Types
 
 | Type | Description |
 |------|-------------|
 | `:none` | No dependencies, runs first |
-| `[:step1, :step2]` | Waits for listed steps |
+| `[:task1, :task2]` | Waits for listed tasks |
 | `:optional` | Only runs when activated |
 
 ## Robot#call Interface
@@ -62,18 +80,18 @@ end
 
 | Method | Description |
 |--------|-------------|
-| `continue(value)` | Continue to next steps |
+| `continue(value)` | Continue to next tasks |
 | `halt(value)` | Stop pipeline execution |
 | `with_context(key, val)` | Add data to context |
-| `activate(step_name)` | Enable optional step |
+| `activate(task_name)` | Enable optional task |
 
 ## SimpleFlow::Result
 
 The result object flows through the pipeline:
 
 ```ruby
-result.value      # Current step's output
-result.context    # Accumulated context from all steps
+result.value      # Current task's output
+result.context    # Accumulated context from all tasks
 result.halted?    # Whether execution stopped early
 result.continued? # Whether execution continues
 ```
@@ -85,13 +103,13 @@ result.continued? # Whether execution continues
   run_params: { message: "...", customer_id: 123 },
   classifier: RobotResult,
   billing: RobotResult,
-  # ... other step results
+  # ... other task results
 }
 ```
 
-## Optional Step Activation
+## Optional Task Activation
 
-Optional steps don't run automatically. They must be activated:
+Optional tasks don't run automatically. They must be activated:
 
 ```ruby
 class ClassifierRobot < RobotLab::Robot
@@ -102,7 +120,7 @@ class ClassifierRobot < RobotLab::Robot
       .with_context(@name.to_sym, robot_result)
       .continue(robot_result)
 
-    # Analyze output and activate appropriate step
+    # Analyze output and activate appropriate task
     category = robot_result.last_text_content.to_s.downcase
 
     case category
@@ -119,19 +137,19 @@ end
 
 ## Parallel Execution
 
-Steps with the same dependencies can run in parallel:
+Tasks with the same dependencies can run in parallel:
 
 ```ruby
 network = RobotLab.create_network(name: "analysis", concurrency: :threads) do
-  step :fetch, fetcher, depends_on: :none
+  task :fetch, fetcher, depends_on: :none
 
   # These three run in parallel
-  step :sentiment, sentiment_bot, depends_on: [:fetch]
-  step :entities, entity_bot, depends_on: [:fetch]
-  step :keywords, keyword_bot, depends_on: [:fetch]
+  task :sentiment, sentiment_bot, depends_on: [:fetch]
+  task :entities, entity_bot, depends_on: [:fetch]
+  task :keywords, keyword_bot, depends_on: [:fetch]
 
   # Waits for all three
-  step :merge, merger, depends_on: [:sentiment, :entities, :keywords]
+  task :merge, merger, depends_on: [:sentiment, :entities, :keywords]
 end
 ```
 
@@ -147,8 +165,8 @@ end
 
 1. **Initial Value**: `network.run(**params)` creates initial result
 2. **Run Params**: Stored in `result.context[:run_params]`
-3. **Step Results**: Each step adds to context
-4. **Final Value**: Last step's output becomes `result.value`
+3. **Task Results**: Each task adds to context
+4. **Final Value**: Last task's output becomes `result.value`
 
 ```ruby
 # Run with context
@@ -186,8 +204,8 @@ network = RobotLab.create_network(
   name: "support",
   concurrency: :threads  # :auto, :threads, or :async
 ) do
-  step :classifier, classifier, depends_on: :none
-  step :handler, handler, depends_on: [:classifier]
+  task :classifier, classifier, depends_on: :none
+  task :handler, handler, depends_on: [:classifier]
 end
 ```
 

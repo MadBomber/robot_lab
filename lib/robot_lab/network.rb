@@ -11,23 +11,25 @@ module RobotLab
   #
   # @example Sequential execution
   #   network = RobotLab.create_network(name: "pipeline") do
-  #     step :analyst, analyst_robot, depends_on: :none
-  #     step :writer, writer_robot, depends_on: [:analyst]
+  #     task :analyst, analyst_robot, depends_on: :none
+  #     task :writer, writer_robot, depends_on: [:analyst]
   #   end
   #
-  # @example With optional steps (conditional routing)
+  # @example With per-task context
   #   network = RobotLab.create_network(name: "support") do
-  #     step :classifier, classifier_robot, depends_on: :none
-  #     step :billing, billing_robot, depends_on: :optional
-  #     step :technical, technical_robot, depends_on: :optional
+  #     task :classifier, classifier_robot, depends_on: :none
+  #     task :billing, billing_robot,
+  #          context: { department: "billing" },
+  #          tools: [RefundTool],
+  #          depends_on: :optional
   #   end
   #
   # @example Parallel execution
   #   network = RobotLab.create_network(name: "analysis") do
-  #     step :fetch, fetcher_robot, depends_on: :none
-  #     step :sentiment, sentiment_robot, depends_on: [:fetch]
-  #     step :entities, entity_robot, depends_on: [:fetch]
-  #     step :summarize, summary_robot, depends_on: [:sentiment, :entities]
+  #     task :fetch, fetcher_robot, depends_on: :none
+  #     task :sentiment, sentiment_robot, depends_on: [:fetch]
+  #     task :entities, entity_robot, depends_on: [:fetch]
+  #     task :summarize, summary_robot, depends_on: [:sentiment, :entities]
   #   end
   #
   class Network
@@ -43,41 +45,59 @@ module RobotLab
     #
     # @param name [String] unique identifier for the network
     # @param concurrency [Symbol] concurrency model (:auto, :threads, :async)
-    # @yield Block for defining pipeline steps
+    # @yield Block for defining pipeline tasks
     #
     # @example
     #   network = Network.new(name: "support") do
-    #     step :classifier, classifier, depends_on: :none
-    #     step :billing, billing_robot, depends_on: :optional
+    #     task :classifier, classifier, depends_on: :none
+    #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
     def initialize(name:, concurrency: :auto, &block)
       @name = name.to_s
       @robots = {}
+      @tasks = {}
       @pipeline = SimpleFlow::Pipeline.new(concurrency: concurrency)
 
       instance_eval(&block) if block_given?
     end
 
-    # Add a robot as a pipeline step
+    # Add a robot as a pipeline task with optional per-task configuration
     #
-    # @param name [Symbol] step name
+    # @param name [Symbol] task name
     # @param robot [Robot] the robot instance
-    # @param depends_on [Symbol, Array<Symbol>] dependencies (:none, :optional, or step names)
+    # @param context [Hash] task-specific context (deep-merged with run params)
+    # @param mcp [Symbol, Array] MCP server config (:none, :inherit, or array)
+    # @param tools [Symbol, Array] tools config (:none, :inherit, or array)
+    # @param memory [Memory, Hash, nil] task-specific memory
+    # @param depends_on [Symbol, Array<Symbol>] dependencies (:none, :optional, or task names)
     # @return [self]
     #
-    # @example Entry point step
-    #   step :classifier, classifier_robot, depends_on: :none
+    # @example Entry point task
+    #   task :classifier, classifier_robot, depends_on: :none
     #
-    # @example Step with dependencies
-    #   step :writer, writer_robot, depends_on: [:analyst]
+    # @example Task with context and tools
+    #   task :billing, billing_robot,
+    #        context: { department: "billing", escalation: 2 },
+    #        tools: [RefundTool, InvoiceTool],
+    #        depends_on: :optional
     #
-    # @example Optional step (activated at runtime)
-    #   step :billing, billing_robot, depends_on: :optional
+    # @example Task with dependencies
+    #   task :writer, writer_robot, depends_on: [:analyst]
     #
-    def step(name, robot, depends_on: :none)
+    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)
+      task_wrapper = Task.new(
+        name: name,
+        robot: robot,
+        context: context,
+        mcp: mcp,
+        tools: tools,
+        memory: memory
+      )
+
       @robots[name.to_s] = robot
-      @pipeline.step(name, robot, depends_on: depends_on)
+      @tasks[name.to_s] = task_wrapper
+      @pipeline.step(name, task_wrapper, depends_on: depends_on)
       self
     end
 
@@ -85,15 +105,15 @@ module RobotLab
     #
     # @param name [Symbol, nil] optional name for the parallel group
     # @param depends_on [Symbol, Array] dependencies for this group
-    # @yield Block containing step definitions
+    # @yield Block containing task definitions
     # @return [self]
     #
     # @example Named parallel group
     #   parallel :fetch_data, depends_on: :validate do
-    #     step :fetch_orders, orders_robot
-    #     step :fetch_products, products_robot
+    #     task :fetch_orders, orders_robot
+    #     task :fetch_products, products_robot
     #   end
-    #   step :process, processor, depends_on: :fetch_data
+    #   task :process, processor, depends_on: :fetch_data
     #
     def parallel(name = nil, depends_on: :none, &block)
       @pipeline.parallel(name, depends_on: depends_on, &block)
@@ -142,7 +162,7 @@ module RobotLab
       @robots.values
     end
 
-    # Add a robot to the network without adding it as a step
+    # Add a robot to the network without adding it as a task
     #
     # Useful for dynamically adding robots that will be referenced later.
     #
@@ -199,8 +219,8 @@ module RobotLab
       {
         name: name,
         robots: @robots.keys,
-        steps: @pipeline.steps.map { |s| s[:name] }.compact,
-        optional_steps: @pipeline.optional_steps.to_a
+        tasks: @tasks.keys,
+        optional_tasks: @pipeline.optional_steps.to_a
       }.compact
     end
   end

@@ -29,44 +29,61 @@ end
 
 ## Network
 
-A **Network** is a collection of robots that work together. Networks provide:
+A **Network** is a collection of robots orchestrated using [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines. Networks provide:
 
-- **Robot Registry**: Named robots that can be referenced
-- **Routing Logic**: Determines which robot handles each request
-- **Shared Configuration**: Default model, MCP servers, tools
-- **State Management**: Tracks conversation state across robots
+- **Task-Based Orchestration**: Define tasks with dependencies and routing
+- **Parallel Execution**: Tasks with the same dependencies run concurrently
+- **Optional Task Activation**: Dynamic routing based on robot output
+- **Per-Task Configuration**: Each task can have its own context, tools, and MCP servers
 
 ```ruby
-network = RobotLab.create_network do
-  name "customer_service"
-
-  add_robot support_robot
-  add_robot billing_robot
-  add_robot technical_robot
-
-  router ->(args) {
-    # Custom routing logic
-    args.call_count.zero? ? :support_agent : nil
-  }
+network = RobotLab.create_network(name: "customer_service") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot,
+       context: { department: "billing" },
+       depends_on: :optional
+  task :technical, technical_robot,
+       context: { department: "technical" },
+       depends_on: :optional
 end
 ```
 
-## State
+## Task
 
-**State** holds all the data for a single conversation or workflow execution:
+A **Task** wraps a robot for use in a network pipeline with per-task configuration:
 
-- **Data**: Key-value store for workflow data
-- **Results**: History of robot responses
-- **Messages**: Conversation message history
-- **Thread ID**: Optional identifier for persistence
-- **Memory**: Shared memory accessible by all robots
+- **Context**: Task-specific context deep-merged with network run params
+- **MCP**: MCP servers available to this task
+- **Tools**: Tools available to this task
+- **Memory**: Task-specific memory
+- **Dependencies**: `:none`, `[:task1, :task2]`, or `:optional`
 
 ```ruby
-state = RobotLab.create_state(
-  message: "I need help with my order",
-  data: { user_id: "123", priority: "high" }
-)
+task :billing, billing_robot,
+     context: { department: "billing", escalation_level: 2 },
+     tools: [RefundTool, InvoiceTool],
+     depends_on: :optional
 ```
+
+## SimpleFlow::Result
+
+Networks use `SimpleFlow::Result` for data flow between tasks:
+
+```ruby
+result.value      # Current task's output (RobotResult)
+result.context    # Accumulated context from all tasks
+result.halted?    # Whether execution stopped early
+result.continued? # Whether execution continues
+```
+
+### Result Methods
+
+| Method | Purpose |
+|--------|---------|
+| `continue(value)` | Continue to next tasks |
+| `halt(value)` | Stop pipeline execution |
+| `with_context(key, val)` | Add data to context |
+| `activate(task_name)` | Enable optional task |
 
 ## Tool
 
@@ -96,36 +113,25 @@ RobotLab uses several message types to represent conversation content:
 | `ToolCallMessage` | Request from LLM to execute a tool |
 | `ToolResultMessage` | Result returned from tool execution |
 
-## Router
-
-A **Router** determines which robot(s) run at each step in a network. Routers receive context about the current execution and return the next robot(s) to run:
-
-```ruby
-router = ->(args) {
-  case args.call_count
-  when 0 then :classifier
-  when 1
-    # Route based on classification result
-    classification = args.last_result&.output&.first&.content
-    classification&.include?("billing") ? :billing_agent : :support_agent
-  else
-    nil # Stop execution
-  end
-}
-```
-
 ## Memory
 
-**Memory** provides a shared key-value store that persists across robot executions within a network run:
+**Memory** provides persistent storage across robot executions:
 
 ```ruby
-# In robot handler or tool
-state.memory.remember("user_preference", "dark_mode")
-preference = state.memory.recall("user_preference")
+# Robot with inherent memory
+robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
+robot.run(message: "My name is Alice")
+robot.run(message: "What's my name?")  # Memory persists
 
-# Scoped memory for organization
-user_memory = state.memory.scoped("user:123")
-user_memory.remember("last_order", "ORD-456")
+# Access robot's memory
+robot.memory[:user_id] = 123
+robot.memory.data[:category] = "billing"
+
+# Runtime memory injection
+robot.run(message: "Help me", memory: { session_id: "abc123" })
+
+# Reset memory
+robot.reset_memory
 ```
 
 ## MCP (Model Context Protocol)
@@ -133,12 +139,13 @@ user_memory.remember("last_order", "ORD-456")
 **MCP** allows robots to connect to external tool servers:
 
 ```ruby
-network = RobotLab.create_network do
-  mcp [
+robot = RobotLab.build(
+  name: "developer",
+  mcp: [
     { name: "filesystem", transport: { type: "stdio", command: "mcp-server-filesystem" } },
     { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
   ]
-end
+)
 ```
 
 ## Execution Flow
@@ -147,15 +154,16 @@ end
 sequenceDiagram
     participant User
     participant Network
-    participant Router
+    participant Pipeline
+    participant Task
     participant Robot
     participant LLM
     participant Tool
 
-    User->>Network: run(state)
-    Network->>Router: get_next_robot(args)
-    Router-->>Network: robot_name
-    Network->>Robot: run(state)
+    User->>Network: run(message, context)
+    Network->>Pipeline: call(initial_result)
+    Pipeline->>Task: call(result)
+    Task->>Robot: call(enhanced_result)
     Robot->>LLM: inference(messages, tools)
 
     alt Tool Call
@@ -166,10 +174,39 @@ sequenceDiagram
     end
 
     LLM-->>Robot: response
-    Robot-->>Network: RobotResult
-    Network->>Router: get_next_robot(args)
-    Router-->>Network: nil (done)
-    Network-->>User: results
+    Robot-->>Task: RobotResult
+    Task-->>Pipeline: result.continue(value)
+
+    alt Optional Task Activated
+        Pipeline->>Task: call activated task
+    end
+
+    Pipeline-->>Network: final result
+    Network-->>User: SimpleFlow::Result
+```
+
+## Conditional Routing
+
+Use custom Robot subclasses to implement intelligent routing:
+
+```ruby
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    # Activate appropriate specialist
+    category = robot_result.last_text_content.to_s.downcase
+    case category
+    when /billing/ then new_result.activate(:billing)
+    when /technical/ then new_result.activate(:technical)
+    else new_result.activate(:general)
+    end
+  end
+end
 ```
 
 ## Next Steps
