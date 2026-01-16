@@ -1,10 +1,10 @@
 # Multi-Robot Network
 
-Customer service system with intelligent routing.
+Customer service system with intelligent routing using SimpleFlow pipelines.
 
 ## Overview
 
-This example demonstrates a multi-robot network where a classifier routes customer inquiries to specialized support robots.
+This example demonstrates a multi-robot network where a classifier routes customer inquiries to specialized support robots using optional step activation.
 
 ## Complete Example
 
@@ -19,12 +19,32 @@ RobotLab.configure do |config|
   config.default_model = "claude-sonnet-4"
 end
 
-# Classifier robot - determines the category of inquiry
-classifier = RobotLab.build do
-  name "classifier"
-  description "Classifies customer inquiries"
+# Custom classifier that routes to specialists
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
 
-  template <<~PROMPT
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    # Route based on classification
+    category = robot_result.last_text_content.to_s.strip.downcase
+
+    case category
+    when /billing/ then new_result.activate(:billing_agent)
+    when /technical/ then new_result.activate(:tech_agent)
+    when /account/ then new_result.activate(:account_agent)
+    else new_result.activate(:general_agent)
+    end
+  end
+end
+
+# Classifier robot
+classifier = ClassifierRobot.new(
+  name: "classifier",
+  description: "Classifies customer inquiries",
+  system_prompt: <<~PROMPT
     You are a customer inquiry classifier. Analyze the customer's message
     and respond with exactly ONE of these categories:
 
@@ -35,14 +55,13 @@ classifier = RobotLab.build do
 
     Respond with ONLY the category name, nothing else.
   PROMPT
-end
+)
 
 # Billing specialist
-billing_agent = RobotLab.build do
-  name "billing_agent"
-  description "Handles billing inquiries"
-
-  template <<~PROMPT
+billing_agent = RobotLab.build(
+  name: "billing_agent",
+  description: "Handles billing inquiries",
+  system_prompt: <<~PROMPT
     You are a billing support specialist. You help customers with:
     - Payment issues and refunds
     - Invoice questions
@@ -51,14 +70,13 @@ billing_agent = RobotLab.build do
 
     Be helpful, empathetic, and provide clear next steps.
   PROMPT
-end
+)
 
 # Technical support
-tech_agent = RobotLab.build do
-  name "tech_agent"
-  description "Handles technical issues"
-
-  template <<~PROMPT
+tech_agent = RobotLab.build(
+  name: "tech_agent",
+  description: "Handles technical issues",
+  system_prompt: <<~PROMPT
     You are a technical support specialist. You help customers with:
     - Bug reports and troubleshooting
     - Feature explanations
@@ -67,14 +85,13 @@ tech_agent = RobotLab.build do
 
     Ask clarifying questions when needed. Provide step-by-step solutions.
   PROMPT
-end
+)
 
 # Account specialist
-account_agent = RobotLab.build do
-  name "account_agent"
-  description "Handles account issues"
-
-  template <<~PROMPT
+account_agent = RobotLab.build(
+  name: "account_agent",
+  description: "Handles account issues",
+  system_prompt: <<~PROMPT
     You are an account support specialist. You help customers with:
     - Login and authentication issues
     - Profile and settings changes
@@ -83,14 +100,13 @@ account_agent = RobotLab.build do
 
     Prioritize security while being helpful.
   PROMPT
-end
+)
 
 # General support
-general_agent = RobotLab.build do
-  name "general_agent"
-  description "Handles general inquiries"
-
-  template <<~PROMPT
+general_agent = RobotLab.build(
+  name: "general_agent",
+  description: "Handles general inquiries",
+  system_prompt: <<~PROMPT
     You are a general support agent. You help customers with:
     - Product information
     - General questions
@@ -99,38 +115,15 @@ general_agent = RobotLab.build do
 
     Be friendly and informative.
   PROMPT
-end
+)
 
-# Create the network with routing
-network = RobotLab.create_network do
-  name "customer_service"
-
-  add_robot classifier
-  add_robot billing_agent
-  add_robot tech_agent
-  add_robot account_agent
-  add_robot general_agent
-
-  router ->(args) {
-    case args.call_count
-    when 0
-      # First call: classify the inquiry
-      :classifier
-    when 1
-      # Second call: route to appropriate specialist
-      category = args.last_result&.output&.first&.content&.strip&.upcase
-
-      case category
-      when "BILLING" then :billing_agent
-      when "TECHNICAL" then :tech_agent
-      when "ACCOUNT" then :account_agent
-      else :general_agent
-      end
-    else
-      # Done after specialist responds
-      nil
-    end
-  }
+# Create the network with optional step routing
+network = RobotLab.create_network(name: "customer_service") do
+  step :classifier, classifier, depends_on: :none
+  step :billing_agent, billing_agent, depends_on: :optional
+  step :tech_agent, tech_agent, depends_on: :optional
+  step :account_agent, account_agent, depends_on: :optional
+  step :general_agent, general_agent, depends_on: :optional
 end
 
 # Run the support system
@@ -149,17 +142,17 @@ test_inquiries.each do |inquiry|
   puts "Customer: #{inquiry}"
   puts "-" * 50
 
-  state = RobotLab.create_state(message: inquiry)
+  result = network.run(message: inquiry)
 
-  network.run(state: state) do |event|
-    case event.type
-    when :robot_start
-      puts "[#{event.robot_name}] Processing..."
-    when :text_delta
-      print event.text if event.robot_name != "classifier"
-    when :robot_complete
-      puts if event.robot_name != "classifier"
-    end
+  # Show classification
+  if result.context[:classifier]
+    puts "Classification: #{result.context[:classifier].last_text_content}"
+  end
+
+  # Show specialist response
+  if result.value.is_a?(RobotLab::RobotResult)
+    puts "Handled by: #{result.value.robot_name}"
+    puts "Response: #{result.value.last_text_content[0..200]}..."
   end
 
   puts
@@ -168,94 +161,114 @@ test_inquiries.each do |inquiry|
 end
 ```
 
-## With Shared Memory
+## With Context Passing
 
 ```ruby
-# Enhanced version with shared context between robots
+# Enhanced version with additional context
 
-network = RobotLab.create_network do
-  name "customer_service_v2"
+class ContextAwareClassifier < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
 
-  add_robot classifier
-  add_robot billing_agent
-  add_robot tech_agent
+    # Store classification in context for specialist
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .with_context(:classification, robot_result.last_text_content.strip)
+      .with_context(:original_message, result.context[:run_params][:message])
+      .continue(robot_result)
 
-  router ->(args) {
-    case args.call_count
-    when 0
-      :classifier
-    when 1
-      # Store classification in memory for specialist
-      category = args.last_result&.output&.first&.content&.strip
-      args.network.state.memory.remember("SHARED:category", category)
-      args.network.state.memory.remember("SHARED:original_message",
-        args.context[:message])
-
-      case category&.upcase
-      when "BILLING" then :billing_agent
-      when "TECHNICAL" then :tech_agent
-      else :general_agent
-      end
+    category = robot_result.last_text_content.to_s.downcase
+    case category
+    when /billing/ then new_result.activate(:billing_agent)
+    when /technical/ then new_result.activate(:tech_agent)
+    else new_result.activate(:general_agent)
     end
-  }
+  end
 end
 
-# Specialist can access shared memory
-billing_agent = RobotLab.build do
-  name "billing_agent"
-  template <<~PROMPT
-    You handle billing questions.
-    The inquiry was classified as: {{state.memory.recall("SHARED:category")}}
-  PROMPT
+# Specialist can access shared context
+class BillingAgent < RobotLab::Robot
+  def call(result)
+    # Access context from classifier
+    classification = result.context[:classification]
+    original_message = result.context[:original_message]
+
+    robot_result = run(
+      **extract_run_context(result),
+      classification: classification,
+      customer_message: original_message
+    )
+
+    result.with_context(@name.to_sym, robot_result).continue(robot_result)
+  end
 end
 ```
 
-## With Fallback Routing
+## Pipeline Pattern
 
 ```ruby
-router ->(args) {
-  case args.call_count
-  when 0
-    :classifier
-  when 1
-    category = args.last_result&.output&.first&.content&.strip&.upcase
+# Sequential processing pipeline
+network = RobotLab.create_network(name: "document_processor") do
+  step :extract, extractor, depends_on: :none
+  step :analyze, analyzer, depends_on: [:extract]
+  step :format, formatter, depends_on: [:analyze]
+end
 
-    # Try specific agent first, fallback to general
-    specific = {
-      "BILLING" => :billing_agent,
-      "TECHNICAL" => :tech_agent
-    }[category]
+result = network.run(message: "Process this document")
+puts result.value.last_text_content
+```
 
-    if specific && args.network.network.robots.key?(specific.to_s)
-      specific
+## Parallel Analysis Pattern
+
+```ruby
+# Fan-out / fan-in pattern
+network = RobotLab.create_network(name: "multi_analysis", concurrency: :threads) do
+  step :prepare, preparer, depends_on: :none
+
+  # These run in parallel
+  step :sentiment, sentiment_analyzer, depends_on: [:prepare]
+  step :entities, entity_extractor, depends_on: [:prepare]
+  step :keywords, keyword_extractor, depends_on: [:prepare]
+
+  # Waits for all three
+  step :summarize, summarizer, depends_on: [:sentiment, :entities, :keywords]
+end
+
+result = network.run(message: "Analyze this text")
+
+# Access parallel results
+puts "Sentiment: #{result.context[:sentiment].last_text_content}"
+puts "Entities: #{result.context[:entities].last_text_content}"
+puts "Keywords: #{result.context[:keywords].last_text_content}"
+puts "Summary: #{result.value.last_text_content}"
+```
+
+## Conditional Halting
+
+```ruby
+class ValidatorRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    if robot_result.last_text_content.include?("INVALID")
+      # Halt the pipeline early
+      result.halt(robot_result)
     else
-      :general_agent
+      result.with_context(@name.to_sym, robot_result).continue(robot_result)
     end
   end
-}
-```
+end
 
-## With Consensus (Multiple Agents)
+network = RobotLab.create_network(name: "validated_pipeline") do
+  step :validate, validator, depends_on: :none
+  step :process, processor, depends_on: [:validate]  # Only runs if not halted
+end
 
-```ruby
-# Get opinions from multiple specialists
-router ->(args) {
-  case args.call_count
-  when 0
-    # Run multiple specialists in parallel
-    [:billing_agent, :tech_agent]
-  when 1
-    # Summarizer combines their responses
-    :summarizer
-  end
-}
-
-summarizer = RobotLab.build do
-  name "summarizer"
-  template <<~PROMPT
-    Review the responses from our specialists and provide a
-    comprehensive answer that incorporates their insights.
-  PROMPT
+result = network.run(message: "Process this")
+if result.halted?
+  puts "Validation failed: #{result.value.last_text_content}"
+else
+  puts "Processing complete: #{result.value.last_text_content}"
 end
 ```
 
@@ -268,13 +281,14 @@ ruby examples/customer_service.rb
 
 ## Key Concepts
 
-1. **Multiple Robots**: Each specialist handles specific domains
-2. **Classifier**: Routes inquiries to appropriate specialist
-3. **Router Function**: Controls execution flow based on results
-4. **Streaming**: Shows real-time progress across robots
+1. **SimpleFlow Pipeline**: DAG-based execution with dependency management
+2. **Optional Steps**: Activated dynamically based on classification
+3. **Robot#call**: Custom routing logic in classifier robots
+4. **Context Flow**: Data passed through `result.context`
+5. **Parallel Execution**: Steps with same dependencies run concurrently
 
 ## See Also
 
 - [Creating Networks Guide](../guides/creating-networks.md)
-- [Memory Guide](../guides/memory.md)
-- [Robot](../api/core/robot.md)
+- [Network Orchestration](../architecture/network-orchestration.md)
+- [API Reference: Network](../api/core/network.md)

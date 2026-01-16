@@ -223,6 +223,29 @@ module RobotLab
       build_result(response, run_memory)
     end
 
+    # SimpleFlow step interface
+    #
+    # Allows Robot to be used directly as a step in a SimpleFlow::Pipeline.
+    # The robot receives a SimpleFlow::Result, executes, and returns a new
+    # SimpleFlow::Result with the robot's output.
+    #
+    # @param result [SimpleFlow::Result] incoming result from previous step
+    # @return [SimpleFlow::Result] result with robot output
+    #
+    # @example Using a robot as a pipeline step
+    #   pipeline = SimpleFlow::Pipeline.new do
+    #     step :classifier, classifier_robot, depends_on: :none
+    #     step :billing, billing_robot, depends_on: :optional
+    #   end
+    #
+    def call(result)
+      robot_result = run(**extract_run_context(result))
+
+      result
+        .with_context(@name.to_sym, robot_result)
+        .continue(robot_result)
+    end
+
     # Reset the robot's inherent memory
     #
     # NOTE: This only affects the robot's standalone memory. When a robot runs
@@ -278,6 +301,28 @@ module RobotLab
 
     private
 
+    # Extract run context from SimpleFlow::Result
+    #
+    # Merges original run params (preserved in context) with current value.
+    #
+    # @param result [SimpleFlow::Result] the incoming result
+    # @return [Hash] context for run method
+    #
+    def extract_run_context(result)
+      base = result.context[:run_params] || {}
+
+      case result.value
+      when Hash
+        base.merge(result.value.transform_keys(&:to_sym))
+      when RobotResult
+        base.merge(message: result.value.last_text_content)
+      when String
+        base.merge(message: result.value)
+      else
+        base.merge(message: result.value.to_s)
+      end
+    end
+
     def resolve_context(context, network:)
       case context
       when Proc then context.call(network: network)
@@ -290,9 +335,6 @@ module RobotLab
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
       chat = RubyLLM.chat(model: model_id)
-
-      # Wrap with semantic cache for automatic caching (if enabled)
-      chat = memory.cache.wrap(chat) if memory.cache
 
       # Apply template and/or system_prompt
       # - Template only: use with_template
@@ -312,6 +354,11 @@ module RobotLab
       # Add callbacks if provided
       chat = chat.on_tool_call(&@on_tool_call) if @on_tool_call
       chat = chat.on_tool_result(&@on_tool_result) if @on_tool_result
+
+      # NOTE: Semantic cache wrapping is disabled because the SemanticCache::Middleware
+      # only supports `ask` method, not `complete`. The caching feature needs to be
+      # re-designed to use the `ask` interface or the `fetch` pattern.
+      # See: https://github.com/ruby-llm/ruby_llm-semantic_cache
 
       chat
     end

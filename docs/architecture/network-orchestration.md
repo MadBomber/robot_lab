@@ -1,179 +1,117 @@
 # Network Orchestration
 
-Networks coordinate multiple robots to accomplish complex tasks.
+Networks coordinate multiple robots using [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines for DAG-based execution.
 
 ## Network Structure
 
-A network contains:
+A network is a thin wrapper around `SimpleFlow::Pipeline`:
 
-- **Robots**: Named collection of available robots
-- **Router**: Logic to select robots at each step
-- **Configuration**: Default model, MCP servers, tools
-- **History**: Optional persistence configuration
+- **Pipeline**: DAG-based execution engine
+- **Robots**: Named collection of step handlers
+- **Steps**: Define dependencies and execution order
 
 ```ruby
-network = RobotLab.create_network do
-  name "customer_service"
-
-  # Add robots
-  add_robot classifier_robot
-  add_robot support_robot
-  add_robot billing_robot
-
-  # Configuration
-  default_model "claude-sonnet-4"
-  max_iterations 10
-
-  # Routing logic
-  router ->(args) { ... }
-
-  # History persistence
-  history history_config
+network = RobotLab.create_network(name: "customer_service") do
+  step :classifier, classifier_robot, depends_on: :none
+  step :billing, billing_robot, depends_on: :optional
+  step :technical, technical_robot, depends_on: :optional
 end
 ```
 
-## NetworkRun
-
-When you call `network.run(state:)`, a `NetworkRun` is created to manage execution:
+## Execution Model
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Pending
-    Pending --> Initializing: run()
-    Initializing --> Routing: initialize_thread
-    Routing --> ExecutingRobot: router returns robot
-    ExecutingRobot --> RobotComplete: robot completes
-    RobotComplete --> Routing: check for next
-    Routing --> Completed: router returns nil
-    Completed --> [*]
-
-    ExecutingRobot --> Failed: error
-    Failed --> [*]
+    [*] --> Start
+    Start --> ExecuteStep: next ready step
+    ExecuteStep --> CheckDependents: step complete
+    CheckDependents --> ExecuteStep: more steps ready
+    CheckDependents --> Complete: all steps done
+    ExecuteStep --> Halted: step halts
+    Complete --> [*]
+    Halted --> [*]
 ```
 
-### Execution States
+### Step Dependency Types
 
-| State | Description |
-|-------|-------------|
-| `pending` | Run created but not started |
-| `initializing` | Loading history, setting up |
-| `routing` | Consulting router for next robot |
-| `executing_robot` | Robot is processing |
-| `robot_complete` | Robot finished, checking next |
-| `completed` | All robots done |
-| `failed` | Error occurred |
+| Type | Description |
+|------|-------------|
+| `:none` | No dependencies, runs first |
+| `[:step1, :step2]` | Waits for listed steps |
+| `:optional` | Only runs when activated |
 
-## Router
+## Robot#call Interface
 
-The router is a function that decides which robot runs next:
+Each robot implements the SimpleFlow step interface:
 
 ```ruby
-router = ->(args) {
-  # args.call_count - How many times router was called
-  # args.network    - The NetworkRun
-  # args.context    - Run context (message, data, etc.)
-  # args.stack      - Robots already scheduled
-  # args.last_result - Previous robot's result
+class Robot
+  def call(result)
+    # Run the LLM
+    robot_result = run(**extract_run_context(result))
 
-  # Return:
-  # - Robot instance
-  # - Robot name (String/Symbol)
-  # - Array of robots (parallel execution)
-  # - nil to stop
-}
-```
-
-### Router Arguments
-
-```ruby
-class Router::Args
-  attr_reader :context,     # Run context hash
-              :network,     # NetworkRun instance
-              :stack,       # Array<Robot> scheduled
-              :call_count,  # Integer
-              :last_result  # RobotResult or nil
-
-  def message
-    @context[:message]  # Convenience accessor
+    # Return new result with context
+    result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
   end
 end
 ```
 
-### Common Router Patterns
+### Result Methods
 
-#### Sequential Execution
+| Method | Description |
+|--------|-------------|
+| `continue(value)` | Continue to next steps |
+| `halt(value)` | Stop pipeline execution |
+| `with_context(key, val)` | Add data to context |
+| `activate(step_name)` | Enable optional step |
 
-Run robots in order:
+## SimpleFlow::Result
+
+The result object flows through the pipeline:
 
 ```ruby
-SEQUENCE = [:classifier, :processor, :responder]
+result.value      # Current step's output
+result.context    # Accumulated context from all steps
+result.halted?    # Whether execution stopped early
+result.continued? # Whether execution continues
+```
 
-router = ->(args) {
-  idx = args.call_count
-  idx < SEQUENCE.length ? SEQUENCE[idx] : nil
+### Context Structure
+
+```ruby
+{
+  run_params: { message: "...", customer_id: 123 },
+  classifier: RobotResult,
+  billing: RobotResult,
+  # ... other step results
 }
 ```
 
-#### Conditional Routing
+## Optional Step Activation
 
-Route based on previous results:
-
-```ruby
-router = ->(args) {
-  case args.call_count
-  when 0
-    :classifier
-  when 1
-    classification = args.last_result&.output&.first&.content
-    case classification&.strip
-    when "BILLING" then :billing_agent
-    when "TECHNICAL" then :tech_agent
-    else :general_agent
-    end
-  else
-    nil
-  end
-}
-```
-
-#### Single Robot
-
-Run one robot then stop:
+Optional steps don't run automatically. They must be activated:
 
 ```ruby
-router = ->(args) {
-  args.call_count.zero? ? :assistant : nil
-}
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
 
-# Or simply pass the robot directly
-network.run(state: state, router: assistant_robot)
-```
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
 
-## Execution Loop
+    # Analyze output and activate appropriate step
+    category = robot_result.last_text_content.to_s.downcase
 
-The main execution loop:
-
-```ruby
-def execute(router:, **run_context)
-  counter = 0
-
-  loop do
-    # Ask router for next robot(s)
-    args = build_router_args(last_result)
-    next_robots = Router.call(router, args)
-
-    # Stop if no more robots or limit reached
-    break if next_robots.nil? || counter >= max_iterations
-
-    # Execute each scheduled robot
-    next_robots.each do |robot|
-      result = robot.run(
-        network: self,
-        state: @state,
-        **run_context
-      )
-      @state.append_result(result)
-      counter += 1
+    case category
+    when /billing/
+      new_result.activate(:billing)
+    when /technical/
+      new_result.activate(:technical)
+    else
+      new_result.activate(:general)
     end
   end
 end
@@ -181,86 +119,80 @@ end
 
 ## Parallel Execution
 
-Routers can return multiple robots for parallel execution:
+Steps with the same dependencies can run in parallel:
 
 ```ruby
-router = ->(args) {
-  if args.call_count.zero?
-    [:sentiment_analyzer, :entity_extractor, :summarizer]
-  else
-    nil
-  end
-}
-```
+network = RobotLab.create_network(name: "analysis", concurrency: :threads) do
+  step :fetch, fetcher, depends_on: :none
 
-!!! note "Future Feature"
-    Full parallel execution via SimpleFlow is planned but currently executes sequentially.
+  # These three run in parallel
+  step :sentiment, sentiment_bot, depends_on: [:fetch]
+  step :entities, entity_bot, depends_on: [:fetch]
+  step :keywords, keyword_bot, depends_on: [:fetch]
 
-## History Integration
-
-Networks can persist conversation history:
-
-```ruby
-network = RobotLab.create_network do
-  history History::Config.new(
-    create_thread: ->(state:, input:, **) {
-      thread = Thread.create!(input: input.to_s)
-      { thread_id: thread.id }
-    },
-    get: ->(thread_id:, **) {
-      Result.where(thread_id: thread_id).map(&:to_robot_result)
-    },
-    append_results: ->(thread_id:, new_results:, **) {
-      new_results.each { |r| Result.create!(thread_id: thread_id, data: r.to_h) }
-    }
-  )
+  # Waits for all three
+  step :merge, merger, depends_on: [:sentiment, :entities, :keywords]
 end
 ```
 
-### History Flow
+### Concurrency Modes
 
-1. **Create Thread**: On first run, create persistent thread
-2. **Load History**: Load existing results into state
-3. **Execute**: Run robots normally
-4. **Save Results**: Persist new results to storage
+| Mode | Description |
+|------|-------------|
+| `:auto` | SimpleFlow chooses best mode |
+| `:threads` | Use Ruby threads |
+| `:async` | Use async/fiber |
 
-## State Sharing
+## Data Flow
 
-Robots in a network share state:
+1. **Initial Value**: `network.run(**params)` creates initial result
+2. **Run Params**: Stored in `result.context[:run_params]`
+3. **Step Results**: Each step adds to context
+4. **Final Value**: Last step's output becomes `result.value`
 
 ```ruby
-# First robot stores data
-state.data[:classification] = "billing"
-state.memory.remember("user_intent", "refund")
+# Run with context
+result = network.run(
+  message: "Help with billing",
+  customer_id: 123
+)
 
-# Second robot accesses it
-classification = state.data[:classification]
-intent = state.memory.recall("user_intent")
+# Access the flow
+result.context[:run_params]  # { message: "...", customer_id: 123 }
+result.context[:classifier]  # First robot's RobotResult
+result.context[:billing]     # Billing robot's RobotResult
+result.value                 # Final RobotResult
 ```
 
-## Iteration Limits
+## Visualization
 
-| Limit | Config | Default |
-|-------|--------|---------|
-| Max robots per run | `network.max_iterations` | 10 |
-| Max tool calls per robot | `config.max_tool_iterations` | 10 |
-
-## NetworkRun Results
-
-After execution:
+Networks provide visualization methods:
 
 ```ruby
-run = network.run(state: state)
+# ASCII representation
+puts network.visualize
 
-run.results      # All results (including loaded history)
-run.new_results  # Only results from this run
-run.last_result  # Most recent result
-run.execution_state  # :completed, :failed, etc.
-run.to_h         # Hash representation
+# Mermaid diagram
+puts network.to_mermaid
+
+# Execution plan description
+puts network.execution_plan
+```
+
+## Network Configuration
+
+```ruby
+network = RobotLab.create_network(
+  name: "support",
+  concurrency: :threads  # :auto, :threads, or :async
+) do
+  step :classifier, classifier, depends_on: :none
+  step :handler, handler, depends_on: [:classifier]
+end
 ```
 
 ## Next Steps
 
-- [State Management](state-management.md) - How state flows through networks
-- [Creating Networks](../guides/creating-networks.md) - Practical network patterns
-- [History Guide](../guides/history.md) - Persisting conversations
+- [Creating Networks](../guides/creating-networks.md) - Practical patterns
+- [Robot Execution](robot-execution.md) - How robots process messages
+- [API Reference: Network](../api/core/network.md) - Complete API

@@ -14,7 +14,7 @@ PATH
       ruby_llm-schema
       ruby_llm-semantic_cache
       ruby_llm-template
-      simple_flow
+      simple_flow (~> 0.3.0)
       state_machines
       state_machines-activemodel
       state_machines-activerecord
@@ -64,7 +64,7 @@ GEM
       ruby_llm
     ansi (1.5.0)
     ast (2.4.3)
-    async (2.35.2)
+    async (2.35.3)
       console (~> 1.29)
       fiber-annotation
       io-event (~> 1.11)
@@ -169,7 +169,7 @@ GEM
     onnxruntime (0.10.1-arm64-darwin)
       ffi
     parallel (1.27.0)
-    parser (3.3.10.0)
+    parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
     pp (0.6.3)
@@ -244,7 +244,7 @@ GEM
       parser (>= 3.3.7.2)
       prism (~> 1.7)
     ruby-progressbar (1.13.0)
-    ruby_llm (1.10.0)
+    ruby_llm (1.11.0)
       base64
       event_stream_parser (~> 1)
       faraday (>= 1.10.0)
@@ -266,7 +266,7 @@ GEM
       ruby_llm (>= 1.0)
       ruby_llm-schema (>= 0.2.0)
     securerandom (0.4.1)
-    simple_flow (0.2.0)
+    simple_flow (0.3.0)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -330,7 +330,7 @@ CHECKSUMS
   aigcm (0.3.2) sha256=eda5055a4bc1dd021f860b08134bf122f9df2e283da5be6719d1dde98a23428a
   ansi (1.5.0) sha256=5408253274e33d9d27d4a98c46d2998266fd51cba58a7eb9d08f50e57ed23592
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
-  async (2.35.2) sha256=2193907844f0ab086d4491c4d05c2a16dc2e2466b12468270e57daba5d21f962
+  async (2.35.3) sha256=6bfc75ac10182d0485b1394a50803b827f65e73f9e3ebe0aeaa4ecd770238271
   async-http (0.94.0) sha256=479dc4a11c078aff7e054a729fc79fef7d0c28ca26bfe81a4d125672b28759ea
   async-pool (0.11.1) sha256=98e1583e199a75f7dc70f8e65fc8d0d3b28636c3f256595d43e206642ad8fbda
   async-websocket (0.30.0) sha256=55739954528ad8f87f7792d0452e1268d1ef2aa5b3719f79400a05a1a6202cdf
@@ -383,7 +383,7 @@ CHECKSUMS
   nokogiri (1.19.0-arm64-darwin) sha256=0811dfd936d5f6dd3f6d32ef790568bf29b2b7bead9ba68866847b33c9cf5810
   onnxruntime (0.10.1-arm64-darwin) sha256=8afc0feaa03bd969c4c0f43379254106ac90dbb548c8bb2cae4cca25f19771b7
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
-  parser (3.3.10.0) sha256=ce3587fa5cc55a88c4ba5b2b37621b3329aadf5728f9eafa36bbd121462aabd6
+  parser (3.3.10.1) sha256=06f6a725d2cd91e5e7f2b7c32ba143631e1f7c8ae2fb918fc4cebec187e6a688
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
   prism (1.8.0) sha256=84453a16ef5530ea62c5f03ec16b52a459575ad4e7b9c2b360fd8ce2c39c1254
@@ -414,13 +414,13 @@ CHECKSUMS
   rubocop (1.82.1) sha256=09f1a6a654a960eda767aebea33e47603080f8e9c9a3f019bf9b94c9cab5e273
   rubocop-ast (1.49.0) sha256=49c3676d3123a0923d333e20c6c2dbaaae2d2287b475273fddee0c61da9f71fd
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
-  ruby_llm (1.10.0) sha256=ac896407a6f3649884ba07b3ef57ba3506a6bfc2f90188e2e43c0558cbf09420
+  ruby_llm (1.11.0) sha256=c1bc17bb02a7e805d8f62ea6ada2ecfe7782fc955e9440b53a2fdbd00e5ec9cc
   ruby_llm-mcp (0.8.0) sha256=74350b6c08eeb8bf1c387dc7192bb21bad8415d21277b9a922c182b2e8c29915
   ruby_llm-schema (0.2.5) sha256=b08cd42e8de7100325e2e868672a56f1915eb23692bb808f51f214e41392104f
   ruby_llm-semantic_cache (0.1.0) sha256=ad285968cfaed88cd8f5b9fc50ae64af815f3d4d6d862aa96d01c64a5f669815
   ruby_llm-template (0.1.6) sha256=163e1f195276df31596af1862a43cb4b7ed256e9fa7a7802690c728748c1702a
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
-  simple_flow (0.2.0) sha256=ec99d6ece749d014eae2afd290288b15809eff9430d0ad87a9d4cea6dd6beaf9
+  simple_flow (0.3.0) sha256=f365506159d25625836db44d19484f7a337fdcd75aa06eae6d4d24c333ad618c
   simplecov (0.22.0) sha256=fe2622c7834ff23b98066bb0a854284b2729a569ac659f82621fc22ef36213a5
   simplecov-html (0.13.2) sha256=bd0b8e54e7c2d7685927e8d6286466359b6f16b18cb0df47b508e8d73c777246
   simplecov_json_formatter (0.1.4) sha256=529418fbe8de1713ac2b2d612aa3daa56d316975d307244399fa4838c601b428
@@ -444,4 +444,4 @@ CHECKSUMS
   zeitwerk (2.7.4) sha256=2bef90f356bdafe9a6c2bd32bcd804f83a4f9b8bc27f3600fff051eb3edcec8b
 
 BUNDLED WITH
-  4.0.3
+  4.0.4

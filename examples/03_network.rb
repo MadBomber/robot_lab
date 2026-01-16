@@ -3,7 +3,8 @@
 
 # Example 3: Multi-Robot Network
 #
-# Demonstrates creating a network of robots with routing.
+# Demonstrates creating a network of robots with conditional routing
+# using SimpleFlow's optional step activation.
 #
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/03_network.rb
@@ -16,8 +17,31 @@ RobotLab.configure do |config|
   config.template_path = File.join(__dir__, "prompts")
 end
 
-# Create specialized robots using templates
-classifier = RobotLab.build(
+# Classifier robot that activates the appropriate specialist
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    # Examine LLM output and activate appropriate specialist
+    category = robot_result.last_text_content.to_s.strip.downcase
+
+    case category
+    when /billing/
+      new_result.activate(:billing)
+    when /technical/
+      new_result.activate(:technical)
+    else
+      new_result.activate(:general)
+    end
+  end
+end
+
+# Create specialized robots
+classifier = ClassifierRobot.new(
   name: "classifier",
   template: :classifier,
   model: "claude-sonnet-4"
@@ -41,41 +65,18 @@ general_robot = RobotLab.build(
   model: "claude-sonnet-4"
 )
 
-# Create router function
-router = lambda do |args|
-  # First call: run classifier
-  return ["classifier"] if args.call_count.zero?
-
-  # Second call: route based on classification
-  if args.call_count == 1
-    classification = args.last_result&.output&.last&.content.to_s.downcase.strip
-
-    case classification
-    when /billing/
-      args.network.state.data[:category] = "billing"
-      return ["billing"]
-    when /technical/
-      args.network.state.data[:category] = "technical"
-      return ["technical"]
-    else
-      args.network.state.data[:category] = "general"
-      return ["general"]
-    end
-  end
-
-  # After specialist responds, we're done
-  nil
+# Create network with optional step routing
+network = RobotLab.create_network(name: "support_network") do
+  step :classifier, classifier, depends_on: :none
+  step :billing, billing_robot, depends_on: :optional
+  step :technical, technical_robot, depends_on: :optional
+  step :general, general_robot, depends_on: :optional
 end
 
-# Create network
-network = RobotLab.create_network(
-  name: "support_network",
-  robots: [classifier, billing_robot, technical_robot, general_robot],
-  router: router,
-  state: RobotLab.create_state(data: { category: nil })
-)
-
 puts "Running multi-robot network..."
+puts "-" * 40
+puts "Network structure:"
+puts network.visualize
 puts "-" * 40
 
 # Run the network with a billing question
@@ -83,13 +84,20 @@ result = network.run(message: "I was charged twice for my subscription last mont
 
 # Display results
 puts "Network: #{network.name}"
-puts "Final category: #{result.state.data[:category]}"
 puts "\nConversation flow:"
-result.state.results.each_with_index do |robot_result, index|
-  puts "\n#{index + 1}. Robot: #{robot_result.robot_name}"
-  robot_result.output.each do |message|
-    puts "   #{message.content[0..100]}..." if message.respond_to?(:content)
-  end
+
+# Show classifier result
+if result.context[:classifier]
+  classifier_result = result.context[:classifier]
+  puts "\n1. Robot: classifier"
+  puts "   Classification: #{classifier_result.last_text_content}"
+end
+
+# Show specialist result (the final value)
+if result.value.is_a?(RobotLab::RobotResult)
+  puts "\n2. Robot: #{result.value.robot_name}"
+  content = result.value.last_text_content
+  puts "   Response: #{content[0..200]}..." if content
 end
 
 puts "-" * 40

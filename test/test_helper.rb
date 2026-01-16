@@ -38,12 +38,8 @@ module RobotLabTestHelpers
   end
 
   # Create a real Network instance for testing
-  def build_network(name:, robots:, **options)
-    RobotLab::Network.new(
-      name: name,
-      robots: robots,
-      **options
-    )
+  def build_network(name:, **options, &block)
+    RobotLab::Network.new(name: name, **options, &block)
   end
 
   # Create a Tool for testing

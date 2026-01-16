@@ -21,11 +21,12 @@ require "async"
 #   result = robot.run("Hello, world!")
 #
 # @example Creating a network of robots
-#   network = RobotLab.create_network(
-#     name: "pipeline",
-#     robots: [analyzer, writer, reviewer]
-#   )
-#   result = network.run("Process this document")
+#   network = RobotLab.create_network(name: "pipeline") do
+#     step :analyzer, analyzer, depends_on: :none
+#     step :writer, writer, depends_on: [:analyzer]
+#     step :reviewer, reviewer, depends_on: [:writer]
+#   end
+#   result = network.run(message: "Process this document")
 #
 # @example Configuration
 #   RobotLab.configure do |config|
@@ -137,26 +138,32 @@ module RobotLab
     # Factory method to create a new Network of robots.
     #
     # @param name [String] the unique identifier for the network
-    # @param robots [Array<Robot, Hash>] the robots to include in the network
-    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
-    # @param options [Hash] additional options passed to Network.new
+    # @param concurrency [Symbol] concurrency model (:auto, :threads, :async)
+    # @yield Block for defining pipeline steps
     # @return [Network] a new Network instance
     #
-    # @example Basic network
-    #   network = RobotLab.create_network(
-    #     name: "pipeline",
-    #     robots: [analyzer, writer, reviewer],
-    #     default_model: "claude-sonnet-4-20250514"
-    #   )
+    # @example Sequential pipeline
+    #   network = RobotLab.create_network(name: "pipeline") do
+    #     step :first, robot1, depends_on: :none
+    #     step :second, robot2, depends_on: [:first]
+    #   end
     #
-    # @example Network with caching disabled
-    #   network = RobotLab.create_network(
-    #     name: "pipeline",
-    #     robots: [robot1, robot2],
-    #     enable_cache: false
-    #   )
-    def create_network(name:, robots:, enable_cache: true, **options)
-      Network.new(name: name, robots: robots, enable_cache: enable_cache, **options)
+    # @example With optional routing
+    #   network = RobotLab.create_network(name: "support") do
+    #     step :classifier, classifier, depends_on: :none
+    #     step :billing, billing_robot, depends_on: :optional
+    #     step :technical, technical_robot, depends_on: :optional
+    #   end
+    #
+    # @example Parallel execution
+    #   network = RobotLab.create_network(name: "analysis") do
+    #     step :fetch, fetcher, depends_on: :none
+    #     step :sentiment, sentiment_bot, depends_on: [:fetch]
+    #     step :entities, entity_bot, depends_on: [:fetch]
+    #     step :merge, merger, depends_on: [:sentiment, :entities]
+    #   end
+    def create_network(name:, concurrency: :auto, &block)
+      Network.new(name: name, concurrency: concurrency, &block)
     end
 
     # Factory method to create a new Memory object.
