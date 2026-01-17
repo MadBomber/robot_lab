@@ -41,12 +41,12 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
+      - name: Build MkDocs site
+        run: mkdocs build
+
       - name: Deploy to GitHub Pages
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "Deploying from main branch"
-            mkdocs gh-deploy --force --clean
-          else
-            echo "Deploying from develop branch"
-            mkdocs gh-deploy --force --clean
-          fi
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          keep_files: true
