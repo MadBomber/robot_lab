@@ -574,13 +574,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#state" class="md-nav__link">
+  <a href="#task" class="md-nav__link">
     <span class="md-ellipsis">
       
-        State
+        Task
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simpleflowresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SimpleFlow::Result
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleFlow::Result">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#result-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -600,17 +628,6 @@
     <span class="md-ellipsis">
       
         Message Types
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#router" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Router
       
     </span>
   </a>
@@ -644,6 +661,17 @@
     <span class="md-ellipsis">
       
         Execution Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Routing
       
     </span>
   </a>
@@ -2768,13 +2796,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#state" class="md-nav__link">
+  <a href="#task" class="md-nav__link">
     <span class="md-ellipsis">
       
-        State
+        Task
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simpleflowresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SimpleFlow::Result
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SimpleFlow::Result">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#result-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2794,17 +2850,6 @@
     <span class="md-ellipsis">
       
         Message Types
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#router" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Router
       
     </span>
   </a>
@@ -2838,6 +2883,17 @@
     <span class="md-ellipsis">
       
         Execution Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Routing
       
     </span>
   </a>
@@ -2919,52 +2975,83 @@
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h2>
-<p>A <strong>Network</strong> is a collection of robots that work together. Networks provide:</p>
+<p>A <strong>Network</strong> is a collection of robots orchestrated using <a href="https://github.com/MadBomber/simple_flow">SimpleFlow</a> pipelines. Networks provide:</p>
 <ul>
-<li><strong>Robot Registry</strong>: Named robots that can be referenced</li>
-<li><strong>Routing Logic</strong>: Determines which robot handles each request</li>
-<li><strong>Shared Configuration</strong>: Default model, MCP servers, tools</li>
-<li><strong>State Management</strong>: Tracks conversation state across robots</li>
+<li><strong>Task-Based Orchestration</strong>: Define tasks with dependencies and routing</li>
+<li><strong>Parallel Execution</strong>: Tasks with the same dependencies run concurrently</li>
+<li><strong>Optional Task Activation</strong>: Dynamic routing based on robot output</li>
+<li><strong>Per-Task Configuration</strong>: Each task can have its own context, tools, and MCP servers</li>
 </ul>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">name</span><span class="w"> </span><span class="s2">&quot;customer_service&quot;</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="n">add_robot</span><span class="w"> </span><span class="n">support_robot</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="n">add_robot</span><span class="w"> </span><span class="n">billing_robot</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="n">add_robot</span><span class="w"> </span><span class="n">technical_robot</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="n">router</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="c1"># Custom routing logic</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="n">args</span><span class="o">.</span><span class="n">call_count</span><span class="o">.</span><span class="n">zero?</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="ss">:support_agent</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_service&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:classifier</span><span class="p">,</span><span class="w"> </span><span class="n">classifier_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">       </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">       </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:technical</span><span class="p">,</span><span class="w"> </span><span class="n">technical_robot</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">       </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;technical&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">       </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">end</span>
 </span></code></pre></div>
-<h2 id="state">State<a class="headerlink" href="#state" title="Permanent link">&para;</a></h2>
-<p><strong>State</strong> holds all the data for a single conversation or workflow execution:</p>
+<h2 id="task">Task<a class="headerlink" href="#task" title="Permanent link">&para;</a></h2>
+<p>A <strong>Task</strong> wraps a robot for use in a network pipeline with per-task configuration:</p>
 <ul>
-<li><strong>Data</strong>: Key-value store for workflow data</li>
-<li><strong>Results</strong>: History of robot responses</li>
-<li><strong>Messages</strong>: Conversation message history</li>
-<li><strong>Thread ID</strong>: Optional identifier for persistence</li>
-<li><strong>Memory</strong>: Shared memory accessible by all robots</li>
+<li><strong>Context</strong>: Task-specific context deep-merged with network run params</li>
+<li><strong>MCP</strong>: MCP servers available to this task</li>
+<li><strong>Tools</strong>: Tools available to this task</li>
+<li><strong>Memory</strong>: Task-specific memory</li>
+<li><strong>Dependencies</strong>: <code>:none</code>, <code>[:task1, :task2]</code>, or <code>:optional</code></li>
 </ul>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_state</span><span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;I need help with my order&quot;</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">priority</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">     </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">escalation_level</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">     </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">RefundTool</span><span class="p">,</span><span class="w"> </span><span class="no">InvoiceTool</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">     </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
 </span></code></pre></div>
+<h2 id="simpleflowresult">SimpleFlow::Result<a class="headerlink" href="#simpleflowresult" title="Permanent link">&para;</a></h2>
+<p>Networks use <code>SimpleFlow::Result</code> for data flow between tasks:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="w">      </span><span class="c1"># Current task&#39;s output (RobotResult)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="w">    </span><span class="c1"># Accumulated context from all tasks</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">result</span><span class="o">.</span><span class="n">halted?</span><span class="w">    </span><span class="c1"># Whether execution stopped early</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">result</span><span class="o">.</span><span class="n">continued?</span><span class="w"> </span><span class="c1"># Whether execution continues</span>
+</span></code></pre></div>
+<h3 id="result-methods">Result Methods<a class="headerlink" href="#result-methods" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>continue(value)</code></td>
+<td>Continue to next tasks</td>
+</tr>
+<tr>
+<td><code>halt(value)</code></td>
+<td>Stop pipeline execution</td>
+</tr>
+<tr>
+<td><code>with_context(key, val)</code></td>
+<td>Add data to context</td>
+</tr>
+<tr>
+<td><code>activate(task_name)</code></td>
+<td>Enable optional task</td>
+</tr>
+</tbody>
+</table>
 <h2 id="tool">Tool<a class="headerlink" href="#tool" title="Permanent link">&para;</a></h2>
 <p><strong>Tools</strong> are functions that robots can call to interact with external systems:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Get current weather for a location&quot;</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;City name&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="ss">handler</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">location</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="n">_context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="no">WeatherService</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Get current weather for a location&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;City name&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="ss">handler</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">location</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="n">_context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="no">WeatherService</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h2>
 <p>RobotLab uses several message types to represent conversation content:</p>
@@ -2994,52 +3081,47 @@
 </tr>
 </tbody>
 </table>
-<h2 id="router">Router<a class="headerlink" href="#router" title="Permanent link">&para;</a></h2>
-<p>A <strong>Router</strong> determines which robot(s) run at each step in a network. Routers receive context about the current execution and return the next robot(s) to run:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">router</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">call_count</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="ss">:classifier</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="mi">1</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="c1"># Route based on classification result</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="n">classification</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">last_result</span><span class="o">&amp;.</span><span class="n">output</span><span class="o">&amp;.</span><span class="n">first</span><span class="o">&amp;.</span><span class="n">content</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="n">classification</span><span class="o">&amp;.</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;billing&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="ss">:billing_agent</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="ss">:support_agent</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="k">else</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="kp">nil</span><span class="w"> </span><span class="c1"># Stop execution</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
-</span></code></pre></div>
 <h2 id="memory">Memory<a class="headerlink" href="#memory" title="Permanent link">&para;</a></h2>
-<p><strong>Memory</strong> provides a shared key-value store that persists across robot executions within a network run:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># In robot handler or tool</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;user_preference&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;dark_mode&quot;</span><span class="p">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">preference</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;user_preference&quot;</span><span class="p">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Scoped memory for organization</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">user_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">scoped</span><span class="p">(</span><span class="s2">&quot;user:123&quot;</span><span class="p">)</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">user_memory</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;last_order&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ORD-456&quot;</span><span class="p">)</span>
+<p><strong>Memory</strong> provides persistent storage across robot executions:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Robot with inherent memory</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;My name is Alice&quot;</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;What&#39;s my name?&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1"># Memory persists</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Access robot&#39;s memory</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">robot</span><span class="o">.</span><span class="n">memory</span><span class="o">[</span><span class="ss">:user_id</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">robot</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:category</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># Runtime memory injection</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Help me&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">memory</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># Reset memory</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="n">robot</span><span class="o">.</span><span class="n">reset_memory</span>
 </span></code></pre></div>
 <h2 id="mcp-model-context-protocol">MCP (Model Context Protocol)<a class="headerlink" href="#mcp-model-context-protocol" title="Permanent link">&para;</a></h2>
 <p><strong>MCP</strong> allows robots to connect to external tool servers:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">mcp</span><span class="w"> </span><span class="o">[</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;filesystem&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-filesystem&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;github&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-github&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="o">]</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;filesystem&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-filesystem&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;github&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-github&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="o">]</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="execution-flow">Execution Flow<a class="headerlink" href="#execution-flow" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
     participant User
     participant Network
-    participant Router
+    participant Pipeline
+    participant Task
     participant Robot
     participant LLM
     participant Tool
 
-    User-&gt;&gt;Network: run(state)
-    Network-&gt;&gt;Router: get_next_robot(args)
-    Router--&gt;&gt;Network: robot_name
-    Network-&gt;&gt;Robot: run(state)
+    User-&gt;&gt;Network: run(message, context)
+    Network-&gt;&gt;Pipeline: call(initial_result)
+    Pipeline-&gt;&gt;Task: call(result)
+    Task-&gt;&gt;Robot: call(enhanced_result)
     Robot-&gt;&gt;LLM: inference(messages, tools)
 
     alt Tool Call
@@ -3050,10 +3132,35 @@
     end
 
     LLM--&gt;&gt;Robot: response
-    Robot--&gt;&gt;Network: RobotResult
-    Network-&gt;&gt;Router: get_next_robot(args)
-    Router--&gt;&gt;Network: nil (done)
-    Network--&gt;&gt;User: results</code></pre>
+    Robot--&gt;&gt;Task: RobotResult
+    Task--&gt;&gt;Pipeline: result.continue(value)
+
+    alt Optional Task Activated
+        Pipeline-&gt;&gt;Task: call activated task
+    end
+
+    Pipeline--&gt;&gt;Network: final result
+    Network--&gt;&gt;User: SimpleFlow::Result</code></pre>
+<h2 id="conditional-routing">Conditional Routing<a class="headerlink" href="#conditional-routing" title="Permanent link">&para;</a></h2>
+<p>Use custom Robot subclasses to implement intelligent routing:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ClassifierRobot</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="n">robot_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">extract_run_context</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="n">new_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="o">.</span><span class="n">with_context</span><span class="p">(</span><span class="vi">@name</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">robot_result</span><span class="p">)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">      </span><span class="o">.</span><span class="n">continue</span><span class="p">(</span><span class="n">robot_result</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="c1"># Activate appropriate specialist</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot_result</span><span class="o">.</span><span class="n">last_text_content</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">downcase</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">category</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="k">when</span><span class="w"> </span><span class="sr">/billing/</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">new_result</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="ss">:billing</span><span class="p">)</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="k">when</span><span class="w"> </span><span class="sr">/technical/</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">new_result</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="ss">:technical</span><span class="p">)</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="n">new_result</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="ss">:general</span><span class="p">)</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="k">end</span>
+</span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../getting-started/quick-start/">Quick Start Guide</a> - Build your first robot</li>
