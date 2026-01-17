@@ -175,42 +175,49 @@ result = robot.run(message: "Should I start learning Rust?")
 
 ## Orchestrating Multiple Robots
 
+Networks use [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with optional task activation for intelligent routing:
+
 ```ruby
-# Create specialized robots (each uses a template from app/prompts/)
-classifier = RobotLab.build(
+# Custom classifier that activates the appropriate specialist
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    # Route based on classification
+    category = robot_result.last_text_content.to_s.strip.downcase
+    case category
+    when /billing/ then new_result.activate(:billing)
+    when /technical/ then new_result.activate(:technical)
+    else new_result.activate(:general)
+    end
+  end
+end
+
+# Create specialized robots
+classifier = ClassifierRobot.new(
   name: "classifier",
   template: :classifier
 )
 
-billing_robot = RobotLab.build(
-  name: "billing",
-  template: :billing
-)
+billing_robot = RobotLab.build(name: "billing", template: :billing)
+technical_robot = RobotLab.build(name: "technical", template: :technical)
+general_robot = RobotLab.build(name: "general", template: :general)
 
-technical_robot = RobotLab.build(
-  name: "technical",
-  template: :technical
-)
-
-# Create router function
-router = lambda do |args|
-  return ["classifier"] if args.call_count.zero?
-
-  if args.call_count == 1
-    category = args.last_result&.output&.last&.content.to_s.upcase.strip
-    category == "BILLING" ? ["billing"] : ["technical"]
-  end
+# Create network with optional task routing
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
-
-# Create a network with routing
-network = RobotLab.create_network(
-  name: "support",
-  robots: [classifier, billing_robot, technical_robot],
-  router: router
-)
 
 # Run the network
 result = network.run(message: "I was charged twice for my subscription")
+puts result.value.last_text_content
 ```
 
 ## Memory
@@ -235,23 +242,28 @@ robot.run(message: "Help me", memory: { session_id: "abc123", tier: "premium" })
 robot.reset_memory
 ```
 
-Networks share memory with all robots:
+Networks pass context through SimpleFlow::Result:
 
 ```ruby
 # Create network with specialized robots
-network = RobotLab.create_network(
-  name: "support",
-  robots: [classifier, billing_robot, technical_robot],
-  router: router
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+end
+
+# Run with context - available to all robots
+result = network.run(
+  message: "I have a billing question",
+  customer_id: 456,
+  ticket_id: "TKT-123"
 )
 
-# Runtime memory injection for network
-network.run(message: "I have a billing question", memory: { ticket_id: 456 })
+# Access results from specific robots
+classifier_result = result.context[:classifier]
+billing_result = result.context[:billing]
 
-# Access network memory
-network.memory[:ticket_id]  # => 456
-
-# All robots in the network share the same memory during execution
+# The final value is the last robot's output
+puts result.value.last_text_content
 ```
 
 ## MCP Integration

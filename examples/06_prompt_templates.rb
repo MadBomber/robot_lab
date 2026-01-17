@@ -5,7 +5,7 @@
 #
 # Demonstrates using ruby_llm-template for organized, reusable prompts
 # within a RobotLab network. This example shows an e-commerce support
-# system with dynamic context injection.
+# system with dynamic context injection using SimpleFlow's optional task routing.
 #
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/06_prompt_templates.rb
@@ -143,6 +143,36 @@ ESCALATION_AUTHORITIES = [
 ]
 
 # =============================================================================
+# Triage Robot with Routing Logic
+# =============================================================================
+
+# Custom triage robot that classifies and activates appropriate specialist
+class TriageRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    # Examine LLM output and activate appropriate specialist
+    classification = robot_result.last_text_content.to_s.strip.downcase
+
+    case classification
+    when /order/
+      new_result.activate(:order)
+    when /product/
+      new_result.activate(:product)
+    when /escalat/
+      new_result.activate(:escalation)
+    else
+      # Default to escalation for unclear cases
+      new_result.activate(:escalation)
+    end
+  end
+end
+
+# =============================================================================
 # Main Demo
 # =============================================================================
 
@@ -163,7 +193,7 @@ end
 # -----------------------------------------------------------------------------
 
 # Triage Robot - Classifies incoming requests
-triage_robot = RobotLab.build(
+triage_robot = TriageRobot.new(
   name: "triage",
   description: "Classifies incoming requests to route to specialists",
   template: :triage,
@@ -214,42 +244,15 @@ escalation_robot = RobotLab.build(
 )
 
 # -----------------------------------------------------------------------------
-# Create Network with Intelligent Routing
+# Create Network with Optional Task Routing
 # -----------------------------------------------------------------------------
 
-router = lambda do |args|
-  # First call: run triage classifier
-  return ["triage"] if args.call_count.zero?
-
-  # Second call: route based on classification
-  if args.call_count == 1
-    classification = args.last_result&.output&.last&.content.to_s.downcase.strip
-
-    category = case classification
-               when /order/ then "order"
-               when /product/ then "product"
-               when /escalat/ then "escalation"
-               else "escalation" # Default to escalation for unclear cases
-               end
-
-    args.network.state.data[:category] = category
-    args.network.state.data[:classification_result] = classification
-    return [category]
-  end
-
-  # After specialist responds, we're done
-  nil
+network = RobotLab.create_network(name: "ecommerce_support") do
+  task :triage, triage_robot, depends_on: :none
+  task :order, order_robot, depends_on: :optional
+  task :product, product_robot, depends_on: :optional
+  task :escalation, escalation_robot, depends_on: :optional
 end
-
-network = RobotLab.create_network(
-  name: "ecommerce_support",
-  robots: [triage_robot, order_robot, product_robot, escalation_robot],
-  router: router,
-  state: RobotLab.create_state(data: {
-    category: nil,
-    classification_result: nil
-  })
-)
 
 # -----------------------------------------------------------------------------
 # Run Demo Scenarios
@@ -285,25 +288,22 @@ demo_queries.each_with_index do |query, index|
     orders: ORDERS
   )
 
-  # Display results
-  puts "Routing Decision: #{result.state.data[:category]&.upcase || 'N/A'}"
-  puts "Classification: #{result.state.data[:classification_result]}"
-  puts
-
-  puts "Response Flow:"
-  result.state.results.each_with_index do |robot_result, idx|
+  # Display triage classification
+  if result.context[:triage]
+    triage_result = result.context[:triage]
+    puts "Classification: #{triage_result.last_text_content}"
     puts
-    puts "  #{idx + 1}. [#{robot_result.robot_name.upcase}]"
-    robot_result.output.each do |msg|
-      next unless msg.respond_to?(:content) && msg.content
+  end
 
-      content = msg.content.to_s
-      # Truncate long responses for display
-      if content.length > 300
-        puts "     #{content[0..300]}..."
-      else
-        puts "     #{content}"
-      end
+  # Display specialist response (the final value)
+  if result.value.is_a?(RobotLab::RobotResult)
+    puts "Routed to: #{result.value.robot_name.upcase}"
+    content = result.value.last_text_content.to_s
+    # Truncate long responses for display
+    if content.length > 300
+      puts "Response: #{content[0..300]}..."
+    else
+      puts "Response: #{content}"
     end
   end
 
@@ -318,7 +318,7 @@ puts "This example demonstrates:"
 puts "  - ruby_llm-template for organized, reusable prompts"
 puts "  - Build-time context (robot identity/capabilities)"
 puts "  - Run-time context (customer data, order history)"
-puts "  - Multi-robot network with intelligent routing"
-puts "  - State sharing between robots"
+puts "  - Multi-robot network with optional task routing"
+puts "  - SimpleFlow::Result for passing context between robots"
 puts
 puts "Template files are located in: #{File.join(__dir__, 'prompts')}"

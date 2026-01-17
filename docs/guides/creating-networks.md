@@ -1,19 +1,19 @@
 # Creating Networks
 
-Networks orchestrate multiple robots to accomplish complex workflows.
+Networks orchestrate multiple robots using [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines with DAG-based execution and optional task activation.
 
 ## Basic Network
 
-Create a network with robots:
+Create a network with a sequential pipeline:
 
 ```ruby
-network = RobotLab.create_network do
-  name "customer_service"
-
-  add_robot support_robot
-  add_robot billing_robot
-  add_robot technical_robot
+network = RobotLab.create_network(name: "pipeline") do
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot, depends_on: [:analyzer]
+  task :reviewer, reviewer_robot, depends_on: [:writer]
 end
+
+result = network.run(message: "Analyze this document")
 ```
 
 ## Network Properties
@@ -23,180 +23,127 @@ end
 Identifies the network for logging and debugging:
 
 ```ruby
-name "order_processing"
+network = RobotLab.create_network(name: "customer_service") do
+  # ...
+end
 ```
 
-### Default Model
+### Concurrency
 
-Model for robots that don't specify one:
+Control parallel execution mode:
 
 ```ruby
-default_model "claude-sonnet-4"
+network = RobotLab.create_network(name: "parallel", concurrency: :threads) do
+  # :auto (default), :threads, or :async
+end
 ```
 
-### Max Iterations
+## Adding Tasks
 
-Limit robot executions per run:
+### Sequential Tasks
+
+Each task depends on the previous:
 
 ```ruby
-max_iterations 10  # Default: 10
+network = RobotLab.create_network(name: "pipeline") do
+  task :first, robot1, depends_on: :none
+  task :second, robot2, depends_on: [:first]
+  task :third, robot3, depends_on: [:second]
+end
 ```
 
-## Adding Robots
+### Parallel Tasks
 
-### Single Robot
+Tasks with the same dependencies run in parallel:
 
 ```ruby
-add_robot my_robot
+network = RobotLab.create_network(name: "parallel_analysis") do
+  task :fetch, fetcher, depends_on: :none
+
+  # These run in parallel after :fetch
+  task :sentiment, sentiment_bot, depends_on: [:fetch]
+  task :entities, entity_bot, depends_on: [:fetch]
+  task :keywords, keyword_bot, depends_on: [:fetch]
+
+  # This waits for all three to complete
+  task :merge, merger, depends_on: [:sentiment, :entities, :keywords]
+end
 ```
 
-### Multiple Robots
+### Optional Tasks
+
+Optional tasks only run when explicitly activated:
 
 ```ruby
-add_robot classifier
-add_robot handler_a
-add_robot handler_b
-add_robot summarizer
+network = RobotLab.create_network(name: "router") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
+end
 ```
 
-### Inline Robot Definition
+## Per-Task Configuration
+
+Tasks can have individual context and configuration that's deep-merged with the network's run parameters:
 
 ```ruby
-add_robot RobotLab.build {
-  name "inline_helper"
-  template "You help with simple tasks."
-}
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing, billing_robot,
+       context: { department: "billing", escalation_level: 2 },
+       depends_on: :optional
+  task :technical, technical_robot,
+       context: { department: "technical" },
+       tools: [DebugTool, LogTool],
+       depends_on: :optional
+end
 ```
 
-## Routing
+### Task Options
 
-The router determines which robot runs at each step.
+| Option | Description |
+|--------|-------------|
+| `context` | Hash merged with run params (task values override) |
+| `mcp` | MCP servers for this task |
+| `tools` | Tools available to this task |
+| `memory` | Task-specific memory |
+| `depends_on` | `:none`, `[:task1]`, or `:optional` |
 
-### Simple Router
+## Conditional Routing
 
-Run one robot:
-
-```ruby
-router ->(args) {
-  args.call_count.zero? ? :assistant : nil
-}
-```
-
-### Sequential Router
-
-Run robots in order:
+Use optional tasks with custom Robot subclasses for intelligent routing:
 
 ```ruby
-SEQUENCE = [:intake, :process, :respond]
+class ClassifierRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
 
-router ->(args) {
-  idx = args.call_count
-  idx < SEQUENCE.length ? SEQUENCE[idx] : nil
-}
-```
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
 
-### Conditional Router
+    # Activate appropriate specialist based on classification
+    category = robot_result.last_text_content.to_s.strip.downcase
 
-Route based on results:
-
-```ruby
-router ->(args) {
-  case args.call_count
-  when 0
-    :classifier
-  when 1
-    # Route based on classification
-    result = args.last_result&.output&.first&.content&.strip
-    case result
-    when "BILLING" then :billing_agent
-    when "TECHNICAL" then :tech_agent
-    when "SALES" then :sales_agent
-    else :general_agent
+    case category
+    when /billing/ then new_result.activate(:billing)
+    when /technical/ then new_result.activate(:technical)
+    else new_result.activate(:general)
     end
-  when 2
-    :summarizer  # Always summarize at end
-  else
-    nil
   end
-}
-```
-
-### Router Arguments
-
-```ruby
-router ->(args) {
-  args.call_count   # Number of router invocations
-  args.network      # The NetworkRun
-  args.context      # Run context (includes :message)
-  args.stack        # Robots already scheduled
-  args.last_result  # Previous robot's RobotResult
-  args.message      # Shortcut for context[:message]
-}
-```
-
-## Network-Level Configuration
-
-### MCP Servers
-
-```ruby
-network = RobotLab.create_network do
-  name "dev_tools"
-
-  mcp [
-    {
-      name: "github",
-      transport: { type: "stdio", command: "mcp-server-github" }
-    },
-    {
-      name: "filesystem",
-      transport: { type: "stdio", command: "mcp-server-fs", args: ["--root", "."] }
-    }
-  ]
 end
-```
 
-### Tool Whitelist
+classifier = ClassifierRobot.new(
+  name: "classifier",
+  system_prompt: "Classify as: billing, technical, or general. Respond with one word."
+)
 
-```ruby
-network = RobotLab.create_network do
-  name "restricted"
-
-  # Only these tools available to robots
-  tools %w[read_file search_code]
-end
-```
-
-## History Configuration
-
-Enable conversation persistence:
-
-```ruby
-network = RobotLab.create_network do
-  name "persistent_chat"
-
-  history History::Config.new(
-    create_thread: ->(state:, input:, **) {
-      thread = ConversationThread.create!(initial_input: input.to_s)
-      { thread_id: thread.id.to_s }
-    },
-
-    get: ->(thread_id:, **) {
-      ConversationResult.where(thread_id: thread_id)
-                        .order(:created_at)
-                        .map(&:to_robot_result)
-    },
-
-    append_results: ->(thread_id:, new_results:, **) {
-      new_results.each do |result|
-        ConversationResult.create!(
-          thread_id: thread_id,
-          robot_name: result.robot_name,
-          output_data: result.output.map(&:to_h),
-          stop_reason: result.stop_reason
-        )
-      end
-    }
-  )
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 ```
 
@@ -205,203 +152,215 @@ end
 ### Basic Run
 
 ```ruby
-state = RobotLab.create_state(message: "Help me with my order")
-result = network.run(state: state)
+result = network.run(message: "Help me with my order")
 
 # Get the final response
-response = result.last_result.output.first.content
+puts result.value.last_text_content
 ```
 
-### With Custom Router
+### With Additional Context
 
 ```ruby
 result = network.run(
-  state: state,
-  router: ->(args) { args.call_count.zero? ? :assistant : nil }
+  message: "Check my order status",
+  customer_id: 123,
+  order_id: "ORD-456"
 )
 ```
 
-### With Single Robot
+### Accessing Task Results
 
 ```ruby
-result = network.run(
-  state: state,
-  router: my_robot  # Robot used as router
-)
+result = network.run(message: "Process this")
+
+# Access individual robot results
+classifier_result = result.context[:classifier]
+billing_result = result.context[:billing]
+
+# Original run parameters
+original_params = result.context[:run_params]
 ```
 
-### With Streaming
+## SimpleFlow::Result
+
+Networks return a `SimpleFlow::Result` object:
 
 ```ruby
-result = network.run(
-  state: state,
-  streaming: ->(event) {
-    puts "#{event[:event]}: #{event[:data]}"
-  }
-)
-```
+result = network.run(message: "Hello")
 
-## NetworkRun Results
-
-```ruby
-run = network.run(state: state)
-
-run.results        # All results (including loaded history)
-run.new_results    # Only results from this run
-run.last_result    # Most recent result
-run.execution_state  # :completed, :failed, etc.
-run.run_id         # Unique run identifier
-
-run.to_h           # Hash representation
+result.value      # The final task's output (RobotResult)
+result.context    # Hash of all task results and metadata
+result.halted?    # Whether execution was halted early
+result.continued? # Whether execution continued normally
 ```
 
 ## Patterns
 
 ### Classifier Pattern
 
-Route to specialists based on input classification:
+Route to specialists based on classification:
 
 ```ruby
-classifier = RobotLab.build do
-  name "classifier"
-  template <<~PROMPT
-    Classify the request: BILLING, TECHNICAL, or GENERAL.
-    Respond with only the category.
-  PROMPT
+class SupportClassifier < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    category = robot_result.last_text_content.to_s.strip.downcase
+    new_result.activate(category.to_sym)
+  end
 end
 
-specialists = {
-  "BILLING" => billing_robot,
-  "TECHNICAL" => tech_robot,
-  "GENERAL" => general_robot
-}
-
-network = RobotLab.create_network do
-  name "smart_router"
-  add_robot classifier
-  specialists.values.each { |r| add_robot r }
-
-  router ->(args) {
-    case args.call_count
-    when 0 then :classifier
-    when 1
-      category = args.last_result&.output&.first&.content&.strip
-      specialists[category]&.name || :general
-    else nil
-    end
-  }
+network = RobotLab.create_network(name: "support") do
+  task :classifier, SupportClassifier.new(name: "classifier", template: :classifier),
+       depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
 end
 ```
 
 ### Pipeline Pattern
 
-Process through stages:
+Process through sequential stages:
 
 ```ruby
-network = RobotLab.create_network do
-  name "document_processor"
-
-  add_robot extractor      # Extract key info
-  add_robot analyzer       # Analyze content
-  add_robot formatter      # Format output
-
-  router ->(args) {
-    [:extractor, :analyzer, :formatter][args.call_count]
-  }
+network = RobotLab.create_network(name: "document_processor") do
+  task :extract, extractor, depends_on: :none
+  task :analyze, analyzer, depends_on: [:extract]
+  task :format, formatter, depends_on: [:analyze]
 end
 ```
 
-### Fallback Pattern
+### Fan-Out/Fan-In Pattern
 
-Try primary, fall back if needed:
+Parallel processing with aggregation:
 
 ```ruby
-router ->(args) {
-  case args.call_count
-  when 0
-    :primary_agent
-  when 1
-    # Check if primary succeeded
-    result = args.last_result
-    if result&.output&.first&.content&.include?("I cannot help")
-      :fallback_agent
+network = RobotLab.create_network(name: "multi_analysis") do
+  task :prepare, preparer, depends_on: :none
+
+  # Fan-out: parallel analysis
+  task :sentiment, sentiment_analyzer, depends_on: [:prepare]
+  task :topics, topic_extractor, depends_on: [:prepare]
+  task :entities, entity_recognizer, depends_on: [:prepare]
+
+  # Fan-in: aggregate results
+  task :aggregate, aggregator, depends_on: [:sentiment, :topics, :entities]
+end
+```
+
+### Conditional Continuation
+
+A robot can halt execution early:
+
+```ruby
+class ValidatorRobot < RobotLab::Robot
+  def call(result)
+    robot_result = run(**extract_run_context(result))
+
+    if robot_result.last_text_content.include?("INVALID")
+      # Stop the pipeline
+      result.halt(robot_result)
     else
-      nil  # Primary succeeded, done
+      # Continue to next task
+      result
+        .with_context(@name.to_sym, robot_result)
+        .continue(robot_result)
     end
-  else
-    nil
   end
-}
+end
 ```
 
-### Consensus Pattern
+## Visualization
 
-Get multiple opinions:
+### ASCII Visualization
 
 ```ruby
-network = RobotLab.create_network do
-  name "consensus"
+puts network.visualize
+# => ASCII representation of the pipeline
+```
 
-  add_robot analyst_1
-  add_robot analyst_2
-  add_robot analyst_3
-  add_robot synthesizer
+### Mermaid Diagram
 
-  router ->(args) {
-    case args.call_count
-    when 0..2
-      [:analyst_1, :analyst_2, :analyst_3][args.call_count]
-    when 3
-      :synthesizer  # Combine all opinions
-    else
-      nil
-    end
-  }
-end
+```ruby
+puts network.to_mermaid
+# => Mermaid graph definition
+```
+
+### Execution Plan
+
+```ruby
+puts network.execution_plan
+# => Description of execution order
+```
+
+## Network Introspection
+
+```ruby
+network.name              # => "support"
+network.robots            # => Hash of name => Robot
+network.robot(:billing)   # => Robot instance
+network["billing"]        # => Robot instance (alias)
+network.available_robots  # => Array of Robot instances
+network.to_h              # => Hash representation
 ```
 
 ## Best Practices
 
-### 1. Keep Routers Simple
+### 1. Keep Robots Focused
+
+Each robot should have a single responsibility:
 
 ```ruby
-# Good: Clear logic
-router ->(args) {
-  args.call_count.zero? ? :handler : nil
-}
+# Good: focused robots
+task :classify, classifier, depends_on: :none
+task :respond, responder, depends_on: [:classify]
 
-# Bad: Complex logic in router
-router ->(args) {
-  # 50 lines of business logic...
-}
+# Bad: one robot doing everything
+task :do_everything, mega_robot, depends_on: :none
 ```
 
-### 2. Use Memory for Data Passing
+### 2. Use Context for Data Passing
+
+Access previous results via context:
 
 ```ruby
-# Instead of parsing results in router
-router ->(args) {
-  # Read from memory
-  intent = args.network.state.memory.recall("user_intent")
-  intent == "billing" ? :billing : :general
-}
+class ResponderRobot < RobotLab::Robot
+  def call(result)
+    # Get classifier's output
+    classification = result.context[:classifier]&.last_text_content
+
+    # Use it in this robot's run
+    robot_result = run(
+      **extract_run_context(result),
+      classification: classification
+    )
+
+    result.with_context(@name.to_sym, robot_result).continue(robot_result)
+  end
+end
 ```
 
-### 3. Handle Edge Cases
+### 3. Handle Missing Results
+
+Guard against missing optional task results:
 
 ```ruby
-router ->(args) {
-  return nil if args.call_count > 5  # Safety limit
-
-  result = args.last_result&.output&.first&.content
-  return :fallback if result.nil?    # Handle missing result
-
-  # Normal routing...
-}
+def call(result)
+  # Check if optional task ran
+  if result.context[:validator]
+    # Use validator result
+  else
+    # Handle missing validation
+  end
+end
 ```
 
 ## Next Steps
 
 - [Using Tools](using-tools.md) - Add capabilities to robots
-- [History Guide](history.md) - Persist conversations
+- [Memory Guide](memory.md) - Persistent memory across runs
 - [API Reference: Network](../api/core/network.md) - Complete API

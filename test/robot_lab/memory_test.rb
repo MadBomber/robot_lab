@@ -324,6 +324,349 @@ class RobotLab::MemoryTest < Minitest::Test
     assert @memory.keys.size > 0
   end
 
+  # =========================================================================
+  # Reactive Memory API Tests
+  # =========================================================================
+
+  # Network name
+  def test_network_name_nil_by_default
+    assert_nil @memory.network_name
+  end
+
+  def test_network_name_set_on_initialize
+    memory = RobotLab::Memory.new(network_name: "support")
+    assert_equal "support", memory.network_name
+  end
+
+  def test_clone_preserves_network_name
+    memory = RobotLab::Memory.new(network_name: "support")
+    cloned = memory.clone
+    assert_equal "support", cloned.network_name
+  end
+
+  # Current writer
+  def test_current_writer_nil_by_default
+    assert_nil @memory.current_writer
+  end
+
+  def test_current_writer_can_be_set
+    @memory.current_writer = "robot_a"
+    assert_equal "robot_a", @memory.current_writer
+  end
+
+  # set() method
+  def test_set_stores_value
+    @memory.set(:sentiment, { score: 0.8 })
+    assert_equal({ score: 0.8 }, @memory.get(:sentiment))
+  end
+
+  def test_set_returns_value
+    result = @memory.set(:key, "value")
+    assert_equal "value", result
+  end
+
+  def test_set_converts_string_key_to_symbol
+    @memory.set("string_key", "value")
+    assert_equal "value", @memory.get(:string_key)
+  end
+
+  # get() method - immediate
+  def test_get_returns_value_immediately
+    @memory.set(:key, "value")
+    assert_equal "value", @memory.get(:key)
+  end
+
+  def test_get_returns_nil_for_missing_key
+    assert_nil @memory.get(:nonexistent)
+  end
+
+  def test_get_multiple_keys_returns_hash
+    @memory.set(:a, 1)
+    @memory.set(:b, 2)
+    @memory.set(:c, 3)
+
+    result = @memory.get(:a, :b, :c)
+    assert_equal({ a: 1, b: 2, c: 3 }, result)
+  end
+
+  def test_get_multiple_keys_with_missing_returns_partial
+    @memory.set(:a, 1)
+
+    result = @memory.get(:a, :missing)
+    assert_equal({ a: 1 }, result)
+  end
+
+  # get() with wait
+  def test_get_with_wait_returns_immediately_if_value_exists
+    @memory.set(:key, "value")
+    result = @memory.get(:key, wait: true)
+    assert_equal "value", result
+  end
+
+  def test_get_with_wait_blocks_until_value_set
+    result = nil
+
+    reader = Thread.new do
+      result = @memory.get(:delayed_key, wait: true)
+    end
+
+    # Give reader time to start waiting
+    sleep 0.05
+
+    writer = Thread.new do
+      @memory.set(:delayed_key, "arrived")
+    end
+
+    reader.join(2)  # 2 second timeout
+    writer.join(1)
+
+    assert_equal "arrived", result
+  end
+
+  def test_get_with_timeout_raises_on_timeout
+    assert_raises(RobotLab::AwaitTimeout) do
+      @memory.get(:never_arrives, wait: 0.1)
+    end
+  end
+
+  def test_get_multiple_with_wait_waits_for_all
+    results = nil
+
+    reader = Thread.new do
+      results = @memory.get(:key1, :key2, wait: true)
+    end
+
+    sleep 0.05
+
+    Thread.new { @memory.set(:key1, "first") }
+    sleep 0.05
+    Thread.new { @memory.set(:key2, "second") }
+
+    reader.join(2)
+
+    assert_equal({ key1: "first", key2: "second" }, results)
+  end
+
+  # Subscriptions
+  def test_subscribe_returns_subscription_id
+    id = @memory.subscribe(:key) { |_change| }
+    refute_nil id
+    assert id.is_a?(String)
+  end
+
+  def test_subscribe_requires_block
+    assert_raises(ArgumentError) do
+      @memory.subscribe(:key)
+    end
+  end
+
+  def test_subscribe_callback_receives_change
+    received = nil
+
+    @memory.subscribe(:sentiment) do |change|
+      received = change
+    end
+
+    @memory.current_writer = "analyzer"
+    @memory.set(:sentiment, { score: 0.8 })
+
+    # Give async callback time to fire
+    sleep 0.1
+
+    refute_nil received
+    assert_equal :sentiment, received.key
+    assert_equal({ score: 0.8 }, received.value)
+    assert_nil received.previous
+    assert_equal "analyzer", received.writer
+  end
+
+  def test_subscribe_callback_includes_previous_value
+    received = nil
+
+    @memory.set(:counter, 1)
+
+    @memory.subscribe(:counter) do |change|
+      received = change
+    end
+
+    @memory.set(:counter, 2)
+
+    sleep 0.1
+
+    assert_equal 2, received.value
+    assert_equal 1, received.previous
+  end
+
+  def test_subscribe_to_multiple_keys
+    changes = []
+
+    @memory.subscribe(:a, :b) do |change|
+      changes << change.key
+    end
+
+    @memory.set(:a, 1)
+    @memory.set(:b, 2)
+    @memory.set(:c, 3)  # Not subscribed
+
+    sleep 0.1
+
+    assert_includes changes, :a
+    assert_includes changes, :b
+    refute_includes changes, :c
+  end
+
+  def test_unsubscribe_removes_subscription
+    callback_count = 0
+
+    id = @memory.subscribe(:key) do |_change|
+      callback_count += 1
+    end
+
+    @memory.set(:key, "first")
+    sleep 0.1
+
+    @memory.unsubscribe(id)
+
+    @memory.set(:key, "second")
+    sleep 0.1
+
+    assert_equal 1, callback_count
+  end
+
+  def test_unsubscribe_returns_true_if_found
+    id = @memory.subscribe(:key) { |_| }
+    assert @memory.unsubscribe(id)
+  end
+
+  def test_unsubscribe_returns_false_if_not_found
+    refute @memory.unsubscribe("nonexistent-id")
+  end
+
+  def test_unsubscribe_keys_removes_all_for_key
+    count = 0
+
+    @memory.subscribe(:key) { count += 1 }
+    @memory.subscribe(:key) { count += 1 }
+
+    @memory.unsubscribe_keys(:key)
+
+    @memory.set(:key, "value")
+    sleep 0.1
+
+    assert_equal 0, count
+  end
+
+  def test_subscribed_returns_true_when_subscribed
+    @memory.subscribe(:key) { |_| }
+    assert @memory.subscribed?(:key)
+  end
+
+  def test_subscribed_returns_false_when_not_subscribed
+    refute @memory.subscribed?(:unsubscribed_key)
+  end
+
+  # Pattern subscriptions
+  def test_subscribe_pattern_matches_keys
+    matched_keys = []
+
+    @memory.subscribe_pattern("analysis:*") do |change|
+      matched_keys << change.key
+    end
+
+    @memory.set(:"analysis:sentiment", 0.8)
+    @memory.set(:"analysis:entities", ["foo"])
+    @memory.set(:other_key, "ignored")
+
+    sleep 0.1
+
+    assert_includes matched_keys, :"analysis:sentiment"
+    assert_includes matched_keys, :"analysis:entities"
+    refute_includes matched_keys, :other_key
+  end
+
+  def test_subscribe_pattern_with_question_mark
+    matched = []
+
+    @memory.subscribe_pattern("step?") do |change|
+      matched << change.key
+    end
+
+    @memory.set(:step1, "a")
+    @memory.set(:step2, "b")
+    @memory.set(:step10, "c")  # Won't match - too many chars
+
+    sleep 0.1
+
+    assert_includes matched, :step1
+    assert_includes matched, :step2
+    refute_includes matched, :step10
+  end
+
+  # MemoryChange object
+  def test_memory_change_created
+    change = RobotLab::MemoryChange.new(
+      key: :test,
+      value: "new",
+      previous: nil
+    )
+    assert change.created?
+    refute change.updated?
+    refute change.deleted?
+  end
+
+  def test_memory_change_updated
+    change = RobotLab::MemoryChange.new(
+      key: :test,
+      value: "new",
+      previous: "old"
+    )
+    refute change.created?
+    assert change.updated?
+    refute change.deleted?
+  end
+
+  def test_memory_change_deleted
+    change = RobotLab::MemoryChange.new(
+      key: :test,
+      value: nil,
+      previous: "old"
+    )
+    refute change.created?
+    refute change.updated?
+    assert change.deleted?
+  end
+
+  def test_memory_change_to_h
+    change = RobotLab::MemoryChange.new(
+      key: :test,
+      value: "value",
+      writer: "robot_a",
+      network_name: "support"
+    )
+
+    hash = change.to_h
+    assert_equal :test, hash[:key]
+    assert_equal "value", hash[:value]
+    assert_equal "robot_a", hash[:writer]
+    assert_equal "support", hash[:network_name]
+  end
+
+  # Bracket operators delegate to set/get
+  def test_bracket_set_triggers_notifications
+    received = nil
+
+    @memory.subscribe(:key) do |change|
+      received = change
+    end
+
+    @memory[:key] = "value"
+
+    sleep 0.1
+
+    refute_nil received
+    assert_equal "value", received.value
+  end
+
   private
 
   def mock_robot_result(robot_name)

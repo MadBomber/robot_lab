@@ -175,7 +175,8 @@ module RobotLab
 
     # Run the robot with the given context
     #
-    # @param network [NetworkRun, nil] Network context if running in network
+    # @param network [NetworkRun, nil] Network context if running in network (legacy)
+    # @param network_memory [Memory, nil] Shared network memory (preferred)
     # @param memory [Memory, Hash, nil] Runtime memory to merge
     # @param mcp [Symbol, Array, nil] Runtime MCP override (:inherit, :none, nil, [], or array of servers)
     # @param tools [Symbol, Array, nil] Runtime tools override (:inherit, :none, nil, [], or array of tool names)
@@ -189,11 +190,15 @@ module RobotLab
     # @example Runtime memory injection
     #   robot.run(message: "Hello", memory: { user_id: 123, session: "abc" })
     #
-    def run(network: nil, memory: nil, mcp: :none, tools: :none, **run_context)
-      # Determine which memory to use:
-      # 1. Network memory if running in a network
-      # 2. Otherwise, use robot's inherent memory
-      run_memory = network&.memory || @memory
+    # @example With network shared memory
+    #   robot.run(message: "Analyze this", network_memory: network.memory)
+    #
+    def run(network: nil, network_memory: nil, memory: nil, mcp: :none, tools: :none, **run_context)
+      # Determine which memory to use (priority order):
+      # 1. Explicit network_memory parameter
+      # 2. Network object's memory (legacy)
+      # 3. Robot's inherent memory
+      run_memory = network_memory || network&.memory || @memory
 
       # Merge runtime memory if provided
       case memory
@@ -203,24 +208,56 @@ module RobotLab
         run_memory.merge!(memory)
       end
 
-      # Resolve hierarchical MCP and tools configuration
-      resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
-      resolved_tools = resolve_tools_hierarchy(tools, network: network)
+      # Set current_writer so memory notifications know who wrote the value
+      previous_writer = run_memory.current_writer
+      run_memory.current_writer = @name
 
-      # Initialize or update MCP clients based on resolved config
-      ensure_mcp_clients(resolved_mcp)
+      begin
+        # Resolve hierarchical MCP and tools configuration
+        resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
+        resolved_tools = resolve_tools_hierarchy(tools, network: network)
 
-      # Merge build context + run context
-      full_context = resolve_context(@build_context, network: network)
-                       .merge(run_context)
+        # Initialize or update MCP clients based on resolved config
+        ensure_mcp_clients(resolved_mcp)
 
-      # Build chat with template, filtered tools, and semantic cache
-      chat = build_chat(full_context, allowed_tools: resolved_tools, memory: run_memory)
+        # Merge build context + run context
+        full_context = resolve_context(@build_context, network: network)
+                         .merge(run_context)
 
-      # Execute and return result
-      response = chat.complete
+        # Build chat with template, filtered tools, and semantic cache
+        chat = build_chat(full_context, allowed_tools: resolved_tools, memory: run_memory)
 
-      build_result(response, run_memory)
+        # Execute and return result
+        response = chat.complete
+
+        build_result(response, run_memory)
+      ensure
+        # Restore previous writer
+        run_memory.current_writer = previous_writer
+      end
+    end
+
+    # SimpleFlow step interface
+    #
+    # Allows Robot to be used directly as a step in a SimpleFlow::Pipeline.
+    # The robot receives a SimpleFlow::Result, executes, and returns a new
+    # SimpleFlow::Result with the robot's output.
+    #
+    # @param result [SimpleFlow::Result] incoming result from previous step
+    # @return [SimpleFlow::Result] result with robot output
+    #
+    # @example Using a robot as a pipeline step
+    #   pipeline = SimpleFlow::Pipeline.new do
+    #     step :classifier, classifier_robot, depends_on: :none
+    #     step :billing, billing_robot, depends_on: :optional
+    #   end
+    #
+    def call(result)
+      robot_result = run(**extract_run_context(result))
+
+      result
+        .with_context(@name.to_sym, robot_result)
+        .continue(robot_result)
     end
 
     # Reset the robot's inherent memory
@@ -278,6 +315,47 @@ module RobotLab
 
     private
 
+    # Extract run context from SimpleFlow::Result
+    #
+    # Merges original run params (preserved in context) with current value.
+    # Extracts special parameters (mcp, tools, memory, network_memory) for Robot#run.
+    #
+    # @param result [SimpleFlow::Result] the incoming result
+    # @return [Hash] context for run method including mcp/tools config
+    #
+    def extract_run_context(result)
+      run_params = result.context[:run_params] || {}
+
+      # Extract robot-specific params that should be passed to run()
+      mcp = run_params.delete(:mcp) || :none
+      tools = run_params.delete(:tools) || :none
+      memory = run_params.delete(:memory)
+      network_memory = run_params.delete(:network_memory)
+
+      # Build base context from remaining run params
+      base = run_params.dup
+
+      # Merge current value into context
+      merged = case result.value
+               when Hash
+                 base.merge(result.value.transform_keys(&:to_sym))
+               when RobotResult
+                 base.merge(message: result.value.last_text_content)
+               when String
+                 base.merge(message: result.value)
+               else
+                 base.merge(message: result.value.to_s)
+               end
+
+      # Add back the special params for run()
+      merged[:mcp] = mcp
+      merged[:tools] = tools
+      merged[:memory] = memory if memory
+      merged[:network_memory] = network_memory if network_memory
+
+      merged
+    end
+
     def resolve_context(context, network:)
       case context
       when Proc then context.call(network: network)
@@ -290,9 +368,6 @@ module RobotLab
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
       chat = RubyLLM.chat(model: model_id)
-
-      # Wrap with semantic cache for automatic caching (if enabled)
-      chat = memory.cache.wrap(chat) if memory.cache
 
       # Apply template and/or system_prompt
       # - Template only: use with_template
@@ -312,6 +387,11 @@ module RobotLab
       # Add callbacks if provided
       chat = chat.on_tool_call(&@on_tool_call) if @on_tool_call
       chat = chat.on_tool_result(&@on_tool_result) if @on_tool_result
+
+      # NOTE: Semantic cache wrapping is disabled because the SemanticCache::Middleware
+      # only supports `ask` method, not `complete`. The caching feature needs to be
+      # re-designed to use the `ask` interface or the `fetch` pattern.
+      # See: https://github.com/ruby-llm/ruby_llm-semantic_cache
 
       chat
     end
