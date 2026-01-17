@@ -3,11 +3,23 @@
 require "ruby_llm/semantic_cache"
 
 module RobotLab
+  # Raised when a blocking get times out
+  class AwaitTimeout < Error; end
+
   # Unified memory system for Robot and Network execution
   #
-  # Memory is a key-value store backed by Redis (if available) or an internal
-  # Hash object. It provides persistent storage for runtime data, conversation
-  # history, and arbitrary user-defined values.
+  # Memory is a reactive key-value store backed by Redis (if available) or an
+  # internal Hash object. It provides persistent storage for runtime data,
+  # conversation history, and arbitrary user-defined values.
+  #
+  # == Reactive Features
+  #
+  # Memory supports pub/sub semantics where robots can subscribe to key changes
+  # and optionally block until values become available:
+  #
+  # - `set(key, value)` - Write a value and notify subscribers asynchronously
+  # - `get(key, wait: true)` - Read a value, blocking until it exists if needed
+  # - `subscribe(*keys)` - Register a callback for key changes
   #
   # Reserved keys with special accessors:
   # - :data       - runtime data (StateProxy for method-style access)
@@ -18,8 +30,27 @@ module RobotLab
   #
   # @example Basic usage
   #   memory = Memory.new
-  #   memory[:user_id] = 123
-  #   memory[:user_id]  # => 123
+  #   memory.set(:user_id, 123)
+  #   memory.get(:user_id)  # => 123
+  #
+  # @example Blocking read
+  #   # In robot A (writer)
+  #   memory.set(:sentiment, { score: 0.8 })
+  #
+  #   # In robot B (reader, may run concurrently)
+  #   result = memory.get(:sentiment, wait: true)   # Blocks until available
+  #   result = memory.get(:sentiment, wait: 30)     # Blocks up to 30 seconds
+  #
+  # @example Multiple keys
+  #   results = memory.get(:sentiment, :entities, :keywords, wait: 60)
+  #   # => { sentiment: {...}, entities: [...], keywords: [...] }
+  #
+  # @example Subscriptions (async callbacks)
+  #   memory.subscribe(:raw_data) do |change|
+  #     puts "#{change.key} changed by #{change.writer}"
+  #     enriched = enrich(change.value)
+  #     memory.set(:enriched, enriched)
+  #   end
   #
   # @example Using reserved keys
   #   memory.data[:category] = "billing"
@@ -27,12 +58,16 @@ module RobotLab
   #   memory.results  # => []
   #   memory.cache  # => RubyLLM::SemanticCache instance
   #
-  # @example Runtime injection
-  #   memory.merge!(magic_word: "xyzzy", user_session: "abc123")
-  #
   class Memory
     # Reserved keys that have special behavior
     RESERVED_KEYS = %i[data results messages session_id cache].freeze
+
+    # @!attribute [r] network_name
+    #   @return [String, nil] the network this memory belongs to
+    # @!attribute [rw] current_writer
+    #   @return [String, nil] the name of the robot currently writing
+    attr_reader :network_name
+    attr_accessor :current_writer
 
     # Creates a new Memory instance.
     #
@@ -42,16 +77,22 @@ module RobotLab
     # @param session_id [String, nil] conversation session identifier
     # @param backend [Symbol] storage backend (:auto, :redis, :hash)
     # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
+    # @param network_name [String, nil] the network this memory belongs to
     #
     # @example Basic memory with caching enabled
     #   Memory.new(data: { category: nil, resolved: false })
     #
     # @example Memory with caching disabled
     #   Memory.new(enable_cache: false)
-    def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true)
+    #
+    # @example Network-owned memory
+    #   Memory.new(network_name: "support_pipeline")
+    def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true, network_name: nil)
       @backend = select_backend(backend)
       @mutex = Mutex.new
       @enable_cache = enable_cache
+      @network_name = network_name
+      @current_writer = nil
 
       # Initialize reserved keys
       set_internal(:data, data.is_a?(Hash) ? data.transform_keys(&:to_sym) : data)
@@ -62,6 +103,13 @@ module RobotLab
 
       # Data proxy for method-style access
       @data_proxy = nil
+
+      # Reactive infrastructure
+      @subscriptions = Hash.new { |h, k| h[k] = [] }
+      @pattern_subscriptions = []
+      @waiters = Hash.new { |h, k| h[k] = [] }
+      @subscription_mutex = Mutex.new
+      @waiter_mutex = Mutex.new
     end
 
     # Get value by key
@@ -78,14 +126,19 @@ module RobotLab
 
     # Set value by key
     #
+    # For non-reserved keys, this delegates to {#set} which provides
+    # reactive notifications. For reserved keys, it bypasses notifications.
+    #
     # @param key [Symbol, String] the key to set
     # @param value [Object] the value to store
     # @return [Object] the stored value
     #
+    # @see #set
+    #
     def []=(key, value)
       key = key.to_sym
 
-      # Reserved keys have special handling
+      # Reserved keys have special handling (no notifications)
       case key
       when :data
         @data_proxy = nil  # Reset proxy
@@ -100,7 +153,8 @@ module RobotLab
         # Cache is read-only after initialization
         raise ArgumentError, "Cannot reassign cache - it is initialized automatically"
       else
-        set_internal(key, value)
+        # Non-reserved keys use reactive set
+        set(key, value)
       end
 
       value
@@ -167,6 +221,191 @@ module RobotLab
     #
     def cache
       get_internal(:cache)
+    end
+
+    # =========================================================================
+    # Reactive Memory API
+    # =========================================================================
+
+    # Set a value and notify subscribers asynchronously.
+    #
+    # This is the primary write method for reactive memory. It stores the value,
+    # wakes any threads waiting for this key, and asynchronously notifies
+    # subscribers.
+    #
+    # @param key [Symbol, String] the key to set
+    # @param value [Object] the value to store
+    # @return [Object] the stored value
+    #
+    # @example Basic set
+    #   memory.set(:sentiment, { score: 0.8, confidence: 0.95 })
+    #
+    # @example Set triggers notifications
+    #   memory.subscribe(:status) { |change| puts "Status: #{change.value}" }
+    #   memory.set(:status, "complete")  # Subscriber callback fires async
+    #
+    def set(key, value)
+      key = key.to_sym
+      old_value = nil
+
+      # Store the value
+      @mutex.synchronize do
+        old_value = @backend[key]
+        @backend[key] = value
+      end
+
+      # Wake any threads waiting for this key (synchronous - they need the value)
+      wake_waiters(key, value)
+
+      # Notify subscribers asynchronously
+      notify_subscribers_async(key, value, old_value)
+
+      value
+    end
+
+    # Get one or more values, optionally waiting until they exist.
+    #
+    # @param keys [Array<Symbol, String>] one or more keys to retrieve
+    # @param wait [Boolean, Numeric] wait behavior:
+    #   - `false` (default): return immediately, nil if missing
+    #   - `true`: block indefinitely until value(s) exist
+    #   - `Numeric`: block up to that many seconds, raise AwaitTimeout if exceeded
+    # @return [Object, Hash] single value for one key, hash for multiple keys
+    # @raise [AwaitTimeout] if timeout expires before value is available
+    #
+    # @example Immediate read
+    #   memory.get(:sentiment)  # => value or nil
+    #
+    # @example Blocking read
+    #   memory.get(:sentiment, wait: true)  # Blocks until available
+    #
+    # @example Blocking with timeout
+    #   memory.get(:sentiment, wait: 30)  # Blocks up to 30 seconds
+    #
+    # @example Multiple keys
+    #   memory.get(:sentiment, :entities, :keywords, wait: 60)
+    #   # => { sentiment: {...}, entities: [...], keywords: [...] }
+    #
+    def get(*keys, wait: false)
+      keys = keys.flatten.map(&:to_sym)
+
+      if keys.one?
+        get_single(keys.first, wait: wait)
+      else
+        get_multiple(keys, wait: wait)
+      end
+    end
+
+    # Subscribe to changes on one or more keys.
+    #
+    # The callback is invoked asynchronously whenever a subscribed key changes.
+    # The callback receives a MemoryChange object with details about the change.
+    #
+    # @param keys [Array<Symbol, String>] keys to subscribe to
+    # @yield [MemoryChange] callback invoked when a subscribed key changes
+    # @return [Object] subscription identifier (for unsubscribe)
+    #
+    # @example Subscribe to a single key
+    #   memory.subscribe(:raw_data) do |change|
+    #     puts "#{change.key} changed from #{change.previous} to #{change.value}"
+    #     puts "Written by: #{change.writer}"
+    #   end
+    #
+    # @example Subscribe to multiple keys
+    #   memory.subscribe(:sentiment, :entities) do |change|
+    #     update_dashboard(change.key, change.value)
+    #   end
+    #
+    def subscribe(*keys, &block)
+      raise ArgumentError, "Block required for subscribe" unless block_given?
+
+      keys = keys.flatten.map(&:to_sym)
+      subscription_id = generate_subscription_id
+
+      @subscription_mutex.synchronize do
+        keys.each do |key|
+          @subscriptions[key] << { id: subscription_id, callback: block }
+        end
+      end
+
+      subscription_id
+    end
+
+    # Subscribe to keys matching a pattern.
+    #
+    # Pattern uses glob-style matching:
+    # - `*` matches any characters
+    # - `?` matches a single character
+    #
+    # @param pattern [String] glob pattern to match keys
+    # @yield [MemoryChange] callback invoked when a matching key changes
+    # @return [Object] subscription identifier (for unsubscribe)
+    #
+    # @example Subscribe to namespace
+    #   memory.subscribe_pattern("analysis:*") do |change|
+    #     puts "Analysis key #{change.key} updated"
+    #   end
+    #
+    def subscribe_pattern(pattern, &block)
+      raise ArgumentError, "Block required for subscribe_pattern" unless block_given?
+
+      subscription_id = generate_subscription_id
+      regex = pattern_to_regex(pattern)
+
+      @subscription_mutex.synchronize do
+        @pattern_subscriptions << { id: subscription_id, pattern: regex, callback: block }
+      end
+
+      subscription_id
+    end
+
+    # Remove a subscription.
+    #
+    # @param subscription_id [Object] the subscription identifier from subscribe
+    # @return [Boolean] true if subscription was found and removed
+    #
+    def unsubscribe(subscription_id)
+      removed = false
+
+      @subscription_mutex.synchronize do
+        @subscriptions.each_value do |subs|
+          removed = true if subs.reject! { |s| s[:id] == subscription_id }
+        end
+
+        removed = true if @pattern_subscriptions.reject! { |s| s[:id] == subscription_id }
+      end
+
+      removed
+    end
+
+    # Remove all subscriptions for specific keys.
+    #
+    # @param keys [Array<Symbol, String>] keys to unsubscribe from
+    # @return [self]
+    #
+    def unsubscribe_keys(*keys)
+      keys = keys.flatten.map(&:to_sym)
+
+      @subscription_mutex.synchronize do
+        keys.each { |key| @subscriptions.delete(key) }
+      end
+
+      self
+    end
+
+    # Check if there are any subscribers for a key.
+    #
+    # @param key [Symbol, String] the key to check
+    # @return [Boolean]
+    #
+    def subscribed?(key)
+      key = key.to_sym
+
+      @subscription_mutex.synchronize do
+        return true if @subscriptions[key].any?
+
+        @pattern_subscriptions.any? { |s| s[:pattern].match?(key.to_s) }
+      end
     end
 
     # Append a robot result to history
@@ -306,7 +545,8 @@ module RobotLab
 
     # Clone memory for isolated execution
     #
-    # The semantic cache setting is preserved in clones.
+    # The semantic cache setting and network name are preserved in clones.
+    # Subscriptions are NOT cloned - the new memory starts with fresh subscriptions.
     #
     # @return [Memory]
     #
@@ -317,10 +557,11 @@ module RobotLab
         messages: messages.dup,
         session_id: session_id,
         backend: @backend.is_a?(Hash) ? :hash : :auto,
-        enable_cache: @enable_cache
+        enable_cache: @enable_cache,
+        network_name: @network_name
       )
-      # Copy non-reserved keys
-      keys.each { |k| cloned[k] = deep_dup(self[k]) }
+      # Copy non-reserved keys (without triggering notifications)
+      keys.each { |k| cloned.send(:set_internal, k, deep_dup(get_internal(k))) }
       cloned
     end
     alias dup clone
@@ -453,6 +694,134 @@ module RobotLab
       else
         obj.dup rescue obj
       end
+    end
+
+    # =========================================================================
+    # Reactive Memory Helpers
+    # =========================================================================
+
+    def get_single(key, wait:)
+      # Try immediate read
+      value = @mutex.synchronize { @backend[key] }
+      return value unless value.nil? && wait
+
+      # Need to wait
+      timeout = wait == true ? nil : wait
+      wait_for_key(key, timeout: timeout)
+    end
+
+    def get_multiple(keys, wait:)
+      results = {}
+      missing = []
+
+      @mutex.synchronize do
+        keys.each do |key|
+          if @backend.key?(key)
+            results[key] = @backend[key]
+          else
+            missing << key
+          end
+        end
+      end
+
+      return results if missing.empty? || !wait
+
+      # Wait for missing keys
+      timeout = wait == true ? nil : wait
+      missing.each do |key|
+        results[key] = wait_for_key(key, timeout: timeout)
+      end
+
+      results
+    end
+
+    def wait_for_key(key, timeout:)
+      waiter = Waiter.new
+
+      @waiter_mutex.synchronize do
+        # Double-check - value might have arrived while setting up
+        value = @mutex.synchronize { @backend[key] }
+        return value unless value.nil?
+
+        @waiters[key] << waiter
+      end
+
+      result = waiter.wait(timeout: timeout)
+
+      if result == :timeout
+        # Clean up the waiter
+        @waiter_mutex.synchronize { @waiters[key].delete(waiter) }
+        raise AwaitTimeout, "Timeout waiting for :#{key} after #{timeout} seconds"
+      end
+
+      result
+    end
+
+    def wake_waiters(key, value)
+      waiters = @waiter_mutex.synchronize { @waiters.delete(key) || [] }
+      waiters.each { |w| w.signal(value) }
+    end
+
+    def notify_subscribers_async(key, value, old_value)
+      # Collect all matching subscribers
+      callbacks = []
+
+      @subscription_mutex.synchronize do
+        # Exact key matches
+        callbacks.concat(@subscriptions[key].map { |s| s[:callback] })
+
+        # Pattern matches
+        key_str = key.to_s
+        @pattern_subscriptions.each do |sub|
+          callbacks << sub[:callback] if sub[:pattern].match?(key_str)
+        end
+      end
+
+      return if callbacks.empty?
+
+      # Build the change object
+      change = MemoryChange.new(
+        key: key,
+        value: value,
+        previous: old_value,
+        writer: @current_writer,
+        network_name: @network_name,
+        timestamp: Time.now
+      )
+
+      # Dispatch callbacks asynchronously
+      callbacks.each do |callback|
+        dispatch_async { callback.call(change) }
+      end
+    end
+
+    def dispatch_async(&block)
+      # Use Async if available (preferred for fiber-based concurrency)
+      if defined?(Async) && Async::Task.current?
+        Async { block.call }
+      else
+        # Fall back to Thread for basic async dispatch
+        Thread.new do
+          block.call
+        rescue StandardError => e
+          # Log but don't crash the notification system
+          warn "Memory subscription callback error: #{e.message}"
+        end
+      end
+    end
+
+    def generate_subscription_id
+      SecureRandom.uuid
+    end
+
+    def pattern_to_regex(pattern)
+      # Convert glob pattern to regex
+      regex_str = pattern
+        .gsub(".", "\\.")
+        .gsub("*", ".*")
+        .gsub("?", ".")
+
+      Regexp.new("\\A#{regex_str}\\z")
     end
   end
 

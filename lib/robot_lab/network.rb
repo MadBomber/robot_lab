@@ -9,6 +9,18 @@ module RobotLab
   # a clean DSL for defining robot workflows with sequential, parallel,
   # and conditional execution.
   #
+  # == Shared Memory
+  #
+  # Networks provide a shared reactive memory that all robots can read and write.
+  # Robots can subscribe to memory keys and be notified when values change,
+  # or use blocking reads to wait for values from other robots.
+  #
+  # == Broadcast Messages
+  #
+  # Networks support a broadcast channel for network-wide announcements.
+  # Use `broadcast` to send messages to all robots, and `on_broadcast` to
+  # register handlers for incoming broadcasts.
+  #
   # @example Sequential execution
   #   network = RobotLab.create_network(name: "pipeline") do
   #     task :analyst, analyst_robot, depends_on: :none
@@ -24,7 +36,7 @@ module RobotLab
   #          depends_on: :optional
   #   end
   #
-  # @example Parallel execution
+  # @example Parallel execution with shared memory
   #   network = RobotLab.create_network(name: "analysis") do
   #     task :fetch, fetcher_robot, depends_on: :none
   #     task :sentiment, sentiment_robot, depends_on: [:fetch]
@@ -32,19 +44,38 @@ module RobotLab
   #     task :summarize, summary_robot, depends_on: [:sentiment, :entities]
   #   end
   #
+  #   # In sentiment_robot:
+  #   memory.set(:sentiment, analyze_sentiment(text))
+  #
+  #   # In summarize_robot:
+  #   results = memory.get(:sentiment, :entities, wait: 60)
+  #
+  # @example Broadcasting
+  #   network.on_broadcast do |message|
+  #     puts "Received: #{message[:event]}"
+  #   end
+  #
+  #   network.broadcast(event: :pause, reason: "rate limit")
+  #
   class Network
+    # Reserved key for broadcast messages in memory
+    BROADCAST_KEY = :_network_broadcast
+
     # @!attribute [r] name
     #   @return [String] unique identifier for the network
     # @!attribute [r] pipeline
     #   @return [SimpleFlow::Pipeline] the underlying pipeline
     # @!attribute [r] robots
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
-    attr_reader :name, :pipeline, :robots
+    # @!attribute [r] memory
+    #   @return [Memory] shared memory for all robots in the network
+    attr_reader :name, :pipeline, :robots, :memory
 
     # Creates a new Network instance.
     #
     # @param name [String] unique identifier for the network
     # @param concurrency [Symbol] concurrency model (:auto, :threads, :async)
+    # @param memory [Memory, nil] optional pre-configured memory instance
     # @yield Block for defining pipeline tasks
     #
     # @example
@@ -53,11 +84,13 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
-    def initialize(name:, concurrency: :auto, &block)
+    def initialize(name:, concurrency: :auto, memory: nil, &block)
       @name = name.to_s
       @robots = {}
       @tasks = {}
       @pipeline = SimpleFlow::Pipeline.new(concurrency: concurrency)
+      @memory = memory || Memory.new(network_name: @name)
+      @broadcast_handlers = []
 
       instance_eval(&block) if block_given?
     end
@@ -122,6 +155,9 @@ module RobotLab
 
     # Run the network with the given context
     #
+    # All robots share the network's memory during execution. The memory
+    # is passed to each robot and can be used for inter-robot communication.
+    #
     # @param run_context [Hash] context passed to all robots (message:, user_id:, etc.)
     # @return [SimpleFlow::Result] final pipeline result
     #
@@ -131,12 +167,83 @@ module RobotLab
     #   result.context[:classifier]  # => RobotResult from classifier
     #
     def run(**run_context)
+      # Include shared memory in run params so robots can access it
+      run_context[:network_memory] = @memory
+
       initial_result = SimpleFlow::Result.new(
         run_context,
         context: { run_params: run_context }
       )
 
       @pipeline.call_parallel(initial_result)
+    end
+
+    # Broadcast a message to all robots in the network.
+    #
+    # This sends a network-wide message that all robots subscribed via
+    # `on_broadcast` will receive asynchronously.
+    #
+    # @param payload [Hash] the message payload
+    # @return [self]
+    #
+    # @example Pause all robots
+    #   network.broadcast(event: :pause, reason: "rate limit hit")
+    #
+    # @example Signal completion
+    #   network.broadcast(event: :phase_complete, phase: "analysis")
+    #
+    def broadcast(payload)
+      message = {
+        payload: payload,
+        network: @name,
+        timestamp: Time.now
+      }
+
+      # Notify handlers asynchronously
+      @broadcast_handlers.each do |handler|
+        dispatch_async { handler.call(message) }
+      end
+
+      # Also set in memory so robots can subscribe via memory.subscribe
+      @memory.set(BROADCAST_KEY, message)
+
+      self
+    end
+
+    # Register a handler for broadcast messages.
+    #
+    # The handler is called asynchronously whenever `broadcast` is called.
+    #
+    # @yield [Hash] the broadcast message with :payload, :network, :timestamp
+    # @return [self]
+    #
+    # @example
+    #   network.on_broadcast do |message|
+    #     case message[:payload][:event]
+    #     when :pause
+    #       pause_current_work
+    #     when :resume
+    #       resume_work
+    #     end
+    #   end
+    #
+    def on_broadcast(&block)
+      raise ArgumentError, "Block required for on_broadcast" unless block_given?
+
+      @broadcast_handlers << block
+      self
+    end
+
+    # Reset the shared memory.
+    #
+    # Clears all values in the network's shared memory. This is useful
+    # between runs if you want to start with a fresh memory state.
+    #
+    # @return [self]
+    #
+    def reset_memory
+      @memory.reset
+      self
     end
 
     # Get a robot by name
@@ -222,6 +329,22 @@ module RobotLab
         tasks: @tasks.keys,
         optional_tasks: @pipeline.optional_steps.to_a
       }.compact
+    end
+
+    private
+
+    def dispatch_async(&block)
+      # Use Async if available (preferred for fiber-based concurrency)
+      if defined?(Async) && Async::Task.current?
+        Async { block.call }
+      else
+        # Fall back to Thread for basic async dispatch
+        Thread.new do
+          block.call
+        rescue StandardError => e
+          warn "Network broadcast handler error: #{e.message}"
+        end
+      end
     end
   end
 end
