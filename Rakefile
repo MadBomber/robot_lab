@@ -65,3 +65,38 @@ namespace :examples do
     end
   end
 end
+
+namespace :docs do
+  desc "Build all documentation (YARD and MkDocs)"
+  task build: %i[yard mkdocs]
+
+  desc "Clean generated documentation"
+  task :clean do
+    rm_rf "doc"
+    rm_rf "site"
+  end
+
+  desc "Build YARD API documentation"
+  task :yard do
+    sh "yard doc"
+  end
+
+  namespace :yard do
+    desc "Serve YARD documentation locally"
+    task :serve do
+      sh "yard server --reload"
+    end
+  end
+
+  desc "Build MkDocs documentation"
+  task :mkdocs do
+    sh "mkdocs build"
+  end
+
+  namespace :mkdocs do
+    desc "Serve MkDocs documentation locally"
+    task :serve do
+      sh "mkdocs serve"
+    end
+  end
+end
