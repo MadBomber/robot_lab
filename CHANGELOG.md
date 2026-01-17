@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-01-16
+
+- refactored the network concept
+- refactored the memory concept
+
 ### Needs Refactoring
 
 - **Network concept is unhinged and needs complete refactoring.** The current implementation has several design issues:
@@ -37,10 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Working examples (basic chat, multi-robot network, tool usage, MCP server, Rails application)
 - Documentation site logo and branding
 - README.md redesign with top table layout pattern
+- Network memory with concurrent robots example
 
 ### Changed
 
 - Updated README.md with new tagline: "Build robots. Solve problems."
+- Enhanced Rakefile with bundler/gem_tasks and test_helper preloading
+- Updated gemspec summary and description for accuracy
 
 ## [0.0.0] - 2026-01-13
 

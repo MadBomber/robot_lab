@@ -8,13 +8,14 @@ Gem::Specification.new do |spec|
   spec.authors = ["Dewayne VanHoozer"]
   spec.email = ["dewayne@vanhoozer.me"]
 
-  spec.summary = "Multi-robot orchestration framework for LLM-powered workflows"
+  spec.summary = "Ruby framework for building and orchestrating multi-robot LLM workflows"
   spec.description = <<~DESC
     RobotLab is a Ruby framework for building and orchestrating multi-robot LLM workflows.
-    Built on ruby_llm, it provides robots with tools and lifecycle hooks, networks for
-    coordinating multiple robots with intelligent routing, MCP (Model Context Protocol)
-    integration for external tool servers, streaming support for real-time updates, and
-    seamless Rails integration with generators and ActiveRecord-backed conversation history.
+    Built on ruby_llm, it provides robots with template-based prompts, tools, and shared
+    memory; networks for coordinating multiple robots with intelligent routing; MCP (Model
+    Context Protocol) integration for external tool servers; a memory system with Redis
+    backend and semantic caching; and Rails integration with generators and ActiveRecord-
+    backed conversation history.
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab"
   spec.license = "MIT"
