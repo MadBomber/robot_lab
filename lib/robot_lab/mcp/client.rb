@@ -51,7 +51,7 @@ module RobotLab
 
         self
       rescue StandardError => e
-        RobotLab.configuration.logger.warn("MCP connection failed for #{@server.name}: #{e.message}")
+        RobotLab.config.logger.warn("MCP connection failed for #{@server.name}: #{e.message}")
         @connected = false
         self
       end

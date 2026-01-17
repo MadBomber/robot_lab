@@ -8,6 +8,7 @@ PATH
       async-http (~> 0.60)
       async-websocket (~> 0.30)
       fastembed
+      myway_config (~> 0.1)
       railties (>= 7.0)
       ruby_llm (~> 1.0)
       ruby_llm-mcp
@@ -63,6 +64,8 @@ GEM
     aigcm (0.3.2)
       ruby_llm
     ansi (1.5.0)
+    anyway_config (2.7.2)
+      ruby-next-core (~> 1.0)
     ast (2.4.3)
     async (2.35.3)
       console (~> 1.29)
@@ -125,7 +128,6 @@ GEM
       onnxruntime (~> 0.9)
       tokenizers (~> 0.5)
     ffi (1.17.3-arm64-darwin)
-    ffi (1.17.3-x86_64-linux-gnu)
     fiber-annotation (0.2.0)
     fiber-local (1.1.0)
       fiber-storage
@@ -163,15 +165,13 @@ GEM
       minitest (>= 5.0)
       ruby-progressbar
     multipart-post (2.4.1)
+    myway_config (0.1.1)
+      anyway_config (>= 2.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
     nokogiri (1.19.0-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.19.0-x86_64-linux-gnu)
-      racc (~> 1.4)
     onnxruntime (0.10.1-arm64-darwin)
-      ffi
-    onnxruntime (0.10.1-x86_64-linux)
       ffi
     parallel (1.27.0)
     parser (3.3.10.1)
@@ -248,6 +248,7 @@ GEM
     rubocop-ast (1.49.0)
       parser (>= 3.3.7.2)
       prism (~> 1.7)
+    ruby-next-core (1.2.0)
     ruby-progressbar (1.13.0)
     ruby_llm (1.11.0)
       base64
@@ -279,7 +280,6 @@ GEM
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
     sqlite3 (2.9.0-arm64-darwin)
-    sqlite3 (2.9.0-x86_64-linux-gnu)
     state_machines (0.100.4)
     state_machines-activemodel (0.101.0)
       activemodel (>= 7.2)
@@ -291,7 +291,6 @@ GEM
     thor (1.5.0)
     timeout (0.6.0)
     tokenizers (0.6.3-arm64-darwin)
-    tokenizers (0.6.3-x86_64-linux)
     traces (0.18.2)
     tsort (0.2.0)
     tzinfo (2.0.6)
@@ -310,7 +309,6 @@ GEM
 
 PLATFORMS
   arm64-darwin
-  x86_64-linux
 
 DEPENDENCIES
   activerecord (>= 7.0)
@@ -337,6 +335,7 @@ CHECKSUMS
   addressable (2.8.8) sha256=7c13b8f9536cf6364c03b9d417c19986019e28f7c00ac8132da4eb0fe393b057
   aigcm (0.3.2) sha256=eda5055a4bc1dd021f860b08134bf122f9df2e283da5be6719d1dde98a23428a
   ansi (1.5.0) sha256=5408253274e33d9d27d4a98c46d2998266fd51cba58a7eb9d08f50e57ed23592
+  anyway_config (2.7.2)
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   async (2.35.3) sha256=6bfc75ac10182d0485b1394a50803b827f65e73f9e3ebe0aeaa4ecd770238271
   async-http (0.94.0) sha256=479dc4a11c078aff7e054a729fc79fef7d0c28ca26bfe81a4d125672b28759ea
@@ -364,7 +363,6 @@ CHECKSUMS
   faraday-retry (2.4.0) sha256=7b79c48fb7e56526faf247b12d94a680071ff40c9fda7cf1ec1549439ad11ebe
   fastembed (1.1.0) sha256=0b59cd93cc6879bed599585404d3230103002b9fb966f1dfe0cc94c334ad168c
   ffi (1.17.3-arm64-darwin) sha256=0c690555d4cee17a7f07c04d59df39b2fba74ec440b19da1f685c6579bb0717f
-  ffi (1.17.3-x86_64-linux-gnu) sha256=3746b01f677aae7b16dc1acb7cb3cc17b3e35bdae7676a3f568153fb0e2c887f
   fiber-annotation (0.2.0) sha256=7abfadf1d119f508867d4103bf231c0354d019cc39a5738945dec2edadaf6c03
   fiber-local (1.1.0) sha256=c885f94f210fb9b05737de65d511136ea602e00c5105953748aa0f8793489f06
   fiber-storage (1.0.1) sha256=f48e5b6d8b0be96dac486332b55cee82240057065dc761c1ea692b2e719240e1
@@ -388,11 +386,10 @@ CHECKSUMS
   minitest (6.0.1) sha256=7854c74f48e2e975969062833adc4013f249a4b212f5e7b9d5c040bf838d54bb
   minitest-reporters (1.7.1) sha256=5060413a0c95b8c32fe73e0606f3631c173a884d7900e50013e15094eb50562c
   multipart-post (2.4.1) sha256=9872d03a8e552020ca096adadbf5e3cb1cd1cdd6acd3c161136b8a5737cdb4a8
+  myway_config (0.1.1)
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   nokogiri (1.19.0-arm64-darwin) sha256=0811dfd936d5f6dd3f6d32ef790568bf29b2b7bead9ba68866847b33c9cf5810
-  nokogiri (1.19.0-x86_64-linux-gnu) sha256=f482b95c713d60031d48c44ce14562f8d2ce31e3a9e8dd0ccb131e9e5a68b58c
   onnxruntime (0.10.1-arm64-darwin) sha256=8afc0feaa03bd969c4c0f43379254106ac90dbb548c8bb2cae4cca25f19771b7
-  onnxruntime (0.10.1-x86_64-linux) sha256=378170c279ee83c772f7a27a739202d0162a5d40219621978f4787fabc4123a4
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
   parser (3.3.10.1) sha256=06f6a725d2cd91e5e7f2b7c32ba143631e1f7c8ae2fb918fc4cebec187e6a688
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
@@ -424,6 +421,7 @@ CHECKSUMS
   robot_lab (0.0.1)
   rubocop (1.82.1) sha256=09f1a6a654a960eda767aebea33e47603080f8e9c9a3f019bf9b94c9cab5e273
   rubocop-ast (1.49.0) sha256=49c3676d3123a0923d333e20c6c2dbaaae2d2287b475273fddee0c61da9f71fd
+  ruby-next-core (1.2.0)
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   ruby_llm (1.11.0) sha256=c1bc17bb02a7e805d8f62ea6ada2ecfe7782fc955e9440b53a2fdbd00e5ec9cc
   ruby_llm-mcp (0.8.0) sha256=74350b6c08eeb8bf1c387dc7192bb21bad8415d21277b9a922c182b2e8c29915
@@ -436,7 +434,6 @@ CHECKSUMS
   simplecov-html (0.13.2) sha256=bd0b8e54e7c2d7685927e8d6286466359b6f16b18cb0df47b508e8d73c777246
   simplecov_json_formatter (0.1.4) sha256=529418fbe8de1713ac2b2d612aa3daa56d316975d307244399fa4838c601b428
   sqlite3 (2.9.0-arm64-darwin) sha256=a917bd9b84285766ff3300b7d79cd583f5a067594c8c1263e6441618c04a6ed3
-  sqlite3 (2.9.0-x86_64-linux-gnu) sha256=72fff9bd750070ba3af695511ba5f0e0a2d8a9206f84869640b3e99dfaf3d5a5
   state_machines (0.100.4) sha256=dd4e555ebb061569dd8fe18a5f39b51d10be6306b89a0c315a9697671d752565
   state_machines-activemodel (0.101.0) sha256=6798c6bf5aa4be2b1a00ca633949c999ebee7a148bd4ea8f6858b189e2cdf72d
   state_machines-activerecord (0.100.0) sha256=b2213f74f3f32c6d92de5139e8898bc64a0ffb3f048df7d950ce27e28384beb5
@@ -444,7 +441,6 @@ CHECKSUMS
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   timeout (0.6.0) sha256=6d722ad619f96ee383a0c557ec6eb8c4ecb08af3af62098a0be5057bf00de1af
   tokenizers (0.6.3-arm64-darwin) sha256=29a6a5582dce106d846a906ee9e4254c12db45a3855c3ff6881d4be8be03e6b6
-  tokenizers (0.6.3-x86_64-linux) sha256=77a45cbde59daac33bdda1a74d45c18080478992a00ee7d898e7b8d15d0b3149
   traces (0.18.2) sha256=80f1649cb4daace1d7174b81f3b3b7427af0b93047759ba349960cb8f315e214
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b

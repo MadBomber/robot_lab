@@ -43,6 +43,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Core dependencies
+  spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
   spec.add_dependency "ruby_llm", "~> 1.0"
   spec.add_dependency "ruby_llm-mcp"

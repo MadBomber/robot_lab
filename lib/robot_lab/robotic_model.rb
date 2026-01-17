@@ -244,7 +244,7 @@ module RobotLab
       when /^llama/, /^mistral/, /^mixtral/
         :ollama
       else
-        RobotLab.configuration.default_provider
+        RobotLab.config.default_provider
       end
     end
   end

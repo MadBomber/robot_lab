@@ -1,0 +1,103 @@
+# frozen_string_literal: false
+#
+# RobotLab Configuration Defaults
+#
+# This file defines the default configuration values for RobotLab.
+# Values are loaded in the following priority order (lowest to highest):
+#   1. Bundled defaults (this file, 'defaults' section)
+#   2. Environment-specific overrides (development, test, production sections)
+#   3. XDG user config (~/.config/robot_lab/config.yml)
+#   4. Project config (./config/robot_lab.yml)
+#   5. Environment variables (ROBOT_LAB_*)
+#   6. Constructor parameters
+#
+# Environment variables use double underscores for nested values:
+#   ROBOT_LAB_DEFAULT_MODEL=gpt-4
+#   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+#   ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
+
+defaults:
+  # RobotLab Core Settings
+  default_provider: :anthropic
+  default_model: claude-sonnet-4
+  max_iterations: 10
+  max_tool_iterations: 10
+  streaming_enabled: true
+  template_path: null
+  mcp: :none
+  tools: :none
+
+  # RubyLLM Configuration Section
+  ruby_llm:
+    # Provider API Keys (null = use env vars directly)
+    anthropic_api_key: null
+    openai_api_key: null
+    gemini_api_key: null
+    deepseek_api_key: null
+    mistral_api_key: null
+    perplexity_api_key: null
+    openrouter_api_key: null
+    gpustack_api_key: null
+    xai_api_key: null
+
+    # AWS Bedrock
+    bedrock_api_key: null
+    bedrock_secret_key: null
+    bedrock_region: null
+    bedrock_session_token: null
+
+    # Google Vertex AI
+    vertexai_project_id: null
+    vertexai_location: null
+
+    # Provider Endpoints (for self-hosted models)
+    openai_api_base: null
+    gemini_api_base: null
+    ollama_api_base: null
+    gpustack_api_base: null
+    xai_api_base: null
+
+    # OpenAI-Specific Options
+    openai_organization_id: null
+    openai_project_id: null
+    openai_use_system_role: true
+
+    # Default Models
+    default_model: null
+    default_embedding_model: null
+    default_image_model: null
+    default_moderation_model: null
+
+    # Connection Settings
+    request_timeout: 120
+    max_retries: 3
+    retry_interval: 1
+    retry_backoff_factor: 2
+    retry_interval_randomness: 0.5
+    http_proxy: null
+
+    # Logging Options
+    log_file: null
+    log_level: :info
+    log_stream_debug: false
+
+development:
+  ruby_llm:
+    log_level: :debug
+
+test:
+  default_model: claude-haiku-3-5
+  max_iterations: 3
+  streaming_enabled: false
+  ruby_llm:
+    request_timeout: 30
+    max_retries: 1
+    log_level: :warn
+
+production:
+  streaming_enabled: false
+  max_iterations: 20
+  ruby_llm:
+    request_timeout: 180
+    max_retries: 5
+    log_level: :warn

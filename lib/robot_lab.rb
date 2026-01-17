@@ -29,10 +29,16 @@ require "async"
 #   result = network.run(message: "Process this document")
 #
 # @example Configuration
-#   RobotLab.configure do |config|
-#     config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-#     config.template_path = "app/templates"
-#   end
+#   # Via environment variables (ROBOT_LAB_* prefix)
+#   # ROBOT_LAB_DEFAULT_MODEL=gpt-4
+#   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+#
+#   # Or via config files (~/.config/robot_lab/config.yml or ./config/robot_lab.yml)
+#   # See lib/robot_lab/config/defaults.yml for all options
+#
+#   # Access configuration values:
+#   RobotLab.config.default_model           #=> "claude-sonnet-4"
+#   RobotLab.config.ruby_llm.request_timeout  #=> 120
 #
 module RobotLab
 end
@@ -63,28 +69,34 @@ module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb
 
   class << self
-    # @!attribute [w] configuration
-    #   @return [Configuration] the configuration object
-    attr_writer :configuration
-
-    # Returns the current configuration object.
+    # Returns the Config object (MywayConfig-based).
     #
-    # @return [Configuration] the configuration instance
-    def configuration
-      @configuration ||= Configuration.new
-    end
-
-    # Yields the configuration object for modification.
+    # Configuration is automatically loaded from:
+    # - Bundled defaults (lib/robot_lab/config/defaults.yml)
+    # - Environment-specific overrides (development, test, production)
+    # - XDG config files (~/.config/robot_lab/config.yml)
+    # - Project config (./config/robot_lab.yml)
+    # - Environment variables (ROBOT_LAB_*)
     #
-    # @yield [Configuration] the configuration object
-    # @return [void]
+    # @return [Config] the config instance
     #
     # @example
-    #   RobotLab.configure do |config|
-    #     config.anthropic_api_key = "sk-..."
-    #   end
-    def configure
-      yield(configuration)
+    #   RobotLab.config.default_model             #=> "claude-sonnet-4"
+    #   RobotLab.config.ruby_llm.request_timeout  #=> 120
+    #   RobotLab.config.development?              #=> true
+    def config
+      @config ||= Config.new.tap(&:after_load)
+    end
+
+    # Reload configuration from all sources.
+    #
+    # Clears the cached Config instance, forcing it to be
+    # reloaded on next access.
+    #
+    # @return [Config] the new config instance
+    def reload_config!
+      @config = nil
+      config
     end
 
     # Factory method to create a new Robot instance.

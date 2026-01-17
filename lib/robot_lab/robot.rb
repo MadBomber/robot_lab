@@ -146,7 +146,7 @@ module RobotLab
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
-      @model = model || RobotLab.configuration.default_model
+      @model = model || RobotLab.config.default_model
       @on_tool_call = on_tool_call
       @on_tool_result = on_tool_result
 
@@ -436,7 +436,7 @@ module RobotLab
     #
     def resolve_mcp_hierarchy(runtime_value, network:)
       # Get parent value (network or config)
-      parent_value = network&.network&.mcp || RobotLab.configuration.mcp
+      parent_value = network&.network&.mcp || RobotLab.config.mcp
 
       # Resolve robot build config against parent
       build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
@@ -453,7 +453,7 @@ module RobotLab
     #
     def resolve_tools_hierarchy(runtime_value, network:)
       # Get parent value (network or config)
-      parent_value = network&.network&.tools || RobotLab.configuration.tools
+      parent_value = network&.network&.tools || RobotLab.config.tools
 
       # Resolve robot build config against parent
       build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
@@ -502,7 +502,7 @@ module RobotLab
         @mcp_clients[server_name] = client
         discover_mcp_tools(client, server_name)
       else
-        RobotLab.configuration.logger.warn(
+        RobotLab.config.logger.warn(
           "Robot '#{@name}' failed to connect to MCP server: #{server_config[:name] || server_config}"
         )
       end
@@ -532,7 +532,7 @@ module RobotLab
         @mcp_tools << tool
       end
 
-      RobotLab.configuration.logger.info(
+      RobotLab.config.logger.info(
         "Robot '#{@name}' discovered #{tools.size} tools from MCP server '#{server_name}'"
       )
     end

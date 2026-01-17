@@ -21,10 +21,11 @@ require "robot_lab"
 require "minitest/autorun"
 
 # Configure RobotLab for testing
-RobotLab.configure do |config|
-  config.logger = Logger.new(nil)
-  config.template_path = File.expand_path("../examples/prompts", __dir__)
-end
+# Set template path via environment variable before loading config
+ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.expand_path("../examples/prompts", __dir__)
+
+# Suppress logging in tests
+RobotLab.config.logger = Logger.new(nil)
 
 # Test helpers
 module RobotLabTestHelpers

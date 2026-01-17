@@ -86,7 +86,7 @@ class RobotLab::RobotTest < Minitest::Test
       template: :assistant
     )
 
-    assert_equal RobotLab.configuration.default_model, robot.model
+    assert_equal RobotLab.config.default_model, robot.model
   end
 
   # system_prompt tests

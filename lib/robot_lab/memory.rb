@@ -654,7 +654,7 @@ module RobotLab
       return false unless defined?(Redis)
 
       # Check if Redis is configured in RobotLab
-      redis_config = RobotLab.configuration.respond_to?(:redis) ? RobotLab.configuration.redis : nil
+      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
       redis_config || ENV["REDIS_URL"]
     end
 
@@ -868,7 +868,7 @@ module RobotLab
     private
 
     def create_redis_connection
-      redis_config = RobotLab.configuration.respond_to?(:redis) ? RobotLab.configuration.redis : nil
+      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
 
       if redis_config.is_a?(Hash)
         Redis.new(**redis_config)

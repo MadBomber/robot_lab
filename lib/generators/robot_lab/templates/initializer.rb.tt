@@ -37,5 +37,5 @@ end
 #     result_model: RobotLabResult
 #   )
 #
-#   RobotLab.configuration.history = adapter.to_config
+#   RobotLab.config.history = adapter.to_config
 # end
