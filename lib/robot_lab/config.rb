@@ -13,12 +13,12 @@ module RobotLab
   # - Automatic RubyLLM configuration application
   #
   # @example Access configuration values
-  #   RobotLab.config.default_model           #=> "claude-sonnet-4"
+  #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
   #   RobotLab.config.ruby_llm.request_timeout  #=> 120
-  #   RobotLab.config.development?            #=> true
+  #   RobotLab.config.development?              #=> true
   #
   # @example Override via environment variables
-  #   # ROBOT_LAB_DEFAULT_MODEL=gpt-4
+  #   # ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
   #   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
   #
   # @example User config file (~/.config/robot_lab/config.yml)

@@ -73,7 +73,7 @@ class RobotLab::RoboticModelTest < Minitest::Test
   def test_initialization_uses_default_provider_for_unknown_model
     model = RobotLab::RoboticModel.new("unknown-model")
 
-    assert_equal RobotLab.config.default_provider, model.provider
+    assert_equal RobotLab.config.ruby_llm.provider, model.provider
   end
 
   def test_initialization_with_explicit_provider

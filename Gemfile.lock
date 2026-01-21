@@ -73,7 +73,7 @@ GEM
       io-event (~> 1.11)
       metrics (~> 0.12)
       traces (~> 0.18)
-    async-http (0.94.0)
+    async-http (0.94.1)
       async (>= 2.10.2)
       async-pool (~> 0.11)
       io-endpoint (~> 0.14)
@@ -182,8 +182,8 @@ GEM
     prettyprint (0.2.0)
     prism (1.8.0)
     protocol-hpack (1.5.1)
-    protocol-http (0.58.0)
-    protocol-http1 (0.36.0)
+    protocol-http (0.58.1)
+    protocol-http1 (0.37.0)
       protocol-http (~> 0.58)
     protocol-http2 (0.24.0)
       protocol-hpack (~> 1.4)
@@ -335,10 +335,10 @@ CHECKSUMS
   addressable (2.8.8) sha256=7c13b8f9536cf6364c03b9d417c19986019e28f7c00ac8132da4eb0fe393b057
   aigcm (0.3.2) sha256=eda5055a4bc1dd021f860b08134bf122f9df2e283da5be6719d1dde98a23428a
   ansi (1.5.0) sha256=5408253274e33d9d27d4a98c46d2998266fd51cba58a7eb9d08f50e57ed23592
-  anyway_config (2.7.2)
+  anyway_config (2.7.2) sha256=30f6b087c0b41afdd43fe46c81d65a16f052a8489dab453abaeb4ea67aa74bad
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
   async (2.35.3) sha256=6bfc75ac10182d0485b1394a50803b827f65e73f9e3ebe0aeaa4ecd770238271
-  async-http (0.94.0) sha256=479dc4a11c078aff7e054a729fc79fef7d0c28ca26bfe81a4d125672b28759ea
+  async-http (0.94.1) sha256=b1c089e9a6e93e19e538a16377519b3316c3d81b9a2f4accc57a92001e7a6247
   async-pool (0.11.1) sha256=98e1583e199a75f7dc70f8e65fc8d0d3b28636c3f256595d43e206642ad8fbda
   async-websocket (0.30.0) sha256=55739954528ad8f87f7792d0452e1268d1ef2aa5b3719f79400a05a1a6202cdf
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
@@ -386,7 +386,7 @@ CHECKSUMS
   minitest (6.0.1) sha256=7854c74f48e2e975969062833adc4013f249a4b212f5e7b9d5c040bf838d54bb
   minitest-reporters (1.7.1) sha256=5060413a0c95b8c32fe73e0606f3631c173a884d7900e50013e15094eb50562c
   multipart-post (2.4.1) sha256=9872d03a8e552020ca096adadbf5e3cb1cd1cdd6acd3c161136b8a5737cdb4a8
-  myway_config (0.1.1)
+  myway_config (0.1.1) sha256=af0ea1316ab685d669b30599728ae433db8c5b34d1a3383b68c7c90b2f3def23
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   nokogiri (1.19.0-arm64-darwin) sha256=0811dfd936d5f6dd3f6d32ef790568bf29b2b7bead9ba68866847b33c9cf5810
   onnxruntime (0.10.1-arm64-darwin) sha256=8afc0feaa03bd969c4c0f43379254106ac90dbb548c8bb2cae4cca25f19771b7
@@ -396,8 +396,8 @@ CHECKSUMS
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
   prism (1.8.0) sha256=84453a16ef5530ea62c5f03ec16b52a459575ad4e7b9c2b360fd8ce2c39c1254
   protocol-hpack (1.5.1) sha256=6feca238b8078da1cd295677d6f306c6001af92d75fe0643d33e6956cbc3ad91
-  protocol-http (0.58.0) sha256=b77c5799e7a7acd31afaa9fed5c3714fe91ab7746925d66e9e4d92a5c74555fa
-  protocol-http1 (0.36.0) sha256=057344d2509a59338d0b4bc8f092a52126bb9ed51b76adbb4365f132bbd4ef09
+  protocol-http (0.58.1) sha256=6d0694aa07cd51ff589c6219f9613c6827aebd5ffdf8fb8a0169254feb0f13fd
+  protocol-http1 (0.37.0) sha256=5bdd739e28792b341134596f6f5ab21a9d4b395f67bae69e153743eb0e69d123
   protocol-http2 (0.24.0) sha256=65327a019b7e36d2774e94050bf57a43bb60212775d2fcf02ae1d2ed4f01ef28
   protocol-rack (0.21.0) sha256=bffbb63110aa1aee15aeb0c764f50c95219338ef3efae017d91c6e2f6ee71561
   protocol-url (0.4.0) sha256=64d4c03b6b51ad815ac6fdaf77a1d91e5baf9220d26becb846c5459dacdea9e1
@@ -421,7 +421,7 @@ CHECKSUMS
   robot_lab (0.0.1)
   rubocop (1.82.1) sha256=09f1a6a654a960eda767aebea33e47603080f8e9c9a3f019bf9b94c9cab5e273
   rubocop-ast (1.49.0) sha256=49c3676d3123a0923d333e20c6c2dbaaae2d2287b475273fddee0c61da9f71fd
-  ruby-next-core (1.2.0)
+  ruby-next-core (1.2.0) sha256=f6a7d00bb5186cecbb02f7f1845a0f3a2c9788d35b6ccff5c9be3f0d46799b86
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   ruby_llm (1.11.0) sha256=c1bc17bb02a7e805d8f62ea6ada2ecfe7782fc955e9440b53a2fdbd00e5ec9cc
   ruby_llm-mcp (0.8.0) sha256=74350b6c08eeb8bf1c387dc7192bb21bad8415d21277b9a922c182b2e8c29915

@@ -60,6 +60,14 @@ module RobotLab
   #     tools: %w[search_code]      # Only allow search_code tool
   #   )
   #
+  # @example Robot with chat options (temperature, max_tokens, etc.)
+  #   robot = Robot.new(
+  #     name: "creative",
+  #     template: :writer,
+  #     temperature: 0.9,           # More creative responses
+  #     max_tokens: 2000            # Limit response length
+  #   )
+  #
   class Robot
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
@@ -85,7 +93,9 @@ module RobotLab
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
     # @!attribute [r] tools_config
     #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
-    attr_reader :mcp_config, :tools_config
+    # @!attribute [r] chat_options
+    #   @return [Hash] chat-specific options (temperature, top_p, max_tokens, etc.)
+    attr_reader :mcp_config, :tools_config, :chat_options
 
     # Creates a new Robot instance.
     #
@@ -102,6 +112,13 @@ module RobotLab
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
     # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
+    # @param temperature [Float, nil] controls randomness (0.0-2.0)
+    # @param top_p [Float, nil] nucleus sampling threshold (0.0-1.0)
+    # @param top_k [Integer, nil] top-k sampling (provider-specific)
+    # @param max_tokens [Integer, nil] maximum tokens in response
+    # @param presence_penalty [Float, nil] penalize based on presence (-2.0 to 2.0)
+    # @param frequency_penalty [Float, nil] penalize based on frequency (-2.0 to 2.0)
+    # @param stop [String, Array, nil] stop sequences
     #
     # @example Basic robot with template
     #   Robot.new(name: "helper", template: :helper)
@@ -120,6 +137,14 @@ module RobotLab
     #     on_tool_call: ->(call) { puts "Calling #{call.name}" }
     #   )
     #
+    # @example Robot with chat options
+    #   Robot.new(
+    #     name: "creative",
+    #     template: :writer,
+    #     temperature: 0.9,
+    #     max_tokens: 2000
+    #   )
+    #
     # @raise [ArgumentError] if neither template nor system_prompt is provided
     def initialize(
       name:,
@@ -134,7 +159,14 @@ module RobotLab
       tools: :none,
       on_tool_call: nil,
       on_tool_result: nil,
-      enable_cache: true
+      enable_cache: true,
+      temperature: nil,
+      top_p: nil,
+      top_k: nil,
+      max_tokens: nil,
+      presence_penalty: nil,
+      frequency_penalty: nil,
+      stop: nil
     )
       unless template || system_prompt
         raise ArgumentError, "Must provide either template or system_prompt"
@@ -146,7 +178,7 @@ module RobotLab
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
-      @model = model || RobotLab.config.default_model
+      @model = model || RobotLab.config.ruby_llm.model
       @on_tool_call = on_tool_call
       @on_tool_result = on_tool_result
 
@@ -154,6 +186,17 @@ module RobotLab
       # mcp_servers is legacy parameter, mcp is the new hierarchical one
       @mcp_config = mcp_servers.any? ? mcp_servers : mcp
       @tools_config = tools
+
+      # Chat options (merged with config defaults at build_chat time)
+      @chat_options = build_chat_options(
+        temperature: temperature,
+        top_p: top_p,
+        top_k: top_k,
+        max_tokens: max_tokens,
+        presence_penalty: presence_penalty,
+        frequency_penalty: frequency_penalty,
+        stop: stop
+      )
 
       # MCP state
       @mcp_clients = {}
@@ -180,6 +223,13 @@ module RobotLab
     # @param memory [Memory, Hash, nil] Runtime memory to merge
     # @param mcp [Symbol, Array, nil] Runtime MCP override (:inherit, :none, nil, [], or array of servers)
     # @param tools [Symbol, Array, nil] Runtime tools override (:inherit, :none, nil, [], or array of tool names)
+    # @param temperature [Float, nil] Runtime temperature override
+    # @param top_p [Float, nil] Runtime top_p override
+    # @param top_k [Integer, nil] Runtime top_k override
+    # @param max_tokens [Integer, nil] Runtime max_tokens override
+    # @param presence_penalty [Float, nil] Runtime presence_penalty override
+    # @param frequency_penalty [Float, nil] Runtime frequency_penalty override
+    # @param stop [String, Array, nil] Runtime stop sequences override
     # @param run_context [Hash] Context for rendering user template
     # @return [RobotResult]
     #
@@ -193,7 +243,24 @@ module RobotLab
     # @example With network shared memory
     #   robot.run(message: "Analyze this", network_memory: network.memory)
     #
-    def run(network: nil, network_memory: nil, memory: nil, mcp: :none, tools: :none, **run_context)
+    # @example With runtime chat options
+    #   robot.run(message: "Be creative", temperature: 1.2, max_tokens: 500)
+    #
+    def run(
+      network: nil,
+      network_memory: nil,
+      memory: nil,
+      mcp: :none,
+      tools: :none,
+      temperature: nil,
+      top_p: nil,
+      top_k: nil,
+      max_tokens: nil,
+      presence_penalty: nil,
+      frequency_penalty: nil,
+      stop: nil,
+      **run_context
+    )
       # Determine which memory to use (priority order):
       # 1. Explicit network_memory parameter
       # 2. Network object's memory (legacy)
@@ -217,6 +284,17 @@ module RobotLab
         resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
         resolved_tools = resolve_tools_hierarchy(tools, network: network)
 
+        # Build runtime chat options (overrides robot defaults)
+        runtime_chat_options = build_chat_options(
+          temperature: temperature,
+          top_p: top_p,
+          top_k: top_k,
+          max_tokens: max_tokens,
+          presence_penalty: presence_penalty,
+          frequency_penalty: frequency_penalty,
+          stop: stop
+        )
+
         # Initialize or update MCP clients based on resolved config
         ensure_mcp_clients(resolved_mcp)
 
@@ -224,8 +302,13 @@ module RobotLab
         full_context = resolve_context(@build_context, network: network)
                          .merge(run_context)
 
-        # Build chat with template, filtered tools, and semantic cache
-        chat = build_chat(full_context, allowed_tools: resolved_tools, memory: run_memory)
+        # Build chat with template, filtered tools, and chat options
+        chat = build_chat(
+          full_context,
+          allowed_tools: resolved_tools,
+          memory: run_memory,
+          runtime_chat_options: runtime_chat_options
+        )
 
         # Execute and return result
         response = chat.complete
@@ -364,10 +447,14 @@ module RobotLab
       end
     end
 
-    def build_chat(context, allowed_tools:, memory:)
+    def build_chat(context, allowed_tools:, memory:, runtime_chat_options: {})
       model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
 
-      chat = RubyLLM.chat(model: model_id)
+      # Merge chat options: config defaults < robot options < runtime options
+      merged_options = resolve_chat_options(runtime_chat_options)
+
+      # Create chat with model and any applicable options
+      chat = create_chat_with_options(model_id, merged_options)
 
       # Apply template and/or system_prompt
       # - Template only: use with_template
@@ -555,6 +642,79 @@ module RobotLab
       return available if allowed_names.empty?
 
       ToolConfig.filter_tools(available, allowed_names: allowed_names)
+    end
+
+    # Build a hash of non-nil chat options
+    #
+    # @param options [Hash] chat options with potentially nil values
+    # @return [Hash] only the non-nil options
+    #
+    def build_chat_options(temperature:, top_p:, top_k:, max_tokens:, presence_penalty:, frequency_penalty:, stop:)
+      {
+        temperature: temperature,
+        top_p: top_p,
+        top_k: top_k,
+        max_tokens: max_tokens,
+        presence_penalty: presence_penalty,
+        frequency_penalty: frequency_penalty,
+        stop: stop
+      }.compact
+    end
+
+    # Resolve chat options by merging: config < robot < runtime
+    #
+    # @param runtime_options [Hash] options passed at run time
+    # @return [Hash] merged chat options
+    #
+    def resolve_chat_options(runtime_options)
+      # Start with config defaults (if chat section exists)
+      config_options = extract_config_chat_options
+
+      # Merge robot-level options (override config)
+      merged = config_options.merge(@chat_options)
+
+      # Merge runtime options (override robot)
+      merged.merge(runtime_options)
+    end
+
+    # Extract chat options from config
+    #
+    # @return [Hash] chat options from RobotLab.config.chat
+    #
+    def extract_config_chat_options
+      return {} unless RobotLab.config.respond_to?(:chat) && RobotLab.config.chat
+
+      chat_config = RobotLab.config.chat
+      {
+        temperature: chat_config.respond_to?(:temperature) ? chat_config.temperature : nil,
+        top_p: chat_config.respond_to?(:top_p) ? chat_config.top_p : nil,
+        top_k: chat_config.respond_to?(:top_k) ? chat_config.top_k : nil,
+        max_tokens: chat_config.respond_to?(:max_tokens) ? chat_config.max_tokens : nil,
+        presence_penalty: chat_config.respond_to?(:presence_penalty) ? chat_config.presence_penalty : nil,
+        frequency_penalty: chat_config.respond_to?(:frequency_penalty) ? chat_config.frequency_penalty : nil,
+        stop: chat_config.respond_to?(:stop) ? chat_config.stop : nil
+      }.compact
+    end
+
+    # Create a chat object with the given model and options
+    #
+    # @param model_id [String] the model identifier
+    # @param options [Hash] chat options to apply
+    # @return [RubyLLM::Chat] configured chat object
+    #
+    def create_chat_with_options(model_id, options)
+      chat = RubyLLM.chat(model: model_id)
+
+      # Apply each option if present
+      chat = chat.with_temperature(options[:temperature]) if options[:temperature]
+      chat = chat.with_top_p(options[:top_p]) if options[:top_p]
+      chat = chat.with_top_k(options[:top_k]) if options[:top_k]
+      chat = chat.with_max_tokens(options[:max_tokens]) if options[:max_tokens]
+      chat = chat.with_presence_penalty(options[:presence_penalty]) if options[:presence_penalty]
+      chat = chat.with_frequency_penalty(options[:frequency_penalty]) if options[:frequency_penalty]
+      chat = chat.with_stop(options[:stop]) if options[:stop]
+
+      chat
     end
   end
 end

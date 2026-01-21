@@ -12,14 +12,12 @@
 #   6. Constructor parameters
 #
 # Environment variables use double underscores for nested values:
-#   ROBOT_LAB_DEFAULT_MODEL=gpt-4
+#   ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
 #   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 #   ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
 
 defaults:
   # RobotLab Core Settings
-  default_provider: :anthropic
-  default_model: claude-sonnet-4
   max_iterations: 10
   max_tool_iterations: 10
   streaming_enabled: true
@@ -27,8 +25,28 @@ defaults:
   mcp: :none
   tools: :none
 
+  # Chat Configuration (passed to RubyLLM.chat)
+  # These are global defaults that can be overridden per-robot or per-run
+  chat:
+    with_model:
+      provider: null # chat-specific provider
+      model: null # chat-specific model
+      assume_exists: null # assume the model exists primarily for local providers
+    with_temperature: 0.7 # Controls randomness (0.0-2.0, null = model default)
+    with_tools: null # ?? not sure about this one.
+    with_params:
+      top_p: null # Nucleus sampling threshold (0.0-1.0)
+      top_k: null # Top-k sampling (integer, provider-specific)
+      max_tokens: null # Maximum tokens in response
+      presence_penalty: null # Penalize new tokens based on presence (-2.0 to 2.0)
+      frequency_penalty: null # Penalize new tokens based on frequency (-2.0 to 2.0)
+      stop: null # Stop sequences (string or array of strings)
+
   # RubyLLM Configuration Section
   ruby_llm:
+    provider: :anthropic
+    model: claude-sonnet-4
+    assume_model_exists: false # (dep of assume_exists in chat section) set true for Ollama and other local LLM providers
     # Provider API Keys (null = use env vars directly)
     anthropic_api_key: null
     openai_api_key: null
@@ -86,10 +104,10 @@ development:
     log_level: :debug
 
 test:
-  default_model: claude-haiku-3-5
   max_iterations: 3
   streaming_enabled: false
   ruby_llm:
+    model: claude-haiku-3-5
     request_timeout: 30
     max_retries: 1
     log_level: :warn

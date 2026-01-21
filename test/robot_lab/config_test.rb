@@ -32,11 +32,11 @@ class RobotLab::ConfigTest < Minitest::Test
 
   # Default values from defaults.yml
   def test_default_provider_from_config
-    assert_equal :anthropic, RobotLab.config.default_provider
+    assert_equal :anthropic, RobotLab.config.ruby_llm.provider
   end
 
   def test_default_model_from_config
-    assert_equal "claude-sonnet-4", RobotLab.config.default_model
+    assert_equal "claude-sonnet-4", RobotLab.config.ruby_llm.model
   end
 
   def test_default_max_iterations_from_config

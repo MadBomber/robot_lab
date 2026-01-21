@@ -16,91 +16,112 @@
 # Configuration Reference: https://rubyllm.com/configuration/
 
 defaults: &defaults
-  # =============================================================================
-  # Provider API Keys
-  # =============================================================================
-  anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
-  openai_api_key: <%= ENV['OPENAI_API_KEY'] %>
-  gemini_api_key: <%= ENV['GEMINI_API_KEY'] %>
-  deepseek_api_key: <%= ENV['DEEPSEEK_API_KEY'] %>
-  mistral_api_key: <%= ENV['MISTRAL_API_KEY'] %>
-  perplexity_api_key: <%= ENV['PERPLEXITY_API_KEY'] %>
-  openrouter_api_key: <%= ENV['OPENROUTER_API_KEY'] %>
-  gpustack_api_key: <%= ENV['GPUSTACK_API_KEY'] %>
-  xai_api_key: <%= ENV['XAI_API_KEY'] %>
+  chat:
+    with_model:
+      provider: null # chat-specific provider
+      model: null # chat-specific model
+      assume_exists: null # assume the model exists primarily for local providers
+    with_temperature: 0.7 # Controls randomness (0.0-2.0, null = model default)
+    with_tools: null # ?? not sure about this one.
+    with_params:
+      top_p: null # Nucleus sampling threshold (0.0-1.0)
+      top_k: null # Top-k sampling (integer, provider-specific)
+      max_tokens: null # Maximum tokens in response
+      presence_penalty: null # Penalize new tokens based on presence (-2.0 to 2.0)
+      frequency_penalty: null # Penalize new tokens based on frequency (-2.0 to 2.0)
+      stop: null # Stop sequences (string or array of strings)
 
-  # AWS Bedrock
-  bedrock_api_key: <%= ENV['AWS_ACCESS_KEY_ID'] %>
-  bedrock_secret_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
-  bedrock_region: <%= ENV.fetch('AWS_REGION', 'us-east-1') %>
-  bedrock_session_token: <%= ENV['AWS_SESSION_TOKEN'] %>
+  ruby_llm:
+    # =============================================================================
+    # Provider API Keys
+    # =============================================================================
+    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+    openai_api_key: <%= ENV['OPENAI_API_KEY'] %>
+    gemini_api_key: <%= ENV['GEMINI_API_KEY'] %>
+    deepseek_api_key: <%= ENV['DEEPSEEK_API_KEY'] %>
+    mistral_api_key: <%= ENV['MISTRAL_API_KEY'] %>
+    perplexity_api_key: <%= ENV['PERPLEXITY_API_KEY'] %>
+    openrouter_api_key: <%= ENV['OPENROUTER_API_KEY'] %>
+    gpustack_api_key: <%= ENV['GPUSTACK_API_KEY'] %>
+    xai_api_key: <%= ENV['XAI_API_KEY'] %>
 
-  # Google Vertex AI
-  vertexai_project_id: <%= ENV['VERTEXAI_PROJECT_ID'] %>
-  vertexai_location: <%= ENV.fetch('VERTEXAI_LOCATION', 'us-central1') %>
+    # AWS Bedrock
+    bedrock_api_key: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+    bedrock_secret_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+    bedrock_region: <%= ENV.fetch('AWS_REGION', 'us-east-1') %>
+    bedrock_session_token: <%= ENV['AWS_SESSION_TOKEN'] %>
 
-  # =============================================================================
-  # Provider Endpoints (for custom/self-hosted)
-  # =============================================================================
-  openai_api_base: <%= ENV['OPENAI_API_BASE'] %>
-  gemini_api_base: <%= ENV['GEMINI_API_BASE'] %>
-  ollama_api_base: <%= ENV.fetch('OLLAMA_API_BASE', 'http://localhost:11434') %>
-  gpustack_api_base: <%= ENV['GPUSTACK_API_BASE'] %>
-  xai_api_base: <%= ENV['XAI_API_BASE'] %>
+    # Google Vertex AI
+    vertexai_project_id: <%= ENV['VERTEXAI_PROJECT_ID'] %>
+    vertexai_location: <%= ENV.fetch('VERTEXAI_LOCATION', 'us-central1') %>
 
-  # =============================================================================
-  # OpenAI-Specific Options
-  # =============================================================================
-  openai_organization_id: <%= ENV['OPENAI_ORGANIZATION_ID'] %>
-  openai_project_id: <%= ENV['OPENAI_PROJECT_ID'] %>
-  # openai_use_system_role: true
+    # =============================================================================
+    # Provider Endpoints (for custom/self-hosted)
+    # =============================================================================
+    openai_api_base: <%= ENV['OPENAI_API_BASE'] %>
+    gemini_api_base: <%= ENV['GEMINI_API_BASE'] %>
+    ollama_api_base: <%= ENV.fetch('OLLAMA_API_BASE', 'http://localhost:11434') %>
+    gpustack_api_base: <%= ENV['GPUSTACK_API_BASE'] %>
+    xai_api_base: <%= ENV['XAI_API_BASE'] %>
 
-  # =============================================================================
-  # Default Models
-  # =============================================================================
-  default_model: <%= ENV.fetch('LLM_DEFAULT_MODEL', 'claude-sonnet-4') %>
-  default_embedding_model: <%= ENV['LLM_EMBEDDING_MODEL'] %>
-  default_image_model: <%= ENV['LLM_IMAGE_MODEL'] %>
-  default_moderation_model: <%= ENV['LLM_MODERATION_MODEL'] %>
+    # =============================================================================
+    # OpenAI-Specific Options
+    # =============================================================================
+    openai_organization_id: <%= ENV['OPENAI_ORGANIZATION_ID'] %>
+    openai_project_id: <%= ENV['OPENAI_PROJECT_ID'] %>
+    # openai_use_system_role: true
 
-  # =============================================================================
-  # Connection Settings
-  # =============================================================================
-  request_timeout: <%= ENV.fetch('LLM_REQUEST_TIMEOUT', '120') %>
-  max_retries: <%= ENV.fetch('LLM_MAX_RETRIES', '3') %>
-  retry_interval: <%= ENV.fetch('LLM_RETRY_INTERVAL', '0.1') %>
-  retry_backoff_factor: <%= ENV.fetch('LLM_RETRY_BACKOFF_FACTOR', '2') %>
-  retry_interval_randomness: <%= ENV.fetch('LLM_RETRY_INTERVAL_RANDOMNESS', '0.5') %>
-  http_proxy: <%= ENV['HTTP_PROXY'] %>
+    # =============================================================================
+    # Default Models
+    # =============================================================================
+    default_model: <%= ENV.fetch('LLM_DEFAULT_MODEL', 'claude-sonnet-4') %>
+    default_embedding_model: <%= ENV['LLM_EMBEDDING_MODEL'] %>
+    default_image_model: <%= ENV['LLM_IMAGE_MODEL'] %>
+    default_moderation_model: <%= ENV['LLM_MODERATION_MODEL'] %>
 
-  # =============================================================================
-  # Logging
-  # =============================================================================
-  log_file: <%= ENV['LLM_LOG_FILE'] %>
-  log_level: <%= ENV.fetch('LLM_LOG_LEVEL', 'info') %>
-  # log_stream_debug: false
+    # =============================================================================
+    # Connection Settings
+    # =============================================================================
+    request_timeout: <%= ENV.fetch('LLM_REQUEST_TIMEOUT', '120') %>
+    max_retries: <%= ENV.fetch('LLM_MAX_RETRIES', '3') %>
+    retry_interval: <%= ENV.fetch('LLM_RETRY_INTERVAL', '0.1') %>
+    retry_backoff_factor: <%= ENV.fetch('LLM_RETRY_BACKOFF_FACTOR', '2') %>
+    retry_interval_randomness: <%= ENV.fetch('LLM_RETRY_INTERVAL_RANDOMNESS', '0.5') %>
+    http_proxy: <%= ENV['HTTP_PROXY'] %>
 
-  # =============================================================================
-  # RobotLab-Specific Settings
-  # =============================================================================
-  streaming_enabled: <%= ENV.fetch('LLM_STREAMING', 'true') %>
-  max_iterations: <%= ENV.fetch('LLM_MAX_ITERATIONS', '10') %>
-  max_tool_iterations: <%= ENV.fetch('LLM_MAX_TOOL_ITERATIONS', '10') %>
+    # =============================================================================
+    # Logging
+    # =============================================================================
+    log_file: <%= ENV['LLM_LOG_FILE'] %>
+    log_level: <%= ENV.fetch('LLM_LOG_LEVEL', 'info') %>
+    # log_stream_debug: false
+
+    # =============================================================================
+    # RobotLab-Specific Settings
+    # =============================================================================
+    streaming_enabled: <%= ENV.fetch('LLM_STREAMING', 'true') %>
+    max_iterations: <%= ENV.fetch('LLM_MAX_ITERATIONS', '10') %>
+    max_tool_iterations: <%= ENV.fetch('LLM_MAX_TOOL_ITERATIONS', '10') %>
 
 # =============================================================================
 # Development Environment
 # =============================================================================
 development:
   <<: *defaults
-  default_model: <%= ENV.fetch('LLM_MODEL', 'claude-sonnet-4') %>
-  log_level: <%= ENV.fetch('LLM_LOG_LEVEL', 'debug') %>
+  chat:
+    with_model:
+      model: <%= ENV.fetch('LLM_MODEL', 'claude-sonnet-4') %>
+  ruby_llm:
+    log_level: <%= ENV.fetch('LLM_LOG_LEVEL', 'debug') %>
 
 # =============================================================================
 # Test Environment
 # =============================================================================
 test:
   <<: *defaults
-  default_model: <%= ENV.fetch('LLM_TEST_MODEL', 'claude-haiku-3-5') %>
+  chat:
+    with_model:
+      model: <%= ENV.fetch('LLM_TEST_MODEL', 'claude-haiku-3-5') %>
   max_iterations: 3
   max_tool_iterations: 3
   streaming_enabled: false
@@ -112,9 +133,12 @@ test:
 # =============================================================================
 production:
   <<: *defaults
-  default_model: <%= ENV.fetch('LLM_PROD_MODEL', 'claude-sonnet-4') %>
-  streaming_enabled: false
-  max_iterations: 20
-  request_timeout: 180
-  max_retries: 5
-  log_level: warn
+  chat:
+    with_model:
+      model: <%= ENV.fetch('LLM_PROD_MODEL', 'claude-sonnet-4') %>
+  ruby_llm:
+    streaming_enabled: false
+    max_iterations: 20
+    request_timeout: 180
+    max_retries: 5
+    log_level: warn

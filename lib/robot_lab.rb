@@ -37,7 +37,7 @@ require "async"
 #   # See lib/robot_lab/config/defaults.yml for all options
 #
 #   # Access configuration values:
-#   RobotLab.config.default_model           #=> "claude-sonnet-4"
+#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
 #   RobotLab.config.ruby_llm.request_timeout  #=> 120
 #
 module RobotLab
@@ -81,7 +81,7 @@ module RobotLab
     # @return [Config] the config instance
     #
     # @example
-    #   RobotLab.config.default_model             #=> "claude-sonnet-4"
+    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
     #   RobotLab.config.ruby_llm.request_timeout  #=> 120
     #   RobotLab.config.development?              #=> true
     def config
