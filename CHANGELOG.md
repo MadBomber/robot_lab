@@ -11,6 +11,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-02-15 (unreleased)
+
+### Added
+
+- **TypedBus message bus** for robot-to-robot communication
+  - `RobotMessage` immutable data class (`Data.define`) with `id`, `from`, `content`, `in_reply_to`
+  - Optional `bus:` parameter on Robot constructor — purely additive
+  - `on_message` handler with auto-ACK (1-arg block) and manual ACK/NACK (2-arg block)
+  - `publish_to_bus` with Async-aware fiber wrapping
+  - Typed channels accepting only `RobotMessage` objects
+- **Dynamic robot spawning** via `Robot#spawn` method for creating child robots at runtime
+- **`with_bus` configuration method** for connecting robots to a message bus after creation
+- **Comic robot class** with dynamic comedy tools (`reinvent_style`, `adjust_energy`, `get_coaching`)
+- New examples:
+  - `12_message_bus.rb` — two-robot joke critique workflow
+  - `13_spawn.rb` — dynamic robot spawning
+  - `14_rusty_circuit/` — multi-robot comedy open mic with bus-based coordination
+- New prompt templates: `comedian`, `comedy_critic`, `dispatcher`, `open_mic_comic`, `open_mic_heckler`, `open_mic_scout`, `configurable`, `llm_config_demo`
+- Rake tasks for building documentation sites
+- GitHub Actions workflow for YARD documentation deployment
+
+### Changed
+
+- Bumped version to 0.0.2
+- Replaced `ruby_llm-template` dependency with `prompt_manager` (~> 1.0)
+- Updated `ruby_llm` dependency to ~> 1.12
+- Added `typed_bus` as a core dependency
+- Added `myway_config` (~> 0.1) dependency
+- Added `amazing_print` and `hashdiff` as development dependencies
+- Migrated all prompt templates from directory-based format (`system.txt.erb` / `user.txt.erb`) to single `.md` files with YAML front matter
+- Refactored `Robot` class for simplified configuration
+- Refactored `Config` class
+- Extensive documentation updates across all guide, architecture, and API reference pages
+
+### Fixed
+
+- GitHub Actions platform limitation (`arm64-darwin` only in lockfile)
+
 ## [0.0.1] - 2026-01-16
 
 - refactored the network concept

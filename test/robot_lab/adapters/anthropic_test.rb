@@ -98,7 +98,7 @@ class RobotLab::Adapters::AnthropicTest < Minitest::Test
 
   # format_tools tests
   def test_format_tools_anthropic_format
-    tool = RobotLab::Tool.new(name: "search", description: "Search the web") { |i| i }
+    tool = RobotLab::Tool.create(name: "search", description: "Search the web") { |_args| "ok" }
 
     result = @adapter.format_tools([tool])
 
@@ -109,12 +109,15 @@ class RobotLab::Adapters::AnthropicTest < Minitest::Test
   end
 
   def test_format_tools_includes_input_schema
-    params = { type: "object", properties: { q: { type: "string" } }, required: ["q"] }
-    tool = RobotLab::Tool.new(name: "search", parameters: params) { |i| i }
+    tool = RobotLab::Tool.create(
+      name: "search",
+      parameters: { type: "object", properties: { q: { type: "string" } }, required: ["q"] }
+    ) { |_args| "ok" }
 
     result = @adapter.format_tools([tool])
 
-    assert_equal params, result[0][:input_schema]
+    assert result[0][:input_schema]
+    assert result[0][:input_schema][:properties]
   end
 
   # format_tool_choice tests

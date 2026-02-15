@@ -51,7 +51,7 @@ module RobotLabTestHelpers
 
   # Create a Tool for testing
   def build_tool(name:, description: 'Test tool', &block)
-    RobotLab::Tool.new(
+    RobotLab::Tool.create(
       name: name,
       description: description,
       &block

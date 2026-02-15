@@ -24,8 +24,8 @@ class RobotLab::Adapters::BaseTest < Minitest::Test
   end
 
   def test_format_tools_converts_to_json_schema
-    tool1 = RobotLab::Tool.new(name: "search", description: "Search") { |i| i }
-    tool2 = RobotLab::Tool.new(name: "delete", description: "Delete") { |i| i }
+    tool1 = RobotLab::Tool.create(name: "search", description: "Search") { |_args| "ok" }
+    tool2 = RobotLab::Tool.create(name: "delete", description: "Delete") { |_args| "ok" }
 
     result = @adapter.format_tools([tool1, tool2])
 

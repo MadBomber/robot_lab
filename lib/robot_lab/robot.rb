@@ -676,13 +676,12 @@ module RobotLab
         tool_name = tool_def[:name]
         mcp_client = client
 
-        tool = Tool.new(
+        tool = Tool.create(
           name: tool_name,
           description: tool_def[:description],
           parameters: tool_def[:inputSchema],
-          mcp: server_name,
-          handler: ->(input, **_opts) { mcp_client.call_tool(tool_name, input) }
-        )
+          mcp: server_name
+        ) { |args| mcp_client.call_tool(tool_name, args) }
 
         @mcp_tools << tool
       end

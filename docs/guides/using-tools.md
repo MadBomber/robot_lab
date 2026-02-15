@@ -1,12 +1,12 @@
 # Using Tools
 
-Tools give robots the ability to interact with external systems. RobotLab supports two approaches: `RubyLLM::Tool` subclasses and `RobotLab::Tool` instances.
+Tools give robots the ability to interact with external systems. RobotLab supports three approaches: `RubyLLM::Tool` subclasses, `RobotLab::Tool` subclasses (with robot access), and `RobotLab::Tool.create` for dynamic tools.
 
 ## Defining Tools
 
 ### RubyLLM::Tool Subclass
 
-The recommended way to define reusable tools is as a `RubyLLM::Tool` subclass. The class body uses a declarative DSL:
+For reusable tools that don't need robot access:
 
 ```ruby
 class GetWeather < RubyLLM::Tool
@@ -21,23 +21,52 @@ class GetWeather < RubyLLM::Tool
 end
 ```
 
-### RobotLab::Tool Instance
+### RobotLab::Tool Subclass
 
-For quick, inline tools you can create a `RobotLab::Tool` directly:
+For tools that need access to their owning robot (self-modification, spawning, etc.):
 
 ```ruby
-weather_tool = RobotLab::Tool.new(
-  name: "get_weather",
-  description: "Get current weather for a location"
-) do |input, **_opts|
-  WeatherService.current(input[:location])
+class AdjustEnergy < RobotLab::Tool
+  description "Adjust the robot's creativity level"
+
+  param :level, type: "number", desc: "Temperature from 0.0 to 1.0"
+
+  def execute(level:)
+    robot.with_temperature(level)
+    "Temperature adjusted to #{level}"
+  end
 end
 ```
 
-You can also pass a lambda as the `handler:` keyword:
+Pass `robot: self` when constructing:
 
 ```ruby
-weather_tool = RobotLab::Tool.new(
+class MyRobot < RobotLab::Robot
+  def initialize
+    super(
+      name: "creative_bot",
+      system_prompt: "You are creative.",
+      local_tools: [AdjustEnergy.new(robot: self)]
+    )
+  end
+end
+```
+
+### RobotLab::Tool.create (Dynamic Tools)
+
+For quick, inline tools use the `Tool.create` factory:
+
+```ruby
+get_time = RobotLab::Tool.create(
+  name: "get_time",
+  description: "Get the current time"
+) { |_args| Time.now.to_s }
+```
+
+With parameters:
+
+```ruby
+weather_tool = RobotLab::Tool.create(
   name: "get_weather",
   description: "Get current weather for a location",
   parameters: {
@@ -46,11 +75,8 @@ weather_tool = RobotLab::Tool.new(
       location: { type: "string", description: "City name" }
     },
     required: ["location"]
-  },
-  handler: ->(input, **_opts) {
-    WeatherService.current(input[:location])
   }
-)
+) { |args| WeatherService.current(args[:location]) }
 ```
 
 ## Attaching Tools to Robots
@@ -271,13 +297,12 @@ robot = RobotLab.build(
 )
 ```
 
-## RobotLab::Tool with Schema
+## RobotLab::Tool.create with Schema
 
-For `RobotLab::Tool`, you can define parameters using a JSON Schema hash or a `RubyLLM::Schema` subclass:
+For dynamic tools via `Tool.create`, pass parameters as a JSON Schema hash:
 
 ```ruby
-# With JSON Schema hash
-tool = RobotLab::Tool.new(
+tool = RobotLab::Tool.create(
   name: "search",
   description: "Search for items",
   parameters: {
@@ -288,9 +313,7 @@ tool = RobotLab::Tool.new(
     },
     required: ["query"]
   }
-) do |input, **_|
-  Search.query(input[:query], limit: input[:limit] || 10)
-end
+) { |args| Search.query(args[:query], limit: args[:limit] || 10) }
 ```
 
 ## Best Practices

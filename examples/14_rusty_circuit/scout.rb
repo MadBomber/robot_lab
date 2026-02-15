@@ -1,5 +1,64 @@
 # frozen_string_literal: true
 
+# ── Scout Tools ────────────────────────────────────────────
+#
+# Each tool accesses the owning robot via the `robot` accessor
+# inherited from RobotLab::Tool.
+
+class RecruitAnalyst < RobotLab::Tool
+  description "Bring in a specialist to analyze a specific aspect " \
+              "of the comedian's performance. The analyst will " \
+              "review your accumulated notes and provide insight."
+
+  param :specialty, type: "string",
+        desc: "What to analyze: timing, crowd_work, " \
+              "originality, adaptability, stage_presence, " \
+              "material_evolution"
+
+  def execute(specialty:)
+    @analysts ||= {}
+    specialty = specialty.to_s.downcase.gsub(/\s+/, "_")
+    analyst = @analysts[specialty] ||= begin
+      robot.instance_variable_set(
+        :@analysts_spawned,
+        robot.analysts_spawned + 1
+      )
+      robot.spawn(
+        name: "#{specialty}_analyst",
+        system_prompt:
+          "You are an expert #{specialty.tr('_', ' ')} analyst " \
+          "for stand-up comedy. You've studied the craft for decades. " \
+          "Analyze the performance notes you're given. Be concise " \
+          "and insightful. 2-3 sentences max."
+      )
+    end
+    analysis = analyst.run(robot.log.join("\n")).last_text_content.strip
+    robot.instance_variable_get(:@display)&.scout_analyst(specialty, analysis)
+    analysis
+  rescue => e
+    robot.instance_variable_get(:@display)&.scout_analyst(specialty, "ERROR: #{e.message}")
+    "Analysis unavailable for #{specialty}. Rely on your own observations."
+  end
+end
+
+class RefineCriteria < RobotLab::Tool
+  description "Update your own evaluation criteria based on what " \
+              "you're observing. Use when you realize the most " \
+              "important qualities aren't what you initially expected. " \
+              "The update takes effect on your next evaluation."
+
+  param :updated_criteria, type: "string",
+        desc: "Your refined evaluation criteria and focus areas"
+
+  def execute(updated_criteria:)
+    robot.instance_variable_set(:@pending_criteria, updated_criteria)
+    robot.instance_variable_get(:@display)&.scout_criteria(updated_criteria)
+    "Criteria refinement accepted: #{updated_criteria}. " \
+    "Apply these updated criteria to all future evaluations."
+  end
+end
+
+
 # ── The Talent Scout ─────────────────────────────────────────
 #
 # Has two tools with side effects:
@@ -24,89 +83,19 @@ class Scout < RobotLab::Robot
   def initialize(bus:, display:)
     @log = []
     @analysts_spawned = 0
-    @analysts = {}
     @pending_criteria = nil
     @processing = false
     @observation_queue = []
     @display = display
 
-    scout = self # captured by tool closures
-    display_ref = display
-
-    recruit_analyst = RobotLab::Tool.new(
-      name: "recruit_analyst",
-      description: "Bring in a specialist to analyze a specific aspect " \
-                   "of the comedian's performance. The analyst will " \
-                   "review your accumulated notes and provide insight.",
-      parameters: {
-        type: "object",
-        properties: {
-          specialty: {
-            type: "string",
-            description: "What to analyze: timing, crowd_work, " \
-                         "originality, adaptability, stage_presence, " \
-                         "material_evolution"
-          }
-        },
-        required: ["specialty"]
-      },
-      handler: ->(input, **) {
-        begin
-          specialty = input[:specialty].to_s.downcase.gsub(/\s+/, "_")
-          analyst = scout.instance_variable_get(:@analysts)[specialty] ||= begin
-            scout.instance_variable_set(
-              :@analysts_spawned,
-              scout.analysts_spawned + 1
-            )
-            scout.spawn(
-              name: "#{specialty}_analyst",
-              system_prompt:
-                "You are an expert #{specialty.tr('_', ' ')} analyst " \
-                "for stand-up comedy. You've studied the craft for decades. " \
-                "Analyze the performance notes you're given. Be concise " \
-                "and insightful. 2-3 sentences max."
-            )
-          end
-          analysis = analyst.run(scout.log.join("\n")).last_text_content.strip
-          display_ref.scout_analyst(specialty, analysis)
-          analysis
-        rescue => e
-          display_ref.scout_analyst(input[:specialty], "ERROR: #{e.message}")
-          "Analysis unavailable for #{input[:specialty]}. Rely on your own observations."
-        end
-      }
-    )
-
-    refine_criteria = RobotLab::Tool.new(
-      name: "refine_criteria",
-      description: "Update your own evaluation criteria based on what " \
-                   "you're observing. Use when you realize the most " \
-                   "important qualities aren't what you initially expected. " \
-                   "The update takes effect on your next evaluation.",
-      parameters: {
-        type: "object",
-        properties: {
-          updated_criteria: {
-            type: "string",
-            description: "Your refined evaluation criteria and focus areas"
-          }
-        },
-        required: ["updated_criteria"]
-      },
-      handler: ->(input, **) {
-        # Queue the change — applied before the next round's run
-        scout.instance_variable_set(:@pending_criteria, input[:updated_criteria])
-        display_ref.scout_criteria(input[:updated_criteria])
-        "Criteria refinement accepted: #{input[:updated_criteria]}. " \
-        "Apply these updated criteria to all future evaluations."
-      }
-    )
-
     super(
       name: "scout",
       template: :open_mic_scout,
       bus: bus,
-      local_tools: [recruit_analyst, refine_criteria]
+      local_tools: [
+        RecruitAnalyst.new(robot: self),
+        RefineCriteria.new(robot: self)
+      ]
     )
 
     # Listen to the room for the comic's performances.

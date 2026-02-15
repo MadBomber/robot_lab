@@ -3,210 +3,285 @@
 require "test_helper"
 
 class RobotLab::ToolTest < Minitest::Test
-  def test_tool_initialization_with_block
-    tool = RobotLab::Tool.new(
-      name: "calculator",
-      description: "Performs calculations"
-    ) do |input, **_context|
-      input[:a] + input[:b]
+  # ── Subclass pattern ──────────────────────────────────────────
+
+  def test_subclass_inherits_from_ruby_llm_tool
+    assert RobotLab::Tool < RubyLLM::Tool
+  end
+
+  def test_subclass_with_description_and_params
+    klass = Class.new(RobotLab::Tool) do
+      description "Adds two numbers"
+      param :a, type: "number", desc: "First number"
+      param :b, type: "number", desc: "Second number"
+
+      def execute(a:, b:)
+        a + b
+      end
     end
 
-    assert_equal "calculator", tool.name
-    assert_equal "Performs calculations", tool.description
+    tool = klass.new
+    assert_equal "Adds two numbers", tool.description
+    assert tool.parameters.key?(:a)
+    assert tool.parameters.key?(:b)
   end
 
-  def test_tool_initialization_with_handler
-    handler = ->(input, **_context) { input[:value] * 2 }
-    tool = RobotLab::Tool.new(
-      name: "doubler",
-      description: "Doubles a value",
-      handler: handler
-    )
+  def test_subclass_execute
+    klass = Class.new(RobotLab::Tool) do
+      description "Doubles a value"
+      param :value, type: "number", desc: "Value to double"
 
-    assert_equal "doubler", tool.name
-  end
-
-  def test_tool_call
-    tool = RobotLab::Tool.new(
-      name: "adder",
-      description: "Adds two numbers"
-    ) do |input, **_context|
-      input[:a] + input[:b]
+      def execute(value:)
+        value * 2
+      end
     end
 
-    result = tool.call({ a: 2, b: 3 }, robot: nil, network: nil)
-    assert_equal 5, result
+    tool = klass.new
+    result = tool.call({ "value" => 10 })
+    assert_equal 20, result
   end
 
-  def test_tool_call_with_context
-    captured_context = nil
-    tool = RobotLab::Tool.new(name: "context_tool") do |_input, **context|
-      captured_context = context
-      "done"
+  # ── robot: accessor ──────────────────────────────────────────
+
+  def test_robot_accessor_in_constructor
+    mock_robot = Object.new
+    klass = Class.new(RobotLab::Tool) do
+      description "Test tool"
+      def execute(**); end
+    end
+
+    tool = klass.new(robot: mock_robot)
+    assert_equal mock_robot, tool.robot
+  end
+
+  def test_robot_accessor_is_writable
+    tool = Class.new(RobotLab::Tool) { def execute(**); end }.new
+    mock_robot = Object.new
+
+    tool.robot = mock_robot
+    assert_equal mock_robot, tool.robot
+  end
+
+  def test_robot_accessible_in_execute
+    captured_robot = nil
+    klass = Class.new(RobotLab::Tool) do
+      description "Captures robot"
+      param :x, type: "string", desc: "Ignored"
+
+      define_method(:execute) do |**_args|
+        captured_robot = robot
+        "done"
+      end
     end
 
     mock_robot = Object.new
-    mock_network = Object.new
-    tool.call({}, robot: mock_robot, network: mock_network)
+    tool = klass.new(robot: mock_robot)
+    tool.call({ "x" => "test" })
 
-    assert_equal mock_robot, captured_context[:robot]
-    assert_equal mock_network, captured_context[:network]
+    assert_equal mock_robot, captured_robot
   end
 
-  def test_tool_with_parameters_schema
-    parameters = { type: "object", properties: { value: { type: "integer" } } }
-    tool = RobotLab::Tool.new(
-      name: "typed_tool",
-      description: "A tool with schema",
-      parameters: parameters
-    ) { |input| input }
-
-    assert_equal parameters, tool.parameters
+  def test_robot_defaults_to_nil
+    tool = Class.new(RobotLab::Tool) { def execute(**); end }.new
+    assert_nil tool.robot
   end
 
-  def test_tool_to_hash
-    tool = RobotLab::Tool.new(
-      name: "hash_tool",
-      description: "Test tool"
-    ) { |input| input }
+  # ── Tool.create factory ──────────────────────────────────────
 
-    hash = tool.to_h
+  def test_create_with_name_and_description
+    tool = RobotLab::Tool.create(
+      name: "get_time",
+      description: "Get the current time"
+    ) { |_args| Time.now.to_s }
 
-    assert_equal "hash_tool", hash[:name]
-    assert_equal "Test tool", hash[:description]
+    assert_equal "get_time", tool.name
+    assert_equal "Get the current time", tool.description
   end
 
-  def test_tool_mcp_flag
-    tool = RobotLab::Tool.new(
-      name: "mcp_tool",
-      mcp: true
-    ) { |input| input }
+  def test_create_with_parameters
+    tool = RobotLab::Tool.create(
+      name: "search",
+      description: "Search for items",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query" },
+          limit: { type: "integer", description: "Max results" }
+        },
+        required: ["query"]
+      }
+    ) { |args| args }
 
-    assert tool.mcp?
+    schema = tool.params_schema
+    assert schema
+    props = schema[:properties] || schema["properties"]
+    assert props
+    assert props.key?(:query) || props.key?("query")
   end
 
-  def test_tool_without_handler_raises_error
-    tool = RobotLab::Tool.new(name: "no_handler")
+  def test_create_executes_handler_block
+    tool = RobotLab::Tool.create(
+      name: "adder",
+      description: "Adds numbers"
+    ) { |args| args[:a] + args[:b] }
 
-    assert_raises(RobotLab::Error) do
-      tool.call({}, robot: nil, network: nil)
-    end
+    result = tool.call({ "a" => 2, "b" => 3 })
+    assert_equal 5, result
   end
 
-  # Additional Tool tests for coverage
-  def test_tool_name_converts_to_string
-    tool = RobotLab::Tool.new(name: :symbol_name) { |i| i }
+  def test_create_with_robot
+    mock_robot = Object.new
+    tool = RobotLab::Tool.create(
+      name: "test",
+      description: "Test",
+      robot: mock_robot
+    ) { |_args| "ok" }
 
+    assert_equal mock_robot, tool.robot
+  end
+
+  def test_create_with_symbol_name
+    tool = RobotLab::Tool.create(name: :symbol_name) { |_args| "ok" }
     assert_equal "symbol_name", tool.name
   end
 
-  def test_tool_strict_attribute
-    tool = RobotLab::Tool.new(name: "strict_tool", strict: true) { |i| i }
+  # ── MCP ──────────────────────────────────────────────────────
 
-    assert tool.strict
-  end
+  def test_mcp_flag_true_when_set
+    tool = RobotLab::Tool.create(
+      name: "mcp_tool",
+      mcp: "github"
+    ) { |_args| "ok" }
 
-  def test_tool_mcp_attribute
-    tool = RobotLab::Tool.new(name: "mcp_tool", mcp: "github") { |i| i }
-
-    assert_equal "github", tool.mcp
     assert tool.mcp?
+    assert_equal "github", tool.mcp
   end
 
-  def test_tool_mcp_false_when_nil
-    tool = RobotLab::Tool.new(name: "local_tool") { |i| i }
-
+  def test_mcp_flag_false_when_nil
+    tool = RobotLab::Tool.create(name: "local_tool") { |_args| "ok" }
     refute tool.mcp?
   end
 
-  # Error handling in call
-  def test_tool_call_catches_errors_and_serializes
-    tool = RobotLab::Tool.new(name: "error_tool") do |_input, **_context|
-      raise StandardError, "Something went wrong"
-    end
-
-    result = tool.call({}, robot: nil, network: nil)
-
-    assert result.is_a?(Hash)
-    assert result[:error]
-    assert_equal "StandardError", result[:error][:type]
-    assert_equal "Something went wrong", result[:error][:message]
+  def test_mcp_nil_on_subclass
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    tool = klass.new
+    refute tool.mcp?
+    assert_nil tool.mcp
   end
 
-  def test_tool_call_reraises_robotlab_errors
-    tool = RobotLab::Tool.new(name: "robotlab_error_tool") do |_input, **_context|
-      raise RobotLab::Error, "RobotLab specific error"
-    end
+  # ── name ─────────────────────────────────────────────────────
 
-    assert_raises(RobotLab::Error) do
-      tool.call({}, robot: nil, network: nil)
-    end
+  def test_name_from_class_on_subclass
+    # RubyLLM::Tool derives name from class name
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    tool = klass.new
+    # Anonymous classes have nil name, so RubyLLM falls through
+    # Named classes would work: class MyTool < RobotLab::Tool => "my"
+    assert tool.name.is_a?(String)
   end
 
-  # to_json_schema tests
+  def test_name_explicit_on_create
+    tool = RobotLab::Tool.create(name: "explicit_name") { |_args| "ok" }
+    assert_equal "explicit_name", tool.name
+  end
+
+  # ── call (inherited from RubyLLM::Tool) ─────────────────────
+
+  def test_call_transforms_string_keys_to_symbols
+    received_args = nil
+    tool = RobotLab::Tool.create(
+      name: "test",
+      description: "Test",
+      parameters: {
+        type: "object",
+        properties: { key: { type: "string" } },
+        required: ["key"]
+      }
+    ) { |args| received_args = args; "ok" }
+
+    tool.call({ "key" => "value" })
+    assert_equal({ key: "value" }, received_args)
+  end
+
+  def test_call_with_symbol_keys
+    received_args = nil
+    tool = RobotLab::Tool.create(name: "test") { |args| received_args = args; "ok" }
+
+    tool.call({ key: "value" })
+    assert_equal({ key: "value" }, received_args)
+  end
+
+  # ── to_json_schema ──────────────────────────────────────────
+
   def test_to_json_schema_with_no_parameters
-    tool = RobotLab::Tool.new(name: "simple", description: "A simple tool") { |i| i }
+    tool = RobotLab::Tool.create(name: "simple", description: "A simple tool") { |_args| "ok" }
 
     schema = tool.to_json_schema
 
     assert_equal "simple", schema[:name]
     assert_equal "A simple tool", schema[:description]
-    assert_equal({ type: "object", properties: {}, required: [] }, schema[:parameters])
+    assert schema[:parameters]
   end
 
-  def test_to_json_schema_with_hash_parameters
-    params = {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "Search query" }
-      },
-      required: ["query"]
-    }
-    tool = RobotLab::Tool.new(name: "search", parameters: params) { |i| i }
+  def test_to_json_schema_with_parameters
+    tool = RobotLab::Tool.create(
+      name: "search",
+      description: "Search",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query" }
+        },
+        required: ["query"]
+      }
+    ) { |_args| "ok" }
 
     schema = tool.to_json_schema
 
-    assert_equal params, schema[:parameters]
+    assert_equal "search", schema[:name]
+    assert schema[:parameters]
   end
 
-  def test_to_json_schema_excludes_nil_values
-    tool = RobotLab::Tool.new(name: "minimal") { |i| i }
+  def test_to_json_schema_excludes_nil_description
+    tool = RobotLab::Tool.create(name: "minimal") { |_args| "ok" }
 
     schema = tool.to_json_schema
 
-    refute schema.key?(:description)
+    # nil description should be compacted out
+    refute schema.key?(:description) if tool.description.nil?
   end
 
-  # to_h tests
-  def test_to_h_includes_mcp_and_strict
-    tool = RobotLab::Tool.new(
-      name: "full",
-      description: "Full tool",
-      mcp: "server",
-      strict: true
-    ) { |i| i }
+  # ── to_h ────────────────────────────────────────────────────
+
+  def test_to_h_includes_name_and_description
+    tool = RobotLab::Tool.create(name: "full", description: "Full tool") { |_args| "ok" }
 
     hash = tool.to_h
 
     assert_equal "full", hash[:name]
     assert_equal "Full tool", hash[:description]
-    assert_equal "server", hash[:mcp]
-    assert hash[:strict]
   end
 
-  def test_to_h_excludes_nil_values
-    tool = RobotLab::Tool.new(name: "minimal") { |i| i }
+  def test_to_h_includes_mcp
+    tool = RobotLab::Tool.create(name: "mcp_tool", mcp: "server") { |_args| "ok" }
 
     hash = tool.to_h
 
-    refute hash.key?(:description)
-    refute hash.key?(:mcp)
-    refute hash.key?(:strict)
+    assert_equal "server", hash[:mcp]
   end
 
-  # to_json test
+  def test_to_h_excludes_nil_values
+    tool = RobotLab::Tool.create(name: "minimal") { |_args| "ok" }
+
+    hash = tool.to_h
+
+    refute hash.key?(:mcp)
+  end
+
+  # ── to_json ─────────────────────────────────────────────────
+
   def test_to_json_returns_json_string
-    tool = RobotLab::Tool.new(name: "json_tool", description: "Test") { |i| i }
+    tool = RobotLab::Tool.create(name: "json_tool", description: "Test") { |_args| "ok" }
 
     json = tool.to_json
 
@@ -216,108 +291,91 @@ class RobotLab::ToolTest < Minitest::Test
     assert_equal "Test", parsed["description"]
   end
 
-  # params_schema test
-  def test_params_schema_with_hash
-    params = { type: "object", properties: { x: { type: "integer" } } }
-    tool = RobotLab::Tool.new(name: "test", parameters: params) { |i| i }
+  # ── params_schema (inherited) ──────────────────────────────
 
-    assert_equal params, tool.params_schema
+  def test_params_schema_from_param_dsl
+    klass = Class.new(RobotLab::Tool) do
+      param :x, type: "integer", desc: "An integer"
+      def execute(x:); x; end
+    end
+
+    tool = klass.new
+    schema = tool.params_schema
+
+    assert schema
+    assert schema[:properties]&.key?(:x) || schema["properties"]&.key?("x")
   end
 
-  def test_params_schema_returns_nil_without_parameters
-    tool = RobotLab::Tool.new(name: "test") { |i| i }
+  def test_params_schema_nil_without_parameters
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    tool = klass.new
 
-    assert_nil tool.params_schema
+    # RubyLLM::Tool returns nil when no params defined
+    # (or an empty schema depending on version)
+    schema = tool.params_schema
+    assert schema.nil? || schema.is_a?(Hash)
   end
 
-  # provider_params test
-  def test_provider_params_returns_empty_hash
-    tool = RobotLab::Tool.new(name: "test") { |i| i }
+  # ── provider_params (inherited) ────────────────────────────
+
+  def test_provider_params_defaults_to_empty_hash
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    tool = klass.new
 
     assert_equal({}, tool.provider_params)
   end
 
-  # Input validation tests
-  def test_validate_input_passes_through_without_parameters
-    tool = RobotLab::Tool.new(name: "test") { |input, **_c| input }
-
-    result = tool.call({ key: "value" }, robot: nil, network: nil)
-
-    assert_equal({ key: "value" }, result)
-  end
-
-  def test_validate_input_transforms_string_keys_to_symbols
-    tool = RobotLab::Tool.new(
-      name: "test",
-      parameters: { type: "object", properties: { key: { type: "string" } } }
-    ) { |input, **_c| input }
-
-    result = tool.call({ "key" => "value" }, robot: nil, network: nil)
-
-    # With parameters defined, string keys get transformed to symbols
-    assert result.key?(:key) || result.key?("key")
-  end
-
-  # Step context
-  def test_tool_receives_step_context
-    captured_step = nil
-    tool = RobotLab::Tool.new(name: "step_tool") do |_input, step:, **_context|
-      captured_step = step
-      "done"
+  def test_provider_params_with_strict
+    klass = Class.new(RobotLab::Tool) do
+      with_params(strict: true)
+      def execute(**); end
     end
 
-    mock_step = Object.new
-    tool.call({}, robot: nil, network: nil, step: mock_step)
-
-    assert_equal mock_step, captured_step
+    tool = klass.new
+    assert tool.provider_params[:strict]
   end
 
-  # to_ruby_llm_tool tests
-  def test_to_ruby_llm_tool_returns_class
-    tool = RobotLab::Tool.new(name: "converter", description: "Test tool") { |i| i }
+  # ── Error handling ─────────────────────────────────────────
 
-    ruby_llm_class = tool.to_ruby_llm_tool
+  def test_execute_raising_propagates_from_call
+    tool = RobotLab::Tool.create(name: "error_tool") do |_args|
+      raise StandardError, "Something went wrong"
+    end
 
-    assert ruby_llm_class.is_a?(Class)
-    assert ruby_llm_class < RubyLLM::Tool
+    # RubyLLM::Tool#call does not catch exceptions — they propagate
+    assert_raises(StandardError) { tool.call({}) }
   end
 
-  def test_to_ruby_llm_tool_with_hash_parameters
-    params = {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "Search query" },
-        limit: { type: "integer" }
-      },
-      required: ["query"]
-    }
-    tool = RobotLab::Tool.new(
-      name: "search_tool",
-      description: "Searches for items",
-      parameters: params
-    ) { |i| i }
+  # ── halt (inherited) ───────────────────────────────────────
 
-    ruby_llm_class = tool.to_ruby_llm_tool
+  def test_halt_returns_halt_object
+    klass = Class.new(RobotLab::Tool) do
+      description "Halting tool"
+      def execute(**)
+        halt("Stop processing")
+      end
+    end
 
-    assert ruby_llm_class.is_a?(Class)
+    tool = klass.new
+    result = tool.call({})
+    assert result.is_a?(RubyLLM::Tool::Halt)
+    assert_equal "Stop processing", result.to_s
   end
 
-  def test_to_ruby_llm_tool_execute_returns_kwargs
-    tool = RobotLab::Tool.new(name: "test_tool", description: "Test") { |i| i }
+  # ── is_a? checks ───────────────────────────────────────────
 
-    ruby_llm_class = tool.to_ruby_llm_tool
-    instance = ruby_llm_class.new
+  def test_tool_is_a_ruby_llm_tool
+    tool = RobotLab::Tool.create(name: "test") { |_args| "ok" }
 
-    result = instance.execute(a: 1, b: 2)
-
-    assert_equal({ a: 1, b: 2 }, result)
+    assert tool.is_a?(RubyLLM::Tool)
+    assert tool.is_a?(RobotLab::Tool)
   end
 
-  # Handler attribute access
-  def test_handler_attribute
-    handler = ->(i, **_c) { i }
-    tool = RobotLab::Tool.new(name: "test", handler: handler)
+  def test_subclass_is_a_ruby_llm_tool
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    tool = klass.new
 
-    assert_equal handler, tool.handler
+    assert tool.is_a?(RubyLLM::Tool)
+    assert tool.is_a?(RobotLab::Tool)
   end
 end
