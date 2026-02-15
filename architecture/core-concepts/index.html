@@ -1085,6 +1085,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#message-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Bus
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Bus">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robotmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotMessage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sending-and-receiving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending and Receiving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-spawning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Spawning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bus-vs-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bus vs Network
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#network" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3180,6 +3252,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#message-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message Bus
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Bus">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robotmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotMessage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sending-and-receiving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending and Receiving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-spawning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Spawning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bus-vs-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bus vs Network
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#network" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3338,6 +3482,16 @@
 <td><code>memory</code></td>
 <td><code>Memory</code></td>
 <td>Inherent key-value memory</td>
+</tr>
+<tr>
+<td><code>bus</code></td>
+<td><code>TypedBus::MessageBus</code>, <code>nil</code></td>
+<td>Message bus instance</td>
+</tr>
+<tr>
+<td><code>outbox</code></td>
+<td><code>Hash</code></td>
+<td>Sent messages tracked with status and replies</td>
 </tr>
 <tr>
 <td><code>mcp_config</code></td>
@@ -3651,15 +3805,123 @@
 </span></code></pre></div>
 <p>Resolution order: <strong>runtime &gt; robot build-time &gt; task &gt; network &gt; global config</strong>.</p>
 <p>The <code>:inherit</code> value pulls from the parent level. <code>:none</code> explicitly disables.</p>
+<h2 id="message-bus">Message Bus<a class="headerlink" href="#message-bus" title="Permanent link">&para;</a></h2>
+<p>The <strong>Message Bus</strong> provides bidirectional, cyclic communication between robots, independent of the Network pipeline. While Networks enforce DAG-based (acyclic) execution, the bus enables negotiation loops, convergence patterns, and multi-turn dialogues.</p>
+<h3 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<p>Robots connect to a shared <code>TypedBus::MessageBus</code> via the <code>bus:</code> parameter. Each robot gets a typed channel (accepting only <code>RobotMessage</code> objects) named after its <code>name</code>. Messages are delivered asynchronously via the <code>async</code> gem's fiber scheduler.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">bus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TypedBus</span><span class="o">::</span><span class="no">MessageBus</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">bob</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You tell jokes.&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">alice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You evaluate jokes.&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="robotmessage">RobotMessage<a class="headerlink" href="#robotmessage" title="Permanent link">&para;</a></h3>
+<p><code>RobotMessage</code> is an immutable <code>Data.define</code> value object used as the typed envelope:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>Integer</code></td>
+<td>Per-robot sequential counter</td>
+</tr>
+<tr>
+<td><code>from</code></td>
+<td><code>String</code></td>
+<td>Sender's robot name (= channel name)</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td><code>String</code>, <code>Hash</code></td>
+<td>Message payload</td>
+</tr>
+<tr>
+<td><code>in_reply_to</code></td>
+<td><code>String</code>, <code>nil</code></td>
+<td>Composite key of the original message (e.g., <code>"alice:1"</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Methods: <code>key</code> returns <code>"from:id"</code> composite identity; <code>reply?</code> returns true when <code>in_reply_to</code> is set.</p>
+<h3 id="sending-and-receiving">Sending and Receiving<a class="headerlink" href="#sending-and-receiving" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Send a message to another robot</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">alice</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:bob</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Tell me a joke.&quot;</span><span class="p">)</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Handle incoming messages with auto-ack (1 arg)</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">bob</span><span class="o">.</span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">  </span><span class="n">joke</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bob</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">to_s</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">  </span><span class="n">bob</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">joke</span><span class="p">)</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="k">end</span>
+</span></code></pre></div>
+<p>Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over <code>delivery.ack!</code>/<code>delivery.nack!</code>.</p>
+<h3 id="dynamic-spawning">Dynamic Spawning<a class="headerlink" href="#dynamic-spawning" title="Permanent link">&para;</a></h3>
+<p>Robots can create new robots at runtime using <code>spawn</code>. The bus is created lazily — no upfront wiring required:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">dispatcher</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dispatcher&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You delegate work.&quot;</span><span class="p">)</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># spawn creates a child on the same bus (bus created automatically)</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">helper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dispatcher</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;helper&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You answer questions.&quot;</span><span class="p">)</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1"># The child can immediately communicate with the parent</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">helper</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is 2+2?&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">helper</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:dispatcher</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">answer</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Robots can also join a bus after creation using <code>with_bus</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">bot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;late_joiner&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello.&quot;</span><span class="p">)</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">bot</span><span class="o">.</span><span class="n">with_bus</span><span class="p">(</span><span class="n">existing_bus</span><span class="p">)</span><span class="w">  </span><span class="c1"># now connected to the bus</span>
+</span></code></pre></div>
+<p><strong>Fan-out messaging</strong>: Multiple robots with the same name all subscribe to the same channel. Messages sent to that name are delivered to all subscribers:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">worker1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dispatcher</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;worker&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Worker 1&quot;</span><span class="p">)</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">worker2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dispatcher</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;worker&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Worker 2&quot;</span><span class="p">)</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">dispatcher</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:worker</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Do this task&quot;</span><span class="p">)</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Both worker1 and worker2 receive the message</span>
+</span></code></pre></div>
+<h3 id="bus-vs-network">Bus vs Network<a class="headerlink" href="#bus-vs-network" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Network</th>
+<th>Message Bus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Execution model</td>
+<td>DAG (acyclic)</td>
+<td>Cyclic, bidirectional</td>
+</tr>
+<tr>
+<td>Communication</td>
+<td>Sequential pipeline</td>
+<td>Pub/sub channels</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Shared network memory</td>
+<td>Independent per-robot</td>
+</tr>
+<tr>
+<td>Use case</td>
+<td>Linear workflows</td>
+<td>Negotiation, convergence</td>
+</tr>
+</tbody>
+</table>
+<p>The bus is purely additive — robots without <code>bus:</code> work exactly as before.</p>
 <h2 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h2>
 <p>A Network orchestrates multiple robots in a pipeline workflow using SimpleFlow:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:classifier</span><span class="p">,</span><span class="w"> </span><span class="n">classifier_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:technical</span><span class="p">,</span><span class="w"> </span><span class="n">technical_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="k">end</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;I need help with billing&quot;</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:classifier</span><span class="p">,</span><span class="w"> </span><span class="n">classifier_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:technical</span><span class="p">,</span><span class="w"> </span><span class="n">technical_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="k">end</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;I need help with billing&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Networks provide:</p>
 <ul>

@@ -1329,6 +1329,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bus-connected-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bus-Connected Robot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spawning-robots-dynamically" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spawning Robots Dynamically
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3268,6 +3290,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bus-connected-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bus-Connected Robot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spawning-robots-dynamically" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spawning Robots Dynamically
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3629,6 +3673,10 @@
 <td><code>with_thinking(config)</code></td>
 <td>Enable extended thinking</td>
 </tr>
+<tr>
+<td><code>with_bus(bus)</code></td>
+<td>Connect to a message bus (creates one if nil)</td>
+</tr>
 </tbody>
 </table>
 <h2 id="running-robots">Running Robots<a class="headerlink" href="#running-robots" title="Permanent link">&para;</a></h2>
@@ -3724,10 +3772,88 @@
 </span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="dl">  PROMPT</span>
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="bus-connected-robot">Bus-Connected Robot<a class="headerlink" href="#bus-connected-robot" title="Permanent link">&para;</a></h3>
+<p>Enable bidirectional communication between robots using a message bus. This pattern supports negotiation loops and convergence:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">bus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TypedBus</span><span class="o">::</span><span class="no">MessageBus</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Comedian</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="ss">bus</span><span class="p">:)</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bob&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:comedian</span><span class="p">,</span><span class="w"> </span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">      </span><span class="n">joke</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">to_s</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span><span class="o">.</span><span class="n">strip</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">      </span><span class="n">reply</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">joke</span><span class="p">)</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="k">end</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="k">class</span><span class="w"> </span><span class="nc">ComedyCritic</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="ss">bus</span><span class="p">:)</span>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:comedy_critic</span><span class="p">,</span><span class="w"> </span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">    </span><span class="vi">@accepted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">false</span>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="w">    </span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="w">      </span><span class="n">verdict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Evaluate: </span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span><span class="o">.</span><span class="n">strip</span>
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="w">      </span><span class="vi">@accepted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">verdict</span><span class="o">.</span><span class="n">start_with?</span><span class="p">(</span><span class="s2">&quot;FUNNY&quot;</span><span class="p">)</span>
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="w">      </span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:bob</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Try again.&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">unless</span><span class="w"> </span><span class="vi">@accepted</span>
+</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:accepted</span>
+</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="k">end</span>
+</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a>
+</span><span id="__span-19-26"><a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="n">bob</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="no">Comedian</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-19-27"><a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="n">alice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ComedyCritic</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-19-28"><a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="n">alice</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:bob</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Tell me a funny robot joke.&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The <code>on_message</code> block arity controls delivery handling:
+- <strong>1 argument</strong> <code>|message|</code> — auto-acknowledges before calling
+- <strong>2 arguments</strong> <code>|delivery, message|</code> — manual <code>delivery.ack!</code> / <code>delivery.nack!</code></p>
+<p>See <a href="../../architecture/core-concepts/#message-bus">Message Bus</a> for details.</p>
+<h3 id="spawning-robots-dynamically">Spawning Robots Dynamically<a class="headerlink" href="#spawning-robots-dynamically" title="Permanent link">&para;</a></h3>
+<p>Create new robots at runtime using <code>spawn</code>. The bus is created lazily — no upfront wiring required:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Dispatcher</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:spawned</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="k">super</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dispatcher&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:dispatcher</span><span class="p">,</span><span class="w"> </span><span class="ss">bus</span><span class="p">:</span><span class="w"> </span><span class="n">bus</span><span class="p">)</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">    </span><span class="vi">@spawned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">    </span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">      </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">from</span><span class="si">}</span><span class="s2"> replied: </span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">first</span><span class="o">&amp;.</span><span class="n">strip</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">dispatch</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">    </span><span class="c1"># Ask LLM what specialist to create</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">    </span><span class="n">plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="n">question</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span><span class="o">.</span><span class="n">strip</span>
+</span><span id="__span-20-16"><a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="w">    </span><span class="n">role</span><span class="p">,</span><span class="w"> </span><span class="n">instruction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plan</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-20-17"><a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="w">    </span><span class="n">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">role</span><span class="o">.</span><span class="n">strip</span><span class="o">.</span><span class="n">downcase</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="sr">/\s+/</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+</span><span id="__span-20-18"><a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a>
+</span><span id="__span-20-19"><a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a><span class="w">    </span><span class="c1"># Spawn (or reuse) a specialist</span>
+</span><span id="__span-20-20"><a id="__codelineno-20-20" name="__codelineno-20-20" href="#__codelineno-20-20"></a><span class="w">    </span><span class="n">specialist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@spawned</span><span class="o">[</span><span class="n">role</span><span class="o">]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="n">spawn</span><span class="p">(</span>
+</span><span id="__span-20-21"><a id="__codelineno-20-21" name="__codelineno-20-21" href="#__codelineno-20-21"></a><span class="w">      </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="n">role</span><span class="p">,</span>
+</span><span id="__span-20-22"><a id="__codelineno-20-22" name="__codelineno-20-22" href="#__codelineno-20-22"></a><span class="w">      </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="n">instruction</span><span class="o">&amp;.</span><span class="n">strip</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;You are a helpful </span><span class="si">#{</span><span class="n">role</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="__span-20-23"><a id="__codelineno-20-23" name="__codelineno-20-23" href="#__codelineno-20-23"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-20-24"><a id="__codelineno-20-24" name="__codelineno-20-24" href="#__codelineno-20-24"></a>
+</span><span id="__span-20-25"><a id="__codelineno-20-25" name="__codelineno-20-25" href="#__codelineno-20-25"></a><span class="w">    </span><span class="c1"># Have the specialist answer and reply</span>
+</span><span id="__span-20-26"><a id="__codelineno-20-26" name="__codelineno-20-26" href="#__codelineno-20-26"></a><span class="w">    </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">specialist</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">question</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span><span class="o">.</span><span class="n">strip</span>
+</span><span id="__span-20-27"><a id="__codelineno-20-27" name="__codelineno-20-27" href="#__codelineno-20-27"></a><span class="w">    </span><span class="n">specialist</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:dispatcher</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">answer</span><span class="p">)</span>
+</span><span id="__span-20-28"><a id="__codelineno-20-28" name="__codelineno-20-28" href="#__codelineno-20-28"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-20-29"><a id="__codelineno-20-29" name="__codelineno-20-29" href="#__codelineno-20-29"></a><span class="k">end</span>
+</span></code></pre></div>
+<p>Key features of <code>spawn</code>:</p>
+<ul>
+<li>Creates a child robot on the same bus as the parent</li>
+<li>Creates a bus lazily if the parent doesn't have one</li>
+<li>Spawned robots can immediately send and receive messages</li>
+<li>Multiple robots with the same name enable fan-out messaging</li>
+</ul>
+<p>Robots can also join a bus after creation:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">bot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;latecomer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello.&quot;</span><span class="p">)</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">bot</span><span class="o">.</span><span class="n">with_bus</span><span class="p">(</span><span class="n">existing_bus</span><span class="p">)</span><span class="w">  </span><span class="c1"># now connected and can send/receive messages</span>
+</span></code></pre></div>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>RobotLab uses <code>MywayConfig</code> for configuration. Access the config object directly -- there is no <code>RobotLab.configure</code> block:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">           </span><span class="c1"># =&gt; &quot;claude-sonnet-4&quot;</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">request_timeout</span><span class="w">  </span><span class="c1"># =&gt; 120</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">           </span><span class="c1"># =&gt; &quot;claude-sonnet-4&quot;</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">request_timeout</span><span class="w">  </span><span class="c1"># =&gt; 120</span>
 </span></code></pre></div>
 <p>Configuration is loaded from:</p>
 <ul>
@@ -3739,38 +3865,40 @@
 </ul>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-clear-focused-prompts">1. Clear, Focused Prompts<a class="headerlink" href="#1-clear-focused-prompts" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Good: Specific and focused</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="sh">    You are a code reviewer. Review code for:</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="sh">    - Security vulnerabilities</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="sh">    - Performance issues</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="sh">    - Best practice violations</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="sh">    Provide specific line numbers and suggestions.</span>
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="dl">  PROMPT</span>
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="p">)</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="c1"># Bad: Vague and unfocused</span>
-</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-20-16"><a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
-</span><span id="__span-20-17"><a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You help with code stuff.&quot;</span>
-</span><span id="__span-20-18"><a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># Good: Specific and focused</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="sh">    You are a code reviewer. Review code for:</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="sh">    - Security vulnerabilities</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="sh">    - Performance issues</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="sh">    - Best practice violations</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="sh">    Provide specific line numbers and suggestions.</span>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="dl">  PROMPT</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="p">)</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="c1"># Bad: Vague and unfocused</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You help with code stuff.&quot;</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="2-use-templates-for-reusable-prompts">2. Use Templates for Reusable Prompts<a class="headerlink" href="#2-use-templates-for-reusable-prompts" title="Permanent link">&para;</a></h3>
 <p>Templates keep prompts in version-controlled files and allow parameterization:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">company</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TechCo&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;English&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">company</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TechCo&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;English&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="3-handle-tool-errors-gracefully">3. Handle Tool Errors Gracefully<a class="headerlink" href="#3-handle-tool-errors-gracefully" title="Permanent link">&para;</a></h3>
 <p>See <a href="../using-tools/#error-handling">Using Tools: Error Handling</a> for patterns.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../creating-networks/">Creating Networks</a> - Orchestrate multiple robots</li>
+<li><a href="../../architecture/core-concepts/#message-bus">Message Bus</a> - Bidirectional robot communication</li>
+<li><a href="../../architecture/core-concepts/#dynamic-spawning">Dynamic Spawning</a> - Robots creating robots at runtime</li>
 <li><a href="../using-tools/">Using Tools</a> - Advanced tool patterns</li>
 <li><a href="../memory/">Memory Guide</a> - Share data between runs and robots</li>
 <li><a href="../../api/core/robot/">API Reference: Robot</a> - Complete API documentation</li>

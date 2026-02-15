@@ -2805,10 +2805,20 @@
         +scoped(namespace)
     }
 
+    class RobotMessage {
+        +id: Integer
+        +from: String
+        +content: String
+        +in_reply_to: String
+        +key()
+        +reply?()
+    }
+
     Network --&gt; Robot : contains
     Robot --&gt; Tool : has
     State --&gt; Memory : has
-    Network --&gt; State : uses</code></pre>
+    Network --&gt; State : uses
+    Robot ..&gt; RobotMessage : sends/receives</code></pre>
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2837,6 +2847,10 @@
 <tr>
 <td><a href="memory/">Memory</a></td>
 <td>Namespaced key-value store for sharing data</td>
+</tr>
+<tr>
+<td>RobotMessage</td>
+<td>Typed envelope for bus-based inter-robot communication</td>
 </tr>
 </tbody>
 </table>
