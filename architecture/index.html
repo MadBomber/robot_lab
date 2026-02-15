@@ -2659,6 +2659,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#data-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2682,10 +2693,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#builder-pattern" class="md-nav__link">
+  <a href="#factory-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Builder Pattern
+        Factory Methods
       
     </span>
   </a>
@@ -2693,10 +2704,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#strategy-pattern" class="md-nav__link">
+  <a href="#fluent-chaining" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Strategy Pattern
+        Fluent Chaining
       
     </span>
   </a>
@@ -2704,10 +2715,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#adapter-pattern" class="md-nav__link">
+  <a href="#hierarchical-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Adapter Pattern
+        Hierarchical Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simpleflow-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SimpleFlow Pipeline
       
     </span>
   </a>
@@ -2775,26 +2797,28 @@
 <h3 id="1-separation-of-concerns">1. Separation of Concerns<a class="headerlink" href="#1-separation-of-concerns" title="Permanent link">&para;</a></h3>
 <p>Each component has a single, well-defined responsibility:</p>
 <ul>
-<li><strong>Robot</strong>: Encapsulates LLM interaction logic and personality</li>
-<li><strong>Network</strong>: Orchestrates robot execution and routing</li>
-<li><strong>State</strong>: Manages conversation and workflow data</li>
-<li><strong>Tool</strong>: Provides external capabilities to robots</li>
+<li><strong>Robot</strong>: LLM-powered agent (subclass of <code>RubyLLM::Agent</code>) with personality, tools, and memory</li>
+<li><strong>Network</strong>: Orchestrates robot execution as a DAG pipeline via SimpleFlow</li>
+<li><strong>Memory</strong>: Reactive key-value store for robot and network data</li>
+<li><strong>Tool</strong>: Provides external capabilities to robots (inherits from <code>RubyLLM::Tool</code>)</li>
+<li><strong>Task</strong>: Wraps a robot for pipeline execution with per-task configuration</li>
 </ul>
 <h3 id="2-composability">2. Composability<a class="headerlink" href="#2-composability" title="Permanent link">&para;</a></h3>
 <p>Components are designed to be mixed and matched:</p>
 <ul>
-<li>Robots can be reused across multiple networks</li>
-<li>Tools can be shared or robot-specific</li>
-<li>Networks can be nested or chained</li>
-<li>State can be persisted and restored</li>
+<li>Robots can be used standalone or within networks</li>
+<li>Tools can be shared across robots or scoped per-robot via <code>local_tools:</code></li>
+<li>Networks define DAG pipelines with sequential, parallel, and optional execution</li>
+<li>Memory can be standalone (per-robot) or shared (per-network)</li>
+<li><code>with_*</code> methods return <code>self</code> for fluent chaining</li>
 </ul>
 <h3 id="3-provider-agnostic">3. Provider Agnostic<a class="headerlink" href="#3-provider-agnostic" title="Permanent link">&para;</a></h3>
-<p>RobotLab abstracts away LLM provider differences:</p>
+<p>RobotLab abstracts away LLM provider differences through RubyLLM:</p>
 <ul>
-<li>Unified message format across providers</li>
+<li>Unified interface across Anthropic, OpenAI, Gemini, DeepSeek, Mistral, and others</li>
 <li>Consistent tool calling interface</li>
 <li>Automatic provider detection from model names</li>
-<li>Easy switching between providers</li>
+<li>Easy switching between providers via configuration</li>
 </ul>
 <h2 id="system-architecture">System Architecture<a class="headerlink" href="#system-architecture" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TB
@@ -2804,37 +2828,52 @@
 
     subgraph "RobotLab Core"
         B[Network]
-        C[Router]
-        D[Robot]
-        E[State]
-        F[Memory]
+        C[Task]
+        D[Robot &lt; RubyLLM::Agent]
+        E[Memory]
+        F[RobotResult]
+    end
+
+    subgraph "Configuration"
+        G[Config &lt; MywayConfig::Base]
     end
 
     subgraph "Integration Layer"
-        G[Adapters]
         H[MCP Client]
-        I[Tools]
+        I[Tools &lt; RubyLLM::Tool]
+        J[Templates / prompt_manager]
+    end
+
+    subgraph "Execution Layer"
+        K[SimpleFlow::Pipeline]
+        L[RubyLLM Chat]
     end
 
     subgraph "Provider Layer"
-        J[Anthropic]
-        K[OpenAI]
-        L[Gemini]
-        M[MCP Servers]
+        M[Anthropic]
+        N[OpenAI]
+        O[Gemini]
+        P[MCP Servers]
     end
 
     A --&gt; B
+    A --&gt; D
     B --&gt; C
-    B --&gt; D
+    C --&gt; D
+    B --&gt; K
     B --&gt; E
-    E --&gt; F
-    D --&gt; G
+    D --&gt; E
+    D --&gt; L
     D --&gt; H
     D --&gt; I
-    G --&gt; J
-    G --&gt; K
+    D --&gt; J
+    D --&gt; F
+    G --&gt; D
     G --&gt; L
-    H --&gt; M</code></pre>
+    L --&gt; M
+    L --&gt; N
+    L --&gt; O
+    H --&gt; P</code></pre>
 <h2 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2847,73 +2886,91 @@
 <tbody>
 <tr>
 <td><strong>Robot</strong></td>
-<td>LLM-powered agent with personality and tools</td>
+<td>LLM agent (subclass of <code>RubyLLM::Agent</code>) with template-based prompts, tools, and memory</td>
 <td><a href="core-concepts/">Core Concepts</a></td>
 </tr>
 <tr>
 <td><strong>Network</strong></td>
-<td>Orchestrates multiple robots</td>
-<td><a href="network-orchestration/">Network Orchestration</a></td>
-</tr>
-<tr>
-<td><strong>State</strong></td>
-<td>Conversation and workflow data</td>
-<td><a href="state-management/">State Management</a></td>
-</tr>
-<tr>
-<td><strong>Router</strong></td>
-<td>Determines robot execution order</td>
+<td>Orchestrates multiple robots as a SimpleFlow pipeline</td>
 <td><a href="network-orchestration/">Network Orchestration</a></td>
 </tr>
 <tr>
 <td><strong>Memory</strong></td>
-<td>Shared key-value store</td>
-<td><a href="state-management/">State Management</a></td>
+<td>Reactive key-value store with pub/sub and blocking reads</td>
+<td><a href="state-management/">Memory Management</a></td>
 </tr>
 <tr>
-<td><strong>Adapter</strong></td>
-<td>Provider-specific message conversion</td>
+<td><strong>Task</strong></td>
+<td>Wraps a robot for pipeline execution with per-task config</td>
+<td><a href="network-orchestration/">Network Orchestration</a></td>
+</tr>
+<tr>
+<td><strong>RobotResult</strong></td>
+<td>Captures LLM output, tool calls, and metadata from a run</td>
 <td><a href="message-flow/">Message Flow</a></td>
+</tr>
+<tr>
+<td><strong>Config</strong></td>
+<td>MywayConfig-based configuration with env var and file support</td>
+<td><a href="#configuration">Configuration</a></td>
 </tr>
 </tbody>
 </table>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>RobotLab uses MywayConfig (<code>Config &lt; MywayConfig::Base</code>) instead of a <code>configure</code> block. Configuration is loaded from multiple sources in priority order:</p>
+<ol>
+<li><strong>Bundled defaults</strong> (<code>lib/robot_lab/config/defaults.yml</code>)</li>
+<li><strong>Environment overrides</strong> (development, test, production sections)</li>
+<li><strong>XDG user config</strong> (<code>~/.config/robot_lab/config.yml</code>)</li>
+<li><strong>Project config</strong> (<code>./config/robot_lab.yml</code>)</li>
+<li><strong>Environment variables</strong> (<code>ROBOT_LAB_*</code> prefix, double underscore for nesting)</li>
+</ol>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Access configuration</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">            </span><span class="c1">#=&gt; &quot;claude-sonnet-4&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">request_timeout</span><span class="w">  </span><span class="c1">#=&gt; 120</span>
+</span></code></pre></div>
 <h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>Input</strong>: User message enters via State</li>
-<li><strong>Routing</strong>: Router selects robot(s) to execute</li>
-<li><strong>Execution</strong>: Robot processes message with LLM</li>
-<li><strong>Tools</strong>: Robot may call tools during execution</li>
-<li><strong>Result</strong>: Robot returns RobotResult</li>
-<li><strong>Iteration</strong>: Router checks for next robot</li>
-<li><strong>Output</strong>: Final results returned to application</li>
+<li><strong>Input</strong>: User calls <code>robot.run("message")</code> or <code>network.run(message: "...")</code></li>
+<li><strong>Memory</strong>: Robot resolves active memory (standalone or network-shared)</li>
+<li><strong>MCP</strong>: Robot resolves and initializes MCP clients from hierarchical config</li>
+<li><strong>Tools</strong>: Robot resolves and filters tools from hierarchical config</li>
+<li><strong>Execution</strong>: Robot delegates to <code>Agent#ask</code> which calls <code>@chat.ask</code> on RubyLLM</li>
+<li><strong>Tool Loop</strong>: LLM may invoke tools; RubyLLM handles the tool call/result loop</li>
+<li><strong>Result</strong>: Robot builds and returns a <code>RobotResult</code></li>
+<li><strong>Network</strong>: If in a network, result flows to dependent tasks via SimpleFlow</li>
 </ol>
 <h2 id="key-patterns">Key Patterns<a class="headerlink" href="#key-patterns" title="Permanent link">&para;</a></h2>
-<h3 id="builder-pattern">Builder Pattern<a class="headerlink" href="#builder-pattern" title="Permanent link">&para;</a></h3>
-<p>Robots and networks are constructed using a fluent DSL:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nb">name</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="n">model</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="n">template</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">end</span>
+<h3 id="factory-methods">Factory Methods<a class="headerlink" href="#factory-methods" title="Permanent link">&para;</a></h3>
+<p>Robots and networks are created via factory methods on the <code>RobotLab</code> module:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:assistant</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">tone</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;friendly&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyst</span><span class="p">,</span><span class="w"> </span><span class="n">analyst_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyst</span><span class="o">]</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">end</span>
 </span></code></pre></div>
-<h3 id="strategy-pattern">Strategy Pattern<a class="headerlink" href="#strategy-pattern" title="Permanent link">&para;</a></h3>
-<p>Routers implement custom selection logic:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">router</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="c1"># Custom routing strategy</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="n">args</span><span class="o">.</span><span class="n">call_count</span><span class="o">.</span><span class="n">zero?</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="ss">:first_robot</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+<h3 id="fluent-chaining">Fluent Chaining<a class="headerlink" href="#fluent-chaining" title="Permanent link">&para;</a></h3>
+<p><code>with_*</code> methods on Robot delegate to the underlying <code>@chat</code> and return <code>self</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="o">.</span><span class="n">with_instructions</span><span class="p">(</span><span class="s2">&quot;Be concise.&quot;</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="o">.</span><span class="n">with_model</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="adapter-pattern">Adapter Pattern<a class="headerlink" href="#adapter-pattern" title="Permanent link">&para;</a></h3>
-<p>Provider adapters normalize LLM interfaces:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">adapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Adapters</span><span class="o">::</span><span class="no">Registry</span><span class="o">.</span><span class="n">for</span><span class="p">(</span><span class="ss">:anthropic</span><span class="p">)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">adapter</span><span class="o">.</span><span class="n">format_messages</span><span class="p">(</span><span class="n">robot_lab_messages</span><span class="p">)</span>
-</span></code></pre></div>
+<h3 id="hierarchical-configuration">Hierarchical Configuration<a class="headerlink" href="#hierarchical-configuration" title="Permanent link">&para;</a></h3>
+<p>Tools and MCP servers use hierarchical resolution: <code>runtime &gt; robot build &gt; network &gt; global config</code>. Values can be <code>:none</code>, <code>:inherit</code>, or explicit arrays.</p>
+<h3 id="simpleflow-pipeline">SimpleFlow Pipeline<a class="headerlink" href="#simpleflow-pipeline" title="Permanent link">&para;</a></h3>
+<p>Networks are thin wrappers around <code>SimpleFlow::Pipeline</code>. Each robot is wrapped in a <code>Task</code> that implements the <code>call(result)</code> interface. Tasks define dependencies (<code>:none</code>, <code>[:task_names]</code>, or <code>:optional</code>) to control execution order.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="core-concepts/">Core Concepts</a> - Deep dive into robots and tools</li>
 <li><a href="robot-execution/">Robot Execution</a> - How robots process messages</li>
 <li><a href="network-orchestration/">Network Orchestration</a> - Multi-robot workflows</li>
-<li><a href="state-management/">State Management</a> - Managing conversation state</li>
+<li><a href="state-management/">Memory Management</a> - Managing memory and reactive features</li>
 <li><a href="message-flow/">Message Flow</a> - How messages move through the system</li>
 </ul>
 

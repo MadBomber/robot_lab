@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#streaming-events" class="md-skip">
+        <a href="#streamingevents" class="md-skip">
           Skip to content
         </a>
       
@@ -2201,10 +2201,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-robotlabstreamingevent" class="md-nav__link">
+  <a href="#module-robotlabstreamingevents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class: RobotLab::Streaming::Event
+        Module: RobotLab::Streaming::Events
       
     </span>
   </a>
@@ -2212,22 +2212,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#event-types" class="md-nav__link">
+  <a href="#event-type-constants" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event Types
+        Event Type Constants
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Event Types">
+    <nav class="md-nav" aria-label="Event Type Constants">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#start" class="md-nav__link">
+  <a href="#run-lifecycle-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :start
+        Run Lifecycle Events
       
     </span>
   </a>
@@ -2235,10 +2235,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#text_delta" class="md-nav__link">
+  <a href="#step-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :text_delta
+        Step Events
       
     </span>
   </a>
@@ -2246,10 +2246,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool_call" class="md-nav__link">
+  <a href="#part-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :tool_call
+        Part Events
       
     </span>
   </a>
@@ -2257,10 +2257,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool_result" class="md-nav__link">
+  <a href="#content-delta-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :tool_result
+        Content Delta Events
       
     </span>
   </a>
@@ -2268,10 +2268,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robot_start" class="md-nav__link">
+  <a href="#human-in-the-loop-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :robot_start
+        Human-in-the-Loop Events
       
     </span>
   </a>
@@ -2279,10 +2279,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robot_complete" class="md-nav__link">
+  <a href="#metadata-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :robot_complete
+        Metadata Events
       
     </span>
   </a>
@@ -2290,10 +2290,38 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#complete" class="md-nav__link">
+  <a href="#terminal-event" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :complete
+        Terminal Event
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Collections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event Collections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all_events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL_EVENTS
       
     </span>
   </a>
@@ -2301,10 +2329,71 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#error" class="md-nav__link">
+  <a href="#lifecycle_events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :error
+        LIFECYCLE_EVENTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delta_events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELTA_EVENTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classification-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classification Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eventslifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.lifecycle?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventsdelta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.delta?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventsvalid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.valid?
       
     </span>
   </a>
@@ -2329,10 +2418,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#complete-handler" class="md-nav__link">
+  <a href="#filtering-events-by-category" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Complete Handler
+        Filtering Events by Category
       
     </span>
   </a>
@@ -2340,10 +2429,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#network-handler" class="md-nav__link">
+  <a href="#using-constants-for-event-matching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Network Handler
+        Using Constants for Event Matching
       
     </span>
   </a>
@@ -2351,21 +2440,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#filtering-events" class="md-nav__link">
+  <a href="#validating-custom-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filtering Events
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#async-processing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Async Processing
+        Validating Custom Events
       
     </span>
   </a>
@@ -2826,10 +2904,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-robotlabstreamingevent" class="md-nav__link">
+  <a href="#module-robotlabstreamingevents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class: RobotLab::Streaming::Event
+        Module: RobotLab::Streaming::Events
       
     </span>
   </a>
@@ -2837,22 +2915,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#event-types" class="md-nav__link">
+  <a href="#event-type-constants" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Event Types
+        Event Type Constants
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Event Types">
+    <nav class="md-nav" aria-label="Event Type Constants">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#start" class="md-nav__link">
+  <a href="#run-lifecycle-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :start
+        Run Lifecycle Events
       
     </span>
   </a>
@@ -2860,10 +2938,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#text_delta" class="md-nav__link">
+  <a href="#step-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :text_delta
+        Step Events
       
     </span>
   </a>
@@ -2871,10 +2949,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool_call" class="md-nav__link">
+  <a href="#part-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :tool_call
+        Part Events
       
     </span>
   </a>
@@ -2882,10 +2960,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool_result" class="md-nav__link">
+  <a href="#content-delta-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :tool_result
+        Content Delta Events
       
     </span>
   </a>
@@ -2893,10 +2971,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robot_start" class="md-nav__link">
+  <a href="#human-in-the-loop-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :robot_start
+        Human-in-the-Loop Events
       
     </span>
   </a>
@@ -2904,10 +2982,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robot_complete" class="md-nav__link">
+  <a href="#metadata-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :robot_complete
+        Metadata Events
       
     </span>
   </a>
@@ -2915,10 +2993,38 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#complete" class="md-nav__link">
+  <a href="#terminal-event" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :complete
+        Terminal Event
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Collections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event Collections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all_events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL_EVENTS
       
     </span>
   </a>
@@ -2926,10 +3032,71 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#error" class="md-nav__link">
+  <a href="#lifecycle_events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        :error
+        LIFECYCLE_EVENTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delta_events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELTA_EVENTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classification-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classification Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eventslifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.lifecycle?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventsdelta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.delta?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventsvalid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events.valid?
       
     </span>
   </a>
@@ -2954,10 +3121,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#complete-handler" class="md-nav__link">
+  <a href="#filtering-events-by-category" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Complete Handler
+        Filtering Events by Category
       
     </span>
   </a>
@@ -2965,10 +3132,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#network-handler" class="md-nav__link">
+  <a href="#using-constants-for-event-matching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Network Handler
+        Using Constants for Event Matching
       
     </span>
   </a>
@@ -2976,21 +3143,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#filtering-events" class="md-nav__link">
+  <a href="#validating-custom-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filtering Events
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#async-processing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Async Processing
+        Validating Custom Events
       
     </span>
   </a>
@@ -3095,305 +3251,277 @@
   
 
 
-<h1 id="streaming-events">Streaming Events<a class="headerlink" href="#streaming-events" title="Permanent link">&para;</a></h1>
-<p>Event types for real-time response handling.</p>
-<h2 id="class-robotlabstreamingevent">Class: <code>RobotLab::Streaming::Event</code><a class="headerlink" href="#class-robotlabstreamingevent" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="w">        </span><span class="c1"># =&gt; Symbol</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="w">        </span><span class="c1"># =&gt; String (for text events)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">event</span><span class="o">.</span><span class="n">robot_name</span><span class="w">  </span><span class="c1"># =&gt; String (for robot events)</span>
+<h1 id="streamingevents">Streaming::Events<a class="headerlink" href="#streamingevents" title="Permanent link">&para;</a></h1>
+<p>Event type constants and classification helpers for the streaming system.</p>
+<h2 id="module-robotlabstreamingevents">Module: <code>RobotLab::Streaming::Events</code><a class="headerlink" href="#module-robotlabstreamingevents" title="Permanent link">&para;</a></h2>
+<p>Defines all recognized event types as string constants and provides helper methods for classifying events.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">::</span><span class="no">TEXT_DELTA</span><span class="w">       </span><span class="c1"># =&gt; &quot;text.delta&quot;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">::</span><span class="no">RUN_COMPLETED</span><span class="w">    </span><span class="c1"># =&gt; &quot;run.completed&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">delta?</span><span class="p">(</span><span class="s2">&quot;text.delta&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; true</span>
 </span></code></pre></div>
-<h2 id="event-types">Event Types<a class="headerlink" href="#event-types" title="Permanent link">&para;</a></h2>
-<h3 id="start">:start<a class="headerlink" href="#start" title="Permanent link">&para;</a></h3>
-<p>Streaming has begun.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:start</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Starting...&quot;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h2 id="event-type-constants">Event Type Constants<a class="headerlink" href="#event-type-constants" title="Permanent link">&para;</a></h2>
+<h3 id="run-lifecycle-events">Run Lifecycle Events<a class="headerlink" href="#run-lifecycle-events" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>robot_name</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td>Robot name</td>
+<td><code>RUN_STARTED</code></td>
+<td><code>"run.started"</code></td>
+<td>A run has begun</td>
+</tr>
+<tr>
+<td><code>RUN_COMPLETED</code></td>
+<td><code>"run.completed"</code></td>
+<td>A run completed successfully</td>
+</tr>
+<tr>
+<td><code>RUN_FAILED</code></td>
+<td><code>"run.failed"</code></td>
+<td>A run failed with an error</td>
+</tr>
+<tr>
+<td><code>RUN_INTERRUPTED</code></td>
+<td><code>"run.interrupted"</code></td>
+<td>A run was interrupted</td>
 </tr>
 </tbody>
 </table>
-<h3 id="text_delta">:text_delta<a class="headerlink" href="#text_delta" title="Permanent link">&para;</a></h3>
-<p>A chunk of text was received.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:text_delta</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">text</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="step-events">Step Events<a class="headerlink" href="#step-events" title="Permanent link">&para;</a></h3>
+<p>For durable execution tracking:</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>text</code></td>
-<td><code>String</code></td>
-<td>Text content</td>
+<td><code>STEP_STARTED</code></td>
+<td><code>"step.started"</code></td>
+<td>A processing step has begun</td>
 </tr>
 <tr>
-<td><code>robot_name</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td>Source robot</td>
+<td><code>STEP_COMPLETED</code></td>
+<td><code>"step.completed"</code></td>
+<td>A processing step completed</td>
+</tr>
+<tr>
+<td><code>STEP_FAILED</code></td>
+<td><code>"step.failed"</code></td>
+<td>A processing step failed</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tool_call">:tool_call<a class="headerlink" href="#tool_call" title="Permanent link">&para;</a></h3>
-<p>A tool is being invoked.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:tool_call</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Calling </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">input</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="part-events">Part Events<a class="headerlink" href="#part-events" title="Permanent link">&para;</a></h3>
+<p>For message composition tracking:</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>id</code></td>
-<td><code>String</code></td>
-<td>Tool call ID</td>
+<td><code>PART_CREATED</code></td>
+<td><code>"part.created"</code></td>
+<td>A message part was created</td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>String</code></td>
-<td>Tool name</td>
+<td><code>PART_COMPLETED</code></td>
+<td><code>"part.completed"</code></td>
+<td>A message part completed</td>
 </tr>
 <tr>
-<td><code>input</code></td>
-<td><code>Hash</code></td>
-<td>Tool parameters</td>
-</tr>
-<tr>
-<td><code>robot_name</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td>Source robot</td>
+<td><code>PART_FAILED</code></td>
+<td><code>"part.failed"</code></td>
+<td>A message part failed</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tool_result">:tool_result<a class="headerlink" href="#tool_result" title="Permanent link">&para;</a></h3>
-<p>A tool has returned a result.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:tool_result</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> returned: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="content-delta-events">Content Delta Events<a class="headerlink" href="#content-delta-events" title="Permanent link">&para;</a></h3>
+<p>Token-level streaming events:</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>id</code></td>
-<td><code>String</code></td>
-<td>Tool call ID</td>
+<td><code>TEXT_DELTA</code></td>
+<td><code>"text.delta"</code></td>
+<td>A chunk of text content was generated</td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>String</code></td>
-<td>Tool name</td>
+<td><code>TOOL_CALL_ARGUMENTS_DELTA</code></td>
+<td><code>"tool_call.arguments.delta"</code></td>
+<td>A chunk of tool call arguments</td>
 </tr>
 <tr>
-<td><code>result</code></td>
-<td><code>Object</code></td>
-<td>Tool result</td>
+<td><code>TOOL_CALL_OUTPUT_DELTA</code></td>
+<td><code>"tool_call.output.delta"</code></td>
+<td>A chunk of tool call output</td>
 </tr>
 <tr>
-<td><code>robot_name</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td>Source robot</td>
+<td><code>REASONING_DELTA</code></td>
+<td><code>"reasoning.delta"</code></td>
+<td>A chunk of reasoning/thinking content</td>
+</tr>
+<tr>
+<td><code>DATA_DELTA</code></td>
+<td><code>"data.delta"</code></td>
+<td>A chunk of structured data</td>
 </tr>
 </tbody>
 </table>
-<h3 id="robot_start">:robot_start<a class="headerlink" href="#robot_start" title="Permanent link">&para;</a></h3>
-<p>A robot has started executing (network only).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:robot_start</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Robot </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2"> starting&quot;</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="human-in-the-loop-events">Human-in-the-Loop Events<a class="headerlink" href="#human-in-the-loop-events" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>robot_name</code></td>
-<td><code>String</code></td>
-<td>Robot name</td>
+<td><code>HITL_REQUESTED</code></td>
+<td><code>"hitl.requested"</code></td>
+<td>Human input has been requested</td>
+</tr>
+<tr>
+<td><code>HITL_RESOLVED</code></td>
+<td><code>"hitl.resolved"</code></td>
+<td>Human input has been provided</td>
 </tr>
 </tbody>
 </table>
-<h3 id="robot_complete">:robot_complete<a class="headerlink" href="#robot_complete" title="Permanent link">&para;</a></h3>
-<p>A robot has finished executing (network only).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:robot_complete</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Robot </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2"> finished&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="metadata-events">Metadata Events<a class="headerlink" href="#metadata-events" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>robot_name</code></td>
-<td><code>String</code></td>
-<td>Robot name</td>
+<td><code>USAGE_UPDATED</code></td>
+<td><code>"usage.updated"</code></td>
+<td>Token usage statistics updated</td>
 </tr>
 <tr>
-<td><code>result</code></td>
-<td><code>RobotResult</code></td>
-<td>Execution result</td>
+<td><code>METADATA_UPDATED</code></td>
+<td><code>"metadata.updated"</code></td>
+<td>Run metadata updated</td>
 </tr>
 </tbody>
 </table>
-<h3 id="complete">:complete<a class="headerlink" href="#complete" title="Permanent link">&para;</a></h3>
-<p>All streaming has finished.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:complete</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;All done!&quot;</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<h3 id="error">:error<a class="headerlink" href="#error" title="Permanent link">&para;</a></h3>
-<p>An error occurred.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">when</span><span class="w"> </span><span class="ss">:error</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Error: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><strong>Attributes:</strong></p>
+<h3 id="terminal-event">Terminal Event<a class="headerlink" href="#terminal-event" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Constant</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>error</code></td>
-<td><code>Exception</code></td>
-<td>The error</td>
-</tr>
-<tr>
-<td><code>robot_name</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td>Source robot</td>
+<td><code>STREAM_ENDED</code></td>
+<td><code>"stream.ended"</code></td>
+<td>The stream has ended; no more events</td>
 </tr>
 </tbody>
 </table>
+<h2 id="event-collections">Event Collections<a class="headerlink" href="#event-collections" title="Permanent link">&para;</a></h2>
+<h3 id="all_events">ALL_EVENTS<a class="headerlink" href="#all_events" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">::</span><span class="no">ALL_EVENTS</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># =&gt; Array of all event type strings (frozen)</span>
+</span></code></pre></div>
+<h3 id="lifecycle_events">LIFECYCLE_EVENTS<a class="headerlink" href="#lifecycle_events" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">::</span><span class="no">LIFECYCLE_EVENTS</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># =&gt; [&quot;run.started&quot;, &quot;run.completed&quot;, &quot;run.failed&quot;, &quot;run.interrupted&quot;]</span>
+</span></code></pre></div>
+<h3 id="delta_events">DELTA_EVENTS<a class="headerlink" href="#delta_events" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">::</span><span class="no">DELTA_EVENTS</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># =&gt; [&quot;text.delta&quot;, &quot;tool_call.arguments.delta&quot;, &quot;tool_call.output.delta&quot;,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1">#     &quot;reasoning.delta&quot;, &quot;data.delta&quot;]</span>
+</span></code></pre></div>
+<h2 id="classification-methods">Classification Methods<a class="headerlink" href="#classification-methods" title="Permanent link">&para;</a></h2>
+<h3 id="eventslifecycle">Events.lifecycle?<a class="headerlink" href="#eventslifecycle" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">lifecycle?</span><span class="p">(</span><span class="s2">&quot;run.started&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">lifecycle?</span><span class="p">(</span><span class="s2">&quot;text.delta&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1"># =&gt; false</span>
+</span></code></pre></div>
+<p>Returns <code>true</code> if the event is a run lifecycle event.</p>
+<h3 id="eventsdelta">Events.delta?<a class="headerlink" href="#eventsdelta" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">delta?</span><span class="p">(</span><span class="s2">&quot;text.delta&quot;</span><span class="p">)</span><span class="w">         </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">delta?</span><span class="p">(</span><span class="s2">&quot;run.completed&quot;</span><span class="p">)</span><span class="w">      </span><span class="c1"># =&gt; false</span>
+</span></code></pre></div>
+<p>Returns <code>true</code> if the event is a content delta (token streaming) event.</p>
+<h3 id="eventsvalid">Events.valid?<a class="headerlink" href="#eventsvalid" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">valid?</span><span class="p">(</span><span class="s2">&quot;text.delta&quot;</span><span class="p">)</span><span class="w">         </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">valid?</span><span class="p">(</span><span class="s2">&quot;unknown.event&quot;</span><span class="p">)</span><span class="w">      </span><span class="c1"># =&gt; false</span>
+</span></code></pre></div>
+<p>Returns <code>true</code> if the event is a recognized event type.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="complete-handler">Complete Handler<a class="headerlink" href="#complete-handler" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:start</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;=== Starting ===&quot;</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:text_delta</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">text</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:tool_call</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Tool: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:tool_result</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;[Result: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:complete</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Complete ===&quot;</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:error</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">!!! Error: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="k">end</span>
+<h3 id="filtering-events-by-category">Filtering Events by Category<a class="headerlink" href="#filtering-events-by-category" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">publish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="n">event_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">event</span><span class="o">[</span><span class="ss">:event</span><span class="o">]</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">delta?</span><span class="p">(</span><span class="n">event_type</span><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="c1"># Handle streaming content</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">[</span><span class="ss">:data</span><span class="o">][</span><span class="ss">:delta</span><span class="o">]</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="k">elsif</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">lifecycle?</span><span class="p">(</span><span class="n">event_type</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="c1"># Handle lifecycle transitions</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">#{</span><span class="n">event_type</span><span class="si">}</span><span class="s2">] run_id=</span><span class="si">#{</span><span class="n">event</span><span class="o">[</span><span class="ss">:data</span><span class="o">][</span><span class="ss">:run_id</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="network-handler">Network Handler<a class="headerlink" href="#network-handler" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">robot_name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;system&quot;</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:robot_start</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;[</span><span class="si">#{</span><span class="n">robot</span><span class="si">}</span><span class="s2">] Starting...&quot;</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:text_delta</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">text</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:tool_call</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">#{</span><span class="n">robot</span><span class="si">}</span><span class="s2">] Calling </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:robot_complete</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">#{</span><span class="n">robot</span><span class="si">}</span><span class="s2">] Complete&quot;</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:error</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">#{</span><span class="n">robot</span><span class="si">}</span><span class="s2">] Error: </span><span class="si">#{</span><span class="n">event</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="k">end</span>
+<h3 id="using-constants-for-event-matching">Using Constants for Event Matching<a class="headerlink" href="#using-constants-for-event-matching" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kp">include</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">publish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">event</span><span class="o">[</span><span class="ss">:event</span><span class="o">]</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="no">TEXT_DELTA</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">[</span><span class="ss">:data</span><span class="o">][</span><span class="ss">:delta</span><span class="o">]</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="no">TOOL_CALL_ARGUMENTS_DELTA</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="n">buffer_tool_args</span><span class="p">(</span><span class="n">event</span><span class="o">[</span><span class="ss">:data</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="no">RUN_COMPLETED</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run complete&quot;</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="no">RUN_FAILED</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run failed: </span><span class="si">#{</span><span class="n">event</span><span class="o">[</span><span class="ss">:data</span><span class="o">][</span><span class="ss">:error</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="no">STREAM_ENDED</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">    </span><span class="n">cleanup</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="filtering-events">Filtering Events<a class="headerlink" href="#filtering-events" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Only text</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:text_delta</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">end</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Only tools</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:tool_call</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="n">log_tool_usage</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="k">end</span>
-</span></code></pre></div>
-<h3 id="async-processing">Async Processing<a class="headerlink" href="#async-processing" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Queue</span><span class="o">.</span><span class="n">new</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="no">Thread</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="kp">loop</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">queue</span><span class="o">.</span><span class="n">pop</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="k">break</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:done</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="n">process_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="k">end</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">  </span><span class="n">queue</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">event</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">  </span><span class="n">queue</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="ss">:done</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:complete</span>
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="k">end</span>
+<h3 id="validating-custom-events">Validating Custom Events<a class="headerlink" href="#validating-custom-events" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">event_type</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="k">unless</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Streaming</span><span class="o">::</span><span class="no">Events</span><span class="o">.</span><span class="n">valid?</span><span class="p">(</span><span class="n">event_type</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="k">raise</span><span class="w"> </span><span class="no">ArgumentError</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Unknown event type: </span><span class="si">#{</span><span class="n">event_type</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="n">context</span><span class="o">.</span><span class="n">publish_event</span><span class="p">(</span><span class="ss">event</span><span class="p">:</span><span class="w"> </span><span class="n">event_type</span><span class="p">,</span><span class="w"> </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../">Streaming Overview</a></li>
-<li><a href="../context/">StreamingContext</a></li>
-<li><a href="../../../guides/streaming/">Streaming Guide</a></li>
+<li><a href="../context/">Context</a></li>
 </ul>
 
 

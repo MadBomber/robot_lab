@@ -2988,7 +2988,7 @@
 <p>This guide covers installing RobotLab in your Ruby project.</p>
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Ruby</strong>: 3.1 or higher</li>
+<li><strong>Ruby</strong>: 3.2 or higher</li>
 <li><strong>Bundler</strong>: 2.0 or higher (recommended)</li>
 </ul>
 <h2 id="install-via-bundler">Install via Bundler<a class="headerlink" href="#install-via-bundler" title="Permanent link">&para;</a></h2>
@@ -3003,7 +3003,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>gem<span class="w"> </span>install<span class="w"> </span>robot_lab
 </span></code></pre></div>
 <h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>RobotLab automatically installs these dependencies:</p>
+<p>RobotLab automatically installs these core dependencies:</p>
 <table>
 <thead>
 <tr>
@@ -3013,16 +3013,40 @@
 </thead>
 <tbody>
 <tr>
-<td><code>ruby_llm</code></td>
-<td>LLM provider integrations</td>
+<td><code>ruby_llm</code> (~&gt; 1.12)</td>
+<td>LLM provider integrations (Anthropic, OpenAI, Gemini, etc.)</td>
 </tr>
 <tr>
-<td><code>ruby_llm-template</code></td>
-<td>Template rendering for prompts</td>
+<td><code>prompt_manager</code> (~&gt; 1.0)</td>
+<td>Template-based prompt management with YAML front matter</td>
 </tr>
 <tr>
-<td><code>simple_flow</code></td>
-<td>Workflow execution</td>
+<td><code>simple_flow</code> (~&gt; 0.3)</td>
+<td>Pipeline workflow execution for networks</td>
+</tr>
+<tr>
+<td><code>myway_config</code> (~&gt; 0.1)</td>
+<td>Layered configuration (defaults, env vars, config files)</td>
+</tr>
+<tr>
+<td><code>ruby_llm-mcp</code></td>
+<td>Model Context Protocol client for external tool servers</td>
+</tr>
+<tr>
+<td><code>ruby_llm-schema</code></td>
+<td>Schema validation for structured outputs</td>
+</tr>
+<tr>
+<td><code>ruby_llm-semantic_cache</code></td>
+<td>Semantic caching for LLM responses</td>
+</tr>
+<tr>
+<td><code>zeitwerk</code> (~&gt; 2.6)</td>
+<td>Autoloading and eager loading</td>
+</tr>
+<tr>
+<td><code>async</code> (~&gt; 2.0)</td>
+<td>Fiber-based concurrency</td>
 </tr>
 </tbody>
 </table>
@@ -3055,7 +3079,7 @@
 </span></code></pre></div>
 <p>Run it:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ruby<span class="w"> </span>test_robot_lab.rb
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># =&gt; RobotLab version: 0.0.1</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># =&gt; RobotLab version: 0.1.0</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># =&gt; Installation successful!</span>
 </span></code></pre></div>
 <h2 id="rails-installation">Rails Installation<a class="headerlink" href="#rails-installation" title="Permanent link">&para;</a></h2>
@@ -3075,19 +3099,19 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>rails<span class="w"> </span>db:migrate
 </span></code></pre></div>
 <h2 id="environment-setup">Environment Setup<a class="headerlink" href="#environment-setup" title="Permanent link">&para;</a></h2>
-<p>Before using RobotLab, set up your API keys as environment variables:</p>
+<p>RobotLab uses a layered configuration system (see <a href="../configuration/">Configuration</a> for full details). The simplest way to get started is with environment variables:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Anthropic (Recommended)</label><label for="__tabbed_2_2">OpenAI</label><label for="__tabbed_2_3">Google Gemini</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-ant-...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-ant-...&quot;</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-...&quot;</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">GEMINI_API_KEY</span><span class="o">=</span><span class="s2">&quot;...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY</span><span class="o">=</span><span class="s2">&quot;...&quot;</span>
 </span></code></pre></div>
 </div>
 </div>
@@ -3096,11 +3120,15 @@
 <p class="admonition-title">Using dotenv</p>
 <p>For development, consider using the <a href="https://github.com/bkeepers/dotenv">dotenv</a> gem to manage environment variables:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Gemfile</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;dotenv-rails&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">groups</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:development</span><span class="p">,</span><span class="w"> </span><span class="ss">:test</span><span class="o">]</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;dotenv&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">groups</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:development</span><span class="p">,</span><span class="w"> </span><span class="ss">:test</span><span class="o">]</span>
 </span></code></pre></div>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># .env</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
 </span></code></pre></div>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Direct provider env vars</p>
+<p>RubyLLM also reads provider-specific environment variables directly (e.g., <code>ANTHROPIC_API_KEY</code>). If you already have those set, they will be picked up automatically. The <code>ROBOT_LAB_RUBY_LLM__*</code> prefix gives you explicit control through RobotLab's config layer.</p>
 </div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="gem-installation-fails">Gem Installation Fails<a class="headerlink" href="#gem-installation-fails" title="Permanent link">&para;</a></h3>
@@ -3119,7 +3147,7 @@
 <h3 id="api-key-issues">API Key Issues<a class="headerlink" href="#api-key-issues" title="Permanent link">&para;</a></h3>
 <p>If you see authentication errors:</p>
 <ol>
-<li>Verify your API key is set: <code>echo $ANTHROPIC_API_KEY</code></li>
+<li>Verify your API key is set: <code>echo $ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</code></li>
 <li>Check the key is valid in your provider's console</li>
 <li>Ensure you're using the correct environment variable name</li>
 </ol>

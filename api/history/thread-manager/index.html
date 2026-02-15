@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#threadmanager" class="md-skip">
+        <a href="#historythreadmanager" class="md-skip">
           Skip to content
         </a>
       
@@ -2358,6 +2358,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2392,6 +2420,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#append_user_message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append_user_message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#append_results" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2403,10 +2442,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ensure_thread" class="md-nav__link">
+  <a href="#load_state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ensure_thread
+        load_state
       
     </span>
   </a>
@@ -2414,10 +2453,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#load_history" class="md-nav__link">
+  <a href="#save_state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_history
+        save_state
       
     </span>
   </a>
@@ -2453,10 +2492,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#in-network" class="md-nav__link">
+  <a href="#loading-history-into-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In Network
+        Loading History into Memory
       
     </span>
   </a>
@@ -2464,10 +2503,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#custom-thread-data" class="md-nav__link">
+  <a href="#saving-incremental-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Custom Thread Data
+        Saving Incremental Results
       
     </span>
   </a>
@@ -2815,6 +2854,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        config
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2849,6 +2916,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#append_user_message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        append_user_message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#append_results" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2860,10 +2938,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ensure_thread" class="md-nav__link">
+  <a href="#load_state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ensure_thread
+        load_state
       
     </span>
   </a>
@@ -2871,10 +2949,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#load_history" class="md-nav__link">
+  <a href="#save_state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        load_history
+        save_state
       
     </span>
   </a>
@@ -2910,10 +2988,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#in-network" class="md-nav__link">
+  <a href="#loading-history-into-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        In Network
+        Loading History into Memory
       
     </span>
   </a>
@@ -2921,10 +2999,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#custom-thread-data" class="md-nav__link">
+  <a href="#saving-incremental-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Custom Thread Data
+        Saving Incremental Results
       
     </span>
   </a>
@@ -3029,13 +3107,17 @@
   
 
 
-<h1 id="threadmanager">ThreadManager<a class="headerlink" href="#threadmanager" title="Permanent link">&para;</a></h1>
-<p>Manages conversation thread lifecycle.</p>
+<h1 id="historythreadmanager">History::ThreadManager<a class="headerlink" href="#historythreadmanager" title="Permanent link">&para;</a></h1>
+<p>Manages conversation thread lifecycle using a <code>History::Config</code> for persistence.</p>
 <h2 id="class-robotlabhistorythreadmanager">Class: <code>RobotLab::History::ThreadManager</code><a class="headerlink" href="#class-robotlabhistorythreadmanager" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">history_config</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">History</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">session_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">create_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">memory</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">config</span><span class="p">:)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -3050,93 +3132,219 @@
 <tr>
 <td><code>config</code></td>
 <td><code>Config</code></td>
-<td>History configuration</td>
+<td>History configuration with persistence callbacks</td>
 </tr>
 </tbody>
 </table>
+<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
+<h3 id="config">config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">manager</span><span class="o">.</span><span class="n">config</span><span class="w">  </span><span class="c1"># =&gt; RobotLab::History::Config</span>
+</span></code></pre></div>
+<p>The history configuration object.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="create_thread">create_thread<a class="headerlink" href="#create_thread" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">thread_info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">create_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">session_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">create_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:,</span><span class="w"> </span><span class="ss">input</span><span class="p">:)</span>
 </span></code></pre></div>
-<p>Create a new conversation thread.</p>
-<p><strong>Returns:</strong> Hash with <code>:id</code> and optional metadata.</p>
+<p>Create a new conversation thread. Delegates to <code>config.create_thread!</code> and returns the <code>session_id</code> from the result hash.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>state</code></td>
+<td><code>Object</code></td>
+<td>Current robot memory or state</td>
+</tr>
+<tr>
+<td><code>input</code></td>
+<td><code>String</code>, <code>UserMessage</code></td>
+<td>Initial user input</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong> <code>String</code> -- the session ID for the new thread.</p>
 <h3 id="get_history">get_history<a class="headerlink" href="#get_history" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span><span class="ss">thread_id</span><span class="p">:</span><span class="w"> </span><span class="nb">id</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Retrieve conversation history.</p>
-<p><strong>Returns:</strong> Array of <code>RobotResult</code>.</p>
+<p>Retrieve conversation history for a thread. Delegates to <code>config.get!</code>.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td><code>String</code></td>
+<td>Thread identifier</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong> <code>Array&lt;RobotResult&gt;</code> -- history of results for the thread.</p>
+<h3 id="append_user_message">append_user_message<a class="headerlink" href="#append_user_message" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">manager</span><span class="o">.</span><span class="n">append_user_message</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">message</span><span class="p">:)</span>
+</span></code></pre></div>
+<p>Append a user message to the thread. Delegates to <code>config.append_user_message!</code>.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td><code>String</code></td>
+<td>Thread identifier</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td><code>UserMessage</code></td>
+<td>User message to append</td>
+</tr>
+</tbody>
+</table>
 <h3 id="append_results">append_results<a class="headerlink" href="#append_results" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">manager</span><span class="o">.</span><span class="n">append_results</span><span class="p">(</span><span class="ss">thread_id</span><span class="p">:</span><span class="w"> </span><span class="nb">id</span><span class="p">,</span><span class="w"> </span><span class="ss">new_results</span><span class="p">:</span><span class="w"> </span><span class="n">results</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">manager</span><span class="o">.</span><span class="n">append_results</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">results</span><span class="p">:)</span>
 </span></code></pre></div>
-<p>Add results to a thread.</p>
-<h3 id="ensure_thread">ensure_thread<a class="headerlink" href="#ensure_thread" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">ensure_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+<p>Append robot results to the thread. Delegates to <code>config.append_results!</code>.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td><code>String</code></td>
+<td>Thread identifier</td>
+</tr>
+<tr>
+<td><code>results</code></td>
+<td><code>Array&lt;RobotResult&gt;</code></td>
+<td>Results to append</td>
+</tr>
+</tbody>
+</table>
+<h3 id="load_state">load_state<a class="headerlink" href="#load_state" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">load_state</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">state</span><span class="p">:)</span>
 </span></code></pre></div>
-<p>Create thread if state doesn't have one, or return existing.</p>
-<h3 id="load_history">load_history<a class="headerlink" href="#load_history" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">load_history</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+<p>Load history from a thread into a state/memory object. Retrieves the history, sets the <code>session_id</code> on the state, and calls <code>append_result</code> for each historical result.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td><code>String</code></td>
+<td>Thread identifier</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td><code>Object</code></td>
+<td>State or Memory object to populate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong> The state object with loaded history.</p>
+<h3 id="save_state">save_state<a class="headerlink" href="#save_state" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">manager</span><span class="o">.</span><span class="n">save_state</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">state</span><span class="p">:,</span><span class="w"> </span><span class="ss">since_index</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Load history into state if thread_id exists.</p>
+<p>Save new results from a state object to the thread. Extracts results from <code>state.results</code> starting at <code>since_index</code> and appends them.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session_id</code></td>
+<td><code>String</code></td>
+<td>Thread identifier</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td><code>Object</code></td>
+<td>State object with results</td>
+</tr>
+<tr>
+<td><code>since_index</code></td>
+<td><code>Integer</code></td>
+<td>Save results from this index (default: 0)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">History</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Start new conversation</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_state</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">ensure_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">state</span><span class="o">.</span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_id</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># Run and save</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">)</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">manager</span><span class="o">.</span><span class="n">append_results</span><span class="p">(</span><span class="ss">thread_id</span><span class="p">:</span><span class="w"> </span><span class="n">thread_id</span><span class="p">,</span><span class="w"> </span><span class="ss">new_results</span><span class="p">:</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">new_results</span><span class="p">)</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># Continue conversation</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">state2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_state</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Follow up&quot;</span><span class="p">)</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">state2</span><span class="o">.</span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_id</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="n">state2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">load_history</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state2</span><span class="p">)</span>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="c1"># state2 now has previous results</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">History</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="ss">create_thread</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">state</span><span class="p">:,</span><span class="w"> </span><span class="ss">input</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="no">SecureRandom</span><span class="o">.</span><span class="n">uuid</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="ss">get</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="no">STORE</span><span class="o">[</span><span class="n">session_id</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[]</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="ss">append_results</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">new_results</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="no">STORE</span><span class="o">[</span><span class="n">session_id</span><span class="o">]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="o">[]</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="no">STORE</span><span class="o">[</span><span class="n">session_id</span><span class="o">].</span><span class="n">concat</span><span class="p">(</span><span class="n">new_results</span><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">)</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="c1"># Start a new conversation</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">session_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">create_thread</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">memory</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="c1"># Run a robot and save results</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="n">manager</span><span class="o">.</span><span class="n">append_results</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="n">session_id</span><span class="p">,</span><span class="w"> </span><span class="ss">results</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="n">result</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="c1"># Later, retrieve history</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">get_history</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="in-network">In Network<a class="headerlink" href="#in-network" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># ThreadManager is used internally by Network</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="n">history</span><span class="w"> </span><span class="n">config</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="n">add_robot</span><span class="w"> </span><span class="n">assistant</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">end</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># First message - thread created automatically</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">result1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state1</span><span class="p">)</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result1</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">thread_id</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1"># Continue - history loaded automatically</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="n">state2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_state</span><span class="p">(</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">  </span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="no">UserMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;Continue&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">thread_id</span><span class="p">:</span><span class="w"> </span><span class="n">thread_id</span><span class="p">)</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="p">)</span>
-</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="n">result2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state2</span><span class="p">)</span>
+<h3 id="loading-history-into-memory">Loading History into Memory<a class="headerlink" href="#loading-history-into-memory" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Create a memory object and load previous conversation</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Memory</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">manager</span><span class="o">.</span><span class="n">load_state</span><span class="p">(</span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="n">existing_session_id</span><span class="p">,</span><span class="w"> </span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">memory</span><span class="p">)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Memory now contains previous results and session_id</span>
 </span></code></pre></div>
-<h3 id="custom-thread-data">Custom Thread Data<a class="headerlink" href="#custom-thread-data" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">History</span><span class="o">::</span><span class="no">ThreadManager</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="no">History</span><span class="o">::</span><span class="no">Config</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="ss">create_thread</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">state</span><span class="p">:,</span><span class="w"> </span><span class="ss">input</span><span class="p">:,</span><span class="w"> </span><span class="ss">metadata</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">      </span><span class="no">Thread</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="ss">title</span><span class="p">:</span><span class="w"> </span><span class="n">input</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">        </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="n">metadata</span><span class="p">,</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">        </span><span class="ss">created_at</span><span class="p">:</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">current</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">      </span><span class="p">)</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="ss">get</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">thread_id</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="no">Thread</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">results</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="ss">append_results</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="ss">thread_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">new_results</span><span class="p">:,</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">      </span><span class="no">Thread</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">new_results</span><span class="p">)</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">  </span><span class="p">)</span>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="p">)</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="c1"># Pass metadata when creating thread</span>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="n">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">create_thread</span><span class="p">(</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="w">  </span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">state</span><span class="p">,</span>
-</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">  </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Help with billing&quot;</span><span class="p">,</span>
-</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="w">  </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">source</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;web&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">priority</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="p">)</span>
+<h3 id="saving-incremental-results">Saving Incremental Results<a class="headerlink" href="#saving-incremental-results" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Save only new results (since the last save point)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">initial_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">length</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Follow-up question&quot;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">append_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">manager</span><span class="o">.</span><span class="n">save_state</span><span class="p">(</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="n">session_id</span><span class="p">,</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="ss">state</span><span class="p">:</span><span class="w"> </span><span class="n">memory</span><span class="p">,</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="ss">since_index</span><span class="p">:</span><span class="w"> </span><span class="n">initial_count</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
