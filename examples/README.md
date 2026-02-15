@@ -38,6 +38,13 @@ examples/
   11_network_introspection.rb # Network visualization & inspection
   12_message_bus.rb           # Bidirectional robot communication
   13_spawn.rb                 # Dynamic specialist robot spawning
+  14_rusty_circuit/           # Multi-robot open mic with self-modification
+    open_mic.rb               #   Main entrypoint — wires up the show
+    comic.rb                  #   Comedian with self-modification tools
+    heckler.rb                #   Audience heckler (can stay silent or counter-joke)
+    scout.rb                  #   Talent scout with analyst spawning
+    display.rb                #   Terminal formatting (color, wrapping, file output)
+    prompts/                  #   Templates for comic, heckler, and scout
   prompts/                    # Prompt templates (.md with YAML front matter)
 ```
 
@@ -135,6 +142,16 @@ Demonstrates: `spawn` for dynamic robot creation, lazy bus creation, `on_message
 
 **Requires:** LLM API key
 
+### 14 — The Rusty Circuit (Open Mic Night)
+
+A comedy club where three robots interact through a shared message bus. A comedian performs stand-up armed with self-modification tools (style reinvention, energy adjustment, coaching). A heckler reacts from the audience — heckling weak material, telling counter-jokes with the comic as the punch line, showing grudging respect, or staying silent when a bit doesn't warrant a response. A talent scout observes silently, spawning specialist analysts and refining evaluation criteria before delivering a final verdict.
+
+Terminal output is color-formatted: comic bits in cyan (left-aligned), heckler reactions in yellow (right-indented), tool annotations dimmed. Scout notes go to `scout_notes.md` instead of STDOUT. The final verdict appears in green on both STDOUT and the scout file.
+
+Demonstrates: Robot subclasses, self-modification via tool side effects, dynamic spawning (`spawn`), shared `:room` channel + personal channels, processing guards for async serialization, `[SILENCE]` opt-out pattern, style reinvention via user-prompt injection.
+
+**Requires:** LLM API key
+
 ## Prompt Templates
 
 Templates live in `examples/prompts/` as `.md` files with YAML front matter. Each template defines a robot's personality and behavior:
@@ -175,3 +192,6 @@ Front matter keys like `model`, `temperature`, `top_p`, `max_tokens` are applied
 | `comedian.md` | 12 | Robot joke teller |
 | `comedy_critic.md` | 12 | Joke evaluator (FUNNY/NOT_FUNNY) |
 | `dispatcher.md` | 13 | Specialist role dispatcher |
+| `open_mic_comic.md` | 14 | Observational comedian with self-modification |
+| `open_mic_heckler.md` | 14 | Tough audience heckler (can stay silent or counter-joke) |
+| `open_mic_scout.md` | 14 | Talent scout with analyst recruitment |
