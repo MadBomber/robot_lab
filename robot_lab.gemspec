@@ -52,6 +52,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm-semantic_cache"
   spec.add_dependency "fastembed"
   spec.add_dependency "async", "~> 2.0"
+  spec.add_dependency "typed_bus"
   spec.add_dependency "simple_flow", "~> 0.3.0"
   spec.add_dependency "state_machines"
   spec.add_dependency "state_machines-activemodel"

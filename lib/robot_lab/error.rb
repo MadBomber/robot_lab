@@ -29,4 +29,10 @@ module RobotLab
   # @example
   #   raise MCPError, "Connection to MCP server refused"
   class MCPError < Error; end
+
+  # Raised when message bus communication fails.
+  #
+  # @example
+  #   raise BusError, "No bus configured on this robot"
+  class BusError < Error; end
 end
