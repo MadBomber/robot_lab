@@ -107,7 +107,7 @@ test:
   max_iterations: 3
   streaming_enabled: false
   ruby_llm:
-    model: claude-haiku-3-5
+    model: claude-3-haiku-20240307
     request_timeout: 30
     max_retries: 1
     log_level: :warn

@@ -35,74 +35,109 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 ```ruby
 require "robot_lab"
 
-RobotLab.configure do |config|
-  config.default_model = "claude-sonnet-4"
-end
+# Configuration is handled automatically via MywayConfig.
+# Set API keys via environment variables:
+#   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+# Or via config files (~/.config/robot_lab/config.yml)
 
-robot = RobotLab.build do
-  name "greeter"
-  template "You are a friendly greeter. Say hello warmly."
-end
+robot = RobotLab.build(
+  name: "greeter",
+  system_prompt: "You are a friendly greeter. Say hello warmly."
+)
 
-state = RobotLab.create_state(message: "Hi there!")
-result = robot.run(state: state)
+result = robot.run("Hi there!")
 
-puts result.output.first.content
+puts result.last_text_content
 ```
 
 ## Robot with Tools
 
 ```ruby
-robot = RobotLab.build do
-  name "calculator"
-  template "You help with calculations."
+class CalculatorTool < RubyLLM::Tool
+  description "Perform a calculation"
 
-  tool :calculate do
-    description "Perform a calculation"
-    parameter :expression, type: :string, required: true
-    handler { |expression:, **_| eval(expression).to_s }
+  param :expression, type: :string, desc: "Math expression to evaluate"
+
+  def execute(expression:)
+    eval(expression).to_s
   end
 end
 
-state = RobotLab.create_state(message: "What's 25 * 4?")
-result = robot.run(state: state)
+robot = RobotLab.build(
+  name: "calculator",
+  system_prompt: "You help with calculations.",
+  local_tools: [CalculatorTool]
+)
+
+result = robot.run("What's 25 * 4?")
+puts result.last_text_content
 ```
 
 ## Network with Routing
 
 ```ruby
-classifier = RobotLab.build do
-  name "classifier"
-  template "Classify: BILLING, TECHNICAL, or GENERAL"
+classifier = RobotLab.build(
+  name: "classifier",
+  system_prompt: "Classify the request as BILLING or TECHNICAL. Respond with only the category."
+)
+
+billing = RobotLab.build(
+  name: "billing",
+  system_prompt: "You handle billing questions."
+)
+
+tech = RobotLab.build(
+  name: "tech",
+  system_prompt: "You handle technical issues."
+)
+
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing, depends_on: :optional
+  task :tech, tech, depends_on: :optional
 end
 
-billing = RobotLab.build do
-  name "billing"
-  template "You handle billing questions."
-end
+result = network.run(message: "I was charged twice for my subscription")
 
-tech = RobotLab.build do
-  name "tech"
-  template "You handle technical issues."
-end
+# Access individual robot results via context
+classifier_result = result.context[:classifier]
+puts classifier_result.last_text_content
+```
 
-network = RobotLab.create_network do
-  name "support"
-  add_robot classifier
-  add_robot billing
-  add_robot tech
+## Chaining Configuration
 
-  router ->(args) {
-    case args.call_count
-    when 0 then :classifier
-    when 1
-      category = args.last_result&.output&.first&.content&.strip
-      category == "BILLING" ? :billing : :tech
-    end
-  }
-end
+Robots support `with_*` methods that return `self` for chaining:
 
-result = network.run(state: state)
+```ruby
+robot = RobotLab.build(name: "assistant")
+  .with_instructions("You are a helpful coding assistant.")
+  .with_temperature(0.3)
+  .with_model("gpt-4o")
+
+result = robot.run("Explain Ruby blocks.")
+puts result.last_text_content
+```
+
+## Using Templates
+
+Templates are `.md` files with optional YAML front matter, managed by prompt_manager:
+
+```ruby
+# Template file: prompts/support.md
+# ---
+# model: claude-sonnet-4
+# temperature: 0.5
+# ---
+# You are a support assistant for {{ company_name }}.
+
+robot = RobotLab.build(
+  name: "support",
+  template: :support,
+  context: { company_name: "Acme Corp" }
+)
+
+result = robot.run("How do I reset my password?")
+puts result.last_text_content
 ```
 
 ## Running Examples
@@ -121,6 +156,13 @@ result = network.run(state: state)
    ```bash
    ruby examples/basic_chat.rb
    ```
+
+Or use the provided rake tasks:
+
+```bash
+bundle exec rake examples:all          # Run all examples
+bundle exec rake examples:run[1]       # Run specific example by number
+```
 
 ## See Also
 

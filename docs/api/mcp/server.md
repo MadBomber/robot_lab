@@ -1,33 +1,44 @@
-# MCP Server
+# MCP Server Configuration
 
-Expose tools via Model Context Protocol.
+Data structure for MCP server connection configuration.
 
 ## Class: `RobotLab::MCP::Server`
 
+`Server` is a configuration object that defines how to connect to an MCP server. It holds the server name and transport settings, and validates the configuration on construction.
+
+This is **not** an MCP server implementation -- it is the configuration used by `MCP::Client` to establish a connection to an external MCP server.
+
 ```ruby
-server = RobotLab::MCP::Server.new(name: "my_tools")
-
-server.add_tool(
-  name: "get_time",
-  description: "Get current time",
-  handler: ->(**_) { Time.now.iso8601 }
+server = RobotLab::MCP::Server.new(
+  name: "filesystem",
+  transport: { type: "stdio", command: "mcp-server-filesystem", args: ["--root", "/data"] }
 )
-
-server.start(transport: :stdio)
 ```
 
 ## Constructor
 
 ```ruby
-Server.new(name:, version: "1.0.0")
+Server.new(name:, transport:)
 ```
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `name` | `String` | Server name |
-| `version` | `String` | Server version |
+| `name` | `String` | Unique server identifier |
+| `transport` | `Hash` | Transport configuration (must include `type`) |
+
+**Raises:** `ArgumentError` if:
+- The transport type is not one of the valid types
+- A stdio transport is missing the `:command` key
+- A network transport (ws, websocket, sse, streamable-http, http) is missing the `:url` key
+
+## Valid Transport Types
+
+```ruby
+RobotLab::MCP::Server::VALID_TRANSPORT_TYPES
+# => ["stdio", "sse", "ws", "websocket", "streamable-http", "http"]
+```
 
 ## Attributes
 
@@ -37,185 +48,158 @@ Server.new(name:, version: "1.0.0")
 server.name  # => String
 ```
 
-Server identifier.
+The server identifier string.
 
-### version
-
-```ruby
-server.version  # => String
-```
-
-Server version.
-
-### tools
+### transport
 
 ```ruby
-server.tools  # => Array<Tool>
+server.transport  # => Hash
 ```
 
-Registered tools.
+The normalized transport configuration hash (keys are symbols, type is downcased).
 
 ## Methods
 
-### add_tool
+### transport_type
 
 ```ruby
-server.add_tool(
-  name:,
-  description:,
-  parameters: {},
-  handler:
+server.transport_type  # => String
+```
+
+Returns the transport type string (e.g., `"stdio"`, `"ws"`, `"sse"`).
+
+### to_h
+
+```ruby
+server.to_h  # => { name: "...", transport: { ... } }
+```
+
+Converts the server configuration to a hash representation.
+
+## Transport Configuration Options
+
+### Stdio Transport
+
+For local MCP servers running as subprocesses:
+
+```ruby
+Server.new(
+  name: "filesystem",
+  transport: {
+    type: "stdio",
+    command: "mcp-server-filesystem",  # Required
+    args: ["--root", "/data"],          # Optional
+    env: { "DEBUG" => "true" }          # Optional
+  }
 )
 ```
 
-Register a tool with the server.
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `type` | `String` | Yes | Must be `"stdio"` |
+| `command` | `String` | Yes | Executable command |
+| `args` | `Array<String>` | No | Command arguments |
+| `env` | `Hash` | No | Environment variables |
 
-**Parameters:**
+### WebSocket Transport
 
-| Name | Type | Description |
-|------|------|-------------|
-| `name` | `String` | Tool name |
-| `description` | `String` | Tool description |
-| `parameters` | `Hash` | Parameter schema |
-| `handler` | `Proc` | Execution function |
-
-### remove_tool
+For bidirectional real-time communication:
 
 ```ruby
-server.remove_tool(name)
+Server.new(
+  name: "neon",
+  transport: {
+    type: "ws",
+    url: "ws://localhost:8080"  # Required
+  }
+)
 ```
 
-Unregister a tool.
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `type` | `String` | Yes | `"ws"` or `"websocket"` |
+| `url` | `String` | Yes | WebSocket endpoint URL |
 
-### start
+### SSE Transport
+
+For server-sent events streaming:
 
 ```ruby
-server.start(transport: :stdio, **options)
+Server.new(
+  name: "streaming",
+  transport: {
+    type: "sse",
+    url: "http://localhost:8080/sse"  # Required
+  }
+)
 ```
 
-Start the server.
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `type` | `String` | Yes | Must be `"sse"` |
+| `url` | `String` | Yes | SSE endpoint URL |
 
-**Transport Options:**
+### Streamable HTTP Transport
 
-| Transport | Options |
-|-----------|---------|
-| `:stdio` | None |
-| `:websocket` | `port:`, `host:` |
-| `:sse` | `port:`, `host:`, `path:` |
-| `:http` | `port:`, `host:`, `path:` |
-
-### stop
+For HTTP-based communication with session management:
 
 ```ruby
-server.stop
+Server.new(
+  name: "api",
+  transport: {
+    type: "streamable-http",
+    url: "https://server.smithery.ai/neon/mcp",  # Required
+    session_id: "abc123",                         # Optional
+    auth_provider: -> { "Bearer #{token}" }       # Optional
+  }
+)
 ```
 
-Stop the server.
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `type` | `String` | Yes | `"streamable-http"` or `"http"` |
+| `url` | `String` | Yes | HTTP endpoint URL |
+| `session_id` | `String` | No | Session identifier |
+| `auth_provider` | `Proc` | No | Authentication callback returning auth header value |
 
 ## Examples
 
-### Basic Server
+### Multiple Server Configurations
 
 ```ruby
-server = RobotLab::MCP::Server.new(name: "utilities")
-
-server.add_tool(
-  name: "echo",
-  description: "Echo back the input",
-  parameters: {
-    message: { type: "string", required: true }
+servers = [
+  {
+    name: "filesystem",
+    transport: { type: "stdio", command: "mcp-server-filesystem", args: ["/data"] }
   },
-  handler: ->(message:) { message }
-)
-
-server.start(transport: :stdio)
-```
-
-### Database Tools Server
-
-```ruby
-server = RobotLab::MCP::Server.new(name: "database")
-
-server.add_tool(
-  name: "query_users",
-  description: "Query users by criteria",
-  parameters: {
-    status: { type: "string", enum: ["active", "inactive"] },
-    limit: { type: "integer", default: 10 }
+  {
+    name: "github",
+    transport: { type: "stdio", command: "mcp-server-github" }
   },
-  handler: ->(status: nil, limit: 10) {
-    scope = User.all
-    scope = scope.where(status: status) if status
-    scope.limit(limit).map(&:to_h)
+  {
+    name: "database",
+    transport: { type: "ws", url: "ws://localhost:9090" }
   }
-)
+]
 
-server.add_tool(
-  name: "get_user",
-  description: "Get user by ID",
-  parameters: {
-    id: { type: "string", required: true }
-  },
-  handler: ->(id:) {
-    user = User.find_by(id: id)
-    user ? user.to_h : { error: "Not found" }
-  }
+# Pass directly to a robot
+robot = Robot.new(
+  name: "dev_assistant",
+  system_prompt: "You help with development tasks.",
+  mcp: servers
 )
-
-server.start(transport: :websocket, port: 8080)
 ```
 
-### From Robot Tools
+### Creating a Client from a Server
 
 ```ruby
-# Convert existing robot tools to MCP server
-robot = RobotLab.build do
-  name "assistant"
-
-  tool :calculate do
-    description "Perform calculation"
-    parameter :expression, type: :string, required: true
-    handler { |expression:, **_| eval(expression) }
-  end
-end
-
-server = RobotLab::MCP::Server.from_robot(robot)
-server.start(transport: :stdio)
-```
-
-### HTTP Server
-
-```ruby
-server = RobotLab::MCP::Server.new(name: "api_tools")
-
-server.add_tool(
-  name: "fetch_data",
-  description: "Fetch data from API",
-  parameters: {
-    endpoint: { type: "string", required: true }
-  },
-  handler: ->(endpoint:) {
-    response = HTTP.get("https://api.example.com/#{endpoint}")
-    JSON.parse(response.body)
-  }
+server = RobotLab::MCP::Server.new(
+  name: "tools",
+  transport: { type: "ws", url: "ws://localhost:8080" }
 )
 
-server.start(transport: :http, port: 3001, path: "/mcp")
-```
-
-### With Resources
-
-```ruby
-server = RobotLab::MCP::Server.new(name: "files")
-
-server.add_resource(
-  uri: "file://config",
-  name: "Configuration",
-  description: "Application configuration",
-  handler: -> { File.read("config.yml") }
-)
-
-server.start(transport: :stdio)
+client = RobotLab::MCP::Client.new(server)
+client.connect
 ```
 
 ## See Also

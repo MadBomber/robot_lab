@@ -7,7 +7,9 @@ gemspec
 
 group :development, :test do
   gem 'aigcm'
+  gem 'amazing_print'
   gem 'debug_me'
+  gem 'hashdiff'
   gem "rake"
   gem "minitest"
   gem "minitest-reporters"

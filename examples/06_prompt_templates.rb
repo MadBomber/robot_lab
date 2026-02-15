@@ -1,29 +1,24 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example 6: Prompt Templates with ruby_llm-template
+# Example 6: Prompt Templates with prompt_manager
 #
-# Demonstrates using ruby_llm-template for organized, reusable prompts
+# Demonstrates using prompt_manager for organized, reusable prompts
 # within a RobotLab network. This example shows an e-commerce support
 # system with dynamic context injection using SimpleFlow's optional task routing.
 #
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/06_prompt_templates.rb
 #
-# Template Structure:
+# Template Structure (prompt_manager .md files with YAML front matter):
 #   examples/prompts/
-#   ├── triage/
-#   │   ├── system.txt.erb
-#   │   └── user.txt.erb
-#   ├── order_support/
-#   │   ├── system.txt.erb
-#   │   └── user.txt.erb
-#   ├── product_support/
-#   │   ├── system.txt.erb
-#   │   └── user.txt.erb
-#   └── escalation/
-#       ├── system.txt.erb
-#       └── user.txt.erb
+#   ├── triage.md
+#   ├── order_support.md
+#   ├── product_support.md
+#   └── escalation.md
+
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
 
@@ -149,7 +144,9 @@ ESCALATION_AUTHORITIES = [
 # Custom triage robot that classifies and activates appropriate specialist
 class TriageRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    run_context = extract_run_context(result)
+    message = run_context.delete(:message)
+    robot_result = run(message, **run_context)
 
     new_result = result
       .with_context(@name.to_sym, robot_result)
@@ -182,11 +179,7 @@ puts "E-Commerce Support Network with Dynamic Context"
 puts "=" * 70
 puts
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
+# Template path is set via ROBOT_LAB_TEMPLATE_PATH env var (see top of file)
 
 # -----------------------------------------------------------------------------
 # Build Robots with Template-Based Prompts
@@ -201,7 +194,7 @@ triage_robot = TriageRobot.new(
     company_name: COMPANY_NAME,
     categories: CATEGORIES
   },
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # Order Support Robot
@@ -214,7 +207,7 @@ order_robot = RobotLab.build(
     policies: POLICIES,
     capabilities: ORDER_CAPABILITIES
   },
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # Product Support Robot
@@ -228,7 +221,7 @@ product_robot = RobotLab.build(
     promotions: PROMOTIONS,
     product_categories: PRODUCT_CATEGORIES
   },
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # Escalation Robot
@@ -240,7 +233,7 @@ escalation_robot = RobotLab.build(
     company_name: COMPANY_NAME,
     authorities: ESCALATION_AUTHORITIES
   },
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # -----------------------------------------------------------------------------
@@ -314,11 +307,13 @@ end
 puts
 puts "Demo Complete!"
 puts
-puts "This example demonstrates:"
-puts "  - ruby_llm-template for organized, reusable prompts"
-puts "  - Build-time context (robot identity/capabilities)"
-puts "  - Run-time context (customer data, order history)"
-puts "  - Multi-robot network with optional task routing"
-puts "  - SimpleFlow::Result for passing context between robots"
-puts
-puts "Template files are located in: #{File.join(__dir__, 'prompts')}"
+puts <<~FOOTER
+  This example demonstrates:
+    - prompt_manager templates (.md with YAML front matter)
+    - Build-time context (robot identity/capabilities)
+    - Run-time context (customer data, order history)
+    - Multi-robot network with optional task routing
+    - SimpleFlow::Result for passing context between robots
+
+  Template files are located in: #{File.join(__dir__, 'prompts')}
+FOOTER

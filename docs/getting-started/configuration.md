@@ -1,226 +1,339 @@
 # Configuration
 
-RobotLab provides flexible configuration options at global, network, and robot levels.
+RobotLab uses a layered configuration system powered by [MywayConfig](https://github.com/MadBomber/myway_config). Configuration is loaded automatically from multiple sources with no block-style `configure` method required.
 
-## Global Configuration
+## How Configuration Works
 
-Configure RobotLab globally using the `configure` block:
+Configuration values are loaded in priority order (lowest to highest):
+
+1. **Bundled defaults** -- `lib/robot_lab/config/defaults.yml` (shipped with the gem)
+2. **Environment-specific overrides** -- `development`, `test`, or `production` sections in defaults.yml
+3. **User config file** -- `~/.config/robot_lab/config.yml`
+4. **Project config file** -- `./config/robot_lab.yml`
+5. **Environment variables** -- `ROBOT_LAB_*` prefix
+6. **Runtime attributes** -- e.g., `RobotLab.config.logger = ...`
+
+Higher-priority sources override lower-priority ones. You only need to set the values you want to change.
+
+## Accessing Configuration
+
+Use `RobotLab.config` to access the configuration object:
 
 ```ruby
-RobotLab.configure do |config|
-  # LLM Provider API Keys
-  config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-  config.openai_api_key = ENV["OPENAI_API_KEY"]
-  config.gemini_api_key = ENV["GEMINI_API_KEY"]
+# Access nested values with dot notation
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.anthropic_api_key #=> "sk-ant-..."
+RobotLab.config.ruby_llm.request_timeout  #=> 120
+RobotLab.config.max_iterations             #=> 10
+RobotLab.config.streaming_enabled          #=> true
 
-  # Default settings
-  config.default_provider = :anthropic
-  config.default_model = "claude-sonnet-4"
-
-  # Execution limits
-  config.max_iterations = 10        # Max robots per network run
-  config.max_tool_iterations = 10   # Max tool calls per robot run
-
-  # Streaming
-  config.streaming_enabled = true
-
-  # Logging
-  config.logger = Logger.new($stdout)
-
-  # Template path for prompt files
-  config.template_path = "prompts"
-end
+# Check the environment
+RobotLab.config.development?  #=> true/false
 ```
 
-## Configuration Options
+!!! warning "No configure block"
+    RobotLab does **not** use a `RobotLab.configure do |config| ... end` pattern. All configuration comes from config files, environment variables, or direct assignment on `RobotLab.config`.
 
-### API Keys
+## Environment Variables
 
-| Option | Description |
-|--------|-------------|
-| `anthropic_api_key` | Anthropic Claude API key |
-| `openai_api_key` | OpenAI API key |
-| `gemini_api_key` | Google Gemini API key |
-| `bedrock_api_key` | AWS Bedrock API key |
-| `openrouter_api_key` | OpenRouter API key |
+Environment variables use the `ROBOT_LAB_` prefix. Use double underscores (`__`) for nested values:
 
-### Defaults
+```bash
+# Top-level settings
+export ROBOT_LAB_MAX_ITERATIONS=20
+export ROBOT_LAB_STREAMING_ENABLED=false
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `default_provider` | `:anthropic` | Default LLM provider |
-| `default_model` | `"claude-sonnet-4"` | Default model |
-| `max_iterations` | `10` | Max robots per network run |
-| `max_tool_iterations` | `10` | Max tool calls per robot |
+# Nested ruby_llm settings (note the double underscore)
+export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
+export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
+export ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY=...
+export ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
+export ROBOT_LAB_RUBY_LLM__MAX_RETRIES=5
+```
+
+The double underscore convention maps to nested YAML structure:
+
+```
+ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY  -->  ruby_llm.anthropic_api_key
+ROBOT_LAB_RUBY_LLM__MODEL              -->  ruby_llm.model
+ROBOT_LAB_MAX_ITERATIONS               -->  max_iterations
+```
+
+## Config Files
+
+### Project Config
+
+Create `./config/robot_lab.yml` in your project root:
+
+```yaml title="config/robot_lab.yml"
+defaults:
+  ruby_llm:
+    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+    model: claude-sonnet-4
+    request_timeout: 120
+
+  max_iterations: 15
+  template_path: prompts
+
+development:
+  ruby_llm:
+    log_level: :debug
+
+test:
+  max_iterations: 3
+  streaming_enabled: false
+  ruby_llm:
+    model: claude-haiku-3-5
+    request_timeout: 30
+    max_retries: 1
+
+production:
+  max_iterations: 20
+  ruby_llm:
+    request_timeout: 180
+    max_retries: 5
+    log_level: :warn
+```
+
+!!! tip "ERB support"
+    Config files support ERB templating, so you can reference environment variables with `<%= ENV['...'] %>`. This is useful for keeping secrets out of config files while still using YAML structure.
+
+### User Config
+
+Create `~/.config/robot_lab/config.yml` for personal defaults that apply across all your projects:
+
+```yaml title="~/.config/robot_lab/config.yml"
+defaults:
+  ruby_llm:
+    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+    model: claude-sonnet-4
+```
+
+## Configuration Reference
+
+### Core Settings
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `max_iterations` | `10` | Maximum robots per network run |
+| `max_tool_iterations` | `10` | Maximum tool calls per robot run |
 | `streaming_enabled` | `true` | Enable streaming by default |
+| `template_path` | `null` (auto-detected) | Directory for prompt templates |
+| `mcp` | `:none` | Global MCP server configuration |
+| `tools` | `:none` | Global tool whitelist |
 
-### Templates
+### RubyLLM Settings (`ruby_llm:` section)
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `template_path` | `"prompts"` (or `"app/prompts"` in Rails) | Directory for prompt templates |
+All settings under the `ruby_llm:` key are applied to `RubyLLM.configure` automatically on startup.
 
-### Global MCP & Tools
+#### Provider API Keys
+
+| Key | Description |
+|-----|-------------|
+| `ruby_llm.anthropic_api_key` | Anthropic Claude API key |
+| `ruby_llm.openai_api_key` | OpenAI API key |
+| `ruby_llm.gemini_api_key` | Google Gemini API key |
+| `ruby_llm.deepseek_api_key` | DeepSeek API key |
+| `ruby_llm.mistral_api_key` | Mistral API key |
+| `ruby_llm.openrouter_api_key` | OpenRouter API key |
+| `ruby_llm.bedrock_api_key` | AWS Bedrock access key |
+| `ruby_llm.bedrock_secret_key` | AWS Bedrock secret key |
+| `ruby_llm.bedrock_region` | AWS Bedrock region |
+| `ruby_llm.xai_api_key` | xAI (Grok) API key |
+
+#### Model Defaults
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ruby_llm.provider` | `:anthropic` | Default LLM provider |
+| `ruby_llm.model` | `claude-sonnet-4` | Default model for robots |
+| `ruby_llm.default_model` | `null` | RubyLLM default model override |
+| `ruby_llm.default_embedding_model` | `null` | Default embedding model |
+| `ruby_llm.default_image_model` | `null` | Default image model |
+
+#### Connection Settings
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ruby_llm.request_timeout` | `120` | Request timeout in seconds |
+| `ruby_llm.max_retries` | `3` | Maximum retry attempts |
+| `ruby_llm.retry_interval` | `1` | Seconds between retries |
+| `ruby_llm.retry_backoff_factor` | `2` | Exponential backoff factor |
+| `ruby_llm.http_proxy` | `null` | HTTP proxy URL |
+
+#### Provider Endpoints (self-hosted models)
+
+| Key | Description |
+|-----|-------------|
+| `ruby_llm.openai_api_base` | Custom OpenAI-compatible endpoint |
+| `ruby_llm.gemini_api_base` | Custom Gemini endpoint |
+| `ruby_llm.ollama_api_base` | Ollama endpoint (e.g., `http://localhost:11434`) |
+| `ruby_llm.gpustack_api_base` | GPUStack endpoint |
+
+#### Logging
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ruby_llm.log_file` | `null` | Path to log file |
+| `ruby_llm.log_level` | `:info` | Log level (`:debug`, `:info`, `:warn`, `:error`) |
+| `ruby_llm.log_stream_debug` | `false` | Log streaming debug output |
+
+### Chat Configuration (`chat:` section)
+
+Default chat parameters applied to all robots unless overridden:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `chat.with_temperature` | `0.7` | Controls randomness (0.0-2.0) |
+| `chat.with_params.top_p` | `null` | Nucleus sampling threshold |
+| `chat.with_params.top_k` | `null` | Top-k sampling |
+| `chat.with_params.max_tokens` | `null` | Maximum tokens in response |
+| `chat.with_params.presence_penalty` | `null` | Presence penalty (-2.0 to 2.0) |
+| `chat.with_params.frequency_penalty` | `null` | Frequency penalty (-2.0 to 2.0) |
+| `chat.with_params.stop` | `null` | Stop sequences |
+
+## Runtime-Only Attributes
+
+Some attributes can only be set at runtime, not through config files:
 
 ```ruby
-RobotLab.configure do |config|
-  # Global MCP servers available to all networks
-  config.mcp = [
-    { name: "github", transport: { type: "stdio", command: "github-mcp" } }
-  ]
-
-  # Global tool whitelist
-  config.tools = %w[search_code create_issue]
-end
+# Logger (defaults to Rails.logger in Rails, or Logger.new($stdout) otherwise)
+RobotLab.config.logger = Logger.new(nil)        # silence logging
+RobotLab.config.logger = Logger.new("robot.log") # log to file
 ```
 
-## Network-Level Configuration
+## Reloading Configuration
 
-Override global settings at the network level:
+To reload configuration from all sources:
 
 ```ruby
-network = RobotLab.create_network do
-  name "my_network"
+RobotLab.reload_config!
+```
 
-  # Override default model for this network
-  default_model "claude-sonnet-4"
+This clears the cached config and reloads from all sources on next access.
 
-  # Network-specific MCP servers
-  mcp [
-    { name: "filesystem", transport: { type: "stdio", command: "mcp-fs" } }
-  ]
+## Environment-Specific Configuration
 
-  # Network-specific tool whitelist
-  tools %w[read_file write_file]
+The `defaults.yml` shipped with RobotLab includes environment-specific overrides:
 
-  # Or inherit from global
-  mcp :inherit
-  tools :inherit
-end
+=== "Development"
+
+    ```yaml
+    development:
+      ruby_llm:
+        log_level: :debug
+    ```
+
+=== "Test"
+
+    ```yaml
+    test:
+      max_iterations: 3
+      streaming_enabled: false
+      ruby_llm:
+        model: claude-haiku-3-5
+        request_timeout: 30
+        max_retries: 1
+        log_level: :warn
+    ```
+
+=== "Production"
+
+    ```yaml
+    production:
+      streaming_enabled: false
+      max_iterations: 20
+      ruby_llm:
+        request_timeout: 180
+        max_retries: 5
+        log_level: :warn
+    ```
+
+The current environment is determined automatically (via `RAILS_ENV`, `RACK_ENV`, or defaults to `development`).
+
+## Rails Integration
+
+In Rails, RobotLab is configured automatically via its Railtie. The logger defaults to `Rails.logger`, and templates default to `app/prompts/`.
+
+Create a project config file for Rails-specific settings:
+
+```yaml title="config/robot_lab.yml"
+defaults:
+  ruby_llm:
+    anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
+    model: claude-sonnet-4
+
+  template_path: null  # auto-detects app/prompts in Rails
+
+production:
+  ruby_llm:
+    request_timeout: 180
+    max_retries: 5
+```
+
+You can also use Rails credentials:
+
+```bash
+rails credentials:edit
+```
+
+```yaml
+# config/credentials.yml.enc
+anthropic_api_key: sk-ant-...
+openai_api_key: sk-...
+```
+
+Then reference them in your config file with ERB:
+
+```yaml title="config/robot_lab.yml"
+defaults:
+  ruby_llm:
+    anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
 ```
 
 ## Robot-Level Configuration
 
-Configure individual robots:
+Individual robots can override the global model and other settings:
 
 ```ruby
-robot = RobotLab.build do
-  name "specialist"
+# Override model for a specific robot
+robot = RobotLab.build(
+  name: "fast_bot",
+  system_prompt: "You are a quick responder.",
+  model: "claude-haiku-3-5",
+  temperature: 0.3,
+  max_tokens: 500
+)
 
-  # Robot-specific model
-  model "claude-sonnet-4"
-
-  # Robot-specific MCP (overrides network)
-  mcp :inherit  # Use network's MCP servers
-  # or
-  mcp :none     # No MCP servers for this robot
-  # or
-  mcp [...]     # Specific servers
-
-  # Robot-specific tools
-  tools :inherit  # Use network's tools
-end
+# Or use chaining at runtime
+robot.with_temperature(0.9).with_max_tokens(2000).run("Tell me a story.")
 ```
 
-## Configuration Hierarchy
+## Hierarchical MCP and Tools
 
-Configuration cascades from global to network to robot:
+MCP servers and tools use a hierarchical configuration: `runtime > robot > network > global`. Each level can specify:
 
-```
-Global (RobotLab.configure)
-  └── Network (create_network)
-        └── Robot (build)
-              └── Runtime (robot.run)
-```
-
-Each level can:
-
-- `:inherit` - Use parent level's configuration
-- `:none` or `nil` or `[]` - No items allowed
-- `[items]` - Specific items only
-
-## Rails Configuration
-
-In Rails, configure in an initializer:
-
-```ruby title="config/initializers/robot_lab.rb"
-RobotLab.configure do |config|
-  # Use Rails credentials
-  config.anthropic_api_key = Rails.application.credentials.anthropic_api_key
-
-  # Use Rails logger
-  config.logger = Rails.logger
-
-  # Template path is automatically set to app/prompts
-end
-```
-
-Or use `config/application.rb`:
-
-```ruby title="config/application.rb"
-module MyApp
-  class Application < Rails::Application
-    config.robot_lab.default_model = "claude-sonnet-4"
-    config.robot_lab.default_provider = :anthropic
-  end
-end
-```
-
-## Environment-Specific Configuration
-
-```ruby title="config/initializers/robot_lab.rb"
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-
-  case Rails.env
-  when "development"
-    config.logger = Logger.new($stdout, level: :debug)
-    config.default_model = "claude-haiku-3"  # Faster/cheaper for dev
-  when "test"
-    config.streaming_enabled = false
-  when "production"
-    config.logger = Rails.logger
-    config.default_model = "claude-sonnet-4"
-  end
-end
-```
-
-## Using Environment Variables
-
-Recommended environment variables:
-
-```bash
-# Required - at least one provider
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=...
-
-# Optional - override defaults
-ROBOT_LAB_DEFAULT_MODEL=claude-sonnet-4
-ROBOT_LAB_DEFAULT_PROVIDER=anthropic
-ROBOT_LAB_MAX_ITERATIONS=20
-```
-
-Load them in configuration:
+- `:inherit` -- Use the parent level's configuration
+- `:none` -- No MCP servers or tools at this level
+- An explicit array -- Specific servers or tools
 
 ```ruby
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-  config.default_model = ENV.fetch("ROBOT_LAB_DEFAULT_MODEL", "claude-sonnet-4")
-  config.max_iterations = ENV.fetch("ROBOT_LAB_MAX_ITERATIONS", 10).to_i
-end
-```
+# Robot inheriting network MCP config
+robot = RobotLab.build(
+  name: "agent",
+  system_prompt: "You are helpful.",
+  mcp: :inherit,
+  tools: :inherit
+)
 
-## Accessing Configuration
-
-```ruby
-# Get current configuration
-config = RobotLab.configuration
-
-# Check settings
-config.default_model      # => "claude-sonnet-4"
-config.default_provider   # => :anthropic
-config.streaming_enabled  # => true
+# Robot with no MCP, specific tools
+robot = RobotLab.build(
+  name: "calculator",
+  system_prompt: "You solve math problems.",
+  mcp: :none,
+  local_tools: [Calculator]
+)
 ```
 
 ## Next Steps

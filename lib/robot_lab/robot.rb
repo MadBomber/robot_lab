@@ -1,84 +1,53 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # LLM-powered robot using ruby_llm-template for prompts
+  # LLM-powered robot built on RubyLLM::Agent
   #
-  # Robot is a thin wrapper around RubyLLM.chat that provides:
-  # - Template-based prompts via ruby_llm-template
-  # - Build-time context (static robot configuration)
-  # - Run-time context (per-request dynamic data)
-  # - Tool integration via RubyLLM::Tool
-  # - Hierarchical MCP and tools configuration
+  # Robot is a subclass of RubyLLM::Agent that adds:
+  # - Template-based prompts via prompt_manager
+  # - Shared memory (standalone or network)
+  # - Tool integration with hierarchical MCP configuration
+  # - SimpleFlow pipeline integration
   #
   # == Memory Behavior
   #
-  # Robots have two memory contexts depending on how they're used:
-  #
   # *Standalone*: Robot uses its own inherent memory (`robot.memory`).
-  # Use `robot.reset_memory` to clear it.
-  #
-  # *In a Network*: Robot uses the network's shared memory (`network.memory`).
-  # The robot's inherent memory is ignored. Use `network.reset_memory` to clear it.
-  #
-  # This allows the same robot instance to work both standalone and as part
-  # of a network, with appropriate memory isolation in each context.
+  # *In a Network*: Robot uses the network's shared memory.
   #
   # @example Simple robot with template
-  #   robot = Robot.new(
-  #     name: "helper",
-  #     template: :helper,
-  #     context: { company_name: "Acme Corp" }
-  #   )
-  #   result = robot.run(message: "Hello!", user_name: "Alice")
+  #   robot = Robot.new(name: "helper", template: :helper)
+  #   result = robot.run("Hello!")
   #
-  # @example Robot with inline system prompt (no template file needed)
-  #   robot = Robot.new(
-  #     name: "quick_bot",
-  #     system_prompt: "You are a helpful assistant. Be concise."
-  #   )
+  # @example Robot with inline system prompt
+  #   robot = Robot.new(name: "bot", system_prompt: "You are helpful.")
+  #   result = robot.run("What is 2+2?")
   #
-  # @example Robot with template and additional system prompt
-  #   robot = Robot.new(
-  #     name: "support",
-  #     template: :support_agent,
-  #     system_prompt: "Today is #{Date.today}. Current promotion: 20% off."
-  #   )
+  # @example Bare robot configured via chaining
+  #   robot = Robot.new(name: "bot")
+  #   robot.with_instructions("Be concise.").run("Hello")
   #
   # @example Robot with tools
   #   robot = Robot.new(
   #     name: "support",
   #     template: :support,
-  #     context: { policies: POLICIES },
-  #     tools: [OrderLookup, RefundProcessor]
+  #     local_tools: [OrderLookup, RefundProcessor]
   #   )
   #
-  # @example Robot with hierarchical MCP/tools config
-  #   robot = Robot.new(
-  #     name: "assistant",
-  #     template: :assistant,
-  #     mcp: :inherit,              # Inherit from network/config
-  #     tools: %w[search_code]      # Only allow search_code tool
-  #   )
-  #
-  # @example Robot with chat options (temperature, max_tokens, etc.)
-  #   robot = Robot.new(
-  #     name: "creative",
-  #     template: :writer,
-  #     temperature: 0.9,           # More creative responses
-  #     max_tokens: 2000            # Limit response length
-  #   )
-  #
-  class Robot
+  class Robot < RubyLLM::Agent
+    # Front matter keys that map to chat configuration methods
+    FRONT_MATTER_CONFIG_KEYS = %i[
+      model temperature top_p top_k max_tokens
+      presence_penalty frequency_penalty stop
+    ].freeze
+
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
     # @!attribute [r] description
     #   @return [String, nil] an optional description of the robot's purpose
     # @!attribute [r] template
-    #   @return [Symbol, nil] the ERB template for the robot's prompt
+    #   @return [Symbol, nil] the prompt_manager template for the robot's prompt
     # @!attribute [r] system_prompt
     #   @return [String, nil] inline system prompt (used alone or appended to template)
-    # @!attribute [r] model
-    #   @return [String, Object] the LLM model identifier or model object
     # @!attribute [r] local_tools
     #   @return [Array] the locally defined tools for this robot
     # @!attribute [r] mcp_clients
@@ -87,65 +56,37 @@ module RobotLab
     #   @return [Array<Tool>] tools discovered from MCP servers
     # @!attribute [r] memory
     #   @return [Memory] the robot's inherent memory (used when standalone, not in network)
-    attr_reader :name, :description, :template, :system_prompt, :model, :local_tools, :mcp_clients, :mcp_tools, :memory
+    attr_reader :name, :description, :template, :system_prompt,
+                :local_tools, :mcp_clients, :mcp_tools, :memory
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
     # @!attribute [r] tools_config
     #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
-    # @!attribute [r] chat_options
-    #   @return [Hash] chat-specific options (temperature, top_p, max_tokens, etc.)
-    attr_reader :mcp_config, :tools_config, :chat_options
+    attr_reader :mcp_config, :tools_config
 
     # Creates a new Robot instance.
     #
     # @param name [String] the unique identifier for the robot
-    # @param template [Symbol, nil] the ERB template for the robot's prompt
-    # @param system_prompt [String, nil] inline system prompt (can be used alone or with template)
-    # @param context [Hash, Proc] variables to pass to the template at build time
-    # @param description [String, nil] an optional description of the robot's purpose
-    # @param local_tools [Array] tools defined locally for this robot
-    # @param model [String, nil] the LLM model to use (defaults to config.default_model)
+    # @param template [Symbol, nil] the prompt_manager template
+    # @param system_prompt [String, nil] inline system prompt
+    # @param context [Hash, Proc] variables to pass to the template
+    # @param description [String, nil] optional description
+    # @param local_tools [Array] tools defined locally
+    # @param model [String, nil] the LLM model to use
     # @param mcp_servers [Array] legacy parameter for MCP server configurations
-    # @param mcp [Symbol, Array] hierarchical MCP config (:none, :inherit, or array of servers)
-    # @param tools [Symbol, Array] hierarchical tools config (:none, :inherit, or array of tool names)
+    # @param mcp [Symbol, Array] hierarchical MCP config
+    # @param tools [Symbol, Array] hierarchical tools config
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
-    # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
-    # @param temperature [Float, nil] controls randomness (0.0-2.0)
-    # @param top_p [Float, nil] nucleus sampling threshold (0.0-1.0)
-    # @param top_k [Integer, nil] top-k sampling (provider-specific)
+    # @param enable_cache [Boolean] whether to enable semantic caching
+    # @param temperature [Float, nil] controls randomness
+    # @param top_p [Float, nil] nucleus sampling threshold
+    # @param top_k [Integer, nil] top-k sampling
     # @param max_tokens [Integer, nil] maximum tokens in response
-    # @param presence_penalty [Float, nil] penalize based on presence (-2.0 to 2.0)
-    # @param frequency_penalty [Float, nil] penalize based on frequency (-2.0 to 2.0)
+    # @param presence_penalty [Float, nil] penalize based on presence
+    # @param frequency_penalty [Float, nil] penalize based on frequency
     # @param stop [String, Array, nil] stop sequences
-    #
-    # @example Basic robot with template
-    #   Robot.new(name: "helper", template: :helper)
-    #
-    # @example Robot with inline system prompt
-    #   Robot.new(name: "bot", system_prompt: "You are helpful.")
-    #
-    # @example Robot with template and additional system prompt
-    #   Robot.new(name: "bot", template: :base, system_prompt: "Extra context here.")
-    #
-    # @example Robot with tools and callbacks
-    #   Robot.new(
-    #     name: "support",
-    #     template: :support,
-    #     local_tools: [OrderLookup],
-    #     on_tool_call: ->(call) { puts "Calling #{call.name}" }
-    #   )
-    #
-    # @example Robot with chat options
-    #   Robot.new(
-    #     name: "creative",
-    #     template: :writer,
-    #     temperature: 0.9,
-    #     max_tokens: 2000
-    #   )
-    #
-    # @raise [ArgumentError] if neither template nor system_prompt is provided
     def initialize(
       name:,
       template: nil,
@@ -168,35 +109,18 @@ module RobotLab
       frequency_penalty: nil,
       stop: nil
     )
-      unless template || system_prompt
-        raise ArgumentError, "Must provide either template or system_prompt"
-      end
-
       @name = name.to_s
       @template = template
       @system_prompt = system_prompt
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
-      @model = model || RobotLab.config.ruby_llm.model
       @on_tool_call = on_tool_call
       @on_tool_result = on_tool_result
 
       # Store raw config values for hierarchical resolution
-      # mcp_servers is legacy parameter, mcp is the new hierarchical one
       @mcp_config = mcp_servers.any? ? mcp_servers : mcp
       @tools_config = tools
-
-      # Chat options (merged with config defaults at build_chat time)
-      @chat_options = build_chat_options(
-        temperature: temperature,
-        top_p: top_p,
-        top_k: top_k,
-        max_tokens: max_tokens,
-        presence_penalty: presence_penalty,
-        frequency_penalty: frequency_penalty,
-        stop: stop
-      )
 
       # MCP state
       @mcp_clients = {}
@@ -205,67 +129,86 @@ module RobotLab
 
       # Inherent memory (used when standalone, not in a network)
       @memory = Memory.new(enable_cache: enable_cache)
+
+      # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)
+      config = RobotLab.config
+
+      # Build chat kwargs for Agent's super
+      resolved_model = model || config.ruby_llm.model
+      chat_kwargs = { model: resolved_model }
+
+      # Create the persistent chat via Agent's initialize
+      super(chat: nil, **chat_kwargs)
+
+      # Apply template first (includes front matter config like model, temperature)
+      # then constructor params override — constructor is more specific than template.
+      apply_template_to_chat(context) if @template
+      @chat.with_instructions(@system_prompt) if @system_prompt
+
+      # Constructor params override template front matter
+      apply_chat_option(:with_temperature, temperature)
+      apply_chat_option(:with_top_p, top_p)
+      apply_chat_option(:with_top_k, top_k)
+      apply_chat_option(:with_max_tokens, max_tokens)
+      apply_chat_option(:with_presence_penalty, presence_penalty)
+      apply_chat_option(:with_frequency_penalty, frequency_penalty)
+      apply_chat_option(:with_stop, stop)
+
+      # Apply callbacks
+      @chat.on_tool_call(&@on_tool_call) if @on_tool_call
+      @chat.on_tool_result(&@on_tool_result) if @on_tool_result
     end
 
-    # Returns the robot's local tools (alias for local_tools).
+
+    # Returns the model identifier
     #
-    # Provided for backward compatibility with earlier API versions.
-    #
-    # @return [Array] the locally defined tools
-    def tools
-      @local_tools
+    # @return [String, nil] the LLM model ID string
+    def model
+      return nil unless @chat.respond_to?(:model)
+
+      m = @chat.model
+      m.respond_to?(:id) ? m.id : m.to_s
     end
 
-    # Run the robot with the given context
+    # Forward with_* methods to the persistent chat, returning self for chaining
+    %i[
+      with_model with_temperature with_top_p with_top_k with_max_tokens
+      with_presence_penalty with_frequency_penalty with_stop
+      with_instructions with_tool with_tools with_params
+      with_headers with_schema with_context with_thinking
+    ].each do |method|
+      define_method(method) do |*args, **kwargs, &block|
+        @chat.public_send(method, *args, **kwargs, &block)
+        self
+      end
+    end
+
+    # Apply a prompt_manager template to the robot's chat
     #
-    # @param network [NetworkRun, nil] Network context if running in network (legacy)
-    # @param network_memory [Memory, nil] Shared network memory (preferred)
-    # @param memory [Memory, Hash, nil] Runtime memory to merge
-    # @param mcp [Symbol, Array, nil] Runtime MCP override (:inherit, :none, nil, [], or array of servers)
-    # @param tools [Symbol, Array, nil] Runtime tools override (:inherit, :none, nil, [], or array of tool names)
-    # @param temperature [Float, nil] Runtime temperature override
-    # @param top_p [Float, nil] Runtime top_p override
-    # @param top_k [Integer, nil] Runtime top_k override
-    # @param max_tokens [Integer, nil] Runtime max_tokens override
-    # @param presence_penalty [Float, nil] Runtime presence_penalty override
-    # @param frequency_penalty [Float, nil] Runtime frequency_penalty override
-    # @param stop [String, Array, nil] Runtime stop sequences override
-    # @param run_context [Hash] Context for rendering user template
+    # @param template_id [Symbol, String] the template identifier
+    # @param context [Hash] variables to pass to the template
+    # @return [self]
+    def with_template(template_id, **context)
+      @template = template_id.to_sym
+      @build_context = context
+      apply_template_to_chat(context)
+      self
+    end
+
+
+    # Send a message and get a response, with Robot's extended capabilities
+    #
+    # @param message [String] the user message
+    # @param network [NetworkRun, nil] network context (legacy)
+    # @param network_memory [Memory, nil] shared network memory
+    # @param memory [Memory, Hash, nil] runtime memory to merge
+    # @param mcp [Symbol, Array, nil] runtime MCP override
+    # @param tools [Symbol, Array, nil] runtime tools override
     # @return [RobotResult]
-    #
-    # @example Standalone robot with inherent memory
-    #   robot.run(message: "My name is Alice")
-    #   robot.run(message: "What's my name?")  # Memory persists
-    #
-    # @example Runtime memory injection
-    #   robot.run(message: "Hello", memory: { user_id: 123, session: "abc" })
-    #
-    # @example With network shared memory
-    #   robot.run(message: "Analyze this", network_memory: network.memory)
-    #
-    # @example With runtime chat options
-    #   robot.run(message: "Be creative", temperature: 1.2, max_tokens: 500)
-    #
-    def run(
-      network: nil,
-      network_memory: nil,
-      memory: nil,
-      mcp: :none,
-      tools: :none,
-      temperature: nil,
-      top_p: nil,
-      top_k: nil,
-      max_tokens: nil,
-      presence_penalty: nil,
-      frequency_penalty: nil,
-      stop: nil,
-      **run_context
-    )
-      # Determine which memory to use (priority order):
-      # 1. Explicit network_memory parameter
-      # 2. Network object's memory (legacy)
-      # 3. Robot's inherent memory
-      run_memory = network_memory || network&.memory || @memory
+    def run(message = nil, network: nil, network_memory: nil, memory: nil, mcp: :none, tools: :none,
+            **kwargs)
+      # Determine which memory to use
+      run_memory = resolve_active_memory(network: network, network_memory: network_memory)
 
       # Merge runtime memory if provided
       case memory
@@ -284,103 +227,97 @@ module RobotLab
         resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
         resolved_tools = resolve_tools_hierarchy(tools, network: network)
 
-        # Build runtime chat options (overrides robot defaults)
-        runtime_chat_options = build_chat_options(
-          temperature: temperature,
-          top_p: top_p,
-          top_k: top_k,
-          max_tokens: max_tokens,
-          presence_penalty: presence_penalty,
-          frequency_penalty: frequency_penalty,
-          stop: stop
-        )
-
         # Initialize or update MCP clients based on resolved config
         ensure_mcp_clients(resolved_mcp)
 
-        # Merge build context + run context
-        full_context = resolve_context(@build_context, network: network)
-                         .merge(run_context)
+        # Apply filtered tools to the persistent chat
+        filtered = filtered_tools(resolved_tools)
+        @chat.with_tools(*filtered) if filtered.any?
 
-        # Build chat with template, filtered tools, and chat options
-        chat = build_chat(
-          full_context,
-          allowed_tools: resolved_tools,
-          memory: run_memory,
-          runtime_chat_options: runtime_chat_options
-        )
+        # Re-render template with run-time context merged into build-time context.
+        # Template parameters (e.g. customer: null) may require values that are
+        # only available at run time — the robot gathers them before rendering.
+        run_context = kwargs.except(:with)
+        rerender_template(run_context) if @template && run_context.any?
 
-        # Execute and return result
-        response = chat.complete
+        # Delegate to Agent's ask (which calls @chat.ask)
+        ask_kwargs = kwargs.slice(:with)
+        response = ask(message, **ask_kwargs)
 
         build_result(response, run_memory)
       ensure
-        # Restore previous writer
         run_memory.current_writer = previous_writer
       end
     end
 
-    # SimpleFlow step interface
+
+    # Reconfigure the robot for a new context
     #
-    # Allows Robot to be used directly as a step in a SimpleFlow::Pipeline.
-    # The robot receives a SimpleFlow::Result, executes, and returns a new
-    # SimpleFlow::Result with the robot's output.
+    # @param template [Symbol, nil] new template to apply
+    # @param context [Hash, nil] new context for the template
+    # @param system_prompt [String, nil] new system prompt
+    # @param model [String, nil] new model
+    # @param temperature [Float, nil] new temperature
+    # @return [self]
+    def update(template: nil, context: nil, system_prompt: nil, model: nil, temperature: nil, **kwargs)
+      if template
+        @template = template
+        ctx = context || @build_context
+        apply_template_to_chat(ctx)
+      end
+
+      @chat.with_instructions(system_prompt) if system_prompt
+      @chat.with_model(model) if model
+      apply_chat_option(:with_temperature, temperature)
+
+      kwargs.each do |key, value|
+        method = :"with_#{key}"
+        @chat.public_send(method, value) if value && @chat.respond_to?(method)
+      end
+
+      self
+    end
+
+
+    # SimpleFlow step interface
     #
     # @param result [SimpleFlow::Result] incoming result from previous step
     # @return [SimpleFlow::Result] result with robot output
-    #
-    # @example Using a robot as a pipeline step
-    #   pipeline = SimpleFlow::Pipeline.new do
-    #     step :classifier, classifier_robot, depends_on: :none
-    #     step :billing, billing_robot, depends_on: :optional
-    #   end
-    #
     def call(result)
-      robot_result = run(**extract_run_context(result))
+      run_context = extract_run_context(result)
+
+      # Extract the message from run context
+      message = run_context.delete(:message)
+
+      robot_result = run(message, **run_context)
 
       result
         .with_context(@name.to_sym, robot_result)
         .continue(robot_result)
     end
 
+
     # Reset the robot's inherent memory
     #
-    # NOTE: This only affects the robot's standalone memory. When a robot runs
-    # as part of a network, it uses the network's shared memory instead.
-    # To reset memory for network execution, use `network.reset_memory`.
-    #
     # @return [self]
-    #
-    # @example Standalone robot
-    #   robot.run(message: "My name is Alice")
-    #   robot.reset_memory  # Clears the conversation
-    #   robot.run(message: "What's my name?")  # Won't remember Alice
-    #
-    # @example Robot in network (reset_memory has no effect on network runs)
-    #   network.run(message: "Hello")
-    #   robot.reset_memory  # Does NOT affect network memory
-    #   network.run(message: "Hi")  # Network memory still intact
-    #   network.reset_memory  # Use this to reset network memory
-    #
     def reset_memory
       @memory.reset
       self
     end
 
+
     # Disconnect all MCP clients
     #
-    # Call this method when done using the robot to clean up MCP connections.
-    #
     # @return [self]
-    #
     def disconnect
       @mcp_clients.each_value(&:disconnect)
       self
     end
 
-    # Converts the robot to a hash representation.
+
+    # Converts the robot to a hash representation
     #
-    # @return [Hash] a hash containing the robot's configuration
+    # @return [Hash]
     def to_h
       {
         name: name,
@@ -392,24 +329,83 @@ module RobotLab
         mcp_config: @mcp_config,
         tools_config: @tools_config,
         mcp_servers: @mcp_clients.keys,
-        model: model.respond_to?(:model_id) ? model.model_id : model
+        model: model
       }.compact
     end
 
     private
 
+    # Apply a chat option if the value is non-nil
+    def apply_chat_option(method, value)
+      @chat.public_send(method, value) if value
+    end
+
+
+    # Apply a prompt_manager template to the persistent chat.
+    # If required parameters are missing, applies front matter config but
+    # defers rendering until run time when all values are available.
+    def apply_template_to_chat(context)
+      parsed = PM.parse(@template)
+
+      # Extract and apply front matter config to the chat
+      apply_front_matter_config(parsed.metadata)
+
+      # Resolve context (could be a Proc)
+      resolved_ctx = resolve_context(context, network: nil)
+
+      # Render the template body with context
+      begin
+        rendered = parsed.to_s(**resolved_ctx)
+        @chat.with_instructions(rendered)
+      rescue ArgumentError => e
+        raise unless e.message.start_with?("Missing required parameters:")
+
+        # Required parameters not yet available; template will be
+        # fully rendered at run time via rerender_template.
+      end
+    end
+
+
+    # Re-render the template with run-time context merged into build-time context.
+    # prompt_manager parameters may be required (null) and only available at run time.
+    def rerender_template(run_context)
+      merged = (@build_context || {}).merge(run_context)
+      parsed = PM.parse(@template)
+      resolved_ctx = resolve_context(merged, network: nil)
+      rendered = parsed.to_s(**resolved_ctx)
+      @chat.with_instructions(rendered)
+    end
+
+
+    # Extract whitelisted config from front matter and apply to chat
+    def apply_front_matter_config(metadata)
+      FRONT_MATTER_CONFIG_KEYS.each do |key|
+        value = metadata.respond_to?(key) ? metadata.send(key) : nil
+        next unless value
+
+        method = :"with_#{key}"
+        @chat.public_send(method, value) if @chat.respond_to?(method)
+      end
+
+      # Handle model specially (may need with_model)
+      return unless metadata.respond_to?(:model) && metadata.model
+
+      @chat.with_model(metadata.model)
+
+    end
+
+
+    # Determine which memory to use
+    def resolve_active_memory(network: nil, network_memory: nil)
+      network_memory || network&.memory || @memory
+    end
+
+
     # Extract run context from SimpleFlow::Result
-    #
-    # Merges original run params (preserved in context) with current value.
-    # Extracts special parameters (mcp, tools, memory, network_memory) for Robot#run.
-    #
-    # @param result [SimpleFlow::Result] the incoming result
-    # @return [Hash] context for run method including mcp/tools config
-    #
     def extract_run_context(result)
       run_params = result.context[:run_params] || {}
 
-      # Extract robot-specific params that should be passed to run()
+      # Extract robot-specific params
       mcp = run_params.delete(:mcp) || :none
       tools = run_params.delete(:tools) || :none
       memory = run_params.delete(:memory)
@@ -430,7 +426,7 @@ module RobotLab
                  base.merge(message: result.value.to_s)
                end
 
-      # Add back the special params for run()
+      # Add back the special params
       merged[:mcp] = mcp
       merged[:tools] = tools
       merged[:memory] = memory if memory
@@ -438,6 +434,7 @@ module RobotLab
 
       merged
     end
+
 
     def resolve_context(context, network:)
       case context
@@ -447,45 +444,10 @@ module RobotLab
       end
     end
 
-    def build_chat(context, allowed_tools:, memory:, runtime_chat_options: {})
-      model_id = @model.respond_to?(:model_id) ? @model.model_id : @model.to_s
-
-      # Merge chat options: config defaults < robot options < runtime options
-      merged_options = resolve_chat_options(runtime_chat_options)
-
-      # Create chat with model and any applicable options
-      chat = create_chat_with_options(model_id, merged_options)
-
-      # Apply template and/or system_prompt
-      # - Template only: use with_template
-      # - system_prompt only: use with_instructions
-      # - Both: use with_template, then append with_instructions
-      if @template
-        chat = chat.with_template(@template, **context)
-        chat = chat.with_instructions(@system_prompt) if @system_prompt
-      else
-        chat = chat.with_instructions(@system_prompt)
-      end
-
-      # Get filtered tools based on whitelist
-      filtered = filtered_tools(allowed_tools)
-      chat = chat.with_tools(*filtered) if filtered.any?
-
-      # Add callbacks if provided
-      chat = chat.on_tool_call(&@on_tool_call) if @on_tool_call
-      chat = chat.on_tool_result(&@on_tool_result) if @on_tool_result
-
-      # NOTE: Semantic cache wrapping is disabled because the SemanticCache::Middleware
-      # only supports `ask` method, not `complete`. The caching feature needs to be
-      # re-designed to use the `ask` interface or the `fetch` pattern.
-      # See: https://github.com/ruby-llm/ruby_llm-semantic_cache
-
-      chat
-    end
 
     def build_result(response, _memory)
       output = if response.respond_to?(:content) && response.content
-                 [TextMessage.new(role: "assistant", content: response.content)]
+                 [TextMessage.new(role: 'assistant', content: response.content)]
                else
                  []
                end
@@ -500,6 +462,7 @@ module RobotLab
       )
     end
 
+
     def normalize_tool_calls(tool_calls)
       return [] unless tool_calls
 
@@ -507,7 +470,7 @@ module RobotLab
         if tc.is_a?(Hash)
           ToolResultMessage.new(
             tool: tc,
-            content: tc[:result] || tc["result"]
+            content: tc[:result] || tc['result']
           )
         else
           tc
@@ -515,57 +478,32 @@ module RobotLab
       end
     end
 
+
     # Resolve MCP hierarchy: runtime -> robot build -> network -> config
-    #
-    # @param runtime_value [Symbol, Array, nil] Runtime MCP override
-    # @param network [NetworkRun, nil] Network context
-    # @return [Array] Resolved MCP server configurations
-    #
     def resolve_mcp_hierarchy(runtime_value, network:)
-      # Get parent value (network or config)
       parent_value = network&.network&.mcp || RobotLab.config.mcp
-
-      # Resolve robot build config against parent
       build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
-
-      # Resolve runtime against build
       ToolConfig.resolve_mcp(runtime_value, parent_value: build_resolved)
     end
 
+
     # Resolve tools hierarchy: runtime -> robot build -> network -> config
-    #
-    # @param runtime_value [Symbol, Array, nil] Runtime tools override
-    # @param network [NetworkRun, nil] Network context
-    # @return [Array<String>] Resolved tool names whitelist
-    #
     def resolve_tools_hierarchy(runtime_value, network:)
-      # Get parent value (network or config)
       parent_value = network&.network&.tools || RobotLab.config.tools
-
-      # Resolve robot build config against parent
       build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
-
-      # Resolve runtime against build
       ToolConfig.resolve_tools(runtime_value, parent_value: build_resolved)
     end
 
+
     # Ensure MCP clients are initialized for the given server configs
-    #
-    # @param mcp_servers [Array] MCP server configurations
-    #
     def ensure_mcp_clients(mcp_servers)
       return if mcp_servers.empty?
 
-      # Get server names from configs
       needed_servers = mcp_servers.map { |s| s.is_a?(Hash) ? s[:name] : s.to_s }.compact
-
-      # Skip if already initialized with same servers
       return if @mcp_initialized && (@mcp_clients.keys.sort == needed_servers.sort)
 
-      # Disconnect existing clients if config changed
       disconnect if @mcp_initialized
 
-      # Initialize new clients
       @mcp_clients = {}
       @mcp_tools = []
 
@@ -576,10 +514,7 @@ module RobotLab
       @mcp_initialized = true
     end
 
-    # Initialize a single MCP client
-    #
-    # @param server_config [Hash] MCP server configuration
-    #
+
     def init_mcp_client(server_config)
       client = MCP::Client.new(server_config)
       client.connect
@@ -595,11 +530,7 @@ module RobotLab
       end
     end
 
-    # Discover tools from an MCP server and add them to @mcp_tools
-    #
-    # @param client [MCP::Client] Connected MCP client
-    # @param server_name [String] Name of the MCP server
-    #
+
     def discover_mcp_tools(client, server_name)
       tools = client.list_tools
 
@@ -607,7 +538,6 @@ module RobotLab
         tool_name = tool_def[:name]
         mcp_client = client
 
-        # Create a Tool that delegates to the MCP client
         tool = Tool.new(
           name: tool_name,
           description: tool_def[:description],
@@ -624,97 +554,17 @@ module RobotLab
       )
     end
 
-    # Get all tools (local + MCP)
-    #
-    # @return [Array] Combined array of local and MCP tools
-    #
+
     def all_tools
       @local_tools + @mcp_tools
     end
 
-    # Filter tools based on allowed tool names whitelist
-    #
-    # @param allowed_names [Array<String>] Whitelist of tool names (empty = all allowed)
-    # @return [Array] Filtered tools
-    #
+
     def filtered_tools(allowed_names)
       available = all_tools
       return available if allowed_names.empty?
 
       ToolConfig.filter_tools(available, allowed_names: allowed_names)
-    end
-
-    # Build a hash of non-nil chat options
-    #
-    # @param options [Hash] chat options with potentially nil values
-    # @return [Hash] only the non-nil options
-    #
-    def build_chat_options(temperature:, top_p:, top_k:, max_tokens:, presence_penalty:, frequency_penalty:, stop:)
-      {
-        temperature: temperature,
-        top_p: top_p,
-        top_k: top_k,
-        max_tokens: max_tokens,
-        presence_penalty: presence_penalty,
-        frequency_penalty: frequency_penalty,
-        stop: stop
-      }.compact
-    end
-
-    # Resolve chat options by merging: config < robot < runtime
-    #
-    # @param runtime_options [Hash] options passed at run time
-    # @return [Hash] merged chat options
-    #
-    def resolve_chat_options(runtime_options)
-      # Start with config defaults (if chat section exists)
-      config_options = extract_config_chat_options
-
-      # Merge robot-level options (override config)
-      merged = config_options.merge(@chat_options)
-
-      # Merge runtime options (override robot)
-      merged.merge(runtime_options)
-    end
-
-    # Extract chat options from config
-    #
-    # @return [Hash] chat options from RobotLab.config.chat
-    #
-    def extract_config_chat_options
-      return {} unless RobotLab.config.respond_to?(:chat) && RobotLab.config.chat
-
-      chat_config = RobotLab.config.chat
-      {
-        temperature: chat_config.respond_to?(:temperature) ? chat_config.temperature : nil,
-        top_p: chat_config.respond_to?(:top_p) ? chat_config.top_p : nil,
-        top_k: chat_config.respond_to?(:top_k) ? chat_config.top_k : nil,
-        max_tokens: chat_config.respond_to?(:max_tokens) ? chat_config.max_tokens : nil,
-        presence_penalty: chat_config.respond_to?(:presence_penalty) ? chat_config.presence_penalty : nil,
-        frequency_penalty: chat_config.respond_to?(:frequency_penalty) ? chat_config.frequency_penalty : nil,
-        stop: chat_config.respond_to?(:stop) ? chat_config.stop : nil
-      }.compact
-    end
-
-    # Create a chat object with the given model and options
-    #
-    # @param model_id [String] the model identifier
-    # @param options [Hash] chat options to apply
-    # @return [RubyLLM::Chat] configured chat object
-    #
-    def create_chat_with_options(model_id, options)
-      chat = RubyLLM.chat(model: model_id)
-
-      # Apply each option if present
-      chat = chat.with_temperature(options[:temperature]) if options[:temperature]
-      chat = chat.with_top_p(options[:top_p]) if options[:top_p]
-      chat = chat.with_top_k(options[:top_k]) if options[:top_k]
-      chat = chat.with_max_tokens(options[:max_tokens]) if options[:max_tokens]
-      chat = chat.with_presence_penalty(options[:presence_penalty]) if options[:presence_penalty]
-      chat = chat.with_frequency_penalty(options[:frequency_penalty]) if options[:frequency_penalty]
-      chat = chat.with_stop(options[:stop]) if options[:stop]
-
-      chat
     end
   end
 end

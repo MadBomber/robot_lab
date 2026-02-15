@@ -11,7 +11,7 @@
 </td>
 <td width="50%" valign="top">
 RobotLab is a Ruby gem that enables you to build sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks.<br><br>
-Each robot has its own system prompt, tools, and capabilities. Robots can be orchestrated through networks with customizable routing logic, share information through a hierarchical memory system, and connect to external tools via the Model Context Protocol (MCP).
+Each robot is backed by a persistent LLM chat, configured with keyword arguments, and run with a simple positional message. Robots can be orchestrated through networks with task-based pipelines, share information through a reactive memory system, and connect to external tools via the Model Context Protocol (MCP).
 </td>
 </tr>
 </table>
@@ -24,7 +24,7 @@ Each robot has its own system prompt, tools, and capabilities. Robots can be orc
 
     ---
 
-    Build applications with multiple specialized AI agents, each with unique capabilities and personalities.
+    Build applications with multiple specialized AI agents, each inheriting from `RubyLLM::Agent` with persistent chat and memory.
 
     [:octicons-arrow-right-24: Learn more](architecture/core-concepts.md)
 
@@ -32,7 +32,7 @@ Each robot has its own system prompt, tools, and capabilities. Robots can be orc
 
     ---
 
-    Connect robots in networks with flexible routing to handle complex, multi-step workflows.
+    Connect robots in task-based pipelines using SimpleFlow with sequential, parallel, and conditional execution.
 
     [:octicons-arrow-right-24: Creating Networks](guides/creating-networks.md)
 
@@ -40,7 +40,7 @@ Each robot has its own system prompt, tools, and capabilities. Robots can be orc
 
     ---
 
-    Give robots custom tools to interact with external systems, databases, and APIs.
+    Give robots tools via `RubyLLM::Tool` subclasses or `RobotLab::Tool.new` with block handlers.
 
     [:octicons-arrow-right-24: Using Tools](guides/using-tools.md)
 
@@ -52,11 +52,11 @@ Each robot has its own system prompt, tools, and capabilities. Robots can be orc
 
     [:octicons-arrow-right-24: MCP Guide](guides/mcp-integration.md)
 
--   :material-memory:{ .lg .middle } **Shared Memory**
+-   :material-memory:{ .lg .middle } **Reactive Memory**
 
     ---
 
-    Robots can share information through a hierarchical memory system with namespaced scopes.
+    Robots share data through a reactive key-value memory system with subscriptions, blocking reads, and optional Redis backend.
 
     [:octicons-arrow-right-24: Memory System](guides/memory.md)
 
@@ -75,33 +75,34 @@ Each robot has its own system prompt, tools, and capabilities. Robots can be orc
 ```ruby
 require "robot_lab"
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-  config.default_model = "claude-sonnet-4"
-end
+# Configuration is automatic via environment variables, YAML files, or defaults.
+# Set API keys via env vars:
+#   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+#
+# Or place a config file at ~/.config/robot_lab/config.yml
+# Access config values: RobotLab.config.ruby_llm.model  #=> "claude-sonnet-4"
 
-# Create a simple robot
-robot = RobotLab.build do
-  name "assistant"
-  description "A helpful AI assistant"
-  template <<~PROMPT
-    You are a helpful assistant. Answer questions clearly and concisely.
-  PROMPT
-end
+# Create a robot with keyword arguments
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are a helpful assistant. Answer questions clearly and concisely.",
+  model: "claude-sonnet-4"
+)
 
-# Create a network with the robot
-network = RobotLab.create_network do
-  name "simple_network"
-  add_robot robot
-end
+# Run the robot with a positional string argument
+result = robot.run("What is the capital of France?")
 
-# Run the network
-state = RobotLab.create_state(message: "What is the capital of France?")
-result = network.run(state: state)
-
-puts result.last_result.output.first.content
+puts result.last_text_content
 # => "The capital of France is Paris."
+
+# Memory persists across runs
+robot.run("Remember that my favorite color is blue.")
+result = robot.run("What is my favorite color?")
+puts result.last_text_content
+# => "Your favorite color is blue."
+
+# Chaining configuration
+robot.with_instructions("Be extra concise.").with_temperature(0.3).run("Explain Ruby in one sentence.")
 ```
 
 ## Supported LLM Providers
@@ -110,12 +111,16 @@ RobotLab supports multiple LLM providers through the [ruby_llm](https://github.c
 
 | Provider | Models |
 |----------|--------|
-| **Anthropic** | Claude 4, Claude Sonnet, Claude Haiku |
-| **OpenAI** | GPT-4o, GPT-4, GPT-3.5 Turbo |
-| **Google** | Gemini Pro, Gemini Ultra |
-| **Azure OpenAI** | All Azure-hosted OpenAI models |
-| **Bedrock** | Claude models via AWS Bedrock |
+| **Anthropic** | Claude Opus 4, Claude Sonnet 4, Claude Haiku 3.5 |
+| **OpenAI** | GPT-4o, GPT-4, o1, o3 |
+| **Google** | Gemini 2.5 Pro, Gemini 2.5 Flash |
+| **DeepSeek** | DeepSeek V3, DeepSeek R1 |
+| **AWS Bedrock** | Claude models via AWS Bedrock |
+| **Google Vertex AI** | Gemini models via Vertex AI |
 | **Ollama** | Local models via Ollama |
+| **OpenRouter** | Multi-provider routing |
+| **Mistral** | Mistral Large, Mistral Medium |
+| **xAI** | Grok models |
 
 ## Installation
 

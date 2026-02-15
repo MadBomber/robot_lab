@@ -25,7 +25,8 @@ This creates:
 
 - `config/initializers/robot_lab.rb`
 - `app/robots/` directory
-- Database migrations for history
+- `app/tools/` directory
+- Database migrations for conversation history
 
 ### 3. Run Migrations
 
@@ -35,16 +36,59 @@ rails db:migrate
 
 ## Configuration
 
-```ruby
-# config/initializers/robot_lab.rb
+RobotLab uses MywayConfig for configuration. There is no `RobotLab.configure` block. Instead, configuration is loaded automatically from multiple sources in priority order:
 
-RobotLab.configure do |config|
-  config.default_model = ENV.fetch("LLM_MODEL", "claude-sonnet-4")
+1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
+2. Environment-specific overrides (development, test, production)
+3. XDG user config (`~/.config/robot_lab/config.yml`)
+4. Project config (`./config/robot_lab.yml`)
+5. Environment variables (`ROBOT_LAB_*` prefix)
 
-  # Enable logging in development
-  config.logger = Rails.logger if Rails.env.development?
-end
+### Config File
+
+```yaml
+# config/robot_lab.yml
+defaults:
+  ruby_llm:
+    model: claude-sonnet-4
+    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+
+development:
+  ruby_llm:
+    log_level: :debug
+
+production:
+  ruby_llm:
+    request_timeout: 180
+    max_retries: 5
 ```
+
+### Environment Variables
+
+```bash
+# Provider API keys
+ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
+
+# Model configuration
+ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
+ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=120
+```
+
+### Accessing Configuration
+
+```ruby
+# Read configuration values at runtime
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.request_timeout  #=> 120
+
+# The logger defaults to Rails.logger when running in Rails
+RobotLab.config.logger  #=> Rails.logger
+```
+
+### Rails Engine and Railtie
+
+RobotLab provides both a Rails Engine (`RobotLab::Rails::Engine`) and a Railtie (`RobotLab::Rails::Railtie`). These are loaded automatically when Rails is detected. The Engine isolates the RobotLab namespace and adds `app/robots` and `app/tools` to the autoload paths. The Railtie loads rake tasks and generators.
 
 ## Models
 
@@ -70,116 +114,114 @@ class ConversationMessage < ApplicationRecord
   validates :content, presence: true
 
   scope :ordered, -> { order(:position) }
-
-  def to_robot_result
-    RobotLab::RobotResult.from_hash(
-      robot_name: robot_name,
-      input: input,
-      output: output
-    )
-  end
 end
 ```
 
 ## Robot Definitions
 
+Robots are built using `RobotLab.build` with named parameters. Tools are Ruby classes that inherit from `RubyLLM::Tool`.
+
+```ruby
+# app/tools/get_user_info_tool.rb
+class GetUserInfoTool < RubyLLM::Tool
+  description "Get information about the current user"
+
+  param :user_id, type: :integer, desc: "The user ID to look up"
+
+  def execute(user_id:)
+    user = User.find(user_id)
+    {
+      name: user.name,
+      email: user.email,
+      plan: user.subscription&.plan || "free",
+      member_since: user.created_at.to_date.to_s
+    }
+  rescue ActiveRecord::RecordNotFound
+    { error: "User not found" }
+  end
+end
+
+# app/tools/get_orders_tool.rb
+class GetOrdersTool < RubyLLM::Tool
+  description "Get user's recent orders"
+
+  param :user_id, type: :integer, desc: "The user ID"
+  param :limit, type: :integer, desc: "Number of orders to return", default: 5
+
+  def execute(user_id:, limit: 5)
+    orders = Order.where(user_id: user_id)
+                  .order(created_at: :desc)
+                  .limit(limit)
+
+    orders.map do |order|
+      {
+        id: order.external_id,
+        status: order.status,
+        total: order.total.to_f,
+        created_at: order.created_at.iso8601
+      }
+    end
+  end
+end
+
+# app/tools/create_ticket_tool.rb
+class CreateTicketTool < RubyLLM::Tool
+  description "Create a support ticket"
+
+  param :user_id, type: :integer, desc: "The user ID"
+  param :subject, type: :string, desc: "Ticket subject"
+  param :description, type: :string, desc: "Ticket description"
+  param :priority, type: :string, desc: "Priority level", enum: %w[low medium high]
+
+  def execute(user_id:, subject:, description:, priority: "medium")
+    ticket = SupportTicket.create!(
+      user_id: user_id,
+      subject: subject,
+      description: description,
+      priority: priority
+    )
+
+    {
+      success: true,
+      ticket_id: ticket.external_id,
+      message: "Ticket created successfully"
+    }
+  rescue => e
+    { success: false, error: e.message }
+  end
+end
+```
+
 ```ruby
 # app/robots/support_robot.rb
 class SupportRobot
-  def self.build
-    RobotLab.build do
-      name "support"
-      description "Customer support assistant"
-
-      template <<~PROMPT
+  def self.build(user_id:)
+    RobotLab.build(
+      name: "support",
+      system_prompt: <<~PROMPT,
         You are a helpful customer support assistant for our company.
         Be friendly, professional, and thorough in your responses.
         If you need to look up information, use the available tools.
+        The current user ID is #{user_id}.
       PROMPT
-
-      tool :get_user_info do
-        description "Get information about the current user"
-
-        handler do |state:, **_|
-          user_id = state.data[:user_id]
-          user = User.find(user_id)
-
-          {
-            name: user.name,
-            email: user.email,
-            plan: user.subscription&.plan || "free",
-            member_since: user.created_at.to_date.to_s
-          }
-        rescue ActiveRecord::RecordNotFound
-          { error: "User not found" }
-        end
-      end
-
-      tool :get_orders do
-        description "Get user's recent orders"
-        parameter :limit, type: :integer, default: 5
-
-        handler do |limit:, state:, **_|
-          user_id = state.data[:user_id]
-          orders = Order.where(user_id: user_id)
-                       .order(created_at: :desc)
-                       .limit(limit)
-
-          orders.map do |order|
-            {
-              id: order.external_id,
-              status: order.status,
-              total: order.total.to_f,
-              created_at: order.created_at.iso8601
-            }
-          end
-        end
-      end
-
-      tool :create_ticket do
-        description "Create a support ticket"
-        parameter :subject, type: :string, required: true
-        parameter :description, type: :string, required: true
-        parameter :priority, type: :string, enum: %w[low medium high], default: "medium"
-
-        handler do |subject:, description:, priority:, state:, **_|
-          ticket = SupportTicket.create!(
-            user_id: state.data[:user_id],
-            subject: subject,
-            description: description,
-            priority: priority
-          )
-
-          {
-            success: true,
-            ticket_id: ticket.external_id,
-            message: "Ticket created successfully"
-          }
-        rescue => e
-          { success: false, error: e.message }
-        end
-      end
-    end
+      local_tools: [GetUserInfoTool, GetOrdersTool, CreateTicketTool]
+    )
   end
 end
 ```
 
 ## Network Configuration
 
+Networks use `create_network` with a block DSL that defines tasks and their dependencies:
+
 ```ruby
 # app/robots/support_network.rb
 class SupportNetwork
-  def self.build
-    RobotLab.create_network do
-      name "support_network"
-      default_model "claude-sonnet-4"
+  def self.build(user_id:)
+    support = SupportRobot.build(user_id: user_id)
 
-      history RobotLab::History::ActiveRecordAdapter.new(
-        thread_model: ConversationThread,
-        result_model: ConversationMessage
-      ).to_config
-
-      add_robot SupportRobot.build
+    RobotLab.create_network(name: "support_network") do
+      task :support, support, depends_on: :none
     end
   end
 end
@@ -193,43 +235,16 @@ class ChatService
   def initialize(user:, thread_id: nil)
     @user = user
     @thread_id = thread_id
-    @network = SupportNetwork.build
   end
 
-  def call(message:, &streaming_callback)
-    user_message = build_message(message)
-    state = build_state(user_message)
-
-    result = @network.run(state: state, user_id: @user.id) do |event|
-      streaming_callback&.call(event)
-    end
+  def call(message:)
+    robot = SupportRobot.build(user_id: @user.id)
+    result = robot.run(message)
 
     {
-      thread_id: result.state.thread_id,
-      response: extract_response(result),
-      messages: result.new_results
+      response: result.last_text_content,
+      has_tool_calls: result.has_tool_calls?
     }
-  end
-
-  private
-
-  def build_message(content)
-    if @thread_id
-      RobotLab::UserMessage.new(content, thread_id: @thread_id)
-    else
-      content
-    end
-  end
-
-  def build_state(message)
-    RobotLab.create_state(
-      message: message,
-      data: { user_id: @user.id }
-    )
-  end
-
-  def extract_response(result)
-    result.last_result&.output&.find { |m| m.is_a?(RobotLab::TextMessage) }&.content
   end
 end
 ```
@@ -251,7 +266,6 @@ module Api
       result = service.call(message: params[:message])
 
       render json: {
-        thread_id: result[:thread_id],
         response: result[:response]
       }
     end
@@ -283,25 +297,15 @@ class ChatJob < ApplicationJob
 
   def perform(user_id:, thread_id:, message:)
     user = User.find(user_id)
+    robot = SupportRobot.build(user_id: user.id)
 
-    service = ChatService.new(user: user, thread_id: thread_id)
+    result = robot.run(message)
 
-    service.call(message: message) do |event|
-      case event.type
-      when :text_delta
-        broadcast_to_user(user, type: "text", content: event.text)
-      when :tool_call
-        broadcast_to_user(user, type: "tool", name: event.name)
-      when :complete
-        broadcast_to_user(user, type: "complete")
-      end
-    end
-  end
-
-  private
-
-  def broadcast_to_user(user, data)
-    ChatChannel.broadcast_to(user, data)
+    ChatChannel.broadcast_to(
+      user,
+      type: "complete",
+      content: result.last_text_content
+    )
   end
 end
 ```
@@ -347,14 +351,8 @@ export default class extends Controller {
 
   handleMessage(data) {
     switch (data.type) {
-      case "text":
-        this.currentResponse.textContent += data.content
-        break
-      case "tool":
-        // Show tool indicator
-        break
       case "complete":
-        this.threadId = data.thread_id
+        this.currentResponse.textContent = data.content
         break
     }
   }
@@ -397,7 +395,7 @@ yarn install
 # Setup database
 rails db:migrate
 
-# Set API key
+# Set API key (or configure via config/robot_lab.yml)
 export ANTHROPIC_API_KEY="your-key"
 
 # Start server
@@ -406,15 +404,16 @@ bin/dev
 
 ## Key Concepts
 
-1. **Robot Classes**: Encapsulate robot definitions
-2. **Network Classes**: Configure multi-robot networks
-3. **Service Objects**: Handle business logic
-4. **Action Cable**: Real-time streaming to browser
-5. **Background Jobs**: Non-blocking processing
-6. **History Persistence**: ActiveRecord integration
+1. **Robot Factory**: `RobotLab.build(name:, system_prompt:, local_tools:, ...)` creates robot instances
+2. **MywayConfig**: Configuration via YAML files and environment variables, not a configure block
+3. **`robot.run("message")`**: Send a message as a positional string argument
+4. **`result.last_text_content`**: Extract the response text from a `RobotResult`
+5. **Memory**: Robots have `robot.memory` for key-value storage; networks share memory
+6. **Tools**: Ruby classes inheriting from `RubyLLM::Tool`, passed via `local_tools:`
+7. **Action Cable**: Real-time streaming to browser
+8. **Background Jobs**: Non-blocking processing
 
 ## See Also
 
 - [Rails Integration Guide](../guides/rails-integration.md)
 - [Streaming Guide](../guides/streaming.md)
-- [History Guide](../guides/history.md)

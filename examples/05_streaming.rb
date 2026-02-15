@@ -8,13 +8,10 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/05_streaming.rb
 
-require_relative "../lib/robot_lab"
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
+require_relative "../lib/robot_lab"
 
 # Create a streaming handler
 streaming_handler = lambda do |event|
@@ -97,11 +94,11 @@ puts <<~CODE
   robot = RobotLab.build(
     name: "streamer",
     template: :helper,
-    model: "claude-sonnet-4"
+    model: "claude-3-haiku-20240307"
   )
 
   # Run with streaming callback
-  result = robot.run(message: "Tell me a story") do |event|
+  result = robot.run("Tell me a story") do |event|
     case event[:event]
     when "text.delta"
       print event[:data][:delta]

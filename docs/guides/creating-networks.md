@@ -38,6 +38,20 @@ network = RobotLab.create_network(name: "parallel", concurrency: :threads) do
 end
 ```
 
+### Shared Memory
+
+Networks provide a shared memory accessible to all robots:
+
+```ruby
+network = RobotLab.create_network(name: "pipeline") do
+  task :first, robot1, depends_on: :none
+end
+
+# Pre-populate shared memory
+network.memory[:project] = "Q4 Report"
+network.memory[:user_id] = 123
+```
+
 ## Adding Tasks
 
 ### Sequential Tasks
@@ -72,7 +86,7 @@ end
 
 ### Optional Tasks
 
-Optional tasks only run when explicitly activated:
+Optional tasks only run when explicitly activated by a preceding robot:
 
 ```ruby
 network = RobotLab.create_network(name: "router") do
@@ -85,7 +99,7 @@ end
 
 ## Per-Task Configuration
 
-Tasks can have individual context and configuration that's deep-merged with the network's run parameters:
+Tasks can have individual context and configuration that is deep-merged with the network's run parameters:
 
 ```ruby
 network = RobotLab.create_network(name: "support") do
@@ -105,8 +119,8 @@ end
 | Option | Description |
 |--------|-------------|
 | `context` | Hash merged with run params (task values override) |
-| `mcp` | MCP servers for this task |
-| `tools` | Tools available to this task |
+| `mcp` | MCP servers for this task (`:none`, `:inherit`, or array) |
+| `tools` | Tools available to this task (`:none`, `:inherit`, or array) |
 | `memory` | Task-specific memory |
 | `depends_on` | `:none`, `[:task1]`, or `:optional` |
 
@@ -117,7 +131,9 @@ Use optional tasks with custom Robot subclasses for intelligent routing:
 ```ruby
 class ClassifierRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    context = extract_run_context(result)
+    message = context.delete(:message)
+    robot_result = run(message, **context)
 
     new_result = result
       .with_context(@name.to_sym, robot_result)
@@ -194,6 +210,25 @@ result.halted?    # Whether execution was halted early
 result.continued? # Whether execution continued normally
 ```
 
+## Broadcasting
+
+Networks support a broadcast channel for network-wide announcements:
+
+```ruby
+# Register a broadcast handler
+network.on_broadcast do |message|
+  case message[:payload][:event]
+  when :pause
+    puts "Pausing: #{message[:payload][:reason]}"
+  when :phase_complete
+    puts "Phase complete: #{message[:payload][:phase]}"
+  end
+end
+
+# Send broadcasts during execution
+network.broadcast(event: :phase_complete, phase: "analysis")
+```
+
 ## Patterns
 
 ### Classifier Pattern
@@ -203,7 +238,10 @@ Route to specialists based on classification:
 ```ruby
 class SupportClassifier < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    context = extract_run_context(result)
+    message = context.delete(:message)
+    robot_result = run(message, **context)
+
     new_result = result
       .with_context(@name.to_sym, robot_result)
       .continue(robot_result)
@@ -259,7 +297,9 @@ A robot can halt execution early:
 ```ruby
 class ValidatorRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    context = extract_run_context(result)
+    message = context.delete(:message)
+    robot_result = run(message, **context)
 
     if robot_result.last_text_content.include?("INVALID")
       # Stop the pipeline
@@ -270,6 +310,30 @@ class ValidatorRobot < RobotLab::Robot
         .with_context(@name.to_sym, robot_result)
         .continue(robot_result)
     end
+  end
+end
+```
+
+### Data Passing Between Tasks
+
+Access previous task results via context:
+
+```ruby
+class ResponderRobot < RobotLab::Robot
+  def call(result)
+    # Get classifier's output
+    classification = result.context[:classifier]&.last_text_content
+
+    context = extract_run_context(result)
+    message = context.delete(:message)
+
+    # Use classification in the message or context
+    robot_result = run(
+      "Classification: #{classification}\n\nUser message: #{message}",
+      **context
+    )
+
+    result.with_context(@name.to_sym, robot_result).continue(robot_result)
   end
 end
 ```
@@ -290,6 +354,13 @@ puts network.to_mermaid
 # => Mermaid graph definition
 ```
 
+### DOT Format (Graphviz)
+
+```ruby
+puts network.to_dot
+# => Graphviz DOT format
+```
+
 ### Execution Plan
 
 ```ruby
@@ -305,6 +376,7 @@ network.robots            # => Hash of name => Robot
 network.robot(:billing)   # => Robot instance
 network["billing"]        # => Robot instance (alias)
 network.available_robots  # => Array of Robot instances
+network.memory            # => Memory instance (shared)
 network.to_h              # => Hash representation
 ```
 
@@ -323,25 +395,14 @@ task :respond, responder, depends_on: [:classify]
 task :do_everything, mega_robot, depends_on: :none
 ```
 
-### 2. Use Context for Data Passing
+### 2. Use Per-Task Context
 
-Access previous results via context:
+Pass task-specific configuration through context:
 
 ```ruby
-class ResponderRobot < RobotLab::Robot
-  def call(result)
-    # Get classifier's output
-    classification = result.context[:classifier]&.last_text_content
-
-    # Use it in this robot's run
-    robot_result = run(
-      **extract_run_context(result),
-      classification: classification
-    )
-
-    result.with_context(@name.to_sym, robot_result).continue(robot_result)
-  end
-end
+task :billing, billing_robot,
+     context: { department: "billing", max_refund: 500 },
+     depends_on: :optional
 ```
 
 ### 3. Handle Missing Results
@@ -359,8 +420,17 @@ def call(result)
 end
 ```
 
+### 4. Reset Memory Between Runs
+
+If reusing a network, reset shared memory between runs:
+
+```ruby
+network.reset_memory
+result = network.run(message: "New request")
+```
+
 ## Next Steps
 
 - [Using Tools](using-tools.md) - Add capabilities to robots
-- [Memory Guide](memory.md) - Persistent memory across runs
+- [Memory Guide](memory.md) - Shared memory patterns
 - [API Reference: Network](../api/core/network.md) - Complete API

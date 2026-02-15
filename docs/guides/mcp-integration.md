@@ -12,13 +12,15 @@ MCP is a protocol that allows LLM applications to connect to external servers th
 
 ## Configuring MCP Servers
 
-### At Network Level
+### At Robot Level
+
+Use the `mcp:` parameter on `RobotLab.build` to connect a robot to MCP servers:
 
 ```ruby
-network = RobotLab.create_network do
-  name "dev_assistant"
-
-  mcp [
+robot = RobotLab.build(
+  name: "coder",
+  template: :developer,
+  mcp: [
     {
       name: "filesystem",
       transport: {
@@ -31,40 +33,49 @@ network = RobotLab.create_network do
       name: "github",
       transport: {
         type: "stdio",
-        command: "mcp-server-github"
+        command: "mcp-server-github",
+        env: { "GITHUB_TOKEN" => ENV["GITHUB_TOKEN"] }
       }
     }
   ]
-end
+)
 ```
 
-### At Robot Level
+### Hierarchical Configuration
+
+The `mcp:` parameter supports three modes:
+
+| Value | Behavior |
+|-------|----------|
+| `:none` | No MCP servers (default) |
+| `:inherit` | Inherit from network or global config |
+| `[...]` | Explicit array of server configurations |
 
 ```ruby
-robot = RobotLab.build do
-  name "coder"
+# Inherit from network/config
+robot = RobotLab.build(
+  name: "reader",
+  system_prompt: "You help read files.",
+  mcp: :inherit
+)
 
-  # Use network's MCP servers
-  mcp :inherit
-
-  # Or specific servers
-  mcp [
-    { name: "filesystem", transport: { type: "stdio", command: "mcp-fs" } }
-  ]
-
-  # Or disable MCP
-  mcp :none
-end
+# Disable MCP explicitly
+robot = RobotLab.build(
+  name: "calculator",
+  system_prompt: "You do math.",
+  mcp: :none
+)
 ```
 
-### Global Configuration
+### Resolution Order
 
-```ruby
-RobotLab.configure do |config|
-  config.mcp = [
-    { name: "common_tools", transport: { type: "stdio", command: "common-mcp" } }
-  ]
-end
+MCP configuration resolves through a hierarchy: **runtime > robot build > network > global config**. Each level can override the previous:
+
+```
+Global (RobotLab.config.mcp)
+  -> Network (task mcp: [...])
+    -> Robot (mcp: :inherit | :none | [...])
+      -> Runtime (robot.run("msg", mcp: [...]))
 ```
 
 ## Transport Types
@@ -134,68 +145,54 @@ Streamable HTTP transport with session support:
 
 ## Using MCP Tools
 
-Once configured, MCP tools are automatically available to robots:
+Once configured, MCP tools are automatically discovered and made available to the robot. The robot connects to MCP servers on its first `run` call and discovers tools dynamically:
 
 ```ruby
-network = RobotLab.create_network do
-  mcp [
+robot = RobotLab.build(
+  name: "helper",
+  system_prompt: <<~PROMPT
+    You can help users with GitHub tasks.
+    Use available tools to search repositories, create issues, etc.
+  PROMPT,
+  mcp: [
     { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
   ]
+)
 
-  add_robot RobotLab.build {
-    name "helper"
-    template <<~PROMPT
-      You can help users with GitHub tasks.
-      Use available tools to search repositories, create issues, etc.
-    PROMPT
-  }
-end
-
-# The robot can now use GitHub MCP tools
-state = RobotLab.create_state(message: "Find repositories about machine learning")
-network.run(state: state)
+# MCP tools are automatically available
+result = robot.run("Find repositories about machine learning")
+puts result.last_text_content
 ```
 
 ## Filtering MCP Tools
 
-Restrict which MCP tools are available:
+Use the `tools:` parameter to restrict which tools (including MCP-discovered tools) are available to a robot:
 
 ```ruby
-robot = RobotLab.build do
-  name "reader"
-  mcp :inherit
-
-  # Only allow specific MCP tools
-  tools %w[read_file search_code list_directory]
-end
-```
-
-## MCP Server Configuration
-
-### Server Object
-
-```ruby
-server = RobotLab::MCP::Server.new(
-  name: "my_server",
-  transport: {
-    type: "stdio",
-    command: "my-mcp-server"
-  }
+robot = RobotLab.build(
+  name: "reader",
+  system_prompt: "You help read and search files.",
+  mcp: [
+    { name: "filesystem", transport: { type: "stdio", command: "mcp-server-fs" } }
+  ],
+  tools: %w[read_file search_files list_directory]  # Only allow specific tools
 )
-
-server.name           # => "my_server"
-server.transport_type # => "stdio"
-server.to_h           # Hash representation
 ```
 
-### Client Object
+## MCP in Networks
+
+When running robots in a network, use per-task MCP configuration:
 
 ```ruby
-client = RobotLab::MCP::Client.new(server: server)
-client.connect
-
-client.connected?     # => true
-client.to_h           # Client info
+network = RobotLab.create_network(name: "dev_pipeline") do
+  task :planner, planner_robot, depends_on: :none
+  task :coder, coder_robot,
+       mcp: [
+         { name: "filesystem", transport: { type: "stdio", command: "mcp-server-fs" } }
+       ],
+       depends_on: [:planner]
+  task :reviewer, reviewer_robot, depends_on: [:coder]
+end
 ```
 
 ## Common MCP Servers
@@ -245,54 +242,70 @@ Tools: `search_repositories`, `create_issue`, `get_file_contents`, etc.
 
 Tools: `query`, `list_tables`, `describe_table`
 
+## MCP Server and Client Objects
+
+For programmatic access, you can work with MCP objects directly:
+
+```ruby
+# Server configuration
+server = RobotLab::MCP::Server.new(
+  name: "my_server",
+  transport: {
+    type: "stdio",
+    command: "my-mcp-server"
+  }
+)
+
+# Client connection
+client = RobotLab::MCP::Client.new(server)
+client.connect
+
+client.connected?           # => true
+client.list_tools           # => Array of tool definitions
+client.call_tool("search", { query: "ruby" })
+client.list_resources       # => Array of resource definitions
+client.disconnect
+```
+
 ## Error Handling
 
 ### Connection Errors
 
 ```ruby
 begin
-  network.run(state: state)
+  result = robot.run("Search for repos")
 rescue RobotLab::MCPError => e
   puts "MCP Error: #{e.message}"
-  # Handle gracefully
 end
 ```
 
-### Missing Dependencies
-
-```ruby
-# If async-websocket not installed
-rescue RobotLab::MCPError => e
-  if e.message.include?("async-websocket")
-    puts "Install async-websocket gem for WebSocket support"
-  end
-end
-```
+!!! tip
+    MCP connection failures are logged as warnings but do not raise errors by default. The robot will continue without MCP tools if a server is unreachable.
 
 ## Disconnecting
 
-Robots automatically disconnect from MCP servers when done:
+Robots can be manually disconnected from MCP servers:
 
 ```ruby
-robot.disconnect  # Manually disconnect
+robot.disconnect  # Disconnect all MCP clients
 ```
-
-Networks handle this automatically at the end of a run.
 
 ## Patterns
 
 ### Development vs Production
 
 ```ruby
-network = RobotLab.create_network do
-  mcp_config = if Rails.env.development?
-    [{ name: "local_fs", transport: { type: "stdio", command: "mcp-fs", args: ["--root", "."] } }]
-  else
-    [{ name: "s3", transport: { type: "stdio", command: "mcp-s3" } }]
-  end
-
-  mcp mcp_config
+mcp_config = if Rails.env.development?
+  [{ name: "local_fs", transport: { type: "stdio", command: "mcp-fs", args: ["--root", "."] } }]
+else
+  [{ name: "s3", transport: { type: "stdio", command: "mcp-s3" } }]
 end
+
+robot = RobotLab.build(
+  name: "file_handler",
+  system_prompt: "You manage files.",
+  mcp: mcp_config
+)
 ```
 
 ### Dynamic Server Selection
@@ -305,9 +318,11 @@ def mcp_servers_for_user(user)
   servers
 end
 
-network = RobotLab.create_network do
-  mcp mcp_servers_for_user(current_user)
-end
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You help the user with connected services.",
+  mcp: mcp_servers_for_user(current_user)
+)
 ```
 
 ## Best Practices
@@ -330,24 +345,25 @@ end
 
 ### 2. Limit Tool Access
 
-```ruby
-# Don't expose all tools
-robot = RobotLab.build do
-  mcp :inherit
-  tools %w[read_file search_files]  # No write access
-end
-```
-
-### 3. Handle Disconnections
+Restrict which MCP tools are available to a robot using the `tools:` parameter:
 
 ```ruby
-begin
-  result = network.run(state: state)
-rescue RobotLab::MCPError
-  # Retry without MCP
-  result = network.run(state: state, mcp: :none)
-end
+robot = RobotLab.build(
+  name: "reader",
+  system_prompt: "You read and search files.",
+  mcp: [{ name: "fs", transport: { type: "stdio", command: "mcp-fs" } }],
+  tools: %w[read_file search_files]  # No write access
+)
 ```
+
+### 3. Use Appropriate Transports
+
+| Transport | Best For |
+|-----------|----------|
+| `stdio` | Local servers, CLI tools |
+| `websocket` | Persistent connections, bidirectional |
+| `sse` | Server push, event streams |
+| `streamable_http` | Remote APIs, session-based |
 
 ## Next Steps
 

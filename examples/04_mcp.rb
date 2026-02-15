@@ -21,13 +21,10 @@
 #   - Reading file contents and repository information
 #   - Managing branches and commits
 
-require_relative "../lib/robot_lab"
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
+require_relative "../lib/robot_lab"
 
 # GitHub MCP server configuration using StdIO transport
 github_server = {
@@ -151,7 +148,7 @@ begin
     name: "github_assistant",
     template: :github_assistant,
     mcp_servers: [github_server],
-    model: "claude-sonnet-4-20250514"
+    model: "claude-3-haiku-20240307"
   )
 
   puts "Robot created: #{robot.name}"
@@ -175,7 +172,7 @@ begin
   puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
   puts "-" * 40
 
-  result = robot.run(message: "What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.")
+  result = robot.run("What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.")
 
   puts
   puts "Robot Response:"

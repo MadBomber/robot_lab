@@ -4,47 +4,49 @@ Conversation persistence and thread management.
 
 ## Overview
 
-The history system enables persistent conversations by storing and retrieving conversation threads and results.
+The history system enables persistent conversations by storing and retrieving conversation threads and results. It uses a callback-based architecture where you provide lambda/proc implementations for thread creation, retrieval, and result storage.
 
 ```ruby
-network = RobotLab.create_network do
-  name "persistent_chat"
-
-  history History::Config.new(
-    create_thread: ->(state:, **) { Thread.create(id: SecureRandom.uuid) },
-    get: ->(thread_id:, **) { Thread.find(thread_id).results },
-    append_results: ->(thread_id:, new_results:, **) {
-      Thread.find(thread_id).results.concat(new_results)
-    }
-  )
-
-  add_robot assistant
-end
+config = RobotLab::History::Config.new(
+  create_thread: ->(state:, input:, **) {
+    { session_id: SecureRandom.uuid }
+  },
+  get: ->(session_id:, **) {
+    STORE[session_id] || []
+  },
+  append_results: ->(session_id:, new_results:, **) {
+    STORE[session_id] ||= []
+    STORE[session_id].concat(new_results)
+  }
+)
 ```
 
 ## Components
 
 | Component | Description |
 |-----------|-------------|
-| [Config](config.md) | History configuration |
+| [Config](config.md) | History configuration with persistence callbacks |
 | [ThreadManager](thread-manager.md) | Thread lifecycle management |
-| [ActiveRecordAdapter](active-record-adapter.md) | Rails integration |
+| [ActiveRecordAdapter](active-record-adapter.md) | Rails ActiveRecord integration |
 
 ## Quick Start
 
 ### Basic Configuration
 
 ```ruby
-history = History::Config.new(
+STORE = {}
+
+history = RobotLab::History::Config.new(
   create_thread: ->(state:, input:, **) {
-    { id: SecureRandom.uuid }
+    id = SecureRandom.uuid
+    STORE[id] = []
+    { session_id: id }
   },
-  get: ->(thread_id:, **) {
-    STORE[thread_id] || []
+  get: ->(session_id:, **) {
+    STORE[session_id] || []
   },
-  append_results: ->(thread_id:, new_results:, **) {
-    STORE[thread_id] ||= []
-    STORE[thread_id].concat(new_results)
+  append_results: ->(session_id:, new_results:, **) {
+    STORE[session_id].concat(new_results)
   }
 )
 ```
@@ -52,36 +54,29 @@ history = History::Config.new(
 ### With ActiveRecord
 
 ```ruby
-history = History::ActiveRecordAdapter.new(
-  thread_model: ConversationThread,
-  result_model: ConversationResult
-).to_config
+adapter = RobotLab::History::ActiveRecordAdapter.new(
+  thread_model: RobotLabThread,
+  result_model: RobotLabResult
+)
+
+config = adapter.to_config
 ```
 
 ## Callbacks
 
-| Callback | Purpose |
-|----------|---------|
-| `create_thread` | Create new conversation thread |
-| `get` | Retrieve existing thread history |
-| `append_results` | Add results to thread |
+| Callback | Required | Purpose |
+|----------|----------|---------|
+| `create_thread` | Yes (for `configured?`) | Create a new conversation thread |
+| `get` | Yes (for `configured?`) | Retrieve existing thread history |
+| `append_user_message` | No | Record user messages |
+| `append_results` | No | Persist robot results |
 
 ## Thread Lifecycle
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant N as Network
-    participant H as History
-
-    U->>N: Run with new message
-    N->>H: get(thread_id)
-    H-->>N: Previous results
-    N->>N: Execute robots
-    N->>H: append_results(new_results)
-    H-->>N: Saved
-    N-->>U: Result with thread_id
-```
+1. **Create** -- When a new conversation starts, `create_thread` is called. It must return a Hash with a `:session_id` key.
+2. **Retrieve** -- On subsequent messages, `get` is called with the `session_id` to load previous results.
+3. **Append** -- After each robot execution, `append_results` is called with the new `RobotResult` objects.
+4. **User Messages** -- Optionally, `append_user_message` records each user input.
 
 ## Examples
 
@@ -90,17 +85,17 @@ sequenceDiagram
 ```ruby
 THREADS = {}
 
-history = History::Config.new(
+history = RobotLab::History::Config.new(
   create_thread: ->(state:, **) {
     id = SecureRandom.uuid
     THREADS[id] = []
-    { id: id }
+    { session_id: id }
   },
-  get: ->(thread_id:, **) {
-    THREADS[thread_id] || []
+  get: ->(session_id:, **) {
+    THREADS[session_id] || []
   },
-  append_results: ->(thread_id:, new_results:, **) {
-    THREADS[thread_id].concat(new_results)
+  append_results: ->(session_id:, new_results:, **) {
+    THREADS[session_id].concat(new_results)
   }
 )
 ```
@@ -108,25 +103,26 @@ history = History::Config.new(
 ### Redis Store
 
 ```ruby
-history = History::Config.new(
+history = RobotLab::History::Config.new(
   create_thread: ->(state:, **) {
     id = SecureRandom.uuid
     Redis.current.set("thread:#{id}", [].to_json)
-    { id: id }
+    { session_id: id }
   },
-  get: ->(thread_id:, **) {
-    data = Redis.current.get("thread:#{thread_id}")
+  get: ->(session_id:, **) {
+    data = Redis.current.get("thread:#{session_id}")
     data ? JSON.parse(data) : []
   },
-  append_results: ->(thread_id:, new_results:, **) {
-    existing = JSON.parse(Redis.current.get("thread:#{thread_id}") || "[]")
+  append_results: ->(session_id:, new_results:, **) {
+    existing = JSON.parse(Redis.current.get("thread:#{session_id}") || "[]")
     existing.concat(new_results.map(&:to_h))
-    Redis.current.set("thread:#{thread_id}", existing.to_json)
+    Redis.current.set("thread:#{session_id}", existing.to_json)
   }
 )
 ```
 
 ## See Also
 
-- [History Guide](../../guides/history.md)
-- [State](../core/state.md)
+- [Config](config.md)
+- [ThreadManager](thread-manager.md)
+- [ActiveRecordAdapter](active-record-adapter.md)

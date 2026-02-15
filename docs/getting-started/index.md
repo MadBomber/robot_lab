@@ -15,7 +15,7 @@ In this section, you'll learn how to:
 
 Before you begin, make sure you have:
 
-- **Ruby 3.1+** installed
+- **Ruby 3.2+** installed
 - An **API key** from at least one LLM provider:
     - [Anthropic](https://console.anthropic.com/) (recommended)
     - [OpenAI](https://platform.openai.com/)

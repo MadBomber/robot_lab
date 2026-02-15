@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "myway_config"
+require 'myway_config'
 
 module RobotLab
   # Modern configuration class using MywayConfig for RobotLab.
@@ -29,7 +29,7 @@ module RobotLab
   class Config < MywayConfig::Base
     config_name :robot_lab
     env_prefix :robot_lab
-    defaults_path File.expand_path("config/defaults.yml", __dir__)
+    defaults_path File.expand_path('config/defaults.yml', __dir__)
     auto_configure!
 
     # @!attribute [rw] logger
@@ -43,6 +43,7 @@ module RobotLab
       @logger ||= default_logger
     end
 
+
     # Apply RubyLLM configuration after loading.
     #
     # This method should be called after initialization to configure
@@ -52,8 +53,9 @@ module RobotLab
     # @return [void]
     def after_load
       apply_ruby_llm_config!
-      apply_template_path!
+      apply_prompt_manager!
     end
+
 
     # Apply all RubyLLM settings from the ruby_llm configuration section.
     #
@@ -74,26 +76,30 @@ module RobotLab
     private
 
     def apply_provider_api_keys(c)
-      c.anthropic_api_key = ruby_llm.anthropic_api_key if ruby_llm.anthropic_api_key
-      c.openai_api_key = ruby_llm.openai_api_key if ruby_llm.openai_api_key
-      c.gemini_api_key = ruby_llm.gemini_api_key if ruby_llm.gemini_api_key
-      c.deepseek_api_key = ruby_llm.deepseek_api_key if ruby_llm.deepseek_api_key
-      c.mistral_api_key = ruby_llm.mistral_api_key if ruby_llm.mistral_api_key
-      c.perplexity_api_key = ruby_llm.perplexity_api_key if ruby_llm.perplexity_api_key
-      c.openrouter_api_key = ruby_llm.openrouter_api_key if ruby_llm.openrouter_api_key
-      c.gpustack_api_key = ruby_llm.gpustack_api_key if ruby_llm.gpustack_api_key
-      c.xai_api_key = ruby_llm.xai_api_key if ruby_llm.xai_api_key
+      # Fall back to standard provider env vars when not set in config.
+      # This lets users set ANTHROPIC_API_KEY (etc.) directly without
+      # needing the ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY prefix.
+      set_if_present(c, :anthropic_api_key, :anthropic_api_key, 'ANTHROPIC_API_KEY')
+      set_if_present(c, :openai_api_key, :openai_api_key, 'OPENAI_API_KEY')
+      set_if_present(c, :gemini_api_key, :gemini_api_key, 'GEMINI_API_KEY')
+      set_if_present(c, :deepseek_api_key, :deepseek_api_key, 'DEEPSEEK_API_KEY')
+      set_if_present(c, :mistral_api_key, :mistral_api_key, 'MISTRAL_API_KEY')
+      set_if_present(c, :perplexity_api_key, :perplexity_api_key, 'PERPLEXITY_API_KEY')
+      set_if_present(c, :openrouter_api_key, :openrouter_api_key, 'OPENROUTER_API_KEY')
+      set_if_present(c, :gpustack_api_key, :gpustack_api_key, 'GPUSTACK_API_KEY')
+      set_if_present(c, :xai_api_key, :xai_api_key, 'XAI_API_KEY')
 
       # AWS Bedrock
-      c.bedrock_api_key = ruby_llm.bedrock_api_key if ruby_llm.bedrock_api_key
-      c.bedrock_secret_key = ruby_llm.bedrock_secret_key if ruby_llm.bedrock_secret_key
-      c.bedrock_region = ruby_llm.bedrock_region if ruby_llm.bedrock_region
-      c.bedrock_session_token = ruby_llm.bedrock_session_token if ruby_llm.bedrock_session_token
+      set_if_present(c, :bedrock_api_key, :bedrock_api_key, 'AWS_ACCESS_KEY_ID')
+      set_if_present(c, :bedrock_secret_key, :bedrock_secret_key, 'AWS_SECRET_ACCESS_KEY')
+      set_if_present(c, :bedrock_region, :bedrock_region, 'AWS_REGION')
+      set_if_present(c, :bedrock_session_token, :bedrock_session_token, 'AWS_SESSION_TOKEN')
 
       # Google Vertex AI
-      c.vertexai_project_id = ruby_llm.vertexai_project_id if ruby_llm.vertexai_project_id
-      c.vertexai_location = ruby_llm.vertexai_location if ruby_llm.vertexai_location
+      set_if_present(c, :vertexai_project_id, :vertexai_project_id, 'GOOGLE_CLOUD_PROJECT')
+      set_if_present(c, :vertexai_location, :vertexai_location, 'GOOGLE_CLOUD_LOCATION')
     end
+
 
     def apply_provider_endpoints(c)
       c.openai_api_base = ruby_llm.openai_api_base if ruby_llm.openai_api_base
@@ -103,11 +109,13 @@ module RobotLab
       c.xai_api_base = ruby_llm.xai_api_base if ruby_llm.xai_api_base
     end
 
+
     def apply_openai_options(c)
       c.openai_organization_id = ruby_llm.openai_organization_id if ruby_llm.openai_organization_id
       c.openai_project_id = ruby_llm.openai_project_id if ruby_llm.openai_project_id
       c.openai_use_system_role = ruby_llm.openai_use_system_role unless ruby_llm.openai_use_system_role.nil?
     end
+
 
     def apply_default_models(c)
       c.default_model = ruby_llm.default_model if ruby_llm.default_model
@@ -115,6 +123,7 @@ module RobotLab
       c.default_image_model = ruby_llm.default_image_model if ruby_llm.default_image_model
       c.default_moderation_model = ruby_llm.default_moderation_model if ruby_llm.default_moderation_model
     end
+
 
     def apply_connection_settings(c)
       c.request_timeout = ruby_llm.request_timeout if ruby_llm.request_timeout
@@ -125,37 +134,48 @@ module RobotLab
       c.http_proxy = ruby_llm.http_proxy if ruby_llm.http_proxy
     end
 
+
     def apply_logging_options(c)
       c.log_file = ruby_llm.log_file if ruby_llm.log_file
       c.log_level = ruby_llm.log_level if ruby_llm.log_level
       c.log_stream_debug = ruby_llm.log_stream_debug unless ruby_llm.log_stream_debug.nil?
     end
 
-    def apply_template_path!
+
+    def apply_prompt_manager!
       path = resolved_template_path
       return unless path
 
-      require "ruby_llm/template"
-      RubyLLM::Template.configure do |config|
-        config.template_directory = path
+      PM.configure do |c|
+        c.prompts_dir = path
       end
     end
+
+
+    # Set a RubyLLM config attribute from config value or standard env var.
+    # Only sets when a non-nil value is found, to avoid overwriting defaults.
+    def set_if_present(c, setter, config_key, env_var)
+      value = ruby_llm.public_send(config_key) || ENV[env_var]
+      c.public_send(:"#{setter}=", value) if value
+    end
+
 
     def resolved_template_path
       return template_path if template_path
 
       if defined?(Rails) && Rails.root
-        Rails.root.join("app", "prompts").to_s
+        Rails.root.join('app', 'prompts').to_s
       else
-        "prompts"
+        'prompts'
       end
     end
+
 
     def default_logger
       if defined?(Rails) && Rails.respond_to?(:logger)
         Rails.logger
       else
-        require "logger"
+        require 'logger'
         Logger.new($stdout, level: Logger::INFO)
       end
     end

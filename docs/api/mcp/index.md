@@ -4,108 +4,123 @@ Integration with MCP servers for extended tool capabilities.
 
 ## Overview
 
-MCP allows robots to connect to external tool servers, extending their capabilities without modifying robot code.
+MCP allows robots to connect to external tool servers, extending their capabilities without modifying robot code. RobotLab provides an MCP client that communicates with MCP-compliant servers over multiple transport types.
 
 ```ruby
-robot = RobotLab.build do
-  name "developer"
-  template "You help with coding tasks."
-
-  mcp [
+robot = Robot.new(
+  name: "developer",
+  system_prompt: "You help with coding tasks.",
+  mcp: [
     {
       name: "filesystem",
       transport: { type: "stdio", command: "npx @modelcontextprotocol/server-filesystem" }
     }
   ]
-end
+)
 ```
 
 ## Components
 
 | Component | Description |
 |-----------|-------------|
-| [Client](client.md) | Connects to MCP servers |
-| [Server](server.md) | Exposes tools via MCP |
-| [Transports](transports.md) | Communication methods |
+| [Client](client.md) | Connects to MCP servers, lists tools, calls tools |
+| [Server](server.md) | Server configuration data structure |
+| [Transports](transports.md) | Communication methods (stdio, WebSocket, SSE, HTTP) |
 
 ## Quick Start
 
-### Using MCP Tools
+### Using MCP with a Robot
+
+Pass MCP server configurations via the `mcp:` parameter when creating a robot:
 
 ```ruby
-network = RobotLab.create_network do
-  name "with_mcp"
-
-  mcp [
+robot = Robot.new(
+  name: "assistant",
+  template: :assistant,
+  mcp: [
     { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
   ]
-
-  add_robot RobotLab.build {
-    name "assistant"
-    template "You help with GitHub tasks."
-    mcp :inherit  # Use network's MCP servers
-  }
-end
-```
-
-### Creating an MCP Server
-
-```ruby
-server = RobotLab::MCP::Server.new(name: "my_tools")
-
-server.add_tool(
-  name: "get_user",
-  description: "Get user by ID",
-  parameters: { id: { type: "string", required: true } },
-  handler: ->(id:) { User.find(id).to_h }
 )
 
-server.start(transport: :stdio)
+result = robot.run("List my open pull requests")
+result.last_text_content
+```
+
+### MCP in Networks
+
+Robots in a network can inherit MCP servers from the network or define their own:
+
+```ruby
+network_mcp = [
+  { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
+]
+
+robot = Robot.new(
+  name: "assistant",
+  template: :assistant,
+  mcp: :inherit  # Use network's MCP servers
+)
+```
+
+### Direct Client Usage
+
+```ruby
+client = RobotLab::MCP::Client.new(
+  name: "filesystem",
+  transport: { type: "stdio", command: "mcp-server-filesystem", args: ["--root", "/data"] }
+)
+
+client.connect
+tools = client.list_tools
+result = client.call_tool("readFile", { path: "/data/config.yml" })
+client.disconnect
 ```
 
 ## Transport Types
 
-| Type | Use Case |
-|------|----------|
-| `stdio` | Local command execution |
-| `websocket` | Real-time bidirectional |
-| `sse` | Server-sent events |
-| `http` | HTTP request/response |
+| Type | Config Key | Use Case |
+|------|------------|----------|
+| `stdio` | `"stdio"` | Local command/subprocess execution |
+| `websocket` | `"ws"` or `"websocket"` | Real-time bidirectional communication |
+| `sse` | `"sse"` | Server-sent events streaming |
+| `streamable-http` | `"streamable-http"` or `"http"` | HTTP request/response with session support |
 
-## Configuration Levels
+## MCP Parameter Values
 
-### Network Level
+The `mcp:` parameter on a Robot accepts three types of values:
+
+| Value | Meaning |
+|-------|---------|
+| `:none` | No MCP servers (explicitly disabled) |
+| `:inherit` | Use the network's MCP servers |
+| `Array<Hash>` | Explicit list of server configurations |
+
+Each server configuration hash requires:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `name` | `String` | Unique server identifier |
+| `transport` | `Hash` | Transport configuration (must include `type`) |
+
+## Error Handling
+
+MCP operations raise `RobotLab::MCPError` when:
+
+- Connection to a server fails
+- A request is made without an active connection
+- An unsupported transport type is specified
 
 ```ruby
-network = RobotLab.create_network do
-  mcp [
-    { name: "server1", transport: { type: "stdio", command: "..." } }
-  ]
-end
-```
-
-### Robot Level
-
-```ruby
-robot = RobotLab.build do
-  mcp :inherit  # Use network's servers
-  # or
-  mcp :none     # No MCP servers
-  # or
-  mcp [...]     # Specific servers
-end
-```
-
-### Tool Filtering
-
-```ruby
-robot = RobotLab.build do
-  mcp :inherit
-  tools %w[read_file write_file]  # Only allow these tools
+begin
+  client.connect
+  client.call_tool("unknown_tool", {})
+rescue RobotLab::MCPError => e
+  puts "MCP error: #{e.message}"
 end
 ```
 
 ## See Also
 
-- [MCP Integration Guide](../../guides/mcp-integration.md)
-- [Tool](../core/tool.md)
+- [MCP Client](client.md)
+- [MCP Server](server.md)
+- [Transports](transports.md)

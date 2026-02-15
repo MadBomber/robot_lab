@@ -8,26 +8,23 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/01_simple_robot.rb
 
-require_relative "../lib/robot_lab"
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
+require_relative "../lib/robot_lab"
 
 # Create a simple robot using a template
 robot = RobotLab.build(
   name: "helper",
   template: :helper,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 puts "Running simple robot..."
 puts "-" * 40
 
-# Run the robot with a simple query
-result = robot.run(message: "What is 2 + 2? Please explain your reasoning briefly.")
+# Run the robot
+result = robot.run("What is 2 + 2? Please explain your reasoning briefly.")
 
 # Display the result
 puts "Robot: #{robot.name}"

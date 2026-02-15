@@ -1,12 +1,141 @@
 # Tool Usage
 
-Robots with external API integration.
+Robots with external capabilities through tools.
 
 ## Overview
 
-This example demonstrates how to give robots access to external systems through tools, including API calls, database queries, and calculations.
+This example demonstrates how to give robots access to external systems through tools. Tools are defined as `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances and passed to robots via the `local_tools:` parameter.
 
-## Complete Example
+## RubyLLM::Tool Subclass Pattern
+
+The primary way to define tools is by subclassing `RubyLLM::Tool`:
+
+```ruby
+#!/usr/bin/env ruby
+# examples/tool_usage.rb
+
+require "bundler/setup"
+require "robot_lab"
+
+# Define tools as RubyLLM::Tool subclasses
+class Calculator < RubyLLM::Tool
+  description "Performs basic arithmetic operations"
+
+  param :operation,
+        type: "string",
+        desc: "The operation to perform (add, subtract, multiply, divide)"
+
+  param :a,
+        type: "number",
+        desc: "First operand"
+
+  param :b,
+        type: "number",
+        desc: "Second operand"
+
+  def execute(operation:, a:, b:)
+    case operation
+    when "add" then a + b
+    when "subtract" then a - b
+    when "multiply" then a * b
+    when "divide" then a.to_f / b
+    else "Unknown operation: #{operation}"
+    end
+  end
+end
+
+class FortuneCookie < RubyLLM::Tool
+  description "Get a fortune cookie message with wisdom and lucky numbers"
+
+  param :category,
+        type: "string",
+        desc: "The category of fortune (wisdom, love, career, adventure)"
+
+  FORTUNES = {
+    "wisdom" => [
+      "The obstacle in the path becomes the path.",
+      "A journey of a thousand miles begins with a single step."
+    ],
+    "career" => [
+      "Opportunity dances with those already on the dance floor.",
+      "Your work is your signature. Sign it with excellence."
+    ]
+  }.freeze
+
+  def execute(category:)
+    {
+      category: category,
+      fortune: FORTUNES.fetch(category, FORTUNES["wisdom"]).sample,
+      lucky_numbers: Array.new(6) { rand(1..49) }.sort
+    }
+  end
+end
+
+# Create robot with tools via local_tools
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You help with math and dispense fortune cookies.",
+  local_tools: [Calculator, FortuneCookie],
+  model: "claude-sonnet-4"
+)
+
+# Run the robot
+result = robot.run("What is 15 multiplied by 7? Also, give me a career fortune.")
+
+# Display results
+puts "Response: #{result.last_text_content}"
+
+if result.tool_calls.any?
+  puts "\nTool calls made:"
+  result.tool_calls.each do |tc|
+    tool_info = tc.respond_to?(:tool) ? tc.tool : tc
+    puts "  #{tool_info[:name] || tool_info}"
+  end
+end
+```
+
+## RobotLab::Tool Inline Pattern
+
+For simpler tools that do not need their own class, use `RobotLab::Tool`:
+
+```ruby
+require "robot_lab"
+
+# Define an inline tool
+get_time = RobotLab::Tool.new(
+  name: "get_time",
+  description: "Get the current time",
+  handler: ->(_input, **_opts) { Time.now.to_s }
+)
+
+# Define a tool with parameters (JSON Schema)
+weather_tool = RobotLab::Tool.new(
+  name: "get_weather",
+  description: "Get weather for a city",
+  parameters: {
+    type: "object",
+    properties: {
+      city: { type: "string", description: "City name" }
+    },
+    required: ["city"]
+  },
+  handler: ->(input, **_opts) {
+    { city: input[:city], temperature: "72F", condition: "sunny" }
+  }
+)
+
+robot = RobotLab.build(
+  name: "weather_bot",
+  system_prompt: "You provide weather and time information.",
+  local_tools: [get_time, weather_tool],
+  model: "claude-sonnet-4"
+)
+
+result = robot.run("What time is it and what's the weather in New York?")
+puts result.last_text_content
+```
+
+## Weather API Integration
 
 ```ruby
 #!/usr/bin/env ruby
@@ -17,86 +146,81 @@ require "robot_lab"
 require "http"
 require "json"
 
-RobotLab.configure do |config|
-  config.default_model = "claude-sonnet-4"
+class GetWeather < RubyLLM::Tool
+  description "Get current weather for a city"
+
+  param :city,
+        type: "string",
+        desc: "City name (e.g., 'New York', 'London')"
+
+  def execute(city:)
+    response = HTTP.get(
+      "https://wttr.in/#{URI.encode_www_form_component(city)}?format=j1"
+    )
+
+    if response.status.success?
+      data = JSON.parse(response.body)
+      current = data["current_condition"].first
+
+      {
+        city: city,
+        temperature_f: current["temp_F"],
+        temperature_c: current["temp_C"],
+        condition: current["weatherDesc"].first["value"],
+        humidity: current["humidity"],
+        wind_mph: current["windspeedMiles"]
+      }
+    else
+      { error: "Could not fetch weather for #{city}" }
+    end
+  rescue HTTP::Error => e
+    { error: "Network error: #{e.message}" }
+  end
 end
 
-# Weather assistant with API integration
-weather_bot = RobotLab.build do
-  name "weather_assistant"
-  description "Provides weather information"
+class GetForecast < RubyLLM::Tool
+  description "Get weather forecast for upcoming days"
 
-  template <<~PROMPT
-    You are a helpful weather assistant. You can look up current weather
-    conditions for any city. When users ask about weather, use the
-    get_weather tool to fetch real data.
+  param :city, type: "string", desc: "City name"
+  param :days, type: "integer", desc: "Number of days (default 3)"
 
+  def execute(city:, days: 3)
+    response = HTTP.get(
+      "https://wttr.in/#{URI.encode_www_form_component(city)}?format=j1"
+    )
+
+    if response.status.success?
+      data = JSON.parse(response.body)
+      data["weather"].take(days).map do |day|
+        {
+          date: day["date"],
+          high_f: day["maxtempF"],
+          low_f: day["mintempF"],
+          condition: day["hourly"].first["weatherDesc"].first["value"]
+        }
+      end
+    else
+      { error: "Could not fetch forecast" }
+    end
+  rescue HTTP::Error => e
+    { error: "Network error: #{e.message}" }
+  end
+end
+
+# Create weather assistant
+weather_bot = RobotLab.build(
+  name: "weather_assistant",
+  description: "Provides weather information",
+  system_prompt: <<~PROMPT,
+    You are a helpful weather assistant. Use your tools to look up weather.
     Always provide temperatures in both Fahrenheit and Celsius.
     Include relevant advice based on conditions (umbrella, sunscreen, etc).
   PROMPT
+  local_tools: [GetWeather, GetForecast],
+  model: "claude-sonnet-4"
+)
 
-  tool :get_weather do
-    description "Get current weather for a city"
-
-    parameter :city, type: :string, required: true,
-              description: "City name (e.g., 'New York', 'London')"
-
-    handler do |city:, **_|
-      # Using wttr.in API (free, no key required)
-      response = HTTP.get("https://wttr.in/#{URI.encode_www_form_component(city)}?format=j1")
-
-      if response.status.success?
-        data = JSON.parse(response.body)
-        current = data["current_condition"].first
-
-        {
-          city: city,
-          temperature_f: current["temp_F"],
-          temperature_c: current["temp_C"],
-          condition: current["weatherDesc"].first["value"],
-          humidity: current["humidity"],
-          wind_mph: current["windspeedMiles"],
-          feels_like_f: current["FeelsLikeF"],
-          uv_index: current["uvIndex"]
-        }
-      else
-        { error: "Could not fetch weather for #{city}" }
-      end
-    rescue HTTP::Error => e
-      { error: "Network error: #{e.message}" }
-    end
-  end
-
-  tool :get_forecast do
-    description "Get weather forecast for upcoming days"
-
-    parameter :city, type: :string, required: true
-    parameter :days, type: :integer, default: 3
-
-    handler do |city:, days: 3, **_|
-      response = HTTP.get("https://wttr.in/#{URI.encode_www_form_component(city)}?format=j1")
-
-      if response.status.success?
-        data = JSON.parse(response.body)
-
-        data["weather"].take(days).map do |day|
-          {
-            date: day["date"],
-            high_f: day["maxtempF"],
-            low_f: day["mintempF"],
-            condition: day["hourly"].first["weatherDesc"].first["value"]
-          }
-        end
-      else
-        { error: "Could not fetch forecast" }
-      end
-    rescue HTTP::Error => e
-      { error: "Network error: #{e.message}" }
-    end
-  end
-end
-
-# Run interactive session
+# Interactive session
 puts "Weather Assistant (type 'quit' to exit)"
 puts "-" * 50
 
@@ -107,18 +231,8 @@ loop do
   break if input.nil? || input.downcase == "quit"
   next if input.empty?
 
-  state = RobotLab.create_state(message: input)
-
-  print "\nAssistant: "
-  weather_bot.run(state: state) do |event|
-    case event.type
-    when :text_delta
-      print event.text
-    when :tool_call
-      puts "\n[Checking weather for #{event.input[:city]}...]"
-    end
-  end
-  puts
+  result = weather_bot.run(input)
+  puts "\nAssistant: #{result.last_text_content}"
 end
 
 puts "\nGoodbye!"
@@ -137,157 +251,88 @@ ORDERS = {
   "ORD002" => { id: "ORD002", status: "processing", items: ["Gadget", "Gizmo"], total: 89.99 }
 }
 
-order_bot = RobotLab.build do
-  name "order_assistant"
-  template "You help customers check their orders."
+class GetOrder < RubyLLM::Tool
+  description "Look up an order by ID"
 
-  tool :get_order do
-    description "Look up an order by ID"
-    parameter :order_id, type: :string, required: true
+  param :order_id, type: "string", desc: "The order ID to look up"
 
-    handler do |order_id:, state:, **_|
-      # Verify user owns this order
-      user_id = state.data[:user_id]
-      order = ORDERS[order_id.upcase]
-
-      if order
-        order
-      else
-        { error: "Order not found" }
-      end
-    end
+  def execute(order_id:)
+    order = ORDERS[order_id.upcase]
+    order || { error: "Order not found" }
   end
+end
 
-  tool :list_orders do
-    description "List user's recent orders"
-    parameter :limit, type: :integer, default: 5
+class ListOrders < RubyLLM::Tool
+  description "List recent orders"
 
-    handler do |limit:, state:, **_|
-      user_id = state.data[:user_id]
-      # Filter by user in real implementation
-      ORDERS.values.take(limit)
-    end
+  param :limit, type: "integer", desc: "Maximum number of orders to return"
+
+  def execute(limit: 5)
+    ORDERS.values.take(limit)
   end
+end
 
-  tool :cancel_order do
-    description "Cancel an order"
-    parameter :order_id, type: :string, required: true
-    parameter :reason, type: :string
+class CancelOrder < RubyLLM::Tool
+  description "Cancel an order"
 
-    handler do |order_id:, reason: nil, state:, **_|
-      order = ORDERS[order_id.upcase]
+  param :order_id, type: "string", desc: "The order ID to cancel"
+  param :reason, type: "string", desc: "Reason for cancellation"
 
-      if order.nil?
-        { success: false, error: "Order not found" }
-      elsif order[:status] == "shipped"
-        { success: false, error: "Cannot cancel shipped orders" }
-      else
-        order[:status] = "cancelled"
-        order[:cancel_reason] = reason
-        { success: true, message: "Order #{order_id} cancelled" }
-      end
+  def execute(order_id:, reason: nil)
+    order = ORDERS[order_id.upcase]
+
+    if order.nil?
+      { success: false, error: "Order not found" }
+    elsif order[:status] == "shipped"
+      { success: false, error: "Cannot cancel shipped orders" }
+    else
+      order[:status] = "cancelled"
+      order[:cancel_reason] = reason
+      { success: true, message: "Order #{order_id} cancelled" }
     end
   end
 end
 
-# Run with user context
-state = RobotLab.create_state(
-  message: "What's the status of order ORD001?",
-  data: { user_id: "user_123" }
+order_bot = RobotLab.build(
+  name: "order_assistant",
+  system_prompt: "You help customers check and manage their orders.",
+  local_tools: [GetOrder, ListOrders, CancelOrder],
+  model: "claude-sonnet-4"
 )
 
-result = order_bot.run(state: state)
-puts result.output.first.content
+# Run with a question
+result = order_bot.run("What's the status of order ORD001?")
+puts result.last_text_content
 ```
 
-## Calculator Tool
+## Tool Call Callbacks
+
+Use `on_tool_call` and `on_tool_result` to monitor tool execution:
 
 ```ruby
-# examples/math_assistant.rb
+robot = RobotLab.build(
+  name: "monitored_bot",
+  system_prompt: "You help with calculations.",
+  local_tools: [Calculator],
+  model: "claude-sonnet-4",
+  on_tool_call: ->(tool_call) {
+    puts "[Tool Call] #{tool_call.name}: #{tool_call.arguments}"
+  },
+  on_tool_result: ->(tool_call, result) {
+    puts "[Tool Result] #{tool_call.name}: #{result}"
+  }
+)
 
-require "robot_lab"
-require "dentaku"
-
-calculator = Dentaku::Calculator.new
-
-math_bot = RobotLab.build do
-  name "math_assistant"
-  template "You help with mathematical calculations."
-
-  tool :calculate do
-    description "Evaluate a mathematical expression"
-    parameter :expression, type: :string, required: true,
-              description: "Math expression like '2 + 2' or 'sqrt(16)'"
-
-    handler do |expression:, **_|
-      result = calculator.evaluate(expression)
-      { expression: expression, result: result }
-    rescue => e
-      { error: "Invalid expression: #{e.message}" }
-    end
-  end
-
-  tool :solve_equation do
-    description "Solve for a variable"
-    parameter :equation, type: :string, required: true
-    parameter :variable, type: :string, required: true
-
-    handler do |equation:, variable:, **_|
-      result = calculator.solve(equation, variable.to_sym)
-      { equation: equation, variable: variable, solutions: result }
-    rescue => e
-      { error: "Could not solve: #{e.message}" }
-    end
-  end
-end
-```
-
-## Multi-Tool Example
-
-```ruby
-# examples/research_assistant.rb
-
-research_bot = RobotLab.build do
-  name "research_assistant"
-  template "You help with research tasks."
-
-  tool :web_search do
-    description "Search the web"
-    parameter :query, type: :string, required: true
-    handler { |query:, **_| SearchAPI.search(query) }
-  end
-
-  tool :read_url do
-    description "Read content from a URL"
-    parameter :url, type: :string, required: true
-    handler { |url:, **_| HTTP.get(url).body.to_s }
-  end
-
-  tool :summarize do
-    description "Summarize text"
-    parameter :text, type: :string, required: true
-    parameter :length, type: :string, enum: %w[short medium long], default: "medium"
-    handler { |text:, length:, **_| Summarizer.summarize(text, length) }
-  end
-
-  tool :save_note do
-    description "Save a research note"
-    parameter :title, type: :string, required: true
-    parameter :content, type: :string, required: true
-    handler do |title:, content:, state:, **_|
-      notes = state.memory.recall("notes") || []
-      notes << { title: title, content: content, created: Time.now }
-      state.memory.remember("notes", notes)
-      { saved: true, total_notes: notes.size }
-    end
-  end
-end
+result = robot.run("What is 42 * 17?")
 ```
 
 ## Running
 
 ```bash
 export ANTHROPIC_API_KEY="your-key"
+
+# Tool usage example
+ruby examples/tool_usage.rb
 
 # Weather assistant
 ruby examples/weather_assistant.rb
@@ -298,13 +343,15 @@ ruby examples/order_assistant.rb
 
 ## Key Concepts
 
-1. **Tool Definition**: Use the `tool` DSL with description and parameters
-2. **Handler**: Receives parameters plus state, robot, network context
-3. **Error Handling**: Return error hashes for graceful failures
-4. **State Access**: Tools can read/write state and memory
+1. **RubyLLM::Tool subclass**: Define a class with `description`, `param`, and `execute` method
+2. **RobotLab::Tool inline**: Use `RobotLab::Tool.new(name:, description:, handler:)` for simple tools
+3. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
+4. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
+5. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
+6. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
 
 ## See Also
 
 - [Using Tools Guide](../guides/using-tools.md)
 - [Tool API](../api/core/tool.md)
-- [Memory Guide](../guides/memory.md)
+- [Robot API](../api/core/robot.md)

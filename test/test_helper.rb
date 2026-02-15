@@ -1,28 +1,32 @@
 # frozen_string_literal: true
 
-require "simplecov"
+require 'simplecov'
 SimpleCov.start do
-  add_filter "/test/"
-  add_filter "/vendor/"
+  add_filter '/test/'
+  add_filter '/vendor/'
 
-  add_group "Core", "lib/robot_lab"
-  add_group "Adapters", "lib/robot_lab/adapters"
-  add_group "MCP", "lib/robot_lab/mcp"
-  add_group "History", "lib/robot_lab/history"
-  add_group "Streaming", "lib/robot_lab/streaming"
-  add_group "Rails", "lib/robot_lab/rails"
+  add_group 'Core', 'lib/robot_lab'
+  add_group 'Adapters', 'lib/robot_lab/adapters'
+  add_group 'MCP', 'lib/robot_lab/mcp'
+  add_group 'History', 'lib/robot_lab/history'
+  add_group 'Streaming', 'lib/robot_lab/streaming'
+  add_group 'Rails', 'lib/robot_lab/rails'
 
   enable_coverage :branch
 end
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-
-require "robot_lab"
-require "minitest/autorun"
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
 # Configure RobotLab for testing
 # Set template path via environment variable before loading config
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.expand_path("../examples/prompts", __dir__)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.expand_path('../examples/prompts', __dir__)
+
+require 'robot_lab'
+require 'minitest/autorun'
+
+# Set dummy API key so RubyLLM model resolution doesn't fail in unit tests
+# (Robot now creates a persistent chat in initialize via Agent)
+RubyLLM.configure { |c| c.anthropic_api_key = 'test-key-for-unit-tests' }
 
 # Suppress logging in tests
 RobotLab.config.logger = Logger.new(nil)
@@ -38,13 +42,15 @@ module RobotLabTestHelpers
     )
   end
 
+
   # Create a real Network instance for testing
   def build_network(name:, **options, &block)
     RobotLab::Network.new(name: name, **options, &block)
   end
 
+
   # Create a Tool for testing
-  def build_tool(name:, description: "Test tool", &block)
+  def build_tool(name:, description: 'Test tool', &block)
     RobotLab::Tool.new(
       name: name,
       description: description,
@@ -52,6 +58,7 @@ module RobotLabTestHelpers
     )
   end
 end
+
 
 class Minitest::Test
   include RobotLabTestHelpers
