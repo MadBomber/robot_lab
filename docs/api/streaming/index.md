@@ -1,108 +1,110 @@
 # Streaming
 
-Real-time response streaming from LLM providers.
+Real-time event streaming during robot and network execution.
 
 ## Overview
 
-Streaming allows you to receive LLM responses in real-time, token by token, enabling responsive user interfaces and progressive content display.
+The streaming system provides structured event publishing during LLM execution. Events are emitted for run lifecycle, content deltas (token streaming), tool calls, and metadata updates. The system supports nested contexts for network-level orchestration where multiple robots execute within a single run.
 
 ```ruby
-result = robot.run(state: state) do |event|
-  case event.type
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "\nCalling tool: #{event.name}"
-  when :complete
+publish = ->(event) {
+  case event[:event]
+  when "text.delta"
+    print event[:data][:delta]
+  when "run.completed"
     puts "\nDone!"
   end
-end
+}
+
+context = RobotLab::Streaming::Context.new(
+  run_id: SecureRandom.uuid,
+  message_id: SecureRandom.uuid,
+  scope: "robot",
+  publish: publish
+)
+
+context.publish_event(event: "text.delta", data: { delta: "Hello" })
 ```
 
 ## Components
 
 | Component | Description |
 |-----------|-------------|
-| [Context](context.md) | Streaming context and state |
-| [Events](events.md) | Event types and handling |
+| [Context](context.md) | Manages streaming state, sequencing, and event publishing |
+| [Events](events.md) | Event type constants and classification helpers |
+
+Also used internally:
+
+| Component | Description |
+|-----------|-------------|
+| `SequenceCounter` | Thread-safe monotonic counter for event ordering |
+
+## Event Categories
+
+| Category | Events | Description |
+|----------|--------|-------------|
+| Lifecycle | `run.started`, `run.completed`, `run.failed`, `run.interrupted` | Run-level state changes |
+| Steps | `step.started`, `step.completed`, `step.failed` | Durable execution steps |
+| Parts | `part.created`, `part.completed`, `part.failed` | Message composition parts |
+| Deltas | `text.delta`, `tool_call.arguments.delta`, `reasoning.delta`, `data.delta` | Token-level content streaming |
+| HITL | `hitl.requested`, `hitl.resolved` | Human-in-the-loop events |
+| Metadata | `usage.updated`, `metadata.updated` | Token usage and metadata |
+| Terminal | `stream.ended` | End of stream signal |
+
+## Event Structure
+
+Each published event is a hash with the following shape:
+
+```ruby
+{
+  event: "text.delta",           # Event type string
+  data: {                        # Event payload (merged with context info)
+    delta: "Hello",              #   Custom data
+    run_id: "run_123",           #   Injected by context
+    message_id: "msg_456",       #   Injected by context
+    scope: "robot"               #   Injected by context
+  },
+  timestamp: 1707900000000,      # Millisecond Unix timestamp
+  sequence_number: 1,            # Monotonically increasing
+  id: "publish-1:text.delta"     # Unique event ID
+}
+```
 
 ## Quick Start
 
-### Basic Streaming
+### Publishing Events
 
 ```ruby
-robot.run(state: state) do |event|
-  print event.text if event.type == :text_delta
-end
+context = RobotLab::Streaming::Context.new(
+  run_id: "run_123",
+  message_id: "msg_456",
+  scope: "network",
+  publish: ->(event) { broadcast(event) }
+)
+
+context.publish_event(event: "run.started", data: { robot_name: "assistant" })
+context.publish_event(event: "text.delta", data: { delta: "Hello " })
+context.publish_event(event: "text.delta", data: { delta: "world!" })
+context.publish_event(event: "run.completed", data: {})
 ```
 
-### With Network
+### Nested Contexts for Networks
 
 ```ruby
-network.run(state: state) do |event|
-  case event.type
-  when :robot_start
-    puts "Robot #{event.robot_name} starting..."
-  when :text_delta
-    print event.text
-  when :robot_complete
-    puts "\nRobot #{event.robot_name} complete"
-  end
-end
-```
+# Parent context for the network run
+network_context = RobotLab::Streaming::Context.new(
+  run_id: "network_run_1",
+  message_id: "msg_1",
+  scope: "network",
+  publish: ->(event) { stream_to_client(event) }
+)
 
-## Event Types
-
-| Event | Description |
-|-------|-------------|
-| `:start` | Streaming started |
-| `:text_delta` | Text chunk received |
-| `:tool_call` | Tool being called |
-| `:tool_result` | Tool result received |
-| `:robot_start` | Robot execution started |
-| `:robot_complete` | Robot execution finished |
-| `:complete` | All streaming finished |
-| `:error` | Error occurred |
-
-## Callback Patterns
-
-### Proc/Lambda
-
-```ruby
-callback = ->(event) {
-  print event.text if event.type == :text_delta
-}
-
-robot.run(state: state, streaming: callback)
-```
-
-### Block
-
-```ruby
-robot.run(state: state) do |event|
-  print event.text if event.type == :text_delta
-end
-```
-
-### Object with `call`
-
-```ruby
-class StreamHandler
-  def call(event)
-    case event.type
-    when :text_delta
-      broadcast(event.text)
-    when :error
-      log_error(event.error)
-    end
-  end
-end
-
-robot.run(state: state, streaming: StreamHandler.new)
+# Child context for each robot (shares the sequence counter)
+robot_context = network_context.create_child_context("robot_run_1")
+robot_context.publish_event(event: "text.delta", data: { delta: "Response" })
 ```
 
 ## See Also
 
-- [Streaming Guide](../../guides/streaming.md)
-- [Robot](../core/robot.md)
-- [Network](../core/network.md)
+- [Context](context.md)
+- [Events](events.md)

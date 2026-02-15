@@ -4,30 +4,31 @@ Stream LLM responses in real-time for better user experience.
 
 ## Basic Streaming
 
-Pass a callback to receive streaming events:
+Pass a block to `robot.run` to receive streaming events:
 
 ```ruby
-robot.run(
-  state: state,
-  network: network,
-  streaming: ->(event) {
-    puts event.inspect
-  }
+robot = RobotLab.build(
+  name: "storyteller",
+  system_prompt: "You are a creative storyteller."
 )
+
+robot.run("Tell me a story about a brave robot") do |event|
+  puts event.inspect
+end
 ```
 
 ## Event Types
 
 ### Text Deltas
 
-Receive text as it's generated:
+Receive text as it is generated:
 
 ```ruby
-streaming: ->(event) {
-  if event[:event] == "delta"
+robot.run("Tell me a story") do |event|
+  if event[:event] == "text.delta"
     print event[:data][:content]
   end
-}
+end
 ```
 
 ### Tool Calls
@@ -35,14 +36,14 @@ streaming: ->(event) {
 Know when tools are being called:
 
 ```ruby
-streaming: ->(event) {
+robot.run("What's the weather in Tokyo?") do |event|
   case event[:event]
   when "tool_call.start"
     puts "\nCalling: #{event[:data][:name]}"
   when "tool_call.complete"
     puts "Done: #{event[:data][:result]}"
   end
-}
+end
 ```
 
 ### Lifecycle Events
@@ -50,57 +51,48 @@ streaming: ->(event) {
 Track execution lifecycle:
 
 ```ruby
-streaming: ->(event) {
+robot.run("Help me with my task") do |event|
   case event[:event]
   when "run.started"
-    puts "Starting run #{event[:data][:run_id]}"
+    puts "Starting..."
   when "run.completed"
     puts "Completed!"
   when "run.failed"
     puts "Failed: #{event[:data][:error]}"
   end
-}
+end
 ```
 
 ## Event Reference
 
 | Event | Description | Data |
 |-------|-------------|------|
-| `run.started` | Network run began | `run_id`, `network` |
-| `run.completed` | Network run finished | `run_id`, `robot_count` |
+| `run.started` | Execution began | `run_id` |
+| `run.completed` | Execution finished | `run_id` |
 | `run.failed` | Error occurred | `run_id`, `error` |
-| `delta` | Text content chunk | `content` |
+| `text.delta` | Text content chunk | `content` |
 | `tool_call.start` | Tool execution starting | `name`, `input` |
 | `tool_call.complete` | Tool execution done | `name`, `result` |
 
-## Streaming Context
+## Comprehensive Event Handling
 
-For advanced control, use `Streaming::Context`:
-
-```ruby
-context = RobotLab::Streaming::Context.new(
-  run_id: SecureRandom.uuid,
-  message_id: SecureRandom.uuid,
-  scope: "network",
-  publish: ->(event) { broadcast_to_client(event) }
-)
-```
-
-### Context Properties
+Handle all event types in a single block:
 
 ```ruby
-context.run_id      # Unique run identifier
-context.message_id  # Unique message identifier
-context.scope       # "network" or "robot"
-```
-
-### Publishing Events
-
-```ruby
-context.publish_event(
-  event: "custom.event",
-  data: { key: "value" }
-)
+robot.run("Analyze this data and generate a report") do |event|
+  case event[:event]
+  when "text.delta"
+    print event[:data][:content]
+  when "tool_call.start"
+    puts "\n[Tool] Calling: #{event[:data][:name]}"
+  when "tool_call.complete"
+    puts "[Tool] Done: #{event[:data][:name]}"
+  when "run.completed"
+    puts "\n--- Complete ---"
+  when "run.failed"
+    puts "\n[Error] #{event[:data][:error]}"
+  end
+end
 ```
 
 ## Web Integration
@@ -110,14 +102,14 @@ context.publish_event(
 ```ruby
 class ChatChannel < ApplicationCable::Channel
   def receive(data)
-    state = RobotLab.create_state(message: data["message"])
-
-    network.run(
-      state: state,
-      streaming: ->(event) {
-        transmit(event)
-      }
+    robot = RobotLab.build(
+      name: "chat_bot",
+      system_prompt: "You are a helpful chat assistant."
     )
+
+    robot.run(data["message"]) do |event|
+      transmit(event)
+    end
   end
 end
 ```
@@ -131,14 +123,14 @@ class StreamController < ApplicationController
   def create
     response.headers["Content-Type"] = "text/event-stream"
 
-    state = RobotLab.create_state(message: params[:message])
-
-    network.run(
-      state: state,
-      streaming: ->(event) {
-        response.stream.write("data: #{event.to_json}\n\n")
-      }
+    robot = RobotLab.build(
+      name: "stream_bot",
+      system_prompt: "You are helpful."
     )
+
+    robot.run(params[:message]) do |event|
+      response.stream.write("data: #{event.to_json}\n\n")
+    end
   ensure
     response.stream.close
   end
@@ -150,34 +142,10 @@ end
 ```ruby
 # Using Faye WebSocket
 ws.on :message do |msg|
-  state = RobotLab.create_state(message: msg.data)
-
-  network.run(
-    state: state,
-    streaming: ->(event) {
-      ws.send(event.to_json)
-    }
-  )
+  robot.run(msg.data) do |event|
+    ws.send(event.to_json)
+  end
 end
-```
-
-## Event Filtering
-
-### Check Event Type
-
-```ruby
-streaming: ->(event) {
-  return unless RobotLab::Streaming::Events.delta?(event)
-  print event[:data][:content]
-}
-```
-
-### Available Predicates
-
-```ruby
-Streaming::Events.lifecycle?(event)  # run.started, run.completed, etc.
-Streaming::Events.delta?(event)       # Text content
-Streaming::Events.valid?(event)       # Has required fields
 ```
 
 ## Buffering
@@ -187,8 +155,8 @@ Buffer content for batch processing:
 ```ruby
 buffer = []
 
-streaming: ->(event) {
-  if event[:event] == "delta"
+robot.run("Generate a long response") do |event|
+  if event[:event] == "text.delta"
     buffer << event[:data][:content]
 
     # Flush every 10 chunks
@@ -197,9 +165,9 @@ streaming: ->(event) {
       buffer.clear
     end
   end
-}
+end
 
-# Don't forget final flush
+# Final flush
 process_batch(buffer.join) if buffer.any?
 ```
 
@@ -216,9 +184,9 @@ class StreamProgress
 
   def handle(event)
     case event[:event]
-    when "delta"
+    when "text.delta"
       @chars += event[:data][:content].length
-      puts "\rReceived #{@chars} characters..."
+      print "\rReceived #{@chars} characters..."
     when "tool_call.start"
       @tools += 1
       puts "\nTool call ##{@tools}: #{event[:data][:name]}"
@@ -227,7 +195,10 @@ class StreamProgress
 end
 
 progress = StreamProgress.new
-network.run(state: state, streaming: progress.method(:handle))
+
+robot.run("Process this complex request") do |event|
+  progress.handle(event)
+end
 ```
 
 ## Error Handling
@@ -235,12 +206,12 @@ network.run(state: state, streaming: progress.method(:handle))
 Handle streaming errors gracefully:
 
 ```ruby
-streaming: ->(event) {
+robot.run("Analyze this") do |event|
   case event[:event]
   when "run.failed"
     log_error(event[:data][:error])
     notify_user("An error occurred")
-  when "delta"
+  when "text.delta"
     begin
       broadcast(event)
     rescue BroadcastError => e
@@ -248,20 +219,17 @@ streaming: ->(event) {
       logger.warn "Broadcast failed: #{e.message}"
     end
   end
-}
+end
 ```
 
-## Disabling Streaming
+## Without Streaming
 
-Disable streaming when not needed:
+When streaming is not needed, simply call `run` without a block:
 
 ```ruby
-RobotLab.configure do |config|
-  config.streaming_enabled = false
-end
-
-# Or per-run
-network.run(state: state, streaming: nil)
+# No streaming - returns RobotResult directly
+result = robot.run("Hello!")
+puts result.last_text_content
 ```
 
 ## Best Practices
@@ -269,39 +237,41 @@ network.run(state: state, streaming: nil)
 ### 1. Handle All Event Types
 
 ```ruby
-streaming: ->(event) {
+robot.run("Hello") do |event|
   case event[:event]
-  when "delta" then handle_delta(event)
+  when "text.delta" then handle_delta(event)
   when "tool_call.start" then show_tool_indicator(event)
   when "tool_call.complete" then hide_tool_indicator(event)
   when "run.completed" then finalize_response
   when "run.failed" then show_error(event)
   end
-}
+end
 ```
 
 ### 2. Provide User Feedback
 
 ```ruby
-streaming: ->(event) {
+robot.run("Process my request") do |event|
   case event[:event]
   when "run.started"
     show_typing_indicator
-  when "delta"
+  when "text.delta"
     update_message(event[:data][:content])
   when "tool_call.start"
     show_status("Looking up information...")
   when "run.completed"
     hide_typing_indicator
   end
-}
+end
 ```
 
 ### 3. Clean Up Resources
 
 ```ruby
 begin
-  network.run(state: state, streaming: callback)
+  robot.run("Hello") do |event|
+    stream_to_client(event)
+  end
 ensure
   close_stream_connection
 end

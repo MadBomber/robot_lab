@@ -4,27 +4,74 @@ Understanding the fundamental concepts in RobotLab will help you build effective
 
 ## Robot
 
-A **Robot** is an LLM-powered agent with a specific personality, capabilities, and tools. Each robot has:
+A **Robot** is an LLM-powered agent that inherits from `RubyLLM::Agent`. Each robot wraps a persistent chat session created at initialization and provides template-based prompts, tools, memory, and MCP integration. Robots are created using keyword arguments via the `RobotLab.build` factory method.
 
-- **Name**: A unique identifier within a network
-- **Description**: What the robot does (used for routing decisions)
-- **Template/System Prompt**: Instructions that define the robot's behavior
-- **Model**: The LLM model to use (e.g., `claude-sonnet-4`)
-- **Tools**: Custom functions the robot can call
+Each robot has:
+
+- **Name**: A unique identifier (auto-generated if omitted)
+- **Template**: A `.md` file with YAML front matter managed by prompt_manager, referenced by symbol
+- **System Prompt**: Inline instructions (can be used alone or combined with a template)
+- **Model**: The LLM model to use (defaults to `RobotLab.config.ruby_llm.model`)
+- **Local Tools**: `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances
+- **Memory**: Persistent key-value store across runs
 
 ```ruby
-robot = RobotLab.build do
-  name "support_agent"
-  description "Handles customer support inquiries"
-  model "claude-sonnet-4"
-  template "You are a friendly customer support agent..."
+# Robot with template (references prompts/support.md)
+robot = RobotLab.build(
+  name: "support_agent",
+  template: :support,
+  context: { tone: "friendly", department: "billing" },
+  local_tools: [OrderLookup, RefundProcessor],
+  model: "claude-sonnet-4"
+)
 
-  tool :lookup_order do
-    description "Look up order details by order ID"
-    parameter :order_id, type: :string, required: true
-    handler { |order_id:| Order.find(order_id).to_h }
-  end
-end
+# Robot with inline system prompt
+robot = RobotLab.build(
+  name: "helper",
+  system_prompt: "You are a friendly customer support agent."
+)
+
+# Bare robot configured via chaining
+robot = RobotLab.build(name: "bot")
+robot.with_instructions("Be concise.").with_temperature(0.3).run("Hello")
+```
+
+The primary method is `robot.run("message")`, which takes a positional string argument and returns a `RobotResult`:
+
+```ruby
+result = robot.run("What is 2 + 2?")
+puts result.last_text_content  # => "4"
+```
+
+Standalone robots persist their conversation history and memory across runs:
+
+```ruby
+robot.run("My name is Alice.")
+result = robot.run("What is my name?")
+puts result.last_text_content  # => "Your name is Alice."
+```
+
+## Configuration
+
+RobotLab uses `MywayConfig` for configuration. There is no `RobotLab.configure` block. Instead, configuration is loaded automatically from multiple sources in priority order:
+
+1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
+2. Environment-specific overrides (development, test, production)
+3. XDG user config (`~/.config/robot_lab/config.yml`)
+4. Project config (`./config/robot_lab.yml`)
+5. Environment variables (`ROBOT_LAB_*` prefix)
+
+```ruby
+# Access configuration values
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.request_timeout  #=> 120
+
+# Set API keys via environment variables
+# ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+# ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
+
+# Reload configuration
+RobotLab.reload_config!
 ```
 
 ## Network
@@ -35,6 +82,7 @@ A **Network** is a collection of robots orchestrated using [SimpleFlow](https://
 - **Parallel Execution**: Tasks with the same dependencies run concurrently
 - **Optional Task Activation**: Dynamic routing based on robot output
 - **Per-Task Configuration**: Each task can have its own context, tools, and MCP servers
+- **Shared Memory**: All robots in a network share a reactive memory instance
 
 ```ruby
 network = RobotLab.create_network(name: "customer_service") do
@@ -46,6 +94,8 @@ network = RobotLab.create_network(name: "customer_service") do
        context: { department: "technical" },
        depends_on: :optional
 end
+
+result = network.run(message: "I was charged twice for my subscription.")
 ```
 
 ## Task
@@ -53,8 +103,8 @@ end
 A **Task** wraps a robot for use in a network pipeline with per-task configuration:
 
 - **Context**: Task-specific context deep-merged with network run params
-- **MCP**: MCP servers available to this task
-- **Tools**: Tools available to this task
+- **MCP**: MCP servers available to this task (`:none`, `:inherit`, or array)
+- **Tools**: Tools available to this task (`:none`, `:inherit`, or array)
 - **Memory**: Task-specific memory
 - **Dependencies**: `:none`, `[:task1, :task2]`, or `:optional`
 
@@ -87,51 +137,121 @@ result.continued? # Whether execution continues
 
 ## Tool
 
-**Tools** are functions that robots can call to interact with external systems:
+**Tools** give robots the ability to interact with external systems. There are two patterns for defining tools:
+
+### RubyLLM::Tool Subclass (Preferred)
+
+```ruby
+class Calculator < RubyLLM::Tool
+  description "Performs basic arithmetic operations"
+
+  param :operation, type: "string", desc: "The operation (add, subtract, multiply, divide)"
+  param :a, type: "number", desc: "First operand"
+  param :b, type: "number", desc: "Second operand"
+
+  def execute(operation:, a:, b:)
+    case operation
+    when "add" then a + b
+    when "subtract" then a - b
+    when "multiply" then a * b
+    when "divide" then a.to_f / b
+    else "Unknown operation: #{operation}"
+    end
+  end
+end
+
+robot = RobotLab.build(
+  name: "math_bot",
+  system_prompt: "You can do math.",
+  local_tools: [Calculator]
+)
+```
+
+### RobotLab::Tool with Block Handler
 
 ```ruby
 tool = RobotLab::Tool.new(
   name: "get_weather",
   description: "Get current weather for a location",
   parameters: {
-    location: { type: "string", description: "City name" }
-  },
-  handler: ->(location:, **_context) {
-    WeatherService.current(location)
+    type: "object",
+    properties: {
+      location: { type: "string", description: "City name" }
+    },
+    required: ["location"]
   }
-)
+) do |input, **_opts|
+  WeatherService.current(input[:location])
+end
 ```
 
-## Message Types
+## RobotResult
 
-RobotLab uses several message types to represent conversation content:
+`RobotResult` captures the output of a single `robot.run(...)` call:
 
-| Type | Purpose |
-|------|---------|
-| `TextMessage` | User or assistant text content |
-| `ToolMessage` | Tool definition with name and parameters |
-| `ToolCallMessage` | Request from LLM to execute a tool |
-| `ToolResultMessage` | Result returned from tool execution |
+```ruby
+result = robot.run("Hello!")
+
+result.last_text_content  # => "Hi there!" (String or nil)
+result.output             # => [TextMessage, ...] array of output messages
+result.tool_calls         # => [] array of tool call results
+result.robot_name         # => "assistant"
+result.stop_reason        # => "end_turn" or nil
+result.has_tool_calls?    # => false
+result.checksum           # => "a1b2c3d4..." (for dedup)
+```
 
 ## Memory
 
-**Memory** provides persistent storage across robot executions:
+**Memory** is a reactive key-value store that provides persistent storage across robot executions. Standalone robots use their own inherent memory; robots in a network share the network's memory.
 
 ```ruby
-# Robot with inherent memory
+# Standalone robot with inherent memory
 robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
-robot.run(message: "My name is Alice")
-robot.run(message: "What's my name?")  # Memory persists
+robot.run("My name is Alice")
+robot.run("What's my name?")  # Memory persists across runs
 
-# Access robot's memory
+# Access robot's memory directly
 robot.memory[:user_id] = 123
 robot.memory.data[:category] = "billing"
+robot.memory.data.category  # => "billing" (method-style access)
 
 # Runtime memory injection
-robot.run(message: "Help me", memory: { session_id: "abc123" })
+robot.run("Help me", memory: { session_id: "abc123" })
 
 # Reset memory
 robot.reset_memory
+```
+
+### Reserved Memory Keys
+
+| Key | Purpose |
+|-----|---------|
+| `:data` | Runtime data (StateProxy for method-style access) |
+| `:results` | Accumulated robot results |
+| `:messages` | Conversation history |
+| `:session_id` | Session identifier for history persistence |
+| `:cache` | Semantic cache instance (RubyLLM::SemanticCache) |
+
+### Reactive Memory in Networks
+
+In a network, shared memory supports pub/sub semantics for inter-robot communication:
+
+```ruby
+# Robot A writes to shared memory
+network.memory.set(:sentiment, { score: 0.8 })
+
+# Robot B reads (blocking until available)
+result = network.memory.get(:sentiment, wait: true)
+result = network.memory.get(:sentiment, wait: 30)  # timeout in seconds
+
+# Multiple keys
+results = network.memory.get(:sentiment, :entities, :keywords, wait: 60)
+
+# Subscribe to changes
+network.memory.subscribe(:status) do |change|
+  puts "#{change.key} changed by #{change.writer}: #{change.value}"
+end
 ```
 
 ## MCP (Model Context Protocol)
@@ -141,12 +261,15 @@ robot.reset_memory
 ```ruby
 robot = RobotLab.build(
   name: "developer",
+  system_prompt: "You are a developer assistant.",
   mcp: [
     { name: "filesystem", transport: { type: "stdio", command: "mcp-server-filesystem" } },
     { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
   ]
 )
 ```
+
+MCP configuration follows a hierarchical resolution: `runtime > robot > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays.
 
 ## Execution Flow
 
@@ -160,11 +283,12 @@ sequenceDiagram
     participant LLM
     participant Tool
 
-    User->>Network: run(message, context)
-    Network->>Pipeline: call(initial_result)
+    User->>Network: run(message: "...", **context)
+    Network->>Pipeline: call_parallel(initial_result)
     Pipeline->>Task: call(result)
     Task->>Robot: call(enhanced_result)
-    Robot->>LLM: inference(messages, tools)
+    Robot->>Robot: extract_run_context(result)
+    Robot->>LLM: ask(message)
 
     alt Tool Call
         LLM-->>Robot: tool_call
@@ -175,7 +299,7 @@ sequenceDiagram
 
     LLM-->>Robot: response
     Robot-->>Task: RobotResult
-    Task-->>Pipeline: result.continue(value)
+    Task-->>Pipeline: result.continue(robot_result)
 
     alt Optional Task Activated
         Pipeline->>Task: call activated task
@@ -185,21 +309,26 @@ sequenceDiagram
     Network-->>User: SimpleFlow::Result
 ```
 
-## Conditional Routing
+## Conditional Routing with ClassifierRobot
 
-Use custom Robot subclasses to implement intelligent routing:
+Use a custom Robot subclass to implement intelligent routing. Override `call(result)` to inspect the LLM output and activate optional tasks:
 
 ```ruby
 class ClassifierRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    # Extract context and message from the pipeline result
+    context = extract_run_context(result)
+    message = context.delete(:message)
+
+    # Run the robot to classify the input
+    robot_result = run(message, **context)
 
     new_result = result
       .with_context(@name.to_sym, robot_result)
       .continue(robot_result)
 
-    # Activate appropriate specialist
-    category = robot_result.last_text_content.to_s.downcase
+    # Activate the appropriate specialist based on classification
+    category = robot_result.last_text_content.to_s.strip.downcase
     case category
     when /billing/ then new_result.activate(:billing)
     when /technical/ then new_result.activate(:technical)
@@ -207,7 +336,58 @@ class ClassifierRobot < RobotLab::Robot
     end
   end
 end
+
+# Build the classifier (uses a .md template with YAML front matter)
+classifier = ClassifierRobot.new(
+  name: "classifier",
+  template: :classifier,
+  model: "claude-sonnet-4"
+)
+
+# Build specialist robots
+billing_robot = RobotLab.build(name: "billing", template: :billing)
+technical_robot = RobotLab.build(name: "technical", template: :technical)
+general_robot = RobotLab.build(name: "general", template: :general)
+
+# Create network with optional task routing
+network = RobotLab.create_network(name: "support_network") do
+  task :classifier, classifier, depends_on: :none
+  task :billing, billing_robot, depends_on: :optional
+  task :technical, technical_robot, depends_on: :optional
+  task :general, general_robot, depends_on: :optional
+end
+
+result = network.run(message: "I was charged twice for my subscription.")
+puts result.value.last_text_content
 ```
+
+## Templates
+
+Templates are `.md` files with YAML front matter, managed by the prompt_manager gem. They live in the configured template path (default: `./prompts/` or `app/prompts/` in Rails).
+
+```markdown
+---
+description: Customer support classifier
+model: claude-sonnet-4
+temperature: 0.3
+---
+You are a request classifier. Analyze the user's request and classify it
+as either "billing", "technical", or "general".
+
+Respond with ONLY the category name, nothing else.
+```
+
+Reference templates by symbol when building robots:
+
+```ruby
+robot = RobotLab.build(
+  name: "classifier",
+  template: :classifier,           # loads prompts/classifier.md
+  context: { tone: "professional" } # variables passed to the template
+)
+```
+
+Front matter keys like `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, and `stop` are automatically applied to the robot's chat configuration.
 
 ## Next Steps
 

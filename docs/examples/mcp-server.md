@@ -1,100 +1,14 @@
 # MCP Server
 
-Creating and using Model Context Protocol servers.
+Connecting robots to Model Context Protocol servers for external tool access.
 
 ## Overview
 
-This example demonstrates how to create MCP servers to expose tools and how to connect robots to external MCP servers.
+This example demonstrates how to connect robots to external MCP servers. MCP servers expose tools that robots can discover and invoke automatically. RobotLab supports stdio, HTTP, WebSocket, and SSE transports.
 
-## Creating an MCP Server
+## Using MCP with a Robot
 
-```ruby
-#!/usr/bin/env ruby
-# examples/mcp_server.rb
-
-require "bundler/setup"
-require "robot_lab"
-require "json"
-
-# Create an MCP server with database tools
-server = RobotLab::MCP::Server.new(
-  name: "database_tools",
-  version: "1.0.0"
-)
-
-# Mock database
-USERS = {
-  "1" => { id: "1", name: "Alice", email: "alice@example.com", plan: "pro" },
-  "2" => { id: "2", name: "Bob", email: "bob@example.com", plan: "free" }
-}
-
-ORDERS = {
-  "ORD001" => { id: "ORD001", user_id: "1", total: 99.99, status: "shipped" },
-  "ORD002" => { id: "ORD002", user_id: "1", total: 49.99, status: "pending" },
-  "ORD003" => { id: "ORD003", user_id: "2", total: 29.99, status: "delivered" }
-}
-
-# Add tools to the server
-server.add_tool(
-  name: "get_user",
-  description: "Get user by ID",
-  parameters: {
-    user_id: { type: "string", required: true, description: "User ID" }
-  },
-  handler: ->(user_id:) {
-    user = USERS[user_id]
-    user || { error: "User not found" }
-  }
-)
-
-server.add_tool(
-  name: "list_users",
-  description: "List all users",
-  parameters: {
-    plan: { type: "string", enum: ["free", "pro"], description: "Filter by plan" }
-  },
-  handler: ->(plan: nil) {
-    users = USERS.values
-    users = users.select { |u| u[:plan] == plan } if plan
-    users
-  }
-)
-
-server.add_tool(
-  name: "get_orders",
-  description: "Get orders for a user",
-  parameters: {
-    user_id: { type: "string", required: true },
-    status: { type: "string", enum: ["pending", "shipped", "delivered"] }
-  },
-  handler: ->(user_id:, status: nil) {
-    orders = ORDERS.values.select { |o| o[:user_id] == user_id }
-    orders = orders.select { |o| o[:status] == status } if status
-    orders
-  }
-)
-
-server.add_tool(
-  name: "update_order_status",
-  description: "Update an order's status",
-  parameters: {
-    order_id: { type: "string", required: true },
-    status: { type: "string", required: true, enum: ["pending", "shipped", "delivered"] }
-  },
-  handler: ->(order_id:, status:) {
-    order = ORDERS[order_id]
-    return { error: "Order not found" } unless order
-    order[:status] = status
-    { success: true, order: order }
-  }
-)
-
-# Start the server (stdio for local use)
-puts "Starting MCP server..."
-server.start(transport: :stdio)
-```
-
-## Using MCP Server in Robot
+The primary pattern is to pass MCP server configurations via `mcp:` or `mcp_servers:` when building a robot:
 
 ```ruby
 #!/usr/bin/env ruby
@@ -103,136 +17,174 @@ server.start(transport: :stdio)
 require "bundler/setup"
 require "robot_lab"
 
-RobotLab.configure do |config|
-  config.default_model = "claude-sonnet-4"
-end
-
-# Robot that uses the MCP server
-admin_bot = RobotLab.build do
-  name "admin_assistant"
-  description "Helps with administrative tasks"
-
-  template <<~PROMPT
-    You are an administrative assistant with access to user and order data.
-    Help users look up information and manage orders.
-  PROMPT
-
-  mcp [
-    {
-      name: "database",
-      transport: {
-        type: "stdio",
-        command: "ruby",
-        args: ["examples/mcp_server.rb"]
-      }
+# MCP server configuration (stdio transport)
+github_server = {
+  name: "github",
+  transport: {
+    type: "stdio",
+    command: "github-mcp-server",
+    args: ["stdio"],
+    env: {
+      "GITHUB_PERSONAL_ACCESS_TOKEN" => ENV.fetch("GITHUB_PERSONAL_ACCESS_TOKEN", "")
     }
-  ]
-end
+  }
+}
 
-# Interactive session
-puts "Admin Assistant (uses MCP server)"
-puts "-" * 50
+# Create a robot with MCP server integration
+# Tools are automatically discovered when the robot connects
+robot = RobotLab.build(
+  name: "github_assistant",
+  system_prompt: <<~PROMPT,
+    You are a GitHub assistant with access to repository tools.
+    Help users search repos, manage issues, and explore code.
+  PROMPT
+  mcp: [github_server],
+  model: "claude-sonnet-4"
+)
 
-state = RobotLab.create_state(message: "List all pro users and their orders")
+# The robot auto-discovers MCP tools on first run
+puts "MCP Servers: #{robot.mcp_clients.keys.join(", ")}"
+puts "MCP Tools: #{robot.mcp_tools.size} discovered"
 
-admin_bot.run(state: state) do |event|
-  case event.type
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "\n[MCP: #{event.name}]"
+# Run the robot -- it can use any discovered MCP tools
+result = robot.run("What are the top 3 most starred Ruby web frameworks on GitHub?")
+puts result.last_text_content
+
+# Show tool calls if any were made
+if result.tool_calls.any?
+  puts "\nTool calls made:"
+  result.tool_calls.each do |tc|
+    tool_info = tc.respond_to?(:tool) ? tc.tool : tc
+    puts "  #{tool_info[:name] || tool_info}"
   end
 end
 
-puts
-admin_bot.disconnect
+# Always disconnect MCP clients when done
+robot.disconnect
 ```
 
-## Network with MCP
+## Direct MCP Client Usage
+
+You can also use the MCP client directly without a robot:
 
 ```ruby
-# examples/network_with_mcp.rb
+require "robot_lab"
 
-network = RobotLab.create_network do
-  name "support_with_mcp"
-
-  # MCP servers available to all robots
-  mcp [
-    {
-      name: "database",
-      transport: { type: "stdio", command: "ruby examples/mcp_server.rb" }
-    },
-    {
-      name: "filesystem",
-      transport: {
-        type: "stdio",
-        command: "npx",
-        args: ["@modelcontextprotocol/server-filesystem", "/data"]
-      }
-    }
-  ]
-
-  add_robot RobotLab.build {
-    name "data_analyst"
-    template "You analyze user data."
-    mcp :inherit  # Uses network's MCP servers
+# Create and connect MCP client
+github_server = {
+  name: "github",
+  transport: {
+    type: "stdio",
+    command: "github-mcp-server",
+    args: ["stdio"],
+    env: { "GITHUB_PERSONAL_ACCESS_TOKEN" => ENV["GITHUB_PERSONAL_ACCESS_TOKEN"] }
   }
+}
 
-  add_robot RobotLab.build {
-    name "file_manager"
-    template "You manage files."
-    mcp :inherit
-    tools %w[read_file list_directory]  # Only these MCP tools
-  }
+client = RobotLab::MCP::Client.new(github_server)
+client.connect
+
+if client.connected?
+  # List available tools
+  tools = client.list_tools
+  tools.each do |tool|
+    puts "#{tool[:name]}: #{tool[:description]}"
+  end
+
+  # Call a tool directly
+  result = client.call_tool("search_repositories", {
+    query: "language:ruby stars:>1000",
+    per_page: 5
+  })
+
+  puts JSON.pretty_generate(result)
+
+  client.disconnect
 end
 ```
 
-## HTTP MCP Server
+## Multiple MCP Servers
+
+A robot can connect to multiple MCP servers simultaneously:
 
 ```ruby
-#!/usr/bin/env ruby
-# examples/http_mcp_server.rb
-
-require "robot_lab"
-require "sinatra"
-
-server = RobotLab::MCP::Server.new(name: "api_tools")
-
-server.add_tool(
-  name: "get_stats",
-  description: "Get system statistics",
-  parameters: {},
-  handler: -> {
-    {
-      uptime: `uptime`.strip,
-      memory: `free -m 2>/dev/null || vm_stat`.strip,
-      time: Time.now.iso8601
-    }
+filesystem_server = {
+  name: "filesystem",
+  transport: {
+    type: "stdio",
+    command: "npx",
+    args: ["@modelcontextprotocol/server-filesystem", "/data"]
   }
+}
+
+github_server = {
+  name: "github",
+  transport: {
+    type: "stdio",
+    command: "github-mcp-server",
+    args: ["stdio"],
+    env: { "GITHUB_PERSONAL_ACCESS_TOKEN" => ENV["GITHUB_PERSONAL_ACCESS_TOKEN"] }
+  }
+}
+
+robot = RobotLab.build(
+  name: "developer",
+  system_prompt: "You help with coding tasks using GitHub and the filesystem.",
+  mcp: [filesystem_server, github_server],
+  model: "claude-sonnet-4"
 )
 
-# Sinatra endpoint for MCP
-post "/mcp" do
-  content_type :json
-  request_body = JSON.parse(request.body.read)
-  response = server.handle_request(request_body)
-  response.to_json
-end
+result = robot.run("Search for Ruby repos with CI configs and list their workflow files")
+puts result.last_text_content
 
-# Run: ruby examples/http_mcp_server.rb
-# Connect with HTTP transport
+robot.disconnect
 ```
 
-## Connecting to HTTP Server
+## MCP in Networks
+
+Networks pass MCP configuration through the hierarchical resolution system. Use `mcp: :inherit` on robots to use the network-level MCP config, or specify per-task MCP servers:
 
 ```ruby
-robot = RobotLab.build do
-  name "remote_assistant"
-  template "You have access to remote tools."
+# Create robots
+data_analyst = RobotLab.build(
+  name: "data_analyst",
+  system_prompt: "You analyze data.",
+  mcp: :inherit   # Will use whatever MCP config is resolved at runtime
+)
 
-  mcp [
+file_manager = RobotLab.build(
+  name: "file_manager",
+  system_prompt: "You manage files.",
+  mcp: :inherit,
+  tools: :none     # Only use inherited MCP tools, no local tools
+)
+
+# Create network with per-task MCP configuration
+network = RobotLab.create_network(name: "support_with_mcp") do
+  task :analyst, data_analyst,
+       mcp: [github_server],
+       depends_on: :none
+
+  task :files, file_manager,
+       mcp: [filesystem_server],
+       tools: %w[read_file list_directory],   # Whitelist only these MCP tools
+       depends_on: :optional
+end
+
+result = network.run(message: "Analyze the project structure")
+```
+
+## HTTP Transport
+
+Connect to remote MCP servers over HTTP:
+
+```ruby
+robot = RobotLab.build(
+  name: "remote_assistant",
+  system_prompt: "You have access to remote tools.",
+  mcp: [
     {
-      name: "remote",
+      name: "remote_api",
       transport: {
         type: "http",
         url: "https://mcp.example.com/mcp",
@@ -240,48 +192,100 @@ robot = RobotLab.build do
       }
     }
   ]
-end
-```
-
-## WebSocket Server
-
-```ruby
-#!/usr/bin/env ruby
-# examples/websocket_mcp_server.rb
-
-require "robot_lab"
-
-server = RobotLab::MCP::Server.new(name: "realtime_tools")
-
-server.add_tool(
-  name: "subscribe_events",
-  description: "Subscribe to real-time events",
-  parameters: { channel: { type: "string", required: true } },
-  handler: ->(channel:) { { subscribed: channel } }
 )
 
-# Start WebSocket server
-server.start(transport: :websocket, port: 8765)
+result = robot.run("Use the remote tools to check system status")
+robot.disconnect
+```
+
+## WebSocket Transport
+
+For real-time bidirectional communication:
+
+```ruby
+robot = RobotLab.build(
+  name: "realtime_assistant",
+  system_prompt: "You monitor real-time events.",
+  mcp: [
+    {
+      name: "realtime",
+      transport: {
+        type: "websocket",
+        url: "ws://localhost:8765"
+      }
+    }
+  ]
+)
+
+result = robot.run("Subscribe to the events channel")
+robot.disconnect
+```
+
+## SSE Transport
+
+Server-Sent Events transport for streaming responses:
+
+```ruby
+robot = RobotLab.build(
+  name: "sse_assistant",
+  system_prompt: "You have access to streaming tools.",
+  mcp: [
+    {
+      name: "streaming_api",
+      transport: {
+        type: "sse",
+        url: "https://api.example.com/sse"
+      }
+    }
+  ]
+)
+
+result = robot.run("Stream the latest metrics")
+robot.disconnect
+```
+
+## Runtime MCP Overrides
+
+Override MCP configuration at runtime via `robot.run`:
+
+```ruby
+robot = RobotLab.build(
+  name: "flexible_bot",
+  system_prompt: "You use available tools.",
+  mcp: [github_server]
+)
+
+# Use default MCP config
+result = robot.run("Search for Ruby repos")
+
+# Override MCP at runtime -- disable all MCP
+result = robot.run("Just answer from your knowledge", mcp: :none)
+
+robot.disconnect
 ```
 
 ## Running
 
 ```bash
-# Start MCP server in one terminal
-ruby examples/mcp_server.rb
-
-# Run client in another terminal
+# Set API keys
 export ANTHROPIC_API_KEY="your-key"
+export GITHUB_PERSONAL_ACCESS_TOKEN="your-token"
+
+# Install MCP server (example: GitHub)
+brew install github-mcp-server
+
+# Run client
 ruby examples/mcp_client.rb
 ```
 
 ## Key Concepts
 
-1. **Server Creation**: Use `RobotLab::MCP::Server.new`
-2. **Tool Registration**: Add tools with `server.add_tool`
-3. **Transport**: Choose stdio, http, websocket, or sse
-4. **Client Connection**: Configure in robot's `mcp` block
-5. **Tool Filtering**: Use `tools` whitelist for security
+1. **MCP Configuration**: Pass server configs via `mcp:` parameter on `RobotLab.build` or `Robot.new`
+2. **Auto-Discovery**: Tools are automatically discovered when the robot connects to an MCP server
+3. **Transport Types**: stdio, http, websocket, sse
+4. **Hierarchical Config**: `runtime > robot > network > global`, using `:none`, `:inherit`, or explicit arrays
+5. **Tool Filtering**: Use `tools:` whitelist to limit which MCP tools are available
+6. **Cleanup**: Always call `robot.disconnect` when done to release MCP connections
 
 ## See Also
 

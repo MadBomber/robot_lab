@@ -1,237 +1,185 @@
-# Streaming Events
+# Streaming::Events
 
-Event types for real-time response handling.
+Event type constants and classification helpers for the streaming system.
 
-## Class: `RobotLab::Streaming::Event`
+## Module: `RobotLab::Streaming::Events`
 
-```ruby
-event.type        # => Symbol
-event.text        # => String (for text events)
-event.robot_name  # => String (for robot events)
-```
-
-## Event Types
-
-### :start
-
-Streaming has begun.
+Defines all recognized event types as string constants and provides helper methods for classifying events.
 
 ```ruby
-case event.type
-when :start
-  puts "Starting..."
-end
+RobotLab::Streaming::Events::TEXT_DELTA       # => "text.delta"
+RobotLab::Streaming::Events::RUN_COMPLETED    # => "run.completed"
+RobotLab::Streaming::Events.delta?("text.delta")  # => true
 ```
 
-**Attributes:**
+## Event Type Constants
 
-| Name | Type | Description |
-|------|------|-------------|
-| `robot_name` | `String`, `nil` | Robot name |
+### Run Lifecycle Events
 
-### :text_delta
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `RUN_STARTED` | `"run.started"` | A run has begun |
+| `RUN_COMPLETED` | `"run.completed"` | A run completed successfully |
+| `RUN_FAILED` | `"run.failed"` | A run failed with an error |
+| `RUN_INTERRUPTED` | `"run.interrupted"` | A run was interrupted |
 
-A chunk of text was received.
+### Step Events
+
+For durable execution tracking:
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `STEP_STARTED` | `"step.started"` | A processing step has begun |
+| `STEP_COMPLETED` | `"step.completed"` | A processing step completed |
+| `STEP_FAILED` | `"step.failed"` | A processing step failed |
+
+### Part Events
+
+For message composition tracking:
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `PART_CREATED` | `"part.created"` | A message part was created |
+| `PART_COMPLETED` | `"part.completed"` | A message part completed |
+| `PART_FAILED` | `"part.failed"` | A message part failed |
+
+### Content Delta Events
+
+Token-level streaming events:
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `TEXT_DELTA` | `"text.delta"` | A chunk of text content was generated |
+| `TOOL_CALL_ARGUMENTS_DELTA` | `"tool_call.arguments.delta"` | A chunk of tool call arguments |
+| `TOOL_CALL_OUTPUT_DELTA` | `"tool_call.output.delta"` | A chunk of tool call output |
+| `REASONING_DELTA` | `"reasoning.delta"` | A chunk of reasoning/thinking content |
+| `DATA_DELTA` | `"data.delta"` | A chunk of structured data |
+
+### Human-in-the-Loop Events
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `HITL_REQUESTED` | `"hitl.requested"` | Human input has been requested |
+| `HITL_RESOLVED` | `"hitl.resolved"` | Human input has been provided |
+
+### Metadata Events
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `USAGE_UPDATED` | `"usage.updated"` | Token usage statistics updated |
+| `METADATA_UPDATED` | `"metadata.updated"` | Run metadata updated |
+
+### Terminal Event
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `STREAM_ENDED` | `"stream.ended"` | The stream has ended; no more events |
+
+## Event Collections
+
+### ALL_EVENTS
 
 ```ruby
-case event.type
-when :text_delta
-  print event.text
-end
+RobotLab::Streaming::Events::ALL_EVENTS
+# => Array of all event type strings (frozen)
 ```
 
-**Attributes:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `text` | `String` | Text content |
-| `robot_name` | `String`, `nil` | Source robot |
-
-### :tool_call
-
-A tool is being invoked.
+### LIFECYCLE_EVENTS
 
 ```ruby
-case event.type
-when :tool_call
-  puts "Calling #{event.name} with #{event.input}"
-end
+RobotLab::Streaming::Events::LIFECYCLE_EVENTS
+# => ["run.started", "run.completed", "run.failed", "run.interrupted"]
 ```
 
-**Attributes:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `id` | `String` | Tool call ID |
-| `name` | `String` | Tool name |
-| `input` | `Hash` | Tool parameters |
-| `robot_name` | `String`, `nil` | Source robot |
-
-### :tool_result
-
-A tool has returned a result.
+### DELTA_EVENTS
 
 ```ruby
-case event.type
-when :tool_result
-  puts "#{event.name} returned: #{event.result}"
-end
+RobotLab::Streaming::Events::DELTA_EVENTS
+# => ["text.delta", "tool_call.arguments.delta", "tool_call.output.delta",
+#     "reasoning.delta", "data.delta"]
 ```
 
-**Attributes:**
+## Classification Methods
 
-| Name | Type | Description |
-|------|------|-------------|
-| `id` | `String` | Tool call ID |
-| `name` | `String` | Tool name |
-| `result` | `Object` | Tool result |
-| `robot_name` | `String`, `nil` | Source robot |
-
-### :robot_start
-
-A robot has started executing (network only).
+### Events.lifecycle?
 
 ```ruby
-case event.type
-when :robot_start
-  puts "Robot #{event.robot_name} starting"
-end
+RobotLab::Streaming::Events.lifecycle?("run.started")   # => true
+RobotLab::Streaming::Events.lifecycle?("text.delta")     # => false
 ```
 
-**Attributes:**
+Returns `true` if the event is a run lifecycle event.
 
-| Name | Type | Description |
-|------|------|-------------|
-| `robot_name` | `String` | Robot name |
-
-### :robot_complete
-
-A robot has finished executing (network only).
+### Events.delta?
 
 ```ruby
-case event.type
-when :robot_complete
-  puts "Robot #{event.robot_name} finished"
-end
+RobotLab::Streaming::Events.delta?("text.delta")         # => true
+RobotLab::Streaming::Events.delta?("run.completed")      # => false
 ```
 
-**Attributes:**
+Returns `true` if the event is a content delta (token streaming) event.
 
-| Name | Type | Description |
-|------|------|-------------|
-| `robot_name` | `String` | Robot name |
-| `result` | `RobotResult` | Execution result |
-
-### :complete
-
-All streaming has finished.
+### Events.valid?
 
 ```ruby
-case event.type
-when :complete
-  puts "All done!"
-end
+RobotLab::Streaming::Events.valid?("text.delta")         # => true
+RobotLab::Streaming::Events.valid?("unknown.event")      # => false
 ```
 
-### :error
-
-An error occurred.
-
-```ruby
-case event.type
-when :error
-  puts "Error: #{event.error.message}"
-end
-```
-
-**Attributes:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `error` | `Exception` | The error |
-| `robot_name` | `String`, `nil` | Source robot |
+Returns `true` if the event is a recognized event type.
 
 ## Examples
 
-### Complete Handler
+### Filtering Events by Category
 
 ```ruby
-robot.run(state: state) do |event|
-  case event.type
-  when :start
-    puts "=== Starting ==="
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "\n[Tool: #{event.name}]"
-  when :tool_result
-    puts "[Result: #{event.result.to_s.truncate(50)}]"
-  when :complete
-    puts "\n=== Complete ==="
-  when :error
-    puts "\n!!! Error: #{event.error.message}"
+publish = ->(event) {
+  event_type = event[:event]
+
+  if RobotLab::Streaming::Events.delta?(event_type)
+    # Handle streaming content
+    print event[:data][:delta]
+  elsif RobotLab::Streaming::Events.lifecycle?(event_type)
+    # Handle lifecycle transitions
+    puts "\n[#{event_type}] run_id=#{event[:data][:run_id]}"
   end
-end
+}
 ```
 
-### Network Handler
+### Using Constants for Event Matching
 
 ```ruby
-network.run(state: state) do |event|
-  robot = event.robot_name || "system"
+include RobotLab::Streaming::Events
 
-  case event.type
-  when :robot_start
-    puts "[#{robot}] Starting..."
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "\n[#{robot}] Calling #{event.name}"
-  when :robot_complete
-    puts "\n[#{robot}] Complete"
-  when :error
-    puts "\n[#{robot}] Error: #{event.error.message}"
+publish = ->(event) {
+  case event[:event]
+  when TEXT_DELTA
+    print event[:data][:delta]
+  when TOOL_CALL_ARGUMENTS_DELTA
+    buffer_tool_args(event[:data])
+  when RUN_COMPLETED
+    puts "\nRun complete"
+  when RUN_FAILED
+    puts "\nRun failed: #{event[:data][:error]}"
+  when STREAM_ENDED
+    cleanup
   end
-end
+}
 ```
 
-### Filtering Events
+### Validating Custom Events
 
 ```ruby
-# Only text
-robot.run(state: state) do |event|
-  print event.text if event.type == :text_delta
-end
-
-# Only tools
-robot.run(state: state) do |event|
-  if event.type == :tool_call
-    log_tool_usage(event.name, event.input)
+def emit(event_type, data)
+  unless RobotLab::Streaming::Events.valid?(event_type)
+    raise ArgumentError, "Unknown event type: #{event_type}"
   end
-end
-```
 
-### Async Processing
-
-```ruby
-queue = Queue.new
-
-Thread.new do
-  loop do
-    event = queue.pop
-    break if event == :done
-    process_event(event)
-  end
-end
-
-robot.run(state: state) do |event|
-  queue << event
-  queue << :done if event.type == :complete
+  context.publish_event(event: event_type, data: data)
 end
 ```
 
 ## See Also
 
 - [Streaming Overview](index.md)
-- [StreamingContext](context.md)
-- [Streaming Guide](../../guides/streaming.md)
+- [Context](context.md)

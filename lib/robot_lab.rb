@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
-require "zeitwerk"
-require "json"
-require "securerandom"
-require "digest"
+require 'zeitwerk'
+require 'json'
+require 'securerandom'
+require 'digest'
 
 # Core dependencies
-require "ruby_llm"
-require "async"
+require 'active_support'
+require 'active_support/core_ext/module/delegation'
+require 'ruby_llm'
+require 'prompt_manager'
+require 'async'
 
 # Define the module first so Zeitwerk can populate it
 #
@@ -29,10 +32,16 @@ require "async"
 #   result = network.run(message: "Process this document")
 #
 # @example Configuration
-#   RobotLab.configure do |config|
-#     config.anthropic_api_key = ENV["ANTHROPIC_API_KEY"]
-#     config.template_path = "app/templates"
-#   end
+#   # Via environment variables (ROBOT_LAB_* prefix)
+#   # ROBOT_LAB_DEFAULT_MODEL=gpt-4
+#   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+#
+#   # Or via config files (~/.config/robot_lab/config.yml or ./config/robot_lab.yml)
+#   # See lib/robot_lab/config/defaults.yml for all options
+#
+#   # Access configuration values:
+#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+#   RobotLab.config.ruby_llm.request_timeout  #=> 120
 #
 module RobotLab
 end
@@ -43,16 +52,16 @@ loader.ignore("#{__dir__}/robot_lab/rails")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
 loader.inflector.inflect(
-  "robot_lab" => "RobotLab",
-  "robotic_model" => "RoboticModel",
-  "mcp" => "MCP",
-  "openai" => "OpenAI",
-  "sse" => "SSE",
-  "streamable_http" => "StreamableHTTP",
-  "websocket" => "WebSocket"
+  'robot_lab' => 'RobotLab',
+  'robotic_model' => 'RoboticModel',
+  'mcp' => 'MCP',
+  'openai' => 'OpenAI',
+  'sse' => 'SSE',
+  'streamable_http' => 'StreamableHTTP',
+  'websocket' => 'WebSocket'
 )
 
-# Note: adapters/ is NOT collapsed since files define RobotLab::Adapters::* classes
+# NOTE: adapters/ is NOT collapsed since files define RobotLab::Adapters::* classes
 
 loader.setup
 
@@ -63,40 +72,51 @@ module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb
 
   class << self
-    # @!attribute [w] configuration
-    #   @return [Configuration] the configuration object
-    attr_writer :configuration
-
-    # Returns the current configuration object.
+    # Returns the Config object (MywayConfig-based).
     #
-    # @return [Configuration] the configuration instance
-    def configuration
-      @configuration ||= Configuration.new
-    end
-
-    # Yields the configuration object for modification.
+    # Configuration is automatically loaded from:
+    # - Bundled defaults (lib/robot_lab/config/defaults.yml)
+    # - Environment-specific overrides (development, test, production)
+    # - XDG config files (~/.config/robot_lab/config.yml)
+    # - Project config (./config/robot_lab.yml)
+    # - Environment variables (ROBOT_LAB_*)
     #
-    # @yield [Configuration] the configuration object
-    # @return [void]
+    # @return [Config] the config instance
     #
     # @example
-    #   RobotLab.configure do |config|
-    #     config.anthropic_api_key = "sk-..."
-    #   end
-    def configure
-      yield(configuration)
+    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+    #   RobotLab.config.ruby_llm.request_timeout  #=> 120
+    #   RobotLab.config.development?              #=> true
+    def config
+      @config ||= Config.new.tap(&:after_load)
     end
+
+
+    # Reload configuration from all sources.
+    #
+    # Clears the cached Config instance, forcing it to be
+    # reloaded on next access.
+    #
+    # @return [Config] the new config instance
+    def reload_config!
+      @config = nil
+      config
+    end
+
 
     # Factory method to create a new Robot instance.
     #
-    # @param name [String] the unique identifier for the robot
-    # @param template [Symbol, nil] the ERB template for the robot's prompt
+    # @param name [String, nil] the unique identifier for the robot (auto-generated if nil)
+    # @param template [Symbol, nil] the prompt_manager template for the robot's prompt
     # @param system_prompt [String, nil] inline system prompt (can be used alone or with template)
     # @param context [Hash] variables to pass to the template
     # @param enable_cache [Boolean] whether to enable semantic caching (default: true)
     # @param options [Hash] additional options passed to Robot.new
     # @return [Robot] a new Robot instance
-    # @raise [ArgumentError] if neither template nor system_prompt is provided
+    #
+    # @example Bare robot (no template or prompt)
+    #   robot = RobotLab.build
+    #   robot.with_instructions("You are helpful.").run("Hello!")
     #
     # @example Robot with template
     #   robot = RobotLab.build(
@@ -110,21 +130,8 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    #
-    # @example Robot with both template and system prompt
-    #   robot = RobotLab.build(
-    #     name: "support",
-    #     template: :support_agent,
-    #     system_prompt: "Today's date is #{Date.today}."
-    #   )
-    #
-    # @example Robot with caching disabled
-    #   robot = RobotLab.build(
-    #     name: "simple",
-    #     system_prompt: "You are helpful.",
-    #     enable_cache: false
-    #   )
-    def build(name:, template: nil, system_prompt: nil, context: {}, enable_cache: true, **options)
+    def build(name: nil, template: nil, system_prompt: nil, context: {}, enable_cache: true, **options)
+      name ||= "robot_#{SecureRandom.hex(4)}"
       Robot.new(
         name: name,
         template: template,
@@ -134,6 +141,7 @@ module RobotLab
         **options
       )
     end
+
 
     # Factory method to create a new Network of robots.
     #
@@ -166,6 +174,7 @@ module RobotLab
       Network.new(name: name, concurrency: concurrency, &block)
     end
 
+
     # Factory method to create a new Memory object.
     #
     # @param data [Hash] initial runtime data
@@ -190,6 +199,6 @@ end
 
 # Load Rails integration if Rails is defined
 if defined?(Rails::Engine)
-  require "robot_lab/rails/engine"
-  require "robot_lab/rails/railtie"
+  require 'robot_lab/rails/engine'
+  require 'robot_lab/rails/railtie'
 end

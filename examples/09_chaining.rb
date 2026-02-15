@@ -1,0 +1,174 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Example 9: Robot Chaining & Reconfiguration
+#
+# Demonstrates the Robot API surface for runtime configuration without
+# making any LLM calls. Covers:
+#   - with_* method chaining
+#   - update() for reconfiguration
+#   - to_h introspection (via amazing_print)
+#   - Config diffs between steps (via hashdiff)
+#   - Template front matter config keys
+#   - Constructor params overriding front matter
+#   - Config hierarchy in action
+#
+# Usage:
+#   bundle exec ruby examples/09_chaining.rb
+
+# Configure template path before loading
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
+
+require_relative "../lib/robot_lab"
+require "amazing_print"
+require "hashdiff"
+
+# Show a config snapshot and the diff from the previous snapshot.
+# Returns the current hash for use as the next "previous" snapshot.
+def show_config(robot, previous_config = nil)
+  current = robot.to_h
+  ap current
+
+  if previous_config
+    diff = Hashdiff.diff(previous_config, current)
+    if diff.empty?
+      puts "  (no changes to to_h)"
+    else
+      puts
+      puts "  Diff from previous:"
+      diff.each do |change|
+        op, path, *values = change
+        case op
+        when "+"
+          puts "    + #{path}: #{values.first.inspect}"
+        when "-"
+          puts "    - #{path}: #{values.first.inspect}"
+        when "~"
+          puts "    ~ #{path}: #{values.first.inspect} -> #{values.last.inspect}"
+        end
+      end
+    end
+  end
+
+  current
+end
+
+puts "=" * 70
+puts "Example 9: Robot Chaining & Reconfiguration"
+puts "=" * 70
+puts
+
+# =============================================================================
+# Section 1: Template front matter config
+# =============================================================================
+
+puts "--- Section 1: Template Front Matter Config ---"
+puts
+
+# The 'configurable' template sets temperature: 0.3 and max_tokens: 200
+# via YAML front matter. These are applied automatically.
+robot = RobotLab.build(
+  name: "chameleon",
+  template: :configurable,
+  context: { task_type: "analysis" }
+)
+
+puts "Robot created with :configurable template"
+prev = show_config(robot)
+puts
+
+# =============================================================================
+# Section 2: with_* method chaining
+# =============================================================================
+
+puts "--- Section 2: with_* Method Chaining ---"
+puts
+
+# with_* methods return self, enabling fluent chaining.
+# These override whatever the template set.
+robot.with_temperature(0.9)
+
+puts "After chaining with_temperature(0.9):"
+prev = show_config(robot, prev)
+puts
+
+# =============================================================================
+# Section 3: update() for reconfiguration
+# =============================================================================
+
+puts "--- Section 3: update() for Reconfiguration ---"
+puts
+
+# update() can swap the template, model, temperature, and other settings.
+robot.update(template: :assistant, temperature: 0.5)
+
+puts "After update(template: :assistant, temperature: 0.5):"
+prev = show_config(robot, prev)
+puts
+
+# Swap back with context
+robot.update(template: :configurable, context: { task_type: "creative" })
+
+puts "After update(template: :configurable, context: { task_type: 'creative' }):"
+prev = show_config(robot, prev)
+puts
+
+# =============================================================================
+# Section 4: Constructor params override front matter
+# =============================================================================
+
+puts "--- Section 4: Constructor Params Override Front Matter ---"
+puts
+
+# The configurable template sets temperature: 0.3 in front matter.
+# Passing temperature: 0.9 to the constructor overrides it.
+robot2 = RobotLab.build(
+  name: "override_demo",
+  template: :configurable,
+  context: { task_type: "creative" },
+  temperature: 0.9
+)
+
+puts "Template sets temperature: 0.3, constructor passes temperature: 0.9"
+prev2 = show_config(robot2)
+puts
+
+# =============================================================================
+# Section 5: Bare robot with chaining
+# =============================================================================
+
+puts "--- Section 5: Bare Robot with Chaining ---"
+puts
+
+# A bare robot has no template. Configure entirely via chaining.
+bare = RobotLab.build(name: "bare")
+
+puts "Bare robot before chaining:"
+prev_bare = show_config(bare)
+puts
+
+bare
+  .with_instructions("You are a helpful assistant.")
+  .with_temperature(0.5)
+
+puts "After with_instructions(...).with_temperature(0.5):"
+prev_bare = show_config(bare, prev_bare)
+puts
+
+# =============================================================================
+# Section 6: with_template() on an existing robot
+# =============================================================================
+
+puts "--- Section 6: with_template() on Existing Robot ---"
+puts
+
+# You can apply a template to a robot after creation.
+bare.with_template(:helper)
+
+puts "After bare.with_template(:helper):"
+show_config(bare, prev_bare)
+puts
+
+puts "=" * 70
+puts "All sections completed without any LLM calls."
+puts "=" * 70

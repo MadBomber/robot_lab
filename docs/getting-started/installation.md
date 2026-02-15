@@ -4,7 +4,7 @@ This guide covers installing RobotLab in your Ruby project.
 
 ## Requirements
 
-- **Ruby**: 3.1 or higher
+- **Ruby**: 3.2 or higher
 - **Bundler**: 2.0 or higher (recommended)
 
 ## Install via Bundler
@@ -31,13 +31,19 @@ gem install robot_lab
 
 ## Dependencies
 
-RobotLab automatically installs these dependencies:
+RobotLab automatically installs these core dependencies:
 
 | Gem | Purpose |
 |-----|---------|
-| `ruby_llm` | LLM provider integrations |
-| `ruby_llm-template` | Template rendering for prompts |
-| `simple_flow` | Workflow execution |
+| `ruby_llm` (~> 1.12) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) |
+| `prompt_manager` (~> 1.0) | Template-based prompt management with YAML front matter |
+| `simple_flow` (~> 0.3) | Pipeline workflow execution for networks |
+| `myway_config` (~> 0.1) | Layered configuration (defaults, env vars, config files) |
+| `ruby_llm-mcp` | Model Context Protocol client for external tool servers |
+| `ruby_llm-schema` | Schema validation for structured outputs |
+| `ruby_llm-semantic_cache` | Semantic caching for LLM responses |
+| `zeitwerk` (~> 2.6) | Autoloading and eager loading |
+| `async` (~> 2.0) | Fiber-based concurrency |
 
 ### Optional Dependencies
 
@@ -78,7 +84,7 @@ Run it:
 
 ```bash
 ruby test_robot_lab.rb
-# => RobotLab version: 0.0.1
+# => RobotLab version: 0.1.0
 # => Installation successful!
 ```
 
@@ -107,24 +113,24 @@ rails db:migrate
 
 ## Environment Setup
 
-Before using RobotLab, set up your API keys as environment variables:
+RobotLab uses a layered configuration system (see [Configuration](configuration.md) for full details). The simplest way to get started is with environment variables:
 
 === "Anthropic (Recommended)"
 
     ```bash
-    export ANTHROPIC_API_KEY="sk-ant-..."
+    export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY="sk-ant-..."
     ```
 
 === "OpenAI"
 
     ```bash
-    export OPENAI_API_KEY="sk-..."
+    export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY="sk-..."
     ```
 
 === "Google Gemini"
 
     ```bash
-    export GEMINI_API_KEY="..."
+    export ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY="..."
     ```
 
 !!! tip "Using dotenv"
@@ -132,13 +138,16 @@ Before using RobotLab, set up your API keys as environment variables:
 
     ```ruby
     # Gemfile
-    gem "dotenv-rails", groups: [:development, :test]
+    gem "dotenv", groups: [:development, :test]
     ```
 
     ```bash
     # .env
-    ANTHROPIC_API_KEY=sk-ant-...
+    ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
     ```
+
+!!! info "Direct provider env vars"
+    RubyLLM also reads provider-specific environment variables directly (e.g., `ANTHROPIC_API_KEY`). If you already have those set, they will be picked up automatically. The `ROBOT_LAB_RUBY_LLM__*` prefix gives you explicit control through RobotLab's config layer.
 
 ## Troubleshooting
 
@@ -167,7 +176,7 @@ bundle add async-websocket
 
 If you see authentication errors:
 
-1. Verify your API key is set: `echo $ANTHROPIC_API_KEY`
+1. Verify your API key is set: `echo $ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY`
 2. Check the key is valid in your provider's console
 3. Ensure you're using the correct environment variable name
 

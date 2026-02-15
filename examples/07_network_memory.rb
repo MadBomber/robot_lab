@@ -41,14 +41,11 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/07_network_memory.rb
 
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
+
 require_relative "../lib/robot_lab"
 require "json"
-
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
 
 puts "=" * 60
 puts "Example 7: Network Memory with Concurrent Robots"
@@ -69,8 +66,9 @@ class AnalysisRobot < RobotLab::Robot
   def call(result)
     run_context = extract_run_context(result)
     network_memory = run_context.delete(:network_memory)
+    message = run_context.delete(:message)
 
-    robot_result = run(network_memory: network_memory, **run_context)
+    robot_result = run(message, network_memory: network_memory, **run_context)
 
     # Parse the JSON response and write to shared memory
     if network_memory
@@ -101,6 +99,7 @@ class SynthesizerRobot < RobotLab::Robot
   def call(result)
     run_context = extract_run_context(result)
     network_memory = run_context.delete(:network_memory)
+    message = run_context.delete(:message)
 
     puts "  [#{@name}] Reading analysis results from memory..."
 
@@ -125,7 +124,7 @@ class SynthesizerRobot < RobotLab::Robot
       run_context[:keywords] = "Not available"
     end
 
-    robot_result = run(network_memory: network_memory, **run_context)
+    robot_result = run(message, network_memory: network_memory, **run_context)
 
     result
       .with_context(@name.to_sym, robot_result)
@@ -154,27 +153,27 @@ sentiment_robot = AnalysisRobot.new(
   name: "sentiment_analyzer",
   template: :sentiment_analyzer,
   memory_key: :sentiment,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 entity_robot = AnalysisRobot.new(
   name: "entity_extractor",
   template: :entity_extractor,
   memory_key: :entities,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 keyword_robot = AnalysisRobot.new(
   name: "keyword_extractor",
   template: :keyword_extractor,
   memory_key: :keywords,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 synthesizer = SynthesizerRobot.new(
   name: "synthesizer",
   template: :synthesizer,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # -----------------------------------------------------------------------------

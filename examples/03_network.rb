@@ -9,18 +9,17 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/03_network.rb
 
-require_relative "../lib/robot_lab"
+# Configure template path before loading (MywayConfig reads env vars on init)
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.anthropic_api_key = ENV.fetch("ANTHROPIC_API_KEY", nil)
-  config.template_path = File.join(__dir__, "prompts")
-end
+require_relative "../lib/robot_lab"
 
 # Classifier robot that activates the appropriate specialist
 class ClassifierRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    run_context = extract_run_context(result)
+    message = run_context.delete(:message)
+    robot_result = run(message, **run_context)
 
     new_result = result
       .with_context(@name.to_sym, robot_result)
@@ -44,25 +43,25 @@ end
 classifier = ClassifierRobot.new(
   name: "classifier",
   template: :classifier,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 billing_robot = RobotLab.build(
   name: "billing",
   template: :billing,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 technical_robot = RobotLab.build(
   name: "technical",
   template: :technical,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 general_robot = RobotLab.build(
   name: "general",
   template: :general,
-  model: "claude-sonnet-4"
+  model: "claude-3-haiku-20240307"
 )
 
 # Create network with optional task routing

@@ -18,7 +18,7 @@ RobotLab enables you to build sophisticated AI applications using multiple speci
 - <strong>Network Orchestration</strong> - Connect robots with flexible routing<br>
 - <strong>Extensible Tools</strong> - Give robots custom capabilities<br>
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
-- <strong>Shared Memory</strong> - Hierarchical memory with namespaced scopes<br>
+- <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Conversation History</strong> - Persist and restore threads<br>
 - <strong>Streaming</strong> - Real-time event streaming<br>
 - <strong>Rails Integration</strong> - Generators and ActiveRecord support
@@ -52,11 +52,6 @@ The simplest way to create a robot is with an inline `system_prompt`. This appro
 ```ruby
 require "robot_lab"
 
-# Configure RobotLab
-RobotLab.configure do |config|
-  config.default_model = "claude-sonnet-4"
-end
-
 # Create a robot with an inline system prompt
 robot = RobotLab.build(
   name: "assistant",
@@ -64,63 +59,89 @@ robot = RobotLab.build(
 )
 
 # Run the robot
-result = robot.run(message: "What is the capital of France?")
+result = robot.run("What is the capital of France?")
 
-puts result.output.first.content
+puts result.last_text_content
 # => "The capital of France is Paris."
+```
+
+### Configuration
+
+RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layered configuration. There is no `configure` block. Configuration is loaded automatically from multiple sources in priority order:
+
+1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
+2. Environment-specific overrides (development, test, production)
+3. XDG user config (`~/.config/robot_lab/config.yml`)
+4. Project config (`./config/robot_lab.yml`)
+5. Environment variables (`ROBOT_LAB_*` prefix)
+
+```bash
+# Set API keys via environment variables (double underscore for nesting)
+export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
+export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
+```
+
+```ruby
+# Access configuration values
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.request_timeout  #=> 120
+RobotLab.config.streaming_enabled         #=> true
+```
+
+Or create a project config file at `./config/robot_lab.yml`:
+
+```yaml
+ruby_llm:
+  model: claude-sonnet-4
+  anthropic_api_key: sk-ant-...
+  request_timeout: 180
 ```
 
 ### Using Templates
 
-For production applications, RobotLab supports a powerful template system built on ERB. Templates allow you to:
+For production applications, RobotLab supports a template system built on [PromptManager](https://github.com/MadBomber/prompt_manager). Templates allow you to:
 
-- **Compose prompts** from reusable components
-- **Inject dynamic context** at build-time and run-time
+- **Compose prompts** from reusable Markdown files
+- **Inject dynamic context** at build-time
 - **Version control** your prompts alongside your code
 - **Share prompts** across multiple robots
 
-Configure the template directory:
-
-```ruby
-RobotLab.configure do |config|
-  config.template_path = "app/prompts"
-end
-```
-
-Each template is a **directory** containing ERB files for different message roles:
+Each template is a `.md` file with YAML front matter for metadata and parameters:
 
 ```
-app/prompts/
-  assistant/
-    ├── system.txt.erb    # System message (required)
-    ├── user.txt.erb      # User prompt template (optional)
-    ├── assistant.txt.erb # Pre-filled assistant response (optional)
-    └── schema.rb         # Structured output schema (optional)
+prompts/
+  assistant.md
+  classifier.md
+  billing.md
 ```
 
-Create the system message at `app/prompts/assistant/system.txt.erb`:
+Create a template at `prompts/assistant.md`:
 
-```erb
+```markdown
+---
+description: A helpful assistant
+parameters:
+  company_name: null
+  tone: friendly
+---
 You are a helpful assistant for <%= company_name %>.
+
+Your communication style should be <%= tone %>.
 
 Your responsibilities:
 - Answer questions accurately and concisely
 - Be friendly and professional
 - Admit when you don't know something
-
-<% if guidelines %>
-Additional guidelines:
-<%= guidelines %>
-<% end %>
 ```
 
-Reference the template directory using a Symbol:
+Reference the template by symbol:
 
 ```ruby
 robot = RobotLab.build(
   name: "assistant",
   template: :assistant,
-  context: { company_name: "Acme Corp", guidelines: nil }
+  context: { company_name: "Acme Corp", tone: "professional" }
 )
 ```
 
@@ -132,9 +153,23 @@ The `system_prompt` parameter can also be used alongside a template. When both a
 robot = RobotLab.build(
   name: "assistant",
   template: :assistant,
-  context: { company_name: "Acme Corp" },
+  context: { company_name: "Acme Corp", tone: "friendly" },
   system_prompt: "DEBUG MODE: Log all tool calls. Today's date is #{Date.today}."
 )
+```
+
+### Chaining Configuration
+
+Robots support method chaining to adjust configuration after creation:
+
+```ruby
+robot = RobotLab.build(name: "writer", system_prompt: "You are a creative writer.")
+
+result = robot
+  .with_temperature(0.9)
+  .with_model("claude-sonnet-4")
+  .with_max_tokens(2000)
+  .run("Write a haiku about Ruby programming")
 ```
 
 ## Creating a Robot with Tools
@@ -163,14 +198,14 @@ class Magic8Ball < RubyLLM::Tool
   end
 end
 
-# Create robot with tools
+# Create robot with tools via local_tools: parameter
 robot = RobotLab.build(
   name: "oracle",
   system_prompt: "You are a mystical oracle. Use the Magic 8-Ball to answer questions about the future.",
-  tools: [Magic8Ball]
+  local_tools: [Magic8Ball]
 )
 
-result = robot.run(message: "Should I start learning Rust?")
+result = robot.run("Should I start learning Rust?")
 ```
 
 ## Orchestrating Multiple Robots
@@ -181,7 +216,10 @@ Networks use [SimpleFlow](https://github.com/MadBomber/simple_flow) pipelines wi
 # Custom classifier that activates the appropriate specialist
 class ClassifierRobot < RobotLab::Robot
   def call(result)
-    robot_result = run(**extract_run_context(result))
+    context = extract_run_context(result)
+    message = context.delete(:message)
+
+    robot_result = run(message, **context)
 
     new_result = result
       .with_context(@name.to_sym, robot_result)
@@ -228,15 +266,15 @@ Both robots and networks have inherent memory that persists across runs:
 # Standalone robot with inherent memory
 robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
 
-robot.run(message: "My name is Alice")
-robot.run(message: "What's my name?")  # Memory persists automatically
+robot.run("My name is Alice")
+robot.run("What's my name?")  # Memory persists automatically
 
 # Access robot's memory
 robot.memory[:user_id] = 123
 robot.memory.data[:category] = "billing"
 
 # Runtime memory injection
-robot.run(message: "Help me", memory: { session_id: "abc123", tier: "premium" })
+robot.run("Help me", memory: { session_id: "abc123", tier: "premium" })
 
 # Reset memory when needed
 robot.reset_memory
@@ -285,19 +323,19 @@ filesystem_server = {
 robot = RobotLab.build(
   name: "developer",
   template: :developer,
-  mcp_servers: [filesystem_server]
+  mcp: [filesystem_server]
 )
 
 # Robot can now use filesystem tools
-result = robot.run(message: "List the files in the current directory")
+result = robot.run("List the files in the current directory")
 ```
 
 ## Streaming
 
-Subscribe to real-time events during execution:
+Pass a block to `run` to receive real-time events during execution:
 
 ```ruby
-result = robot.run(message: "Tell me a story") do |event|
+result = robot.run("Tell me a story") do |event|
   case event[:event]
   when "text.delta"
     print event[:data][:delta]

@@ -56,7 +56,7 @@ module RobotLab
         begin
           @publish.call(chunk)
         rescue StandardError => e
-          RobotLab.configuration.logger.warn("Streaming error: #{e.message}")
+          RobotLab.config.logger&.warn("Streaming error: #{e.message}")
         end
 
         chunk

@@ -4,7 +4,7 @@ module RobotLab
   # Handles hierarchical MCP and tools configuration resolution
   #
   # Configuration hierarchy (each level overrides the previous):
-  # 1. RobotLab.configuration (global)
+  # 1. RobotLab.config (global)
   # 2. Network.new (network scope)
   # 3. Robot.new (robot definition scope)
   # 4. robot.run (runtime scope)

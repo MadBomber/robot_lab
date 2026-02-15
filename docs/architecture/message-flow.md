@@ -41,9 +41,10 @@ classDiagram
     }
 
     Message <|-- TextMessage
-    Message <|-- ToolMessage
-    ToolMessage <|-- ToolCallMessage
-    ToolMessage <|-- ToolResultMessage
+    Message <|-- ToolCallMessage
+    Message <|-- ToolResultMessage
+    ToolMessage -- ToolCallMessage
+    ToolMessage -- ToolResultMessage
 ```
 
 ### TextMessage
@@ -58,14 +59,14 @@ TextMessage.new(
 
 TextMessage.new(
   role: "assistant",
-  content: "The weather in Paris is sunny and 22°C.",
+  content: "The weather in Paris is sunny and 22 degrees C.",
   stop_reason: "stop"
 )
 ```
 
 ### ToolMessage
 
-Base class for tool-related messages:
+Represents a tool invocation with its parameters:
 
 ```ruby
 ToolMessage.new(
@@ -77,7 +78,7 @@ ToolMessage.new(
 
 ### ToolCallMessage
 
-LLM's request to execute tools:
+LLM's request to execute one or more tools:
 
 ```ruby
 ToolCallMessage.new(
@@ -101,147 +102,159 @@ ToolResultMessage.new(
 )
 ```
 
-## Message Flow Diagram
+## Message Flow: Standalone Robot
+
+The primary execution path is `robot.run("message")`:
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant State
     participant Robot
-    participant Adapter
+    participant Memory
+    participant MCP
+    participant Tools
+    participant Agent
+    participant Chat
     participant LLM
 
-    User->>State: UserMessage
-    State->>State: Format messages
-    State->>Robot: state.messages
-    Robot->>Adapter: Convert messages
-    Adapter->>LLM: Provider-specific format
+    User->>Robot: robot.run("message")
+    Robot->>Memory: resolve_active_memory
+    Memory-->>Robot: active memory
 
-    LLM-->>Adapter: Response
-    Adapter-->>Robot: Parse response
-    Robot->>Robot: Execute tools (if any)
-    Robot-->>State: RobotResult
-    State->>State: Append result
-    State-->>User: Response
+    Robot->>MCP: resolve_mcp_hierarchy
+    MCP-->>Robot: resolved MCP config
+    Robot->>Robot: ensure_mcp_clients
+
+    Robot->>Tools: resolve_tools_hierarchy
+    Tools-->>Robot: filtered tools
+    Robot->>Chat: @chat.with_tools(...)
+
+    Robot->>Agent: ask("message")
+    Agent->>Chat: @chat.ask("message")
+    Chat->>LLM: Provider API call
+
+    loop Tool Loop (handled by RubyLLM)
+        LLM-->>Chat: Tool call response
+        Chat->>Tools: Execute tool
+        Tools-->>Chat: Tool result
+        Chat->>LLM: Send tool result
+    end
+
+    LLM-->>Chat: Final response
+    Chat-->>Agent: RubyLLM::Response
+    Agent-->>Robot: response
+
+    Robot->>Robot: build_result(response, memory)
+    Robot-->>User: RobotResult
 ```
 
-## Adapter Layer
+### Step-by-Step
 
-Adapters convert between RobotLab's message format and provider-specific formats.
+1. **`robot.run("message")`**: Entry point. Accepts a positional string argument.
 
-### Anthropic Adapter
+2. **Resolve Memory**: Determines which memory to use:
+   - `network_memory` if provided (network execution)
+   - `network.memory` if in a network context
+   - `robot.memory` (standalone, the default)
 
-```ruby
-# RobotLab format
-messages = [
-  TextMessage.new(role: "user", content: "Hello"),
-  TextMessage.new(role: "assistant", content: "Hi there!")
-]
+3. **Merge Runtime Memory**: If a `memory:` keyword argument is passed, it is merged into the active memory.
 
-# Converted to Anthropic format
-[
-  { role: "user", content: "Hello" },
-  { role: "assistant", content: "Hi there!" }
-]
+4. **Set Current Writer**: Sets `memory.current_writer = robot.name` so subscription callbacks know which robot wrote a value.
+
+5. **Resolve MCP Hierarchy**: Resolves MCP server configuration through the hierarchy: `runtime > robot build > network > global config`.
+
+6. **Ensure MCP Clients**: Initializes or updates MCP client connections. Discovers tools from connected MCP servers.
+
+7. **Resolve Tools Hierarchy**: Resolves which tools are available through the same hierarchy.
+
+8. **Filter Tools**: Applies the resolved tool list to `@chat.with_tools(...)`.
+
+9. **Agent#ask**: Delegates to the parent class `RubyLLM::Agent#ask`, which calls `@chat.ask(message)`.
+
+10. **LLM Interaction**: RubyLLM handles the provider-specific API call, including the tool call/result loop.
+
+11. **Build Result**: Wraps the LLM response in a `RobotResult` containing output messages, tool calls, and metadata.
+
+12. **Return**: Returns the `RobotResult` to the caller.
+
+## Message Flow: Network Execution
+
+When running through a network, the flow adds pipeline orchestration:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Network
+    participant Pipeline
+    participant Task
+    participant Robot
+    participant LLM
+
+    User->>Network: network.run(message: "...")
+    Network->>Network: Inject network_memory into run_context
+    Network->>Pipeline: SimpleFlow::Pipeline.call_parallel(initial_result)
+
+    loop For each ready task
+        Pipeline->>Task: task.call(result)
+        Task->>Task: Deep merge task context with run_params
+        Task->>Robot: robot.call(enhanced_result)
+        Robot->>Robot: extract_run_context(result)
+        Robot->>Robot: run(message, network_memory: ...)
+        Robot->>LLM: Agent#ask -> @chat.ask
+        LLM-->>Robot: Response
+        Robot-->>Task: result.with_context(:name, robot_result).continue(robot_result)
+        Task-->>Pipeline: SimpleFlow::Result
+    end
+
+    Pipeline-->>Network: Final SimpleFlow::Result
+    Network-->>User: result
 ```
 
-### System Message Handling
+### Key Points
 
-System messages are handled specially:
+- **Network creates initial result**: `SimpleFlow::Result.new(run_context, context: { run_params: run_context })`
+- **Task wraps robot**: Each `Task` deep-merges its own context with the run params before delegating to the robot
+- **Robot extracts context**: `extract_run_context(result)` pulls the message, MCP, tools, and memory from the SimpleFlow result
+- **Shared memory**: All robots use `network.memory` during network execution
+- **Result accumulation**: Each task stores its `RobotResult` in `result.context[:task_name]`
+
+## RobotResult
+
+The return value of `robot.run("message")`:
 
 ```ruby
-# RobotLab
-messages = [
-  TextMessage.new(role: "system", content: "You are helpful."),
-  TextMessage.new(role: "user", content: "Hello")
-]
+result = robot.run("What is Ruby?")
 
-# Anthropic: system extracted separately
-# OpenAI: system message stays in array
-# Gemini: converted to context
+result.last_text_content  #=> "Ruby is a dynamic programming language..."
+result.has_tool_calls?    #=> false
+result.robot_name         #=> "assistant"
+result.output             #=> [TextMessage(role: "assistant", content: "...")]
+result.tool_calls         #=> []
+result.stop_reason        #=> "stop"
+result.created_at         #=> Time
+result.id                 #=> "uuid"
+result.checksum           #=> "sha256-hex"
 ```
 
-### Tool Message Conversion
-
-Tool calls are provider-specific:
-
-=== "Anthropic"
-
-    ```ruby
-    {
-      type: "tool_use",
-      id: "tool_123",
-      name: "get_weather",
-      input: { location: "Paris" }
-    }
-    ```
-
-=== "OpenAI"
-
-    ```ruby
-    {
-      type: "function",
-      function: {
-        name: "get_weather",
-        arguments: '{"location":"Paris"}'
-      }
-    }
-    ```
-
-## Conversation Building
-
-### Initial State
+### Result Serialization
 
 ```ruby
-state = RobotLab.create_state(
-  message: "What's the weather?",
-  data: { location: "Paris" }
-)
+# Export for persistence (excludes debug fields)
+hash = result.export
 
-state.messages
-# => [TextMessage(role: "user", content: "What's the weather?")]
-```
+# Full hash including debug fields
+hash = result.to_h
 
-### After Robot Execution
+# JSON
+json = result.to_json
 
-```ruby
-result = robot.run(state: state, network: network)
-state.append_result(result)
-
-state.messages
-# => [
-#   TextMessage(role: "user", content: "What's the weather?"),
-#   TextMessage(role: "assistant", content: "The weather is sunny.")
-# ]
-```
-
-### With Tool Calls
-
-```ruby
-state.messages
-# => [
-#   TextMessage(role: "user", content: "What's the weather?"),
-#   ToolCallMessage(tools: [ToolMessage(name: "get_weather", ...)]),
-#   ToolResultMessage(content: { temp: 22 }),
-#   TextMessage(role: "assistant", content: "It's 22°C and sunny.")
-# ]
-```
-
-## Format History
-
-The `format_history` method prepares messages for LLM:
-
-```ruby
-# Includes results from previous robots
-formatted = state.format_history
-
-# Returns alternating user/assistant messages
-# with tool calls/results properly interleaved
+# Reconstruct from hash
+result = RobotResult.from_hash(hash)
 ```
 
 ## Message Predicates
 
-Check message types easily:
+Check message types:
 
 ```ruby
 message.text?         # Is it a TextMessage?
@@ -274,14 +287,6 @@ Message.from_hash(
 )
 ```
 
-### From UserMessage
-
-```ruby
-user_msg = UserMessage.new("Hello", thread_id: "123")
-text_msg = user_msg.to_message
-# => TextMessage(role: "user", content: "Hello")
-```
-
 ## Serialization
 
 Messages can be serialized:
@@ -289,32 +294,36 @@ Messages can be serialized:
 ```ruby
 # To hash
 hash = message.to_h
-# => { type: "text", role: "user", content: "Hello" }
+#=> { type: "text", role: "user", content: "Hello" }
 
 # To JSON
 json = message.to_json
-# => '{"type":"text","role":"user","content":"Hello"}'
 
 # From hash
 message = Message.from_hash(hash)
 ```
 
-## Provider Registry
+## Template Resolution
 
-The adapter registry maps providers to adapters:
+When a robot has a template, it is resolved at build time via prompt_manager:
 
 ```ruby
-Adapters::Registry.for(:anthropic)  # => Adapters::Anthropic
-Adapters::Registry.for(:openai)     # => Adapters::OpenAI
-Adapters::Registry.for(:gemini)     # => Adapters::Gemini
-
-# Aliases
-Adapters::Registry.for(:azure_openai)  # => Adapters::OpenAI
-Adapters::Registry.for(:bedrock)       # => Adapters::Anthropic
+robot = RobotLab.build(
+  name: "helper",
+  template: :helper,
+  context: { tone: "friendly" }
+)
 ```
+
+The template resolution process:
+1. `PM.parse(:helper)` loads the template file from the configured prompts directory
+2. YAML front matter is extracted and applied to the chat (model, temperature, etc.)
+3. The template body is rendered with the provided context
+4. The rendered text is set as system instructions via `@chat.with_instructions(rendered)`
+
+If both `template:` and `system_prompt:` are provided, the template is applied first, then the system prompt is appended via a second `@chat.with_instructions` call.
 
 ## Next Steps
 
-- [Building Robots](../guides/building-robots.md) - Creating custom robots
-- [Using Tools](../guides/using-tools.md) - Tool message handling
-- [API Reference: Messages](../api/messages/index.md) - Detailed message API
+- [Memory Management](state-management.md) - How memory stores conversation data
+- [Network Orchestration](network-orchestration.md) - Multi-robot pipeline execution

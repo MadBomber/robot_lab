@@ -43,10 +43,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Core dependencies
+  spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
-  spec.add_dependency "ruby_llm", "~> 1.0"
+  spec.add_dependency "ruby_llm", "~> 1.12"
   spec.add_dependency "ruby_llm-mcp"
-  spec.add_dependency "ruby_llm-template"
+  spec.add_dependency "prompt_manager", "~> 1.0"
   spec.add_dependency "ruby_llm-schema"
   spec.add_dependency "ruby_llm-semantic_cache"
   spec.add_dependency "fastembed"

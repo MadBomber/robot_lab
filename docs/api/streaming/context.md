@@ -1,171 +1,254 @@
-# StreamingContext
+# Streaming::Context
 
-Manages streaming state during execution.
+Manages streaming event publishing with automatic sequencing, timestamping, and ID generation.
 
 ## Class: `RobotLab::Streaming::Context`
 
 ```ruby
-context = RobotLab::Streaming::Context.new(callback: ->(e) { handle(e) })
+context = RobotLab::Streaming::Context.new(
+  run_id: "run_123",
+  message_id: "msg_456",
+  scope: "network",
+  publish: ->(event) { broadcast(event) }
+)
+
+context.publish_event(event: "text.delta", data: { delta: "Hello" })
 ```
 
 ## Constructor
 
 ```ruby
-Context.new(callback:, robot: nil, network: nil)
+Context.new(
+  run_id:,
+  message_id:,
+  scope:,
+  publish:,
+  parent_run_id: nil,
+  sequence_counter: nil
+)
 ```
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `run_id` | `String` | required | Unique identifier for this run |
+| `message_id` | `String` | required | Current message identifier |
+| `scope` | `String`, `Symbol` | required | Context scope (e.g., `"network"`, `"robot"`) |
+| `publish` | `Proc` | required | Callback invoked with each event hash |
+| `parent_run_id` | `String`, `nil` | `nil` | Parent run identifier for nested contexts |
+| `sequence_counter` | `SequenceCounter`, `nil` | `nil` | Shared sequence counter (creates new one if nil) |
+
+## Attributes
+
+### run_id
+
+```ruby
+context.run_id  # => String
+```
+
+The unique run identifier for this context.
+
+### parent_run_id
+
+```ruby
+context.parent_run_id  # => String | nil
+```
+
+The parent run identifier. Set when this is a child context created by `create_child_context`.
+
+### message_id
+
+```ruby
+context.message_id  # => String
+```
+
+The current message identifier.
+
+### scope
+
+```ruby
+context.scope  # => String
+```
+
+The context scope (converted to string). Typically `"network"` or `"robot"`.
+
+## Methods
+
+### publish_event
+
+```ruby
+chunk = context.publish_event(event:, data: {})
+```
+
+Publish a streaming event. The event is wrapped in a chunk with automatic sequencing, timestamping, and context metadata injection.
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `callback` | `Proc` | Event handler |
-| `robot` | `Robot`, `nil` | Current robot |
-| `network` | `NetworkRun`, `nil` | Network context |
+| `event` | `String` | Event type (e.g., `"text.delta"`, `"run.started"`) |
+| `data` | `Hash` | Event payload (default: `{}`) |
 
-## Attributes
+**Returns:** The constructed event chunk hash.
 
-### callback
-
-```ruby
-context.callback  # => Proc
-```
-
-The event handler callback.
-
-### robot
+The chunk structure:
 
 ```ruby
-context.robot  # => Robot | nil
+{
+  event: "text.delta",
+  data: {
+    delta: "Hello",          # from data parameter
+    run_id: "run_123",       # injected from context
+    message_id: "msg_456",   # injected from context
+    scope: "robot"           # injected from context
+  },
+  timestamp: 1707900000000,  # millisecond Unix timestamp
+  sequence_number: 1,        # monotonically increasing
+  id: "publish-1:text.delta" # unique event ID
+}
 ```
 
-The currently executing robot.
+If the publish callback raises an error, it is caught and logged as a warning via `RobotLab.config.logger`. The chunk is still returned.
 
-### network
+### create_child_context
 
 ```ruby
-context.network  # => NetworkRun | nil
+child = context.create_child_context(robot_run_id)
 ```
 
-The network run context.
+Create a child context for a nested robot execution. The child shares the same publish callback and sequence counter, ensuring events are ordered globally across the parent and child.
 
-### buffer
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `robot_run_id` | `String` | Run ID for the child context |
+
+**Returns:** A new `Context` with:
+- `run_id` set to `robot_run_id`
+- `parent_run_id` set to the current context's `run_id`
+- `scope` set to `"robot"`
+- A new `message_id` (generated UUID)
+- Shared `sequence_counter` and `publish` callback
+
+### create_context_with_shared_sequence
 
 ```ruby
-context.buffer  # => String
+sibling = context.create_context_with_shared_sequence(
+  run_id: "run_789",
+  message_id: "msg_789",
+  scope: "robot"
+)
 ```
 
-Accumulated text content.
+Create a new context that shares the same sequence counter as this context, but with different identifiers.
 
-### tool_calls
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `run_id` | `String` | Run ID for the new context |
+| `message_id` | `String` | Message ID for the new context |
+| `scope` | `String` | Scope for the new context |
+
+**Returns:** A new `Context` sharing the sequence counter and publish callback.
+
+### generate_part_id
 
 ```ruby
-context.tool_calls  # => Array<ToolCallMessage>
+context.generate_part_id  # => "part_run_1234_900123_a1b2c3d4"
 ```
 
-Tool calls received during streaming.
+Generate an OpenAI-compatible part ID (max 40 characters). Combines a truncated message ID, a timestamp suffix, and random hex.
 
-## Methods
-
-### emit
+### generate_step_id
 
 ```ruby
-context.emit(event)
+context.generate_step_id("text_output")  # => "publish-3:text_output"
 ```
 
-Send an event to the callback.
+Generate a step ID for durable execution compatibility. Uses the current sequence number.
 
-### emit_text
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `base_name` | `String` | Base name for the step |
+
+### generate_message_id
 
 ```ruby
-context.emit_text(text)
+context.generate_message_id  # => "a1b2c3d4-..."
 ```
 
-Emit a text delta event.
-
-### emit_tool_call
-
-```ruby
-context.emit_tool_call(id:, name:, input:)
-```
-
-Emit a tool call event.
-
-### emit_error
-
-```ruby
-context.emit_error(error)
-```
-
-Emit an error event.
-
-### complete
-
-```ruby
-context.complete
-```
-
-Signal streaming completion.
-
-### for_robot
-
-```ruby
-new_context = context.for_robot(robot)
-```
-
-Create a child context for a specific robot.
+Generate a new UUID for use as a message identifier.
 
 ## Examples
 
-### Custom Context
+### Basic Event Publishing
 
 ```ruby
+publish = ->(event) {
+  puts "[#{event[:event]}] #{event[:data]}"
+}
+
 context = RobotLab::Streaming::Context.new(
-  callback: ->(event) {
-    case event.type
-    when :text_delta
-      @output << event.text
-    when :complete
-      process_output(@output)
-    end
-  }
+  run_id: SecureRandom.uuid,
+  message_id: SecureRandom.uuid,
+  scope: "robot",
+  publish: publish
 )
 
-# Pass to robot
-robot.run(state: state, streaming: context)
+context.publish_event(event: "run.started", data: { robot_name: "assistant" })
+context.publish_event(event: "text.delta", data: { delta: "Hello " })
+context.publish_event(event: "text.delta", data: { delta: "world!" })
+context.publish_event(event: "run.completed", data: {})
 ```
 
-### Accumulating Content
+### Network with Child Contexts
 
 ```ruby
-context = RobotLab::Streaming::Context.new(
-  callback: ->(event) {
-    print event.text if event.type == :text_delta
-  }
+# Network-level context
+network_ctx = RobotLab::Streaming::Context.new(
+  run_id: "net_run_1",
+  message_id: "net_msg_1",
+  scope: "network",
+  publish: ->(e) { stream_to_client(e) }
 )
 
-robot.run(state: state, streaming: context)
+network_ctx.publish_event(event: "run.started", data: {})
 
-# Access accumulated content
-puts "Total content: #{context.buffer}"
-puts "Tool calls: #{context.tool_calls.size}"
+# Robot 1 executes
+robot1_ctx = network_ctx.create_child_context("robot1_run_1")
+robot1_ctx.publish_event(event: "step.started", data: { robot: "classifier" })
+robot1_ctx.publish_event(event: "text.delta", data: { delta: "Category: billing" })
+robot1_ctx.publish_event(event: "step.completed", data: { robot: "classifier" })
+
+# Robot 2 executes (sequence numbers continue from robot 1)
+robot2_ctx = network_ctx.create_child_context("robot2_run_1")
+robot2_ctx.publish_event(event: "step.started", data: { robot: "responder" })
+robot2_ctx.publish_event(event: "text.delta", data: { delta: "I can help with that." })
+robot2_ctx.publish_event(event: "step.completed", data: { robot: "responder" })
+
+network_ctx.publish_event(event: "run.completed", data: {})
 ```
 
-### Network Context
+### Error-Safe Publishing
 
 ```ruby
+# Errors in the publish callback are caught and logged,
+# so streaming failures do not interrupt execution.
 context = RobotLab::Streaming::Context.new(
-  callback: ->(event) {
-    prefix = event.robot_name ? "[#{event.robot_name}] " : ""
-    case event.type
-    when :text_delta
-      print "#{prefix}#{event.text}"
-    when :robot_complete
-      puts "\n#{prefix}Complete"
-    end
-  }
+  run_id: "run_1",
+  message_id: "msg_1",
+  scope: "robot",
+  publish: ->(e) { raise "connection lost" }
 )
 
-network.run(state: state, streaming: context)
+# This does not raise -- the error is logged via RobotLab.config.logger
+chunk = context.publish_event(event: "text.delta", data: { delta: "test" })
+# chunk is still returned with the event data
 ```
 
 ## See Also

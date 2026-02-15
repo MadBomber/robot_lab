@@ -1,139 +1,189 @@
-# ThreadManager
+# History::ThreadManager
 
-Manages conversation thread lifecycle.
+Manages conversation thread lifecycle using a `History::Config` for persistence.
 
 ## Class: `RobotLab::History::ThreadManager`
 
 ```ruby
-manager = History::ThreadManager.new(config: history_config)
+config = RobotLab::History::Config.new(...)
+manager = RobotLab::History::ThreadManager.new(config)
+
+session_id = manager.create_thread(state: memory, input: "Hello")
+history = manager.get_history(session_id)
 ```
 
 ## Constructor
 
 ```ruby
-ThreadManager.new(config:)
+ThreadManager.new(config)
 ```
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `config` | `Config` | History configuration |
+| `config` | `Config` | History configuration with persistence callbacks |
+
+## Attributes
+
+### config
+
+```ruby
+manager.config  # => RobotLab::History::Config
+```
+
+The history configuration object.
 
 ## Methods
 
 ### create_thread
 
 ```ruby
-thread_info = manager.create_thread(state: state, input: input, **context)
+session_id = manager.create_thread(state:, input:)
 ```
 
-Create a new conversation thread.
+Create a new conversation thread. Delegates to `config.create_thread!` and returns the `session_id` from the result hash.
 
-**Returns:** Hash with `:id` and optional metadata.
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `state` | `Object` | Current robot memory or state |
+| `input` | `String`, `UserMessage` | Initial user input |
+
+**Returns:** `String` -- the session ID for the new thread.
 
 ### get_history
 
 ```ruby
-results = manager.get_history(thread_id: id, **context)
+results = manager.get_history(session_id)
 ```
 
-Retrieve conversation history.
+Retrieve conversation history for a thread. Delegates to `config.get!`.
 
-**Returns:** Array of `RobotResult`.
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `session_id` | `String` | Thread identifier |
+
+**Returns:** `Array<RobotResult>` -- history of results for the thread.
+
+### append_user_message
+
+```ruby
+manager.append_user_message(session_id:, message:)
+```
+
+Append a user message to the thread. Delegates to `config.append_user_message!`.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `session_id` | `String` | Thread identifier |
+| `message` | `UserMessage` | User message to append |
 
 ### append_results
 
 ```ruby
-manager.append_results(thread_id: id, new_results: results, **context)
+manager.append_results(session_id:, results:)
 ```
 
-Add results to a thread.
+Append robot results to the thread. Delegates to `config.append_results!`.
 
-### ensure_thread
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `session_id` | `String` | Thread identifier |
+| `results` | `Array<RobotResult>` | Results to append |
+
+### load_state
 
 ```ruby
-thread_id = manager.ensure_thread(state: state, input: input, **context)
+state = manager.load_state(session_id:, state:)
 ```
 
-Create thread if state doesn't have one, or return existing.
+Load history from a thread into a state/memory object. Retrieves the history, sets the `session_id` on the state, and calls `append_result` for each historical result.
 
-### load_history
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `session_id` | `String` | Thread identifier |
+| `state` | `Object` | State or Memory object to populate |
+
+**Returns:** The state object with loaded history.
+
+### save_state
 
 ```ruby
-state = manager.load_history(state: state, **context)
+manager.save_state(session_id:, state:, since_index: 0)
 ```
 
-Load history into state if thread_id exists.
+Save new results from a state object to the thread. Extracts results from `state.results` starting at `since_index` and appends them.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `session_id` | `String` | Thread identifier |
+| `state` | `Object` | State object with results |
+| `since_index` | `Integer` | Save results from this index (default: 0) |
 
 ## Examples
 
 ### Basic Usage
 
 ```ruby
-config = History::Config.new(...)
-manager = History::ThreadManager.new(config: config)
-
-# Start new conversation
-state = RobotLab.create_state(message: "Hello")
-thread_id = manager.ensure_thread(state: state, input: "Hello")
-state.thread_id = thread_id
-
-# Run and save
-result = network.run(state: state)
-manager.append_results(thread_id: thread_id, new_results: result.new_results)
-
-# Continue conversation
-state2 = RobotLab.create_state(message: "Follow up")
-state2.thread_id = thread_id
-state2 = manager.load_history(state: state2)
-# state2 now has previous results
-```
-
-### In Network
-
-```ruby
-# ThreadManager is used internally by Network
-network = RobotLab.create_network do
-  history config
-  add_robot assistant
-end
-
-# First message - thread created automatically
-result1 = network.run(state: state1)
-thread_id = result1.state.thread_id
-
-# Continue - history loaded automatically
-state2 = RobotLab.create_state(
-  message: UserMessage.new("Continue", thread_id: thread_id)
-)
-result2 = network.run(state: state2)
-```
-
-### Custom Thread Data
-
-```ruby
-manager = History::ThreadManager.new(
-  config: History::Config.new(
-    create_thread: ->(state:, input:, metadata:, **) {
-      Thread.create(
-        title: input.truncate(50),
-        metadata: metadata,
-        created_at: Time.current
-      )
-    },
-    get: ->(thread_id:, **) { Thread.find(thread_id).results },
-    append_results: ->(thread_id:, new_results:, **) {
-      Thread.find(thread_id).results.concat(new_results)
-    }
-  )
+config = RobotLab::History::Config.new(
+  create_thread: ->(state:, input:, **) { { session_id: SecureRandom.uuid } },
+  get: ->(session_id:, **) { STORE[session_id] || [] },
+  append_results: ->(session_id:, new_results:, **) {
+    STORE[session_id] ||= []
+    STORE[session_id].concat(new_results)
+  }
 )
 
-# Pass metadata when creating thread
-thread = manager.create_thread(
-  state: state,
-  input: "Help with billing",
-  metadata: { source: "web", priority: "high" }
+manager = RobotLab::History::ThreadManager.new(config)
+
+# Start a new conversation
+session_id = manager.create_thread(state: memory, input: "Hello")
+
+# Run a robot and save results
+result = robot.run("Hello")
+manager.append_results(session_id: session_id, results: [result])
+
+# Later, retrieve history
+history = manager.get_history(session_id)
+```
+
+### Loading History into Memory
+
+```ruby
+manager = RobotLab::History::ThreadManager.new(config)
+
+# Create a memory object and load previous conversation
+memory = RobotLab::Memory.new
+manager.load_state(session_id: existing_session_id, state: memory)
+
+# Memory now contains previous results and session_id
+```
+
+### Saving Incremental Results
+
+```ruby
+# Save only new results (since the last save point)
+initial_count = memory.results.length
+
+result = robot.run("Follow-up question")
+memory.append_result(result)
+
+manager.save_state(
+  session_id: session_id,
+  state: memory,
+  since_index: initial_count
 )
 ```
 
