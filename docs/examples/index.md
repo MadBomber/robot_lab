@@ -15,6 +15,8 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 | [Tool Usage](tool-usage.md) | External API integration |
 | [MCP Server](mcp-server.md) | Creating an MCP tool server |
 | [Rails Application](rails-application.md) | Full Rails integration |
+| [Message Bus](#message-bus) | Bidirectional robot communication with convergence |
+| [Spawning Robots](#spawning-robots) | Dynamic specialist creation at runtime |
 
 ## Quick Links
 
@@ -29,6 +31,8 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 - [Streaming Responses](basic-chat.md#with-streaming)
 - [Persistent Conversations](basic-chat.md#with-conversation-history)
 - [MCP Integration](mcp-server.md)
+- [Message Bus Communication](#message-bus)
+- [Spawning Robots](#spawning-robots)
 
 ## Hello World
 
@@ -163,6 +167,135 @@ Or use the provided rake tasks:
 bundle exec rake examples:all          # Run all examples
 bundle exec rake examples:run[1]       # Run specific example by number
 ```
+
+## Message Bus
+
+Robots can communicate bidirectionally via a message bus, enabling convergence loops and negotiation patterns. This example demonstrates a comedy critic tasking a comedian to generate jokes until one passes:
+
+```ruby
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
+require "robot_lab"
+
+MAX_ATTEMPTS = 5
+
+class Comedian < RobotLab::Robot
+  TEMP_START = 0.2
+  TEMP_STEP  = 0.2
+
+  def initialize(bus:)
+    super(name: "bob", template: :comedian, bus: bus, temperature: TEMP_START)
+    @attempts = 0
+    on_message do |message|
+      @attempts += 1
+      temp = [TEMP_START + TEMP_STEP * (@attempts - 1), 1.0].min
+      with_temperature(temp)
+      joke = run(message.content.to_s).last_text_content.strip
+      reply(message, joke)
+    end
+  end
+
+  attr_reader :attempts
+end
+
+class ComedyCritic < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "alice", template: :comedy_critic, bus: bus)
+    @accepted = false
+    on_message do |message|
+      verdict = run("Evaluate this joke:\n\n#{message.content}").last_text_content.strip
+      @accepted = verdict.start_with?("FUNNY")
+      send_message(to: :bob, content: "Not funny enough. Try again.") unless @accepted
+    end
+  end
+
+  attr_reader :accepted
+end
+
+bus   = TypedBus::MessageBus.new
+bob   = Comedian.new(bus: bus)
+alice = ComedyCritic.new(bus: bus)
+
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+puts "Attempts: #{bob.attempts} / #{MAX_ATTEMPTS}"
+puts "Accepted: #{alice.accepted}"
+```
+
+Key patterns demonstrated:
+
+- **Robot subclasses** with templates for prompt management
+- **Auto-ack** via 1-arg `on_message` blocks
+- **`reply(message, content)`** for correlated responses
+- **Temperature ramping** (0.2 &rarr; 1.0) for increasing creativity
+- **Convergence loop** that terminates when the critic approves
+
+Run: `bundle exec ruby examples/12_message_bus.rb`
+
+## Spawning Robots
+
+Robots can create new specialist robots at runtime using `spawn`. A dispatcher receives questions, decides what kind of specialist is needed, and spawns one on the fly. The bus is created lazily — no explicit setup required:
+
+```ruby
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
+require "robot_lab"
+
+QUESTIONS = [
+  "Why did the Roman Empire fall?",
+  "Write a haiku about recursion.",
+  "What is the square root of 144?",
+].freeze
+
+class Dispatcher < RobotLab::Robot
+  attr_reader :spawned
+
+  def initialize(bus: nil)
+    super(name: "dispatcher", template: :dispatcher, bus: bus)
+    @spawned = {}
+    @pending = {}
+
+    on_message do |message|
+      puts "  Dispatcher  <- :#{message.from} replied"
+      puts "               | #{message.content.to_s.lines.first&.strip}"
+      @pending.delete(message.from)
+    end
+  end
+
+  def dispatch(question)
+    plan = run(question).last_text_content.strip
+    role, instruction = plan.split("\n", 2)
+    role = role.strip.downcase.gsub(/\s+/, "_")
+    instruction = instruction&.strip || "You are a helpful #{role}."
+
+    specialist = @spawned[role] ||= spawn(
+      name: role,
+      system_prompt: instruction
+    )
+
+    @pending[role] = question
+
+    specialist.send_message(to: :dispatcher, content:
+      specialist.run(question).last_text_content.strip
+    )
+  end
+end
+
+dispatcher = Dispatcher.new
+
+QUESTIONS.each_with_index do |question, i|
+  puts "\nQuestion #{i + 1}: #{question}"
+  dispatcher.dispatch(question)
+end
+
+puts "\nSpecialists spawned: #{dispatcher.spawned.keys.join(', ')}"
+```
+
+Key patterns demonstrated:
+
+- **`spawn`** for dynamic robot creation (bus created lazily)
+- **`on_message`** for reply handling
+- **LLM-driven delegation** — the dispatcher asks its LLM what specialist to create
+- **Specialist reuse** — spawned robots are cached and reused across questions
+
+Run: `bundle exec ruby examples/13_spawn.rb`
 
 ## See Also
 

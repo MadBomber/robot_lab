@@ -19,6 +19,7 @@ PATH
       state_machines
       state_machines-activemodel
       state_machines-activerecord
+      typed_bus
       zeitwerk (~> 2.6)
 
 GEM
@@ -295,6 +296,8 @@ GEM
     tokenizers (0.6.3-arm64-darwin)
     traces (0.18.2)
     tsort (0.2.0)
+    typed_bus (0.0.1)
+      async (~> 2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (3.2.0)
@@ -449,6 +452,7 @@ CHECKSUMS
   tokenizers (0.6.3-arm64-darwin) sha256=29a6a5582dce106d846a906ee9e4254c12db45a3855c3ff6881d4be8be03e6b6
   traces (0.18.2) sha256=80f1649cb4daace1d7174b81f3b3b7427af0b93047759ba349960cb8f315e214
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
+  typed_bus (0.0.1) sha256=bf20463b4e0099349fd8931d7cf70f3c5fad7c6b657c566b40898637cde2038e
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
   unicode-display_width (3.2.0) sha256=0cdd96b5681a5949cdbc2c55e7b420facae74c4aaf9a9815eee1087cb1853c42
   unicode-emoji (4.2.0) sha256=519e69150f75652e40bf736106cfbc8f0f73aa3fb6a65afe62fefa7f80b0f80f

@@ -69,6 +69,8 @@ The persistent `@chat` maintains conversation history across multiple `run` call
 | `mcp_clients` | `Hash` | Connected MCP clients by server name |
 | `mcp_tools` | `Array` | Tools discovered from MCP servers |
 | `memory` | `Memory` | Inherent key-value memory |
+| `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance |
+| `outbox` | `Hash` | Sent messages tracked with status and replies |
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration |
 
@@ -374,6 +376,91 @@ RobotLab.config (global)
 Resolution order: **runtime > robot build-time > task > network > global config**.
 
 The `:inherit` value pulls from the parent level. `:none` explicitly disables.
+
+## Message Bus
+
+The **Message Bus** provides bidirectional, cyclic communication between robots, independent of the Network pipeline. While Networks enforce DAG-based (acyclic) execution, the bus enables negotiation loops, convergence patterns, and multi-turn dialogues.
+
+### How It Works
+
+Robots connect to a shared `TypedBus::MessageBus` via the `bus:` parameter. Each robot gets a typed channel (accepting only `RobotMessage` objects) named after its `name`. Messages are delivered asynchronously via the `async` gem's fiber scheduler.
+
+```ruby
+bus = TypedBus::MessageBus.new
+
+bob   = RobotLab.build(name: "bob", system_prompt: "You tell jokes.", bus: bus)
+alice = RobotLab.build(name: "alice", system_prompt: "You evaluate jokes.", bus: bus)
+```
+
+### RobotMessage
+
+`RobotMessage` is an immutable `Data.define` value object used as the typed envelope:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `Integer` | Per-robot sequential counter |
+| `from` | `String` | Sender's robot name (= channel name) |
+| `content` | `String`, `Hash` | Message payload |
+| `in_reply_to` | `String`, `nil` | Composite key of the original message (e.g., `"alice:1"`) |
+
+Methods: `key` returns `"from:id"` composite identity; `reply?` returns true when `in_reply_to` is set.
+
+### Sending and Receiving
+
+```ruby
+# Send a message to another robot
+alice.send_message(to: :bob, content: "Tell me a joke.")
+
+# Handle incoming messages with auto-ack (1 arg)
+bob.on_message do |message|
+  joke = bob.run(message.content.to_s).last_text_content
+  bob.reply(message, joke)
+end
+```
+
+Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over `delivery.ack!`/`delivery.nack!`.
+
+### Dynamic Spawning
+
+Robots can create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
+
+```ruby
+dispatcher = RobotLab.build(name: "dispatcher", system_prompt: "You delegate work.")
+
+# spawn creates a child on the same bus (bus created automatically)
+helper = dispatcher.spawn(name: "helper", system_prompt: "You answer questions.")
+
+# The child can immediately communicate with the parent
+answer = helper.run("What is 2+2?").last_text_content
+helper.send_message(to: :dispatcher, content: answer)
+```
+
+Robots can also join a bus after creation using `with_bus`:
+
+```ruby
+bot = RobotLab.build(name: "late_joiner", system_prompt: "Hello.")
+bot.with_bus(existing_bus)  # now connected to the bus
+```
+
+**Fan-out messaging**: Multiple robots with the same name all subscribe to the same channel. Messages sent to that name are delivered to all subscribers:
+
+```ruby
+worker1 = dispatcher.spawn(name: "worker", system_prompt: "Worker 1")
+worker2 = dispatcher.spawn(name: "worker", system_prompt: "Worker 2")
+dispatcher.send_message(to: :worker, content: "Do this task")
+# Both worker1 and worker2 receive the message
+```
+
+### Bus vs Network
+
+| Feature | Network | Message Bus |
+|---------|---------|-------------|
+| Execution model | DAG (acyclic) | Cyclic, bidirectional |
+| Communication | Sequential pipeline | Pub/sub channels |
+| Memory | Shared network memory | Independent per-robot |
+| Use case | Linear workflows | Negotiation, convergence |
+
+The bus is purely additive — robots without `bus:` work exactly as before.
 
 ## Network
 

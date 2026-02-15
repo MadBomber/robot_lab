@@ -52,6 +52,14 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: MCP Guide](guides/mcp-integration.md)
 
+-   :material-message-arrow-right-outline:{ .lg .middle } **Message Bus**
+
+    ---
+
+    Enable bidirectional, cyclic communication between robots via TypedBus for negotiation loops and convergence patterns.
+
+    [:octicons-arrow-right-24: Message Bus](architecture/core-concepts.md#message-bus)
+
 -   :material-memory:{ .lg .middle } **Reactive Memory**
 
     ---

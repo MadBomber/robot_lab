@@ -396,6 +396,179 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
 
+  # Bus integration tests
+
+  def test_initialization_without_bus
+    robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
+
+    assert_nil robot.bus
+    assert_equal({}, robot.outbox)
+  end
+
+
+  def test_initialization_with_bus
+    bus = TypedBus::MessageBus.new
+    robot = RobotLab::Robot.new(name: 'bus_bot', template: :assistant, bus: bus)
+
+    assert_equal bus, robot.bus
+    assert bus.channel?(:bus_bot)
+  end
+
+
+  def test_bus_channel_is_typed
+    bus = TypedBus::MessageBus.new
+    RobotLab::Robot.new(name: 'typed_bot', template: :assistant, bus: bus)
+
+    error = nil
+    Async do
+      begin
+        bus.publish(:typed_bot, "not a RobotMessage")
+      rescue ArgumentError => e
+        error = e
+      end
+    end
+
+    assert_kind_of ArgumentError, error
+    assert_match(/Expected RobotLab::RobotMessage/, error.message)
+  end
+
+
+  def test_send_message_increments_counter
+    bus = TypedBus::MessageBus.new
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+
+    msg1 = alice.send_message(to: :bob, content: "first")
+    msg2 = alice.send_message(to: :bob, content: "second")
+
+    assert_equal 1, msg1.id
+    assert_equal 2, msg2.id
+  end
+
+
+  def test_send_message_tracks_in_outbox
+    bus = TypedBus::MessageBus.new
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+
+    msg = alice.send_message(to: :bob, content: "task")
+
+    assert alice.outbox.key?(msg.key)
+    assert_equal :sent, alice.outbox[msg.key][:status]
+    assert_equal msg, alice.outbox[msg.key][:message]
+    assert_equal [], alice.outbox[msg.key][:replies]
+  end
+
+
+  def test_send_message_without_bus_raises
+    robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
+
+    assert_raises(RobotLab::BusError) do
+      robot.send_message(to: :someone, content: "hello")
+    end
+  end
+
+
+  def test_send_reply_without_bus_raises
+    robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
+
+    assert_raises(RobotLab::BusError) do
+      robot.send_reply(to: :someone, content: "reply", in_reply_to: "someone:1")
+    end
+  end
+
+
+  def test_on_message_sets_custom_handler
+    bus = TypedBus::MessageBus.new
+    received = []
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob.on_message do |delivery, message|
+      received << message
+      delivery.ack!
+    end
+
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    Async { alice.send_message(to: :bob, content: "hello from alice") }
+
+    assert_equal 1, received.size
+    assert_equal "hello from alice", received.first.content
+    assert_equal "alice", received.first.from
+  end
+
+
+  def test_disconnect_with_bus
+    bus = TypedBus::MessageBus.new
+    robot = RobotLab::Robot.new(name: 'disc_bot', template: :assistant, bus: bus)
+
+    result = robot.disconnect
+
+    assert_equal robot, result
+  end
+
+
+  def test_to_h_includes_bus_flag
+    bus = TypedBus::MessageBus.new
+    robot = RobotLab::Robot.new(name: 'bus_bot', template: :assistant, bus: bus)
+
+    hash = robot.to_h
+    assert_equal true, hash[:bus]
+  end
+
+
+  def test_to_h_excludes_bus_when_nil
+    robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
+
+    hash = robot.to_h
+    refute hash.key?(:bus)
+  end
+
+
+  def test_on_message_auto_acks_with_single_arg_block
+    bus = TypedBus::MessageBus.new
+    received = []
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob.on_message do |message|
+      received << message
+    end
+
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    Async { alice.send_message(to: :bob, content: "auto-ack test") }
+
+    assert_equal 1, received.size
+    assert_equal "auto-ack test", received.first.content
+  end
+
+
+  def test_reply_convenience_method
+    bus = TypedBus::MessageBus.new
+    replies = []
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    alice.on_message do |message|
+      replies << message
+    end
+
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob.on_message do |message|
+      bob.reply(message, "got it")
+    end
+
+    Async { alice.send_message(to: :bob, content: "hello") }
+
+    assert_equal 1, replies.size
+    assert_equal "got it", replies.first.content
+    assert replies.first.reply?
+  end
+
+
+  def test_build_factory_with_bus
+    bus = TypedBus::MessageBus.new
+    robot = RobotLab.build(name: 'factory_bot', bus: bus)
+
+    assert_equal bus, robot.bus
+    assert bus.channel?(:factory_bot)
+  end
+
+
   # Private method: normalize_tool_calls
   def test_normalize_tool_calls_with_nil
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -509,5 +682,151 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.send(:resolve_tools_hierarchy, :none, network: nil)
 
     assert_equal [], result
+  end
+
+
+  # Spawn tests
+  # with_bus tests
+  def test_with_bus_with_existing_bus
+    bot = RobotLab::Robot.new(name: 'lonely', template: :assistant)
+    bus = TypedBus::MessageBus.new
+
+    assert_nil bot.bus
+
+    bot.with_bus(bus)
+
+    assert_equal bus, bot.bus
+    assert bus.channel?(:lonely)
+  end
+
+
+  def test_with_bus_creates_new_bus
+    bot = RobotLab::Robot.new(name: 'lonely', template: :assistant)
+
+    bot.with_bus
+
+    assert_instance_of TypedBus::MessageBus, bot.bus
+    assert bot.bus.channel?(:lonely)
+  end
+
+
+  def test_with_bus_noop_when_already_on_same_bus
+    bus = TypedBus::MessageBus.new
+    bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus)
+
+    result = bot.with_bus(bus)
+
+    assert_equal bot, result
+    assert_equal bus, bot.bus
+  end
+
+
+  def test_with_bus_allows_switching_buses
+    bus1 = TypedBus::MessageBus.new
+    bus2 = TypedBus::MessageBus.new
+    bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus1)
+
+    bot.with_bus(bus2)
+
+    assert_equal bus2, bot.bus
+    assert bus2.channel?(:bot)
+  end
+
+
+  def test_with_bus_enables_messaging
+    bot1 = RobotLab::Robot.new(name: 'alice', template: :assistant)
+    bot2 = RobotLab::Robot.new(name: 'bob', template: :assistant)
+    received = []
+
+    bus = TypedBus::MessageBus.new
+    bot1.with_bus(bus)
+    bot2.with_bus(bus)
+    bot2.on_message { |msg| received << msg.content }
+
+    Async { bot1.send_message(to: :bob, content: 'hello') }
+
+    assert_equal ['hello'], received
+  end
+
+
+  def test_spawn_creates_robot_on_same_bus
+    bus = TypedBus::MessageBus.new
+    parent = RobotLab::Robot.new(name: 'parent', template: :assistant, bus: bus)
+
+    child = parent.spawn(name: 'child', system_prompt: 'You are a helper.')
+
+    assert_instance_of RobotLab::Robot, child
+    assert_equal 'child', child.name
+    assert_equal bus, child.bus
+    assert bus.channel?(:child)
+  end
+
+
+  def test_spawn_without_bus_creates_one
+    robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
+
+    assert_nil robot.bus
+
+    child = robot.spawn(name: 'child', system_prompt: 'test')
+
+    assert_instance_of TypedBus::MessageBus, robot.bus
+    assert_equal robot.bus, child.bus
+    assert robot.bus.channel?(:no_bus)
+    assert robot.bus.channel?(:child)
+  end
+
+
+  def test_spawn_child_can_receive_messages
+    bus = TypedBus::MessageBus.new
+    parent = RobotLab::Robot.new(name: 'parent', template: :assistant, bus: bus)
+    received = []
+
+    child = parent.spawn(name: 'child', system_prompt: 'You are a helper.')
+    child.on_message { |message| received << message }
+
+    Async { parent.send_message(to: :child, content: 'hello child') }
+
+    assert_equal 1, received.size
+    assert_equal 'hello child', received.first.content
+    assert_equal 'parent', received.first.from
+  end
+
+
+  def test_spawn_passes_options_through
+    bus = TypedBus::MessageBus.new
+    tool = build_tool(name: 'test_tool') { |i| i }
+    parent = RobotLab::Robot.new(name: 'parent', template: :assistant, bus: bus)
+
+    child = parent.spawn(name: 'tooled', system_prompt: 'test', local_tools: [tool])
+
+    assert_equal 1, child.local_tools.size
+    assert_equal 'test_tool', child.local_tools.first.name
+  end
+
+
+  def test_spawn_defaults_name_to_robot
+    bot = RobotLab.build
+    bot2 = bot.spawn(system_prompt: 'test')
+
+    assert_equal 'robot', bot2.name
+  end
+
+
+  def test_spawn_fan_out_with_same_name
+    bus = TypedBus::MessageBus.new
+    parent = RobotLab::Robot.new(name: 'parent', template: :assistant, bus: bus)
+    received = []
+
+    worker1 = parent.spawn(name: 'worker', system_prompt: 'test')
+    worker1.on_message { |msg| received << "w1:#{msg.content}" }
+
+    worker2 = parent.spawn(name: 'worker', system_prompt: 'test')
+    worker2.on_message { |msg| received << "w2:#{msg.content}" }
+
+    Async { parent.send_message(to: :worker, content: 'task') }
+
+    assert_equal 2, received.size
+    assert_includes received, 'w1:task'
+    assert_includes received, 'w2:task'
   end
 end

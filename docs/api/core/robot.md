@@ -29,6 +29,7 @@ Robot.new(
   on_tool_call: nil,
   on_tool_result: nil,
   enable_cache: true,
+  bus: nil,
   temperature: nil,
   top_p: nil,
   top_k: nil,
@@ -56,6 +57,7 @@ Robot.new(
 | `on_tool_call` | `Proc`, `nil` | `nil` | Callback invoked when a tool is called |
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
+| `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness (0.0-1.0) |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold |
 | `top_k` | `Integer`, `nil` | `nil` | Top-k sampling |
@@ -68,17 +70,18 @@ Robot.new(
 
 ```ruby
 robot = RobotLab.build(
-  name: nil,          # Auto-generates "robot_XXXXXXXX" if nil
+  name: "robot",      # Defaults to "robot"
   template: nil,
   system_prompt: nil,
   context: {},
   enable_cache: true,
+  bus: nil,           # Optional TypedBus::MessageBus
   **options           # All other Robot.new parameters
 )
 # => RobotLab::Robot
 ```
 
-If `name` is omitted, a unique name is generated automatically using `SecureRandom.hex(4)`.
+If `name` is omitted, it defaults to `"robot"`.
 
 ## Attributes (Read-Only)
 
@@ -92,6 +95,8 @@ If `name` is omitted, a unique name is generated automatically using `SecureRand
 | `mcp_clients` | `Hash<String, MCP::Client>` | Connected MCP clients, keyed by server name |
 | `mcp_tools` | `Array<Tool>` | Tools discovered from MCP servers |
 | `memory` | `Memory` | Inherent memory (used when standalone, not in network) |
+| `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance (nil if not configured) |
+| `outbox` | `Hash` | Sent messages tracked by composite key with status and replies |
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration (raw, unresolved) |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration (raw, unresolved) |
 
@@ -182,6 +187,7 @@ All `with_*` methods delegate to the persistent `@chat` and return `self` for ch
 | `with_schema(schema)` | Set output schema |
 | `with_context(**ctx)` | Set context |
 | `with_thinking(opts)` | Enable extended thinking |
+| `with_bus(bus)` | Connect to a message bus (creates one if nil) |
 
 **Example:**
 
@@ -223,6 +229,173 @@ robot.reset_memory
 
 Reset the robot's inherent memory to its initial state.
 
+### send_message
+
+```ruby
+message = robot.send_message(to: :bob, content: "Tell me a joke.")
+# => RobotMessage
+```
+
+Publish a message to another robot's bus channel. Increments the internal message counter, creates a `RobotMessage`, tracks it in the outbox, and publishes to the target channel.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `to` | `String`, `Symbol` | Target robot's channel name |
+| `content` | `String`, `Hash` | Message payload |
+
+**Returns:** `RobotMessage`
+
+**Raises:** `BusError` if no bus is configured.
+
+### send_reply
+
+```ruby
+reply = robot.send_reply(to: :alice, content: "Here's a joke...", in_reply_to: "alice:1")
+# => RobotMessage
+```
+
+Publish a correlated reply to a specific message. The `in_reply_to` composite key links this reply to the original message.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `to` | `String`, `Symbol` | Target robot's channel name |
+| `content` | `String`, `Hash` | Reply payload |
+| `in_reply_to` | `String` | Composite key of the original message (e.g., `"alice:1"`) |
+
+**Returns:** `RobotMessage`
+
+**Raises:** `BusError` if no bus is configured.
+
+### reply
+
+```ruby
+robot.reply(message, "Here's my response")
+# => RobotMessage
+```
+
+Convenience method that wraps `send_reply`. Extracts the `from` and `key` from the incoming `RobotMessage` automatically.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `message` | `RobotMessage` | The message being replied to |
+| `content` | `String`, `Hash` | Reply payload |
+
+**Returns:** `RobotMessage`
+
+### on_message
+
+```ruby
+robot.on_message { |message| puts message.content }
+# => self
+```
+
+Register a custom handler for incoming bus messages. Block arity controls delivery handling:
+
+- **1 argument** `|message|` — auto-acknowledges the delivery before calling the block
+- **2 arguments** `|delivery, message|` — manual mode; you call `delivery.ack!` or `delivery.nack!`
+
+**Examples:**
+
+```ruby
+# Auto-ack mode (1 arg)
+robot.on_message do |message|
+  joke = run(message.content.to_s).last_text_content
+  reply(message, joke)
+end
+
+# Manual mode (2 args)
+robot.on_message do |delivery, message|
+  if message.content.to_s.length > 10
+    delivery.ack!
+    reply(message, "Got it!")
+  else
+    delivery.nack!
+  end
+end
+```
+
+### spawn
+
+```ruby
+child = robot.spawn(
+  name: "specialist",
+  system_prompt: "You are a specialist."
+)
+# => RobotLab::Robot (connected to same bus)
+```
+
+Create a new robot on the same message bus. If the parent has no bus, one is created automatically and the parent is connected to it.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `name` | `String` | `"robot"` | Name for the new robot |
+| `system_prompt` | `String`, `nil` | `nil` | Inline system prompt |
+| `template` | `Symbol`, `nil` | `nil` | Prompt template |
+| `local_tools` | `Array` | `[]` | Tools for the new robot |
+| `**options` | `Hash` | `{}` | Additional options passed to `RobotLab.build` |
+
+**Returns:** `Robot`
+
+**Examples:**
+
+```ruby
+# Minimal spawn (bus created automatically)
+bot  = RobotLab.build
+bot2 = bot.spawn(system_prompt: "You are helpful.")
+
+# Spawn with template
+specialist = dispatcher.spawn(
+  name: "billing",
+  template: :billing,
+  local_tools: [InvoiceLookup]
+)
+
+# Fan-out: multiple robots with the same name
+worker1 = bot.spawn(name: "worker", system_prompt: "Worker 1")
+worker2 = bot.spawn(name: "worker", system_prompt: "Worker 2")
+# Messages sent to :worker are delivered to both
+```
+
+### with_bus
+
+```ruby
+robot.with_bus(bus)
+# => self
+```
+
+Connect the robot to a message bus after creation. If called without an argument and the robot has no bus, a new one is created. Returns `self` for chaining.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Bus to join (creates one if nil and robot has no bus) |
+
+**Returns:** `self`
+
+**Examples:**
+
+```ruby
+# Join an existing bus
+bot = RobotLab.build(name: "bot")
+bot.with_bus(some_bus)
+
+# Create a bus on demand
+bot = RobotLab.build(name: "bot").with_bus
+
+# Switch buses
+bot.with_bus(bus1)  # joins bus1
+bot.with_bus(bus2)  # leaves bus1, joins bus2
+```
+
 ### disconnect
 
 ```ruby
@@ -230,7 +403,7 @@ robot.disconnect
 # => self
 ```
 
-Disconnect from all MCP servers.
+Disconnect from all MCP servers and bus channels.
 
 ### to_h
 
@@ -239,7 +412,7 @@ robot.to_h
 # => Hash
 ```
 
-Returns a hash representation of the robot including name, description, template, system_prompt, local_tools, mcp_tools, mcp_config, tools_config, mcp_servers, and model.
+Returns a hash representation of the robot including name, description, template, system_prompt, local_tools, mcp_tools, mcp_config, tools_config, mcp_servers, model, and bus (true if configured, omitted otherwise).
 
 ## Memory Behavior
 
@@ -362,6 +535,63 @@ result = robot
   .with_instructions("Be concise.")
   .with_temperature(0.3)
   .run("Explain quantum computing")
+```
+
+### Robot with Message Bus
+
+```ruby
+bus = TypedBus::MessageBus.new
+
+bob = RobotLab.build(name: "bob", system_prompt: "You tell jokes.", bus: bus)
+
+alice = RobotLab.build(name: "alice", system_prompt: "You evaluate jokes.", bus: bus)
+alice.on_message do |message|
+  verdict = alice.run("Is this funny? #{message.content}").last_text_content
+  puts verdict
+end
+
+bob.on_message do |message|
+  joke = bob.run(message.content.to_s).last_text_content
+  bob.reply(message, joke)
+end
+
+alice.send_message(to: :bob, content: "Tell me a robot joke.")
+```
+
+### Spawning Robots Dynamically
+
+```ruby
+# Parent robot spawns specialists on demand
+dispatcher = RobotLab.build(
+  name: "dispatcher",
+  system_prompt: "You delegate work."
+)
+
+dispatcher.on_message do |message|
+  puts "Reply from #{message.from}: #{message.content}"
+end
+
+# spawn creates child on same bus (bus created lazily)
+helper = dispatcher.spawn(
+  name: "helper",
+  system_prompt: "You answer questions concisely."
+)
+
+answer = helper.run("What is 2+2?").last_text_content
+helper.send_message(to: :dispatcher, content: answer)
+```
+
+### Connecting to a Bus After Creation
+
+```ruby
+bot = RobotLab.build(name: "latecomer", system_prompt: "Hi there.")
+
+# Join a bus later
+bus = TypedBus::MessageBus.new
+bot.with_bus(bus)
+
+# Now bot can send/receive messages
+bot.send_message(to: :someone, content: "Hello!")
 ```
 
 ## See Also

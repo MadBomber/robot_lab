@@ -11,6 +11,7 @@ require 'active_support/core_ext/module/delegation'
 require 'ruby_llm'
 require 'prompt_manager'
 require 'async'
+require 'typed_bus'
 
 # Define the module first so Zeitwerk can populate it
 #
@@ -130,14 +131,14 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: nil, template: nil, system_prompt: nil, context: {}, enable_cache: true, **options)
-      name ||= "robot_#{SecureRandom.hex(4)}"
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, **options)
       Robot.new(
         name: name,
         template: template,
         system_prompt: system_prompt,
         context: context,
         enable_cache: enable_cache,
+        bus: bus,
         **options
       )
     end

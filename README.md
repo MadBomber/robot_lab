@@ -20,6 +20,8 @@ RobotLab enables you to build sophisticated AI applications using multiple speci
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Conversation History</strong> - Persist and restore threads<br>
+- <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
+- <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
 - <strong>Streaming</strong> - Real-time event streaming<br>
 - <strong>Rails Integration</strong> - Generators and ActiveRecord support
 </td>
@@ -329,6 +331,96 @@ robot = RobotLab.build(
 # Robot can now use filesystem tools
 result = robot.run("List the files in the current directory")
 ```
+
+## Message Bus
+
+Robots can communicate bidirectionally via an optional message bus, independent of the Network pipeline. This enables negotiation loops, convergence patterns, and cyclic workflows.
+
+Connect robots to a bus at construction time with `bus:`, or after creation with `with_bus`:
+
+```ruby
+require "robot_lab"
+
+bus = TypedBus::MessageBus.new
+
+class Comedian < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "bob", template: :comedian, bus: bus)
+    on_message do |message|
+      joke = run(message.content.to_s).last_text_content.strip
+      reply(message, joke)
+    end
+  end
+end
+
+class ComedyCritic < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "alice", template: :comedy_critic, bus: bus)
+    @accepted = false
+    on_message do |message|
+      verdict = run("Evaluate this joke:\n\n#{message.content}").last_text_content.strip
+      @accepted = verdict.start_with?("FUNNY")
+      send_message(to: :bob, content: "Try again.") unless @accepted
+    end
+  end
+  attr_reader :accepted
+end
+
+bob   = Comedian.new(bus: bus)
+alice = ComedyCritic.new(bus: bus)
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+```
+
+Key features:
+
+- **Typed channels** — only `RobotMessage` objects are accepted (type enforcement via `typed_bus`)
+- **Auto-ACK** — `on_message { |message| }` auto-acknowledges; use `|delivery, message|` for manual ACK/NACK
+- **Reply correlation** — `reply(message, content)` tracks conversation threads via `in_reply_to`
+- **Outbox tracking** — sent messages tracked in `robot.outbox` with status and replies
+- **Independent of Network** — bus communication works without a Network pipeline
+
+## Dynamic Robot Spawning
+
+Robots can create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
+
+```ruby
+require "robot_lab"
+
+class Dispatcher < RobotLab::Robot
+  attr_reader :spawned
+
+  def initialize(bus: nil)
+    super(name: "dispatcher", system_prompt: "Decide which specialist to create.", bus: bus)
+    @spawned = {}
+
+    on_message do |message|
+      puts "Got reply from #{message.from}: #{message.content.to_s.lines.first&.strip}"
+    end
+  end
+
+  def dispatch(question)
+    # Spawn a specialist (reuse if already spawned)
+    specialist = @spawned["helper"] ||= spawn(
+      name: "helper",
+      system_prompt: "You answer questions concisely."
+    )
+
+    # Have the specialist work and reply
+    answer = specialist.run(question).last_text_content.strip
+    specialist.send_message(to: :dispatcher, content: answer)
+  end
+end
+
+dispatcher = Dispatcher.new
+dispatcher.dispatch("What is the capital of France?")
+```
+
+Key features:
+
+- **`spawn`** — creates a child robot on the same bus; creates a bus lazily if none exists
+- **`with_bus`** — connect a robot to a bus after creation (`bot.with_bus(existing_bus)`)
+- **Fan-out** — multiple robots with the same name all receive messages sent to that name
+- **No setup required** — bus and channels are created automatically on first use
 
 ## Streaming
 

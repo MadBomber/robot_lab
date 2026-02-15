@@ -43,10 +43,20 @@ classDiagram
         +scoped(namespace)
     }
 
+    class RobotMessage {
+        +id: Integer
+        +from: String
+        +content: String
+        +in_reply_to: String
+        +key()
+        +reply?()
+    }
+
     Network --> Robot : contains
     Robot --> Tool : has
     State --> Memory : has
     Network --> State : uses
+    Robot ..> RobotMessage : sends/receives
 ```
 
 ## Classes
@@ -58,6 +68,7 @@ classDiagram
 | [State](state.md) | Conversation state with data, results, and memory |
 | [Tool](tool.md) | Callable function with parameters and handler |
 | [Memory](memory.md) | Namespaced key-value store for sharing data |
+| RobotMessage | Typed envelope for bus-based inter-robot communication |
 
 ## Quick Examples
 
