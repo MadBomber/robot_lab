@@ -69,6 +69,8 @@ The persistent `@chat` maintains conversation history across multiple `run` call
 | `mcp_clients` | `Hash` | Connected MCP clients by server name |
 | `mcp_tools` | `Array` | Tools discovered from MCP servers |
 | `memory` | `Memory` | Inherent key-value memory |
+| `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance |
+| `outbox` | `Hash` | Sent messages tracked with status and replies |
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration |
 
@@ -417,6 +419,37 @@ end
 ```
 
 Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over `delivery.ack!`/`delivery.nack!`.
+
+### Dynamic Spawning
+
+Robots can create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
+
+```ruby
+dispatcher = RobotLab.build(name: "dispatcher", system_prompt: "You delegate work.")
+
+# spawn creates a child on the same bus (bus created automatically)
+helper = dispatcher.spawn(name: "helper", system_prompt: "You answer questions.")
+
+# The child can immediately communicate with the parent
+answer = helper.run("What is 2+2?").last_text_content
+helper.send_message(to: :dispatcher, content: answer)
+```
+
+Robots can also join a bus after creation using `with_bus`:
+
+```ruby
+bot = RobotLab.build(name: "late_joiner", system_prompt: "Hello.")
+bot.with_bus(existing_bus)  # now connected to the bus
+```
+
+**Fan-out messaging**: Multiple robots with the same name all subscribe to the same channel. Messages sent to that name are delivered to all subscribers:
+
+```ruby
+worker1 = dispatcher.spawn(name: "worker", system_prompt: "Worker 1")
+worker2 = dispatcher.spawn(name: "worker", system_prompt: "Worker 2")
+dispatcher.send_message(to: :worker, content: "Do this task")
+# Both worker1 and worker2 receive the message
+```
 
 ### Bus vs Network
 

@@ -201,6 +201,7 @@ result = robot
 | `with_template(id, **ctx)` | Apply a prompt template |
 | `with_schema(schema)` | Set structured output schema |
 | `with_thinking(config)` | Enable extended thinking |
+| `with_bus(bus)` | Connect to a message bus (creates one if nil) |
 
 ## Running Robots
 
@@ -369,6 +370,56 @@ The `on_message` block arity controls delivery handling:
 
 See [Message Bus](../architecture/core-concepts.md#message-bus) for details.
 
+### Spawning Robots Dynamically
+
+Create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
+
+```ruby
+class Dispatcher < RobotLab::Robot
+  attr_reader :spawned
+
+  def initialize(bus: nil)
+    super(name: "dispatcher", template: :dispatcher, bus: bus)
+    @spawned = {}
+
+    on_message do |message|
+      puts "#{message.from} replied: #{message.content.to_s.lines.first&.strip}"
+    end
+  end
+
+  def dispatch(question)
+    # Ask LLM what specialist to create
+    plan = run(question).last_text_content.strip
+    role, instruction = plan.split("\n", 2)
+    role = role.strip.downcase.gsub(/\s+/, "_")
+
+    # Spawn (or reuse) a specialist
+    specialist = @spawned[role] ||= spawn(
+      name: role,
+      system_prompt: instruction&.strip || "You are a helpful #{role}."
+    )
+
+    # Have the specialist answer and reply
+    answer = specialist.run(question).last_text_content.strip
+    specialist.send_message(to: :dispatcher, content: answer)
+  end
+end
+```
+
+Key features of `spawn`:
+
+- Creates a child robot on the same bus as the parent
+- Creates a bus lazily if the parent doesn't have one
+- Spawned robots can immediately send and receive messages
+- Multiple robots with the same name enable fan-out messaging
+
+Robots can also join a bus after creation:
+
+```ruby
+bot = RobotLab.build(name: "latecomer", system_prompt: "Hello.")
+bot.with_bus(existing_bus)  # now connected and can send/receive messages
+```
+
 ## Configuration
 
 RobotLab uses `MywayConfig` for configuration. Access the config object directly -- there is no `RobotLab.configure` block:
@@ -431,6 +482,7 @@ See [Using Tools: Error Handling](using-tools.md#error-handling) for patterns.
 
 - [Creating Networks](creating-networks.md) - Orchestrate multiple robots
 - [Message Bus](../architecture/core-concepts.md#message-bus) - Bidirectional robot communication
+- [Dynamic Spawning](../architecture/core-concepts.md#dynamic-spawning) - Robots creating robots at runtime
 - [Using Tools](using-tools.md) - Advanced tool patterns
 - [Memory Guide](memory.md) - Share data between runs and robots
 - [API Reference: Robot](../api/core/robot.md) - Complete API documentation

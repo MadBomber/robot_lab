@@ -376,6 +376,72 @@ module RobotLab
     end
 
 
+    # Spawn a new robot on a shared bus.
+    #
+    # Creates a new Robot instance that shares this robot's bus,
+    # allowing it to immediately send and receive messages with
+    # all other robots on the bus. If no bus exists yet, one is
+    # created automatically and the parent robot is connected to it.
+    #
+    # @param name [String] unique name for the new robot
+    # @param system_prompt [String, nil] inline system prompt
+    # @param template [Symbol, nil] prompt_manager template
+    # @param local_tools [Array] tools for the new robot
+    # @param options [Hash] additional options passed to RobotLab.build
+    # @return [Robot] the newly created robot
+    #
+    # @example Spawn from a bus-less robot (bus and name created automatically)
+    #   bot  = RobotLab.build
+    #   bot2 = bot.spawn(system_prompt: "You are helpful.")
+    #
+    # @example Spawn a specialist from a message handler
+    #   on_message do |message|
+    #     specialist = spawn(
+    #       name: "fact_checker",
+    #       system_prompt: "You verify factual claims. Be concise."
+    #     )
+    #     specialist.send_message(to: name.to_sym, content: specialist.run(message.content).last_text_content)
+    #   end
+    #
+    def spawn(name: "robot", system_prompt: nil, template: nil, local_tools: [], **options)
+      ensure_bus
+
+      RobotLab.build(
+        name: name,
+        system_prompt: system_prompt,
+        template: template,
+        local_tools: local_tools,
+        bus: @bus,
+        **options
+      )
+    end
+
+
+    # Connect this robot to a message bus.
+    #
+    # If a bus is provided, the robot joins it. If no bus is provided
+    # and the robot doesn't already have one, a new bus is created.
+    # No-op if the robot is already on the given bus.
+    #
+    # @param bus [TypedBus::MessageBus, nil] bus to join (creates one if nil)
+    # @return [self]
+    #
+    # @example Join an existing bus
+    #   bot = RobotLab.build.with_bus(some_bus)
+    #
+    # @example Create a bus on demand
+    #   bot = RobotLab.build.with_bus
+    #
+    def with_bus(bus = nil)
+      return self if bus && @bus == bus
+
+      teardown_bus_channel if @bus
+      @bus = bus || @bus || TypedBus::MessageBus.new
+      setup_bus_channel
+      self
+    end
+
+
     # Disconnect all MCP clients and bus channel.
     #
     # @return [self]
@@ -637,6 +703,12 @@ module RobotLab
       return available if allowed_names.empty?
 
       ToolConfig.filter_tools(available, allowed_names: allowed_names)
+    end
+
+
+    # Create a bus if one doesn't exist and connect this robot to it
+    def ensure_bus
+      with_bus unless @bus
     end
 
 

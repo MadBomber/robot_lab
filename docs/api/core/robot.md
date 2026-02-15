@@ -70,7 +70,7 @@ Robot.new(
 
 ```ruby
 robot = RobotLab.build(
-  name: nil,          # Auto-generates "robot_XXXXXXXX" if nil
+  name: "robot",      # Defaults to "robot"
   template: nil,
   system_prompt: nil,
   context: {},
@@ -81,7 +81,7 @@ robot = RobotLab.build(
 # => RobotLab::Robot
 ```
 
-If `name` is omitted, a unique name is generated automatically using `SecureRandom.hex(4)`.
+If `name` is omitted, it defaults to `"robot"`.
 
 ## Attributes (Read-Only)
 
@@ -187,6 +187,7 @@ All `with_*` methods delegate to the persistent `@chat` and return `self` for ch
 | `with_schema(schema)` | Set output schema |
 | `with_context(**ctx)` | Set context |
 | `with_thinking(opts)` | Enable extended thinking |
+| `with_bus(bus)` | Connect to a message bus (creates one if nil) |
 
 **Example:**
 
@@ -317,6 +318,82 @@ robot.on_message do |delivery, message|
     delivery.nack!
   end
 end
+```
+
+### spawn
+
+```ruby
+child = robot.spawn(
+  name: "specialist",
+  system_prompt: "You are a specialist."
+)
+# => RobotLab::Robot (connected to same bus)
+```
+
+Create a new robot on the same message bus. If the parent has no bus, one is created automatically and the parent is connected to it.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `name` | `String` | `"robot"` | Name for the new robot |
+| `system_prompt` | `String`, `nil` | `nil` | Inline system prompt |
+| `template` | `Symbol`, `nil` | `nil` | Prompt template |
+| `local_tools` | `Array` | `[]` | Tools for the new robot |
+| `**options` | `Hash` | `{}` | Additional options passed to `RobotLab.build` |
+
+**Returns:** `Robot`
+
+**Examples:**
+
+```ruby
+# Minimal spawn (bus created automatically)
+bot  = RobotLab.build
+bot2 = bot.spawn(system_prompt: "You are helpful.")
+
+# Spawn with template
+specialist = dispatcher.spawn(
+  name: "billing",
+  template: :billing,
+  local_tools: [InvoiceLookup]
+)
+
+# Fan-out: multiple robots with the same name
+worker1 = bot.spawn(name: "worker", system_prompt: "Worker 1")
+worker2 = bot.spawn(name: "worker", system_prompt: "Worker 2")
+# Messages sent to :worker are delivered to both
+```
+
+### with_bus
+
+```ruby
+robot.with_bus(bus)
+# => self
+```
+
+Connect the robot to a message bus after creation. If called without an argument and the robot has no bus, a new one is created. Returns `self` for chaining.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Bus to join (creates one if nil and robot has no bus) |
+
+**Returns:** `self`
+
+**Examples:**
+
+```ruby
+# Join an existing bus
+bot = RobotLab.build(name: "bot")
+bot.with_bus(some_bus)
+
+# Create a bus on demand
+bot = RobotLab.build(name: "bot").with_bus
+
+# Switch buses
+bot.with_bus(bus1)  # joins bus1
+bot.with_bus(bus2)  # leaves bus1, joins bus2
 ```
 
 ### disconnect
@@ -479,6 +556,42 @@ bob.on_message do |message|
 end
 
 alice.send_message(to: :bob, content: "Tell me a robot joke.")
+```
+
+### Spawning Robots Dynamically
+
+```ruby
+# Parent robot spawns specialists on demand
+dispatcher = RobotLab.build(
+  name: "dispatcher",
+  system_prompt: "You delegate work."
+)
+
+dispatcher.on_message do |message|
+  puts "Reply from #{message.from}: #{message.content}"
+end
+
+# spawn creates child on same bus (bus created lazily)
+helper = dispatcher.spawn(
+  name: "helper",
+  system_prompt: "You answer questions concisely."
+)
+
+answer = helper.run("What is 2+2?").last_text_content
+helper.send_message(to: :dispatcher, content: answer)
+```
+
+### Connecting to a Bus After Creation
+
+```ruby
+bot = RobotLab.build(name: "latecomer", system_prompt: "Hi there.")
+
+# Join a bus later
+bus = TypedBus::MessageBus.new
+bot.with_bus(bus)
+
+# Now bot can send/receive messages
+bot.send_message(to: :someone, content: "Hello!")
 ```
 
 ## See Also

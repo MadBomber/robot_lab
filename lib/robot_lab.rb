@@ -131,8 +131,7 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: nil, template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, **options)
-      name ||= "robot_#{SecureRandom.hex(4)}"
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, **options)
       Robot.new(
         name: name,
         template: template,

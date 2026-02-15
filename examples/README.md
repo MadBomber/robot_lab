@@ -37,6 +37,7 @@ examples/
   10_memory.rb                # Advanced Memory API operations
   11_network_introspection.rb # Network visualization & inspection
   12_message_bus.rb           # Bidirectional robot communication
+  13_spawn.rb                 # Dynamic specialist robot spawning
   prompts/                    # Prompt templates (.md with YAML front matter)
 ```
 
@@ -126,6 +127,14 @@ Demonstrates: Robot subclasses, prompt templates, auto-ack `on_message`, `reply(
 
 **Requires:** LLM API key
 
+### 13 — Spawning Robots
+
+Dynamic specialist creation at runtime. A dispatcher robot receives questions, asks its LLM what kind of specialist is needed, then uses `spawn` to create one on the fly. The bus is created lazily on the first spawn — no explicit bus setup required. Spawned specialists are reused across questions of the same type.
+
+Demonstrates: `spawn` for dynamic robot creation, lazy bus creation, `on_message` for reply handling, LLM-driven delegation.
+
+**Requires:** LLM API key
+
 ## Prompt Templates
 
 Templates live in `examples/prompts/` as `.md` files with YAML front matter. Each template defines a robot's personality and behavior:
@@ -165,3 +174,4 @@ Front matter keys like `model`, `temperature`, `top_p`, `max_tokens` are applied
 | `configurable.md` | 09 | Configurable template with front matter |
 | `comedian.md` | 12 | Robot joke teller |
 | `comedy_critic.md` | 12 | Joke evaluator (FUNNY/NOT_FUNNY) |
+| `dispatcher.md` | 13 | Specialist role dispatcher |

@@ -394,6 +394,28 @@ Key features:
 - **Reply correlation** — `reply(message, content)` tracks threads via `in_reply_to`
 - **Independent of Network** — bus works without a Network pipeline
 
+### Dynamic Spawning
+
+Robots can create new robots at runtime using `spawn`. The bus is created lazily:
+
+```ruby
+dispatcher = RobotLab.build(name: "dispatcher", system_prompt: "You delegate work.")
+
+# spawn creates a child on the same bus (bus created automatically)
+helper = dispatcher.spawn(name: "helper", system_prompt: "You answer questions.")
+answer = helper.run("What is 2+2?").last_text_content
+helper.send_message(to: :dispatcher, content: answer)
+```
+
+Robots can also join a bus after creation with `with_bus`:
+
+```ruby
+bot = RobotLab.build(name: "latecomer", system_prompt: "Hello.")
+bot.with_bus(existing_bus)
+```
+
+Multiple robots with the same name enable fan-out — messages sent to that name are delivered to all subscribers.
+
 ## Templates
 
 Templates are `.md` files with YAML front matter, managed by the prompt_manager gem. They live in the configured template path (default: `./prompts/` or `app/prompts/` in Rails).
