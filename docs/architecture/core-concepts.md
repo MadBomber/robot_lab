@@ -375,6 +375,60 @@ Resolution order: **runtime > robot build-time > task > network > global config*
 
 The `:inherit` value pulls from the parent level. `:none` explicitly disables.
 
+## Message Bus
+
+The **Message Bus** provides bidirectional, cyclic communication between robots, independent of the Network pipeline. While Networks enforce DAG-based (acyclic) execution, the bus enables negotiation loops, convergence patterns, and multi-turn dialogues.
+
+### How It Works
+
+Robots connect to a shared `TypedBus::MessageBus` via the `bus:` parameter. Each robot gets a typed channel (accepting only `RobotMessage` objects) named after its `name`. Messages are delivered asynchronously via the `async` gem's fiber scheduler.
+
+```ruby
+bus = TypedBus::MessageBus.new
+
+bob   = RobotLab.build(name: "bob", system_prompt: "You tell jokes.", bus: bus)
+alice = RobotLab.build(name: "alice", system_prompt: "You evaluate jokes.", bus: bus)
+```
+
+### RobotMessage
+
+`RobotMessage` is an immutable `Data.define` value object used as the typed envelope:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `Integer` | Per-robot sequential counter |
+| `from` | `String` | Sender's robot name (= channel name) |
+| `content` | `String`, `Hash` | Message payload |
+| `in_reply_to` | `String`, `nil` | Composite key of the original message (e.g., `"alice:1"`) |
+
+Methods: `key` returns `"from:id"` composite identity; `reply?` returns true when `in_reply_to` is set.
+
+### Sending and Receiving
+
+```ruby
+# Send a message to another robot
+alice.send_message(to: :bob, content: "Tell me a joke.")
+
+# Handle incoming messages with auto-ack (1 arg)
+bob.on_message do |message|
+  joke = bob.run(message.content.to_s).last_text_content
+  bob.reply(message, joke)
+end
+```
+
+Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over `delivery.ack!`/`delivery.nack!`.
+
+### Bus vs Network
+
+| Feature | Network | Message Bus |
+|---------|---------|-------------|
+| Execution model | DAG (acyclic) | Cyclic, bidirectional |
+| Communication | Sequential pipeline | Pub/sub channels |
+| Memory | Shared network memory | Independent per-robot |
+| Use case | Linear workflows | Negotiation, convergence |
+
+The bus is purely additive — robots without `bus:` work exactly as before.
+
 ## Network
 
 A Network orchestrates multiple robots in a pipeline workflow using SimpleFlow:

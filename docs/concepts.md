@@ -361,6 +361,39 @@ result = network.run(message: "I was charged twice for my subscription.")
 puts result.value.last_text_content
 ```
 
+## Message Bus
+
+The **Message Bus** enables bidirectional, cyclic communication between robots via `typed_bus`. While Networks enforce DAG-based execution, the bus supports negotiation loops, convergence patterns, and multi-turn dialogues.
+
+```ruby
+bus = TypedBus::MessageBus.new
+
+bob   = RobotLab.build(name: "bob", system_prompt: "You tell jokes.", bus: bus)
+alice = RobotLab.build(name: "alice", system_prompt: "You evaluate jokes.", bus: bus)
+
+# Register handlers
+bob.on_message do |message|
+  joke = bob.run(message.content.to_s).last_text_content
+  bob.reply(message, joke)
+end
+
+alice.on_message do |message|
+  verdict = alice.run("Is this funny? #{message.content}").last_text_content
+  # Send another request if not satisfied
+  alice.send_message(to: :bob, content: "Try again.") unless verdict.start_with?("FUNNY")
+end
+
+# Start the conversation
+alice.send_message(to: :bob, content: "Tell me a robot joke.")
+```
+
+Key features:
+
+- **Typed channels** — only `RobotMessage` objects accepted per channel
+- **Auto-ACK** — 1-arg `on_message` blocks auto-acknowledge; 2-arg blocks give manual control
+- **Reply correlation** — `reply(message, content)` tracks threads via `in_reply_to`
+- **Independent of Network** — bus works without a Network pipeline
+
 ## Templates
 
 Templates are `.md` files with YAML front matter, managed by the prompt_manager gem. They live in the configured template path (default: `./prompts/` or `app/prompts/` in Rails).

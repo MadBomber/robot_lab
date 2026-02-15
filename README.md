@@ -20,6 +20,7 @@ RobotLab enables you to build sophisticated AI applications using multiple speci
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Conversation History</strong> - Persist and restore threads<br>
+- <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Streaming</strong> - Real-time event streaming<br>
 - <strong>Rails Integration</strong> - Generators and ActiveRecord support
 </td>
@@ -329,6 +330,51 @@ robot = RobotLab.build(
 # Robot can now use filesystem tools
 result = robot.run("List the files in the current directory")
 ```
+
+## Message Bus
+
+Robots can communicate bidirectionally via an optional message bus, independent of the Network pipeline. This enables negotiation loops, convergence patterns, and cyclic workflows:
+
+```ruby
+require "robot_lab"
+
+bus = TypedBus::MessageBus.new
+
+class Comedian < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "bob", template: :comedian, bus: bus)
+    on_message do |message|
+      joke = run(message.content.to_s).last_text_content.strip
+      reply(message, joke)
+    end
+  end
+end
+
+class ComedyCritic < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "alice", template: :comedy_critic, bus: bus)
+    @accepted = false
+    on_message do |message|
+      verdict = run("Evaluate this joke:\n\n#{message.content}").last_text_content.strip
+      @accepted = verdict.start_with?("FUNNY")
+      send_message(to: :bob, content: "Try again.") unless @accepted
+    end
+  end
+  attr_reader :accepted
+end
+
+bob   = Comedian.new(bus: bus)
+alice = ComedyCritic.new(bus: bus)
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+```
+
+Key features:
+
+- **Typed channels** — only `RobotMessage` objects are accepted (type enforcement via `typed_bus`)
+- **Auto-ACK** — `on_message { |message| }` auto-acknowledges; use `|delivery, message|` for manual ACK/NACK
+- **Reply correlation** — `reply(message, content)` tracks conversation threads via `in_reply_to`
+- **Outbox tracking** — sent messages tracked in `robot.outbox` with status and replies
+- **Independent of Network** — bus communication works without a Network pipeline
 
 ## Streaming
 

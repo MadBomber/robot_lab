@@ -328,6 +328,47 @@ summarizer = RobotLab.build(
 )
 ```
 
+### Bus-Connected Robot
+
+Enable bidirectional communication between robots using a message bus. This pattern supports negotiation loops and convergence:
+
+```ruby
+bus = TypedBus::MessageBus.new
+
+class Comedian < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "bob", template: :comedian, bus: bus)
+    on_message do |message|
+      joke = run(message.content.to_s).last_text_content.strip
+      reply(message, joke)
+    end
+  end
+end
+
+class ComedyCritic < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "alice", template: :comedy_critic, bus: bus)
+    @accepted = false
+    on_message do |message|
+      verdict = run("Evaluate: #{message.content}").last_text_content.strip
+      @accepted = verdict.start_with?("FUNNY")
+      send_message(to: :bob, content: "Try again.") unless @accepted
+    end
+  end
+  attr_reader :accepted
+end
+
+bob   = Comedian.new(bus: bus)
+alice = ComedyCritic.new(bus: bus)
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+```
+
+The `on_message` block arity controls delivery handling:
+- **1 argument** `|message|` — auto-acknowledges before calling
+- **2 arguments** `|delivery, message|` — manual `delivery.ack!` / `delivery.nack!`
+
+See [Message Bus](../architecture/core-concepts.md#message-bus) for details.
+
 ## Configuration
 
 RobotLab uses `MywayConfig` for configuration. Access the config object directly -- there is no `RobotLab.configure` block:
@@ -389,6 +430,7 @@ See [Using Tools: Error Handling](using-tools.md#error-handling) for patterns.
 ## Next Steps
 
 - [Creating Networks](creating-networks.md) - Orchestrate multiple robots
+- [Message Bus](../architecture/core-concepts.md#message-bus) - Bidirectional robot communication
 - [Using Tools](using-tools.md) - Advanced tool patterns
 - [Memory Guide](memory.md) - Share data between runs and robots
 - [API Reference: Robot](../api/core/robot.md) - Complete API documentation

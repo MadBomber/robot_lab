@@ -15,6 +15,7 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 | [Tool Usage](tool-usage.md) | External API integration |
 | [MCP Server](mcp-server.md) | Creating an MCP tool server |
 | [Rails Application](rails-application.md) | Full Rails integration |
+| [Message Bus](#message-bus) | Bidirectional robot communication with convergence |
 
 ## Quick Links
 
@@ -29,6 +30,7 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 - [Streaming Responses](basic-chat.md#with-streaming)
 - [Persistent Conversations](basic-chat.md#with-conversation-history)
 - [MCP Integration](mcp-server.md)
+- [Message Bus Communication](#message-bus)
 
 ## Hello World
 
@@ -163,6 +165,68 @@ Or use the provided rake tasks:
 bundle exec rake examples:all          # Run all examples
 bundle exec rake examples:run[1]       # Run specific example by number
 ```
+
+## Message Bus
+
+Robots can communicate bidirectionally via a message bus, enabling convergence loops and negotiation patterns. This example demonstrates a comedy critic tasking a comedian to generate jokes until one passes:
+
+```ruby
+ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
+require "robot_lab"
+
+MAX_ATTEMPTS = 5
+
+class Comedian < RobotLab::Robot
+  TEMP_START = 0.2
+  TEMP_STEP  = 0.2
+
+  def initialize(bus:)
+    super(name: "bob", template: :comedian, bus: bus, temperature: TEMP_START)
+    @attempts = 0
+    on_message do |message|
+      @attempts += 1
+      temp = [TEMP_START + TEMP_STEP * (@attempts - 1), 1.0].min
+      with_temperature(temp)
+      joke = run(message.content.to_s).last_text_content.strip
+      reply(message, joke)
+    end
+  end
+
+  attr_reader :attempts
+end
+
+class ComedyCritic < RobotLab::Robot
+  def initialize(bus:)
+    super(name: "alice", template: :comedy_critic, bus: bus)
+    @accepted = false
+    on_message do |message|
+      verdict = run("Evaluate this joke:\n\n#{message.content}").last_text_content.strip
+      @accepted = verdict.start_with?("FUNNY")
+      send_message(to: :bob, content: "Not funny enough. Try again.") unless @accepted
+    end
+  end
+
+  attr_reader :accepted
+end
+
+bus   = TypedBus::MessageBus.new
+bob   = Comedian.new(bus: bus)
+alice = ComedyCritic.new(bus: bus)
+
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+puts "Attempts: #{bob.attempts} / #{MAX_ATTEMPTS}"
+puts "Accepted: #{alice.accepted}"
+```
+
+Key patterns demonstrated:
+
+- **Robot subclasses** with templates for prompt management
+- **Auto-ack** via 1-arg `on_message` blocks
+- **`reply(message, content)`** for correlated responses
+- **Temperature ramping** (0.2 &rarr; 1.0) for increasing creativity
+- **Convergence loop** that terminates when the critic approves
+
+Run: `bundle exec ruby examples/12_message_bus.rb`
 
 ## See Also
 
