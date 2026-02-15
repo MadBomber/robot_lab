@@ -19,10 +19,7 @@ class RecruitAnalyst < RobotLab::Tool
     @analysts ||= {}
     specialty = specialty.to_s.downcase.gsub(/\s+/, "_")
     analyst = @analysts[specialty] ||= begin
-      robot.instance_variable_set(
-        :@analysts_spawned,
-        robot.analysts_spawned + 1
-      )
+      robot.analysts_spawned += 1
       robot.spawn(
         name: "#{specialty}_analyst",
         system_prompt:
@@ -33,10 +30,10 @@ class RecruitAnalyst < RobotLab::Tool
       )
     end
     analysis = analyst.run(robot.log.join("\n")).last_text_content.strip
-    robot.instance_variable_get(:@display)&.scout_analyst(specialty, analysis)
+    robot.display&.scout_analyst(specialty, analysis)
     analysis
   rescue => e
-    robot.instance_variable_get(:@display)&.scout_analyst(specialty, "ERROR: #{e.message}")
+    robot.display&.scout_analyst(specialty, "ERROR: #{e.message}")
     "Analysis unavailable for #{specialty}. Rely on your own observations."
   end
 end
@@ -51,8 +48,8 @@ class RefineCriteria < RobotLab::Tool
         desc: "Your refined evaluation criteria and focus areas"
 
   def execute(updated_criteria:)
-    robot.instance_variable_set(:@pending_criteria, updated_criteria)
-    robot.instance_variable_get(:@display)&.scout_criteria(updated_criteria)
+    robot.pending_criteria = updated_criteria
+    robot.display&.scout_criteria(updated_criteria)
     "Criteria refinement accepted: #{updated_criteria}. " \
     "Apply these updated criteria to all future evaluations."
   end
@@ -78,7 +75,7 @@ end
 # ordering in the Anthropic API.
 #
 class Scout < RobotLab::Robot
-  attr_reader :log, :analysts_spawned
+  attr_accessor :log, :analysts_spawned, :pending_criteria, :display
 
   def initialize(bus:, display:)
     @log = []

@@ -16,9 +16,9 @@ class ReinventStyle < RobotLab::Tool
               "Be specific: what kind of humor, what voice, what attitude."
 
   def execute(new_persona:)
-    robot.instance_variable_set(:@pending_reinvention, new_persona)
-    robot.instance_variable_set(:@style_changes, robot.style_changes + 1)
-    robot.instance_variable_get(:@display)&.comic_tool("[reinvent_style] -> #{new_persona[0..70]}...")
+    robot.pending_reinvention = new_persona
+    robot.style_changes += 1
+    robot.display&.comic_tool("[reinvent_style] -> #{new_persona[0..70]}...")
     "Style reinvention accepted: #{new_persona}. " \
     "Commit to this new approach starting now."
   end
@@ -37,7 +37,7 @@ class AdjustEnergy < RobotLab::Tool
   def execute(level:, reason: "tactical adjustment")
     clamped = [[level.to_f, 0.1].max, 1.0].min
     robot.with_temperature(clamped)
-    robot.instance_variable_get(:@display)&.comic_tool("[adjust_energy] -> %.1f (%s)" % [clamped, reason])
+    robot.display&.comic_tool("[adjust_energy] -> %.1f (%s)" % [clamped, reason])
     "Energy adjusted to #{clamped}. Reason: #{reason}"
   end
 end
@@ -53,10 +53,7 @@ class GetCoaching < RobotLab::Tool
   def execute(situation:)
     @coaches ||= {}
     coach = @coaches["comedy_coach"] ||= begin
-      robot.instance_variable_set(
-        :@coaches_spawned,
-        robot.coaches_spawned + 1
-      )
+      robot.coaches_spawned += 1
       robot.spawn(
         name: "comedy_coach",
         system_prompt:
@@ -67,10 +64,10 @@ class GetCoaching < RobotLab::Tool
       )
     end
     advice = coach.run(situation).last_text_content.strip
-    robot.instance_variable_get(:@display)&.comic_tool("[get_coaching] -> #{advice[0..70]}...")
+    robot.display&.comic_tool("[get_coaching] -> #{advice[0..70]}...")
     advice
   rescue => e
-    robot.instance_variable_get(:@display)&.comic_tool("[get_coaching] ERROR: #{e.message}")
+    robot.display&.comic_tool("[get_coaching] ERROR: #{e.message}")
     "Coach unavailable right now. Trust your instincts."
   end
 end
@@ -91,7 +88,8 @@ end
 # Publishes performances to the shared :room channel.
 #
 class Comic < RobotLab::Robot
-  attr_reader :round, :style_changes, :coaches_spawned
+  attr_accessor :round, :style_changes, :coaches_spawned,
+                :pending_reinvention, :display
 
   def initialize(bus:, display:)
     @round              = 0
