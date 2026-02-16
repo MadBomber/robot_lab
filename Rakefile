@@ -45,21 +45,55 @@ task :rubocop_fix do
 end
 
 namespace :examples do
+  # Map of subdirectory-based demos to their entry point scripts
+  SUBDIR_ENTRY_POINTS = {
+    "14_rusty_circuit" => "open_mic.rb",
+    "15_memory_network_and_bus" => "editorial_pipeline.rb"
+  }.freeze
+
   desc "Run all examples"
   task :all do
+    # Single-file examples
     Dir.glob("examples/*.rb").sort.each do |example|
       puts "\n#{'=' * 60}"
       puts "Running: #{example}"
       puts '=' * 60
       ruby example
     end
+
+    # Subdirectory-based demos
+    SUBDIR_ENTRY_POINTS.each do |dir, entry|
+      path = "examples/#{dir}/#{entry}"
+      next unless File.exist?(path)
+
+      puts "\n#{'=' * 60}"
+      puts "Running: #{path}"
+      puts '=' * 60
+      ruby path
+    end
   end
 
   desc "Run a specific example by number (e.g., rake examples:run[1])"
   task :run, [:num] do |_t, args|
-    example = Dir.glob("examples/#{args[:num].rjust(2, '0')}_*.rb").first
+    padded = args[:num].rjust(2, '0')
+
+    # Try single-file example first
+    example = Dir.glob("examples/#{padded}_*.rb").first
     if example
       ruby example
+      next
+    end
+
+    # Try subdirectory-based demo
+    dir = Dir.glob("examples/#{padded}_*/").first
+    if dir
+      dir_name = File.basename(dir)
+      entry = SUBDIR_ENTRY_POINTS[dir_name]
+      if entry && File.exist?(File.join(dir, entry))
+        ruby File.join(dir, entry)
+      else
+        puts "Example #{args[:num]} directory found (#{dir_name}) but no entry point configured"
+      end
     else
       puts "Example #{args[:num]} not found"
     end
