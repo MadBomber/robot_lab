@@ -1498,6 +1498,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#attributes-read-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes (Read-Write)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3091,6 +3102,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#attributes-read-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes (Read-Write)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3760,6 +3782,32 @@
 </tr>
 </tbody>
 </table>
+<h2 id="attributes-read-write">Attributes (Read-Write)<a class="headerlink" href="#attributes-read-write" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>input</code></td>
+<td><code>IO</code>, <code>nil</code></td>
+<td><code>nil</code></td>
+<td>Input stream for user interaction (falls back to <code>$stdin</code>)</td>
+</tr>
+<tr>
+<td><code>output</code></td>
+<td><code>IO</code>, <code>nil</code></td>
+<td><code>nil</code></td>
+<td>Output stream for user interaction (falls back to <code>$stdout</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Used by tools like <a href="../tool/#built-in-askuser"><code>AskUser</code></a> that need terminal IO. Set to <code>StringIO</code> for testing.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="run">run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
