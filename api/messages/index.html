@@ -2633,10 +2633,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-in-state" class="md-nav__link">
+  <a href="#usage-in-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage in State
+        Usage in Memory
       
     </span>
   </a>
@@ -2741,30 +2741,42 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>RobotLab uses a structured message system to represent conversations between users, assistants, and tools.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># User input</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">user_msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">UserMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">thread_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">user_msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">UserMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Assistant response</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">text_msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;Hi there!&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">text_msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hi there!&quot;</span><span class="p">)</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Tool interaction</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">tool_call</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolCallMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">city</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;NYC&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">tool_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolResultMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">result</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">temp</span><span class="p">:</span><span class="w"> </span><span class="mi">72</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">city</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;NYC&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">tool_call</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolCallMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="n">tool</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">tool_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolResultMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">tool</span><span class="p">:</span><span class="w"> </span><span class="n">tool</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">temp</span><span class="p">:</span><span class="w"> </span><span class="mi">72</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
 <h2 id="message-hierarchy">Message Hierarchy<a class="headerlink" href="#message-hierarchy" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Message (base)
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── UserMessage      - User input with metadata
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── TextMessage      - Assistant text response
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── ToolMessage      - Tool-related messages
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│   ├── ToolCallMessage   - Tool invocation
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   └── ToolResultMessage - Tool result
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>└── SystemMessage    - System prompts
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── TextMessage         - role + text content
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── ToolCallMessage     - role + Array&lt;ToolMessage&gt;
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>└── ToolResultMessage   - tool + result content
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>UserMessage             - Standalone (not a Message subclass)
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>ToolMessage             - Standalone (not a Message subclass)
 </span></code></pre></div>
 <h2 id="common-interface">Common Interface<a class="headerlink" href="#common-interface" title="Permanent link">&para;</a></h2>
-<p>All messages implement:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">message</span><span class="o">.</span><span class="n">role</span><span class="w">       </span><span class="c1"># =&gt; Symbol (:user, :assistant, :tool)</span>
+<p>All Message subclasses implement:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">message</span><span class="o">.</span><span class="n">role</span><span class="w">       </span><span class="c1"># =&gt; String (&quot;user&quot;, &quot;assistant&quot;, &quot;tool_result&quot;)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w">    </span><span class="c1"># =&gt; String or structured data</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">message</span><span class="o">.</span><span class="n">to_h</span><span class="w">       </span><span class="c1"># =&gt; Hash representation</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">message</span><span class="o">.</span><span class="n">to_json</span><span class="w">    </span><span class="c1"># =&gt; JSON string</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">message</span><span class="o">.</span><span class="n">type</span><span class="w">       </span><span class="c1"># =&gt; String (&quot;text&quot;, &quot;tool_call&quot;, &quot;tool_result&quot;)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">message</span><span class="o">.</span><span class="n">to_h</span><span class="w">       </span><span class="c1"># =&gt; Hash representation</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">message</span><span class="o">.</span><span class="n">to_json</span><span class="w">    </span><span class="c1"># =&gt; JSON string</span>
+</span></code></pre></div>
+<p>Type and role predicates:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">message</span><span class="o">.</span><span class="n">text?</span><span class="w">       </span><span class="c1"># =&gt; true if type is &quot;text&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_call?</span><span class="w">  </span><span class="c1"># =&gt; true if type is &quot;tool_call&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_result?</span><span class="w"> </span><span class="c1"># =&gt; true if type is &quot;tool_result&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">message</span><span class="o">.</span><span class="n">system?</span><span class="w">     </span><span class="c1"># =&gt; true if role is &quot;system&quot;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">message</span><span class="o">.</span><span class="n">user?</span><span class="w">       </span><span class="c1"># =&gt; true if role is &quot;user&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">message</span><span class="o">.</span><span class="n">assistant?</span><span class="w">  </span><span class="c1"># =&gt; true if role is &quot;assistant&quot;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">message</span><span class="o">.</span><span class="n">stopped?</span><span class="w">    </span><span class="c1"># =&gt; true if stop_reason is &quot;stop&quot;</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_stop?</span><span class="w">  </span><span class="c1"># =&gt; true if stop_reason is &quot;tool&quot;</span>
 </span></code></pre></div>
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <table>
@@ -2777,15 +2789,15 @@
 <tbody>
 <tr>
 <td><a href="user-message/">UserMessage</a></td>
-<td>User input with thread and metadata</td>
+<td>User input with session and metadata</td>
 </tr>
 <tr>
 <td><a href="text-message/">TextMessage</a></td>
-<td>Assistant text response</td>
+<td>Text message with role (system, user, or assistant)</td>
 </tr>
 <tr>
 <td><a href="tool-call-message/">ToolCallMessage</a></td>
-<td>Tool invocation request</td>
+<td>Tool invocation request containing ToolMessage objects</td>
 </tr>
 <tr>
 <td><a href="tool-result-message/">ToolResultMessage</a></td>
@@ -2793,16 +2805,16 @@
 </tr>
 </tbody>
 </table>
-<h2 id="usage-in-state">Usage in State<a class="headerlink" href="#usage-in-state" title="Permanent link">&para;</a></h2>
-<p>Messages are typically accessed through state:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">state</span><span class="o">.</span><span class="n">messages</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Format for LLM</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">state</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Hash&gt;</span>
+<h2 id="usage-in-memory">Usage in Memory<a class="headerlink" href="#usage-in-memory" title="Permanent link">&para;</a></h2>
+<p>Messages are typically accessed through memory:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">messages</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Format for LLM</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../core/state/">State</a></li>
+<li><a href="../core/memory/">Memory</a></li>
 <li><a href="../../architecture/message-flow/">Message Flow Architecture</a></li>
 </ul>
 

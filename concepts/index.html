@@ -647,10 +647,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robotlabtool-with-block-handler" class="md-nav__link">
+  <a href="#robotlabtoolcreate-factory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::Tool with Block Handler
+        RobotLab::Tool.create Factory
       
     </span>
   </a>
@@ -2992,10 +2992,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#robotlabtool-with-block-handler" class="md-nav__link">
+  <a href="#robotlabtoolcreate-factory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::Tool with Block Handler
+        RobotLab::Tool.create Factory
       
     </span>
   </a>
@@ -3353,8 +3353,8 @@
 </span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
 </span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="robotlabtool-with-block-handler">RobotLab::Tool with Block Handler<a class="headerlink" href="#robotlabtool-with-block-handler" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+<h3 id="robotlabtoolcreate-factory">RobotLab::Tool.create Factory<a class="headerlink" href="#robotlabtoolcreate-factory" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Get current weather for a location&quot;</span><span class="p">,</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -3364,9 +3364,7 @@
 </span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="p">},</span>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;location&quot;</span><span class="o">]</span>
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">_opts</span><span class="o">|</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">  </span><span class="no">WeatherService</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">input</span><span class="o">[</span><span class="ss">:location</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="k">end</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">args</span><span class="o">|</span><span class="w"> </span><span class="no">WeatherService</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">args</span><span class="o">[</span><span class="ss">:location</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="robotresult">RobotResult<a class="headerlink" href="#robotresult" title="Permanent link">&para;</a></h2>
 <p><code>RobotResult</code> captures the output of a single <code>robot.run(...)</code> call:</p>
@@ -3550,7 +3548,7 @@
 </span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># Register handlers</span>
 </span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">bob</span><span class="o">.</span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
 </span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span><span class="n">joke</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bob</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">to_s</span><span class="p">)</span><span class="o">.</span><span class="n">last_text_content</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">  </span><span class="n">bob</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">joke</span><span class="p">)</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">  </span><span class="n">bob</span><span class="o">.</span><span class="n">send_reply</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">from</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">joke</span><span class="p">,</span><span class="w"> </span><span class="ss">in_reply_to</span><span class="p">:</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
 </span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="k">end</span>
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
 </span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="n">alice</span><span class="o">.</span><span class="n">on_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
@@ -3566,7 +3564,7 @@
 <ul>
 <li><strong>Typed channels</strong> — only <code>RobotMessage</code> objects accepted per channel</li>
 <li><strong>Auto-ACK</strong> — 1-arg <code>on_message</code> blocks auto-acknowledge; 2-arg blocks give manual control</li>
-<li><strong>Reply correlation</strong> — <code>reply(message, content)</code> tracks threads via <code>in_reply_to</code></li>
+<li><strong>Reply correlation</strong> — <code>send_reply(to:, content:, in_reply_to:)</code> tracks threads via <code>in_reply_to</code></li>
 <li><strong>Independent of Network</strong> — bus works without a Network pipeline</li>
 </ul>
 <h3 id="dynamic-spawning">Dynamic Spawning<a class="headerlink" href="#dynamic-spawning" title="Permanent link">&para;</a></h3>
