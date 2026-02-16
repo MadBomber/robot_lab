@@ -538,6 +538,8 @@
     
 
     
+      (also: #reply)
+    
   </span>
   
   
@@ -1446,7 +1448,6 @@
       <pre class="lines">
 
 
-161
 162
 163
 164
@@ -1460,10 +1461,11 @@
 172
 173
 174
-175</pre>
+175
+176</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 161</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 162</span>
 
 <span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_from_hash'>from_hash</span><span class='lparen'>(</span><span class='id identifier rubyid_hash'>hash</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_hash'>hash</span> <span class='op'>=</span> <span class='id identifier rubyid_hash'>hash</span><span class='period'>.</span><span class='id identifier rubyid_transform_keys'>transform_keys</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_sym</span><span class='rparen'>)</span>
@@ -1678,12 +1680,12 @@
       <pre class="lines">
 
 
-143
 144
-145</pre>
+145
+146</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 143</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 144</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_has_tool_calls?'>has_tool_calls?</span>
   <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:tool_call?</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='id identifier rubyid_tool_calls'>tool_calls</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span>
@@ -1699,6 +1701,10 @@
     #<strong>last_text_content</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
   
 
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='reply-instance_method'>reply</span></span>
+    </span>
   
 
   
@@ -1791,13 +1797,13 @@
       <pre class="lines">
 
 
-151
 152
 153
-154</pre>
+154
+155</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 151</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 152</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_stopped?'>stopped?</span>
   <span class='id identifier rubyid_last_output'>last_output</span> <span class='op'>=</span> <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_last'>last</span>
@@ -1963,7 +1969,7 @@
 </div>
 
       <div id="footer">
-  Generated on Mon Feb 16 02:37:10 2026 by
+  Generated on Mon Feb 16 19:24:37 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
