@@ -4205,7 +4205,40 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># template: :assistant  =&gt;  prompts/assistant.md</span>
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:assistant</span><span class="p">,</span><span class="w"> </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">tone</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;friendly&quot;</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
-<p>Front matter can configure chat options (<code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code>), which are automatically applied to the underlying chat.</p>
+<p>Front matter supports two categories of keys:</p>
+<p><strong>LLM Config:</strong> <code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code> — applied to the underlying chat.</p>
+<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code> — applied to the robot's identity and capabilities. Constructor-provided values always take precedence.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>robot_name</code></td>
+<td><code>String</code></td>
+<td>Override robot name (when constructor uses the default <code>"robot"</code>)</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>String</code></td>
+<td>Human-readable description</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td><code>Array&lt;String&gt;</code></td>
+<td>Tool class names resolved via <code>Object.const_get</code></td>
+</tr>
+<tr>
+<td><code>mcp</code></td>
+<td><code>Array&lt;Hash&gt;</code></td>
+<td>MCP server configurations</td>
+</tr>
+</tbody>
+</table>
 <h2 id="configuration-hierarchy">Configuration Hierarchy<a class="headerlink" href="#configuration-hierarchy" title="Permanent link">&para;</a></h2>
 <p>Tools and MCP servers use hierarchical resolution: <strong>runtime &gt; robot &gt; network &gt; global config</strong>.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>RobotLab.config (global)

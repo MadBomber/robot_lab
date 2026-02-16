@@ -782,6 +782,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Templates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#front-matter-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Front Matter Keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3110,6 +3127,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Templates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#front-matter-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Front Matter Keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3568,7 +3602,28 @@
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">tone</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;professional&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># variables passed to the template</span>
 </span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>Front matter keys like <code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, and <code>stop</code> are automatically applied to the robot's chat configuration.</p>
+<h3 id="front-matter-keys">Front Matter Keys<a class="headerlink" href="#front-matter-keys" title="Permanent link">&para;</a></h3>
+<p>Templates support two categories of front matter keys:</p>
+<p><strong>LLM Config:</strong> <code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code> — applied to the robot's chat configuration.</p>
+<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code> — applied to the robot's identity and capabilities. These make templates self-contained: reading the <code>.md</code> file tells you everything about the robot.</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>---
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>description: GitHub assistant with MCP tool access
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>robot_name: github_bot
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>tools:
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>CodeSearchTool
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>mcp:
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>name: github
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    transport: stdio
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    command: npx
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    args: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;]
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="gu">model: claude-sonnet-4</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="gu">---</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>You are a GitHub assistant. Use available tools to help with repository tasks.
+</span></code></pre></div>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Template provides everything — minimal constructor</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:github_assistant</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Constructor-provided values (<code>local_tools:</code>, <code>mcp:</code>, <code>name:</code>, <code>description:</code>) always take precedence over front matter values.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../getting-started/quick-start/">Quick Start Guide</a> - Build your first robot</li>
