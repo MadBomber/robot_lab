@@ -100,6 +100,15 @@ If `name` is omitted, it defaults to `"robot"`.
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration (raw, unresolved) |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration (raw, unresolved) |
 
+## Attributes (Read-Write)
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `input` | `IO`, `nil` | `nil` | Input stream for user interaction (falls back to `$stdin`) |
+| `output` | `IO`, `nil` | `nil` | Output stream for user interaction (falls back to `$stdout`) |
+
+Used by tools like [`AskUser`](tool.md#built-in-askuser) that need terminal IO. Set to `StringIO` for testing.
+
 ## Methods
 
 ### run

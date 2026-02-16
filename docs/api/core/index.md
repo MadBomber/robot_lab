@@ -67,6 +67,7 @@ classDiagram
 | [Network](network.md) | Container for robots with routing and orchestration |
 | [State](state.md) | Conversation state with data, results, and memory |
 | [Tool](tool.md) | Callable function with parameters and handler |
+| [AskUser](tool.md#built-in-askuser) | Built-in tool for terminal-based user interaction |
 | [Memory](memory.md) | Namespaced key-value store for sharing data |
 | RobotMessage | Typed envelope for bus-based inter-robot communication |
 

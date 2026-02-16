@@ -21,7 +21,7 @@ class OsWriter < RobotLab::Robot
     robot_result = run(message, network_memory: @shared_memory)
 
     if @shared_memory
-      draft = robot_result.last_text_content.to_s
+      draft = robot_result.reply.to_s
       @shared_memory.current_writer = @name
       @shared_memory.set(@memory_key, draft)
 
@@ -38,7 +38,7 @@ class OsWriter < RobotLab::Robot
   def extract_message(result)
     case result.value
     when Hash then result.value[:message]
-    when RobotLab::RobotResult then result.value.last_text_content
+    when RobotLab::RobotResult then result.value.reply
     when String then result.value
     else result.value.to_s
     end

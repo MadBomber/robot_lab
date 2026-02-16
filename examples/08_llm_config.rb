@@ -43,9 +43,13 @@ puts "Example 8: LLM Configuration via MywayConfig"
 puts "=" * 70
 puts
 
-# Show current environment
-env = ENV['ROBOT_LAB_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-puts "Environment: #{env}"
+# --- Gather environment from the user via AskUser ---
+ask = RobotLab::AskUser.new
+env = ask.call(
+  "question" => "Which environment should the demo run in?",
+  "choices"  => %w[development test production],
+  "default"  => ENV['ROBOT_LAB_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV'] || "development"
+)
 puts
 
 # Display configuration values (hiding sensitive keys)
@@ -91,6 +95,7 @@ puts
 robot = RobotLab.build(
   name: "config_demo",
   template: :llm_config_demo,
+  local_tools: [RobotLab::AskUser],
   context: {
     environment: env,
     model: config.ruby_llm.model,

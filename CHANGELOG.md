@@ -11,7 +11,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.3] - 2026-02-15
+## [0.0.4] - 2026-02-16 [unreleased]
+
+### Added
+
+- **`AskUser` tool** for human-in-the-loop interactions
+  - Supports open-ended text, multiple choice, and default values
+  - IO sourced from `robot.input`/`robot.output` (defaults to `$stdin`/`$stdout`)
+  - Full test suite (`test/robot_lab/ask_user_test.rb`)
+- **`Robot#input` / `Robot#output` accessors** for configurable IO streams
+- **`reply` alias** for `RobotResult#last_text_content` — shorter, more natural API
+- **`.irbrc`** for loading RobotLab in project-level IRB sessions
+- **`wait_until` test helper** replacing flaky `sleep`-based assertions in async tests
+- Documentation for AskUser tool across API reference, guides, and examples
+
+### Changed
+
+- Bumped version to 0.0.4
+- **Made Rails dependencies optional** — removed `railties`, `activerecord`, `state_machines`, `state_machines-activemodel`, `state_machines-activerecord` from gemspec hard dependencies; moved to Gemfile `:test` group
+- Replaced `require 'active_support'` with targeted `require 'active_support/core_ext/module/delegation'` — only loads what ruby_llm actually needs
+- Added `activesupport >= 7.0` as explicit gemspec dependency with comment explaining it's required by ruby_llm (undeclared upstream)
+- **Tool JSON schema keys are now symbolized** via `deep_symbolize_keys` in `Tool#to_json_schema`
+- Updated all examples to use `reply` alias instead of `last_text_content`
+- Replaced `sleep`-based test assertions with `wait_until` helper in memory, waiter, and robot tests
+- Disabled branch coverage in SimpleCov except in CI
+
+### Fixed
+
+- Gem install conflict (`activesupport` version mismatch) when running outside Bundler
+- IRB loading issue where `require_relative` was a no-op due to partial load in `$LOADED_FEATURES` — switched to `load`
+- Robot tests for `send_message` now register a message handler on the receiver to avoid TypedBus warnings
+
+## [0.0.3] - 2026-02-15 [unreleased]
 
 ### Added
 

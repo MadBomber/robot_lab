@@ -63,7 +63,7 @@ class GetCoaching < RobotLab::Tool
           "exactly what to do differently in their next bit."
       )
     end
-    advice = coach.run(situation).last_text_content.strip
+    advice = coach.run(situation).reply.strip
     robot.display&.comic_tool("[get_coaching] -> #{advice[0..70]}...")
     advice
   rescue => e
@@ -132,7 +132,7 @@ class Comic < RobotLab::Robot
                 "your energy, or get coaching. Then deliver your next bit."
 
       result = run(prompt)
-      bit = result.last_text_content.strip
+      bit = result.reply.strip
 
       @display.comic("Comic [Round #{@round}]", bit)
 

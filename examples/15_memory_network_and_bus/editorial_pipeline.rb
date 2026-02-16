@@ -60,6 +60,7 @@ bus = TypedBus::MessageBus.new
 mac_writer = OsWriter.new(
   name: "mac_writer",
   template: :os_advocate,
+  local_tools: [RobotLab::AskUser],
   context: {
     os_name: "macOS",
     strengths: "Apple Silicon (M-series) performance, Metal GPU framework, Unix foundation, CoreML integration, energy efficiency"
@@ -70,6 +71,7 @@ mac_writer = OsWriter.new(
 win_writer = OsWriter.new(
   name: "win_writer",
   template: :os_advocate,
+  local_tools: [RobotLab::AskUser],
   context: {
     os_name: "Windows",
     strengths: "NVIDIA CUDA first-class support, WSL2 Linux compatibility, DirectML, widest hardware selection, enterprise tool integration"
@@ -80,6 +82,7 @@ win_writer = OsWriter.new(
 linux_writer = LinuxWriter.new(
   name: "linux_writer",
   template: :os_advocate,
+  local_tools: [RobotLab::AskUser],
   context: {
     os_name: "Linux/BSD",
     strengths: "Full GPU stack control, Docker-native, free and open source, server parity, massive community packages"
@@ -97,7 +100,7 @@ editor = OsEditor.new(
 # Editor handles revision requests from the chief via bus
 revision_count = 0
 editor.on_message do |message|
-  revised = editor.run(message.content).last_text_content.strip
+  revised = editor.run(message.content).reply.strip
   editor.instance_variable_set(:@article, revised)
 
   revision_count += 1
@@ -154,7 +157,14 @@ puts
 puts "Phase 1: Writing Pipeline (Network + Memory + Spawn)"
 puts "-" * 40
 
-topic = "Write about your operating system's advantages for building a home AI research lab focused on LLM fine-tuning, image generation, and local inference."
+# Gather the research focus from the user via AskUser
+ask = RobotLab::AskUser.new
+focus = ask.call(
+  "question" => "What AI research focus areas for the home lab article?",
+  "default"  => "LLM fine-tuning, image generation, and local inference"
+)
+
+topic = "Write about your operating system's advantages for building a home AI research lab focused on #{focus}."
 
 result = network.run(message: topic)
 article = editor.article

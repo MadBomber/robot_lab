@@ -29,7 +29,7 @@ class LinuxWriter < OsWriter
     robot_result = run(enriched, network_memory: @shared_memory)
 
     if @shared_memory
-      draft = robot_result.last_text_content.to_s
+      draft = robot_result.reply.to_s
       @shared_memory.current_writer = @name
       @shared_memory.set(@memory_key, draft)
 
@@ -62,7 +62,7 @@ class LinuxWriter < OsWriter
 
       analysis = specialist.run(
         "Briefly describe why #{distro[:label]} is a strong choice for a home AI research lab. 2-3 sentences."
-      ).last_text_content.strip
+      ).reply.strip
 
       puts "  [#{distro[:name]}] #{analysis[0..80]}..."
       analyses << "### #{distro[:label]}\n#{analysis}"

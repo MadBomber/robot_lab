@@ -87,7 +87,7 @@ display.separator
 opening = comic.run(
   "You just stepped on stage at The Rusty Circuit open mic. " \
   "The crowd looks tough. Do your opening bit."
-).last_text_content.strip
+).reply.strip
 
 display.comic("Comic [Opening]", opening)
 
@@ -102,7 +102,7 @@ comic.send_message(to: :room, content: "OPENING: #{opening}")
 display.separator
 
 # Final verdict from the talent scout
-verdict = scout.run(scout.verdict_prompt).last_text_content.strip
+verdict = scout.run(scout.verdict_prompt).reply.strip
 
 display.verdict("Scout [FINAL VERDICT]", verdict)
 

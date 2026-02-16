@@ -26,8 +26,14 @@ require_relative "../lib/robot_lab"
 # Sample Data
 # =============================================================================
 # Simulated customer and business data that would come from your database.
+# company_name is a template parameter (declared null in all four templates).
+# AskUser gathers it from the user before building robots.
 
-COMPANY_NAME = "TechGear Pro"
+ask = RobotLab::AskUser.new
+COMPANY_NAME = ask.call(
+  "question" => "What is your company name?",
+  "default"  => "TechGear Pro"
+)
 
 SAMPLE_CUSTOMER = {
   name: "Sarah Johnson",
@@ -153,7 +159,7 @@ class TriageRobot < RobotLab::Robot
       .continue(robot_result)
 
     # Examine LLM output and activate appropriate specialist
-    classification = robot_result.last_text_content.to_s.strip.downcase
+    classification = robot_result.reply.to_s.strip.downcase
 
     case classification
     when /order/
@@ -190,6 +196,7 @@ triage_robot = TriageRobot.new(
   name: "triage",
   description: "Classifies incoming requests to route to specialists",
   template: :triage,
+  local_tools: [RobotLab::AskUser],
   context: {
     company_name: COMPANY_NAME,
     categories: CATEGORIES
@@ -202,6 +209,7 @@ order_robot = RobotLab.build(
   name: "order",
   description: "Handles order-related inquiries with full order history",
   template: :order_support,
+  local_tools: [RobotLab::AskUser],
   context: {
     company_name: COMPANY_NAME,
     policies: POLICIES,
@@ -215,6 +223,7 @@ product_robot = RobotLab.build(
   name: "product",
   description: "Answers product questions with catalog knowledge",
   template: :product_support,
+  local_tools: [RobotLab::AskUser],
   context: {
     company_name: COMPANY_NAME,
     products: PRODUCTS,
@@ -229,6 +238,7 @@ escalation_robot = RobotLab.build(
   name: "escalation",
   description: "Handles complex cases requiring special authority",
   template: :escalation,
+  local_tools: [RobotLab::AskUser],
   context: {
     company_name: COMPANY_NAME,
     authorities: ESCALATION_AUTHORITIES
@@ -284,14 +294,14 @@ demo_queries.each_with_index do |query, index|
   # Display triage classification
   if result.context[:triage]
     triage_result = result.context[:triage]
-    puts "Classification: #{triage_result.last_text_content}"
+    puts "Classification: #{triage_result.reply}"
     puts
   end
 
   # Display specialist response (the final value)
   if result.value.is_a?(RobotLab::RobotResult)
     puts "Routed to: #{result.value.robot_name.upcase}"
-    content = result.value.last_text_content.to_s
+    content = result.value.reply.to_s
     # Truncate long responses for display
     if content.length > 300
       puts "Response: #{content[0..300]}..."

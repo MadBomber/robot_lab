@@ -42,7 +42,7 @@ class Dispatcher < RobotLab::Robot
 
   def dispatch(question)
     # Ask the LLM which specialist to spawn
-    plan = run(question).last_text_content.strip
+    plan = run(question).reply.strip
     role, instruction = plan.split("\n", 2)
     role = role.strip.downcase.gsub(/\s+/, "_")
     instruction = instruction&.strip || "You are a helpful #{role}."
@@ -61,7 +61,7 @@ class Dispatcher < RobotLab::Robot
 
     # Ask the specialist to work on the question
     specialist.send_message(to: :dispatcher, content:
-      specialist.run(question).last_text_content.strip
+      specialist.run(question).reply.strip
     )
   end
 

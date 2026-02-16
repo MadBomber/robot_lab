@@ -6,7 +6,8 @@ require 'securerandom'
 require 'digest'
 
 # Core dependencies
-require 'active_support'
+# ActiveSupport delegation is required by ruby_llm (RubyLLM::Agent uses delegate)
+# but not declared in ruby_llm's gemspec. Load it before ruby_llm.
 require 'active_support/core_ext/module/delegation'
 require 'ruby_llm'
 require 'prompt_manager'

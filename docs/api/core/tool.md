@@ -270,6 +270,78 @@ param :query, type: "string", desc: "Search query"                    # required
 param :limit, type: "integer", desc: "Max results", required: false   # optional
 ```
 
+## Built-in: AskUser
+
+`RobotLab::AskUser` is a built-in tool that lets a robot ask the user a question via the terminal. The LLM decides when human input is needed and calls this tool.
+
+### Class: `RobotLab::AskUser < RobotLab::Tool`
+
+```ruby
+class RobotLab::AskUser < RobotLab::Tool
+  description "Ask the user a question and wait for their typed response"
+  param :question, type: "string",  desc: "The question to ask the user"
+  param :choices,  type: "array",   desc: "Optional list of choices to present", required: false
+  param :default,  type: "string",  desc: "Default value if user presses Enter",  required: false
+end
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `question` | `String` | Yes | The question to display |
+| `choices` | `Array` | No | Numbered choices to present |
+| `default` | `String` | No | Value returned when user presses Enter without typing |
+
+### IO Resolution
+
+The tool reads input and writes output using the owning robot's `input`/`output` accessors:
+
+1. `robot.input` / `robot.output` if set
+2. Falls back to `$stdin` / `$stdout`
+
+### Terminal Output
+
+```
+[robot_name] What programming language do you want to learn?
+  1. Ruby
+  2. Python
+  3. Go
+> [Ruby]
+```
+
+### Usage
+
+```ruby
+robot = RobotLab.build(
+  name: "interviewer",
+  system_prompt: "Interview the user about their project needs. Use ask_user to gather information.",
+  local_tools: [RobotLab::AskUser]
+)
+robot.run("Find out what the user wants to build")
+```
+
+### Testing with StringIO
+
+```ruby
+robot = RobotLab::Robot.new(name: "bot", template: :assistant)
+robot.input  = StringIO.new("Ruby\n")
+robot.output = StringIO.new
+
+tool = RobotLab::AskUser.new(robot: robot)
+result = tool.call("question" => "Pick a language:", "choices" => ["Ruby", "Python"])
+# => "Ruby"
+```
+
+### Choice Mapping
+
+When `choices` are provided, the user can type either:
+
+- A **number** (e.g., `2`) — mapped to the corresponding choice text
+- **Text** (e.g., `Python`) — returned as-is
+
+Out-of-range numbers are returned as-is (the LLM can re-ask if needed).
+
 ## See Also
 
 - [Using Tools Guide](../../guides/using-tools.md)

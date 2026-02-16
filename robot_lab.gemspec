@@ -45,6 +45,7 @@ Gem::Specification.new do |spec|
   # Core dependencies
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
+  spec.add_dependency "activesupport", ">= 7.0" # required by ruby_llm (undeclared)
   spec.add_dependency "ruby_llm", "~> 1.12"
   spec.add_dependency "ruby_llm-mcp"
   spec.add_dependency "prompt_manager", "~> 1.0"
@@ -54,16 +55,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus"
   spec.add_dependency "simple_flow", "~> 0.3.0"
-  spec.add_dependency "state_machines"
-  spec.add_dependency "state_machines-activemodel"
-  spec.add_dependency "state_machines-activerecord"
-
   # Optional MCP transport dependencies (loaded on demand)
   spec.add_dependency "async-http", "~> 0.60"
   spec.add_dependency "async-websocket", "~> 0.30"
-
-  # Rails integration (optional - loaded when Rails is present)
-  spec.add_dependency "railties", ">= 7.0"
-  spec.add_dependency "activerecord", ">= 7.0"
-  spec.add_dependency "activesupport", ">= 7.0"
 end

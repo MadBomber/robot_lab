@@ -11,7 +11,7 @@ class RobotLab::WaiterTest < Minitest::Test
       result = waiter.wait
     end
 
-    sleep 0.05
+    sleep 0.01
     waiter.signal("hello")
 
     thread.join(1)
@@ -43,7 +43,7 @@ class RobotLab::WaiterTest < Minitest::Test
       result = waiter.wait(timeout: 2)
     end
 
-    sleep 0.05
+    sleep 0.01
     waiter.signal("in time")
 
     thread.join(1)
@@ -74,7 +74,7 @@ class RobotLab::WaiterTest < Minitest::Test
       end
     end
 
-    sleep 0.05
+    sleep 0.01
     waiter.signal("broadcast")
 
     threads.each { |t| t.join(1) }

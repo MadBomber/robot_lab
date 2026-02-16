@@ -60,6 +60,12 @@ module RobotLab
     #   @return [Array<Tool>] tools discovered from MCP servers
     # @!attribute [r] memory
     #   @return [Memory] the robot's inherent memory (used when standalone, not in network)
+    # @!attribute [rw] input
+    #   @return [IO] input stream for user interaction (default: $stdin)
+    # @!attribute [rw] output
+    #   @return [IO] output stream for user interaction (default: $stdout)
+    attr_accessor :input, :output
+
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
                 :bus, :outbox

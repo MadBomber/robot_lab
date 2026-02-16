@@ -79,6 +79,46 @@ weather_tool = RobotLab::Tool.create(
 ) { |args| WeatherService.current(args[:location]) }
 ```
 
+## Built-in Tools
+
+### AskUser
+
+`RobotLab::AskUser` lets a robot ask the user a question via the terminal. The LLM decides when it needs human input and calls the tool with a question, optional choices, and an optional default.
+
+```ruby
+robot = RobotLab.build(
+  name: "onboarding",
+  system_prompt: "Walk the user through project setup. Ask questions to understand their needs.",
+  local_tools: [RobotLab::AskUser]
+)
+robot.run("Help the user set up a new project")
+```
+
+The tool displays the robot's name and question, then waits for terminal input:
+
+```
+[onboarding] What programming language will you use?
+  1. Ruby
+  2. Python
+  3. Go
+>
+```
+
+Features:
+
+- **Open-ended**: just a question, free-text response
+- **Multiple choice**: numbered options, user types the number or text
+- **Default value**: shown in the prompt, used when user presses Enter
+
+IO is sourced from `robot.input` / `robot.output` (defaulting to `$stdin` / `$stdout`), making it easy to test with `StringIO`:
+
+```ruby
+robot.input  = StringIO.new("2\n")
+robot.output = StringIO.new
+```
+
+See the [AskUser API reference](../api/core/tool.md#built-in-askuser) for full details.
+
 ## Attaching Tools to Robots
 
 ### Via Constructor

@@ -411,7 +411,7 @@ class RobotLab::MemoryTest < Minitest::Test
     end
 
     # Give reader time to start waiting
-    sleep 0.05
+    sleep 0.01
 
     writer = Thread.new do
       @memory.set(:delayed_key, "arrived")
@@ -436,10 +436,10 @@ class RobotLab::MemoryTest < Minitest::Test
       results = @memory.get(:key1, :key2, wait: true)
     end
 
-    sleep 0.05
+    sleep 0.01
 
     Thread.new { @memory.set(:key1, "first") }
-    sleep 0.05
+    sleep 0.01
     Thread.new { @memory.set(:key2, "second") }
 
     reader.join(2)
@@ -470,8 +470,7 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.current_writer = "analyzer"
     @memory.set(:sentiment, { score: 0.8 })
 
-    # Give async callback time to fire
-    sleep 0.1
+    wait_until { received }
 
     refute_nil received
     assert_equal :sentiment, received.key
@@ -491,7 +490,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     @memory.set(:counter, 2)
 
-    sleep 0.1
+    wait_until { received }
 
     assert_equal 2, received.value
     assert_equal 1, received.previous
@@ -508,7 +507,7 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.set(:b, 2)
     @memory.set(:c, 3)  # Not subscribed
 
-    sleep 0.1
+    wait_until { changes.size >= 2 }
 
     assert_includes changes, :a
     assert_includes changes, :b
@@ -523,12 +522,12 @@ class RobotLab::MemoryTest < Minitest::Test
     end
 
     @memory.set(:key, "first")
-    sleep 0.1
+    wait_until { callback_count >= 1 }
 
     @memory.unsubscribe(id)
 
     @memory.set(:key, "second")
-    sleep 0.1
+    sleep 0.01
 
     assert_equal 1, callback_count
   end
@@ -551,7 +550,7 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.unsubscribe_keys(:key)
 
     @memory.set(:key, "value")
-    sleep 0.1
+    sleep 0.01
 
     assert_equal 0, count
   end
@@ -577,7 +576,7 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.set(:"analysis:entities", ["foo"])
     @memory.set(:other_key, "ignored")
 
-    sleep 0.1
+    wait_until { matched_keys.size >= 2 }
 
     assert_includes matched_keys, :"analysis:sentiment"
     assert_includes matched_keys, :"analysis:entities"
@@ -595,7 +594,7 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.set(:step2, "b")
     @memory.set(:step10, "c")  # Won't match - too many chars
 
-    sleep 0.1
+    wait_until { matched.size >= 2 }
 
     assert_includes matched, :step1
     assert_includes matched, :step2
@@ -661,7 +660,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     @memory[:key] = "value"
 
-    sleep 0.1
+    wait_until { received }
 
     refute_nil received
     assert_equal "value", received.value

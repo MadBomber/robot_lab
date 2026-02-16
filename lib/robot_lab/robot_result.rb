@@ -135,6 +135,7 @@ module RobotLab
     def last_text_content
       output.reverse.find(&:text?)&.content
     end
+    alias_method :reply, :last_text_content
 
     # Check if result contains tool calls
     #
