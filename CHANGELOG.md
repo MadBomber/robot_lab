@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-02-15
+
+### Added
+
+- **Self-contained templates** with extended YAML front matter support
+  - `robot_name` — override robot name from template
+  - `description` — set robot description from template
+  - `tools` — declare tool class names (resolved via `Object.const_get` at build time)
+  - `mcp` — declare MCP server configurations
+  - Constructor-provided values always take precedence over front matter
+- **Editorial pipeline example** (`15_memory_network_and_bus/`) demonstrating multi-stage workflow with network, memory, and bus coordination
+  - OS-specific writer robots, editor, and editor-in-chief roles
+  - New prompt templates: `os_advocate`, `os_editor`, `os_chief`
+- Rakefile support for running subdirectory-based examples with `SUBDIR_ENTRY_POINTS` mapping
+
+### Changed
+
+- Bumped version to 0.0.3
+- Refactored Comic and Scout classes to use `attr_accessor` instead of `instance_variable_set`/`instance_variable_get`
+- Extensive documentation updates across README, guides, API reference, and examples for front matter extras
+
 ## [0.0.2] - 2026-02-15 (unreleased)
 
 ### Added
