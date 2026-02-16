@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Class: RobotLab::Network
+  
+    &mdash; Documentation by YARD 0.9.38
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" />
+
+<script type="text/javascript">
+  pathId = "RobotLab::Network";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (N)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span>
+     &raquo; 
+    <span class="title">Network</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Class: RobotLab::Network
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>
+      <span class="inheritName">Object</span>
+      
+        <ul class="fullTree">
+          <li>Object</li>
+          
+            <li class="next">RobotLab::Network</li>
+          
+        </ul>
+        <a href="#" class="inheritanceTree">show all</a>
+      
+    </dd>
+  </dl>
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/robot_lab/network.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>Orchestrates multiple robots in a pipeline workflow</p>
+
+<p>Network is a thin wrapper around SimpleFlow::Pipeline that provides a clean DSL for defining robot workflows with sequential, parallel, and conditional execution.</p>
+
+<h2 id="label-Shared+Memory">Shared Memory</h2>
+
+<p>Networks provide a shared reactive memory that all robots can read and write. Robots can subscribe to memory keys and be notified when values change, or use blocking reads to wait for values from other robots.</p>
+
+<h2 id="label-Broadcast+Messages">Broadcast Messages</h2>
+
+<p>Networks support a broadcast channel for network-wide announcements. Use ‘broadcast` to send messages to all robots, and `on_broadcast` to register handlers for incoming broadcasts.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Sequential execution</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_create_network'><span class='object_link'><a href="../RobotLab.html#create_network-class_method" title="RobotLab.create_network (method)">create_network</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>pipeline</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:analyst</span><span class='comma'>,</span> <span class='id identifier rubyid_analyst_robot'>analyst_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:writer</span><span class='comma'>,</span> <span class='id identifier rubyid_writer_robot'>writer_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:analyst</span><span class='rbracket'>]</span>
+<span class='kw'>end</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>With per-task context</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_create_network'><span class='object_link'><a href="../RobotLab.html#create_network-class_method" title="RobotLab.create_network (method)">create_network</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>support</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:classifier</span><span class='comma'>,</span> <span class='id identifier rubyid_classifier_robot'>classifier_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:billing</span><span class='comma'>,</span> <span class='id identifier rubyid_billing_robot'>billing_robot</span><span class='comma'>,</span>
+       <span class='label'>context:</span> <span class='lbrace'>{</span> <span class='label'>department:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>billing</span><span class='tstring_end'>&quot;</span></span> <span class='rbrace'>}</span><span class='comma'>,</span>
+       <span class='label'>tools:</span> <span class='lbracket'>[</span><span class='const'>RefundTool</span><span class='rbracket'>]</span><span class='comma'>,</span>
+       <span class='label'>depends_on:</span> <span class='symbol'>:optional</span>
+<span class='kw'>end</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Parallel execution with shared memory</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_create_network'><span class='object_link'><a href="../RobotLab.html#create_network-class_method" title="RobotLab.create_network (method)">create_network</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>analysis</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:fetch</span><span class='comma'>,</span> <span class='id identifier rubyid_fetcher_robot'>fetcher_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:sentiment</span><span class='comma'>,</span> <span class='id identifier rubyid_sentiment_robot'>sentiment_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:fetch</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:entities</span><span class='comma'>,</span> <span class='id identifier rubyid_entity_robot'>entity_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:fetch</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:summarize</span><span class='comma'>,</span> <span class='id identifier rubyid_summary_robot'>summary_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:sentiment</span><span class='comma'>,</span> <span class='symbol'>:entities</span><span class='rbracket'>]</span>
+<span class='kw'>end</span>
+
+<span class='comment'># In sentiment_robot:
+</span><span class='id identifier rubyid_memory'>memory</span><span class='period'>.</span><span class='id identifier rubyid_set'>set</span><span class='lparen'>(</span><span class='symbol'>:sentiment</span><span class='comma'>,</span> <span class='id identifier rubyid_analyze_sentiment'>analyze_sentiment</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='rparen'>)</span><span class='rparen'>)</span>
+
+<span class='comment'># In summarize_robot:
+</span><span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='id identifier rubyid_memory'>memory</span><span class='period'>.</span><span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='symbol'>:sentiment</span><span class='comma'>,</span> <span class='symbol'>:entities</span><span class='comma'>,</span> <span class='label'>wait:</span> <span class='int'>60</span><span class='rparen'>)</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Broadcasting</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_on_broadcast'>on_broadcast</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_message'>message</span><span class='op'>|</span>
+  <span class='id identifier rubyid_puts'>puts</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Received: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_message'>message</span><span class='lbracket'>[</span><span class='symbol'>:event</span><span class='rbracket'>]</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_broadcast'>broadcast</span><span class='lparen'>(</span><span class='label'>event:</span> <span class='symbol'>:pause</span><span class='comma'>,</span> <span class='label'>reason:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>rate limit</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span></code></pre>
+    
+  </div>
+
+
+</div>
+  
+    <h2>
+      Constant Summary
+      <small><a href="#" class="constants_summary_toggle">collapse</a></small>
+    </h2>
+
+    <dl class="constants">
+      
+        <dt id="BROADCAST_KEY-constant" class="">BROADCAST_KEY =
+          <div class="docstring">
+  <div class="discussion">
+    
+<p>Reserved key for broadcast messages in memory</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+        </dt>
+        <dd><pre class="code"><span class='symbol'>:_network_broadcast</span></pre></dd>
+      
+    </dl>
+  
+
+
+
+
+  <h2>Instance Attribute Summary <small><a href="#" class="summary_toggle">collapse</a></small></h2>
+  <ul class="summary">
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#memory-instance_method" title="#memory (instance method)">#<strong>memory</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute memory.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#name-instance_method" title="#name (instance method)">#<strong>name</strong>  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Unique identifier for the network.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#pipeline-instance_method" title="#pipeline (instance method)">#<strong>pipeline</strong>  &#x21d2; SimpleFlow::Pipeline </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>The underlying pipeline.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#robots-instance_method" title="#robots (instance method)">#<strong>robots</strong>  &#x21d2; Hash&lt;String, Robot&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Robots in this network, keyed by name.</p>
+</div></span>
+  
+</li>
+
+    
+  </ul>
+
+
+
+
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#add_robot-instance_method" title="#add_robot (instance method)">#<strong>add_robot</strong>(robot)  &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Add a robot to the network without adding it as a task.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#available_robots-instance_method" title="#available_robots (instance method)">#<strong>available_robots</strong>  &#x21d2; Array&lt;Robot&gt; </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Get all robots in the network.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#broadcast-instance_method" title="#broadcast (instance method)">#<strong>broadcast</strong>(payload)  &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Broadcast a message to all robots in the network.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#execution_plan-instance_method" title="#execution_plan (instance method)">#<strong>execution_plan</strong>  &#x21d2; String<sup>?</sup> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Get the execution plan.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, concurrency: :auto, memory: nil) { ... } &#x21d2; Network </a>
+    
+
+    
+  </span>
+  
+  
+    <span class="note title constructor">constructor</span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Creates a new Network instance.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#on_broadcast-instance_method" title="#on_broadcast (instance method)">#<strong>on_broadcast</strong> {|Hash| ... } &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Register a handler for broadcast messages.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parallel-instance_method" title="#parallel (instance method)">#<strong>parallel</strong>(name = nil, depends_on: :none) { ... } &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Define a parallel execution block.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#reset_memory-instance_method" title="#reset_memory (instance method)">#<strong>reset_memory</strong>  &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Reset the shared memory.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#robot-instance_method" title="#robot (instance method)">#<strong>robot</strong>(name)  &#x21d2; Robot<sup>?</sup> </a>
+    
+
+    
+      (also: #[])
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Get a robot by name.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#run-instance_method" title="#run (instance method)">#<strong>run</strong>(**run_context)  &#x21d2; SimpleFlow::Result </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Run the network with the given context.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#task-instance_method" title="#task (instance method)">#<strong>task</strong>(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)  &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Add a robot as a pipeline task with optional per-task configuration.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#to_dot-instance_method" title="#to_dot (instance method)">#<strong>to_dot</strong>  &#x21d2; String<sup>?</sup> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Export pipeline to DOT format (Graphviz).</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#to_h-instance_method" title="#to_h (instance method)">#<strong>to_h</strong>  &#x21d2; Hash </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Converts the network to a hash representation.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#to_mermaid-instance_method" title="#to_mermaid (instance method)">#<strong>to_mermaid</strong>  &#x21d2; String<sup>?</sup> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Export pipeline to Mermaid format.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#visualize-instance_method" title="#visualize (instance method)">#<strong>visualize</strong>  &#x21d2; String<sup>?</sup> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Visualize the pipeline as ASCII.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+<div id="constructor_details" class="method_details_list">
+  <h2>Constructor Details</h2>
+  
+    <div class="method_details first">
+  <h3 class="signature first" id="initialize-instance_method">
+  
+    #<strong>initialize</strong>(name:, concurrency: :auto, memory: nil) { ... } &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::Network (class)">Network</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Creates a new Network instance.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="" title="RobotLab::Network (class)">Network</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>support</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:classifier</span><span class='comma'>,</span> <span class='id identifier rubyid_classifier'>classifier</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:billing</span><span class='comma'>,</span> <span class='id identifier rubyid_billing_robot'>billing_robot</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span> <span class='label'>dept:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>billing</span><span class='tstring_end'>&quot;</span></span> <span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:optional</span>
+<span class='kw'>end</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>name</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>unique identifier for the network</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>concurrency</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>:auto</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>concurrency model (:auto, :threads, :async)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>memory</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Memory.html" title="RobotLab::Memory (class)">Memory</a></span></tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>optional pre-configured memory instance</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Yields:</p>
+<ul class="yield">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'>
+<p>Block for defining pipeline tasks</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 87</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>concurrency:</span> <span class='symbol'>:auto</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='ivar'>@name</span> <span class='op'>=</span> <span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
+  <span class='ivar'>@robots</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='ivar'>@tasks</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='ivar'>@pipeline</span> <span class='op'>=</span> <span class='const'>SimpleFlow</span><span class='op'>::</span><span class='const'>Pipeline</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='label'>concurrency:</span> <span class='id identifier rubyid_concurrency'>concurrency</span><span class='rparen'>)</span>
+  <span class='ivar'>@memory</span> <span class='op'>=</span> <span class='id identifier rubyid_memory'>memory</span> <span class='op'>||</span> <span class='const'><span class='object_link'><a href="Memory.html" title="RobotLab::Memory (class)">Memory</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Memory.html#initialize-instance_method" title="RobotLab::Memory#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>network_name:</span> <span class='ivar'>@name</span><span class='rparen'>)</span>
+  <span class='ivar'>@broadcast_handlers</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+
+  <span class='id identifier rubyid_instance_eval'>instance_eval</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_block_given?'>block_given?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+  
+</div>
+
+  <div id="instance_attr_details" class="attr_details">
+    <h2>Instance Attribute Details</h2>
+    
+      
+      <span id=""></span>
+      <div class="method_details first">
+  <h3 class="signature first" id="memory-instance_method">
+  
+    #<strong>memory</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute memory.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+72</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="name-instance_method">
+  
+    #<strong>name</strong>  &#x21d2; <tt>String</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns unique identifier for the network.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>unique identifier for the network</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+72
+73
+74</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_name'>name</span>
+  <span class='ivar'>@name</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="pipeline-instance_method">
+  
+    #<strong>pipeline</strong>  &#x21d2; <tt>SimpleFlow::Pipeline</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the underlying pipeline.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>SimpleFlow::Pipeline</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the underlying pipeline</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+72</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="robots-instance_method">
+  
+    #<strong>robots</strong>  &#x21d2; <tt>Hash&lt;String, <span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span>&gt;</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns robots in this network, keyed by name.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash&lt;String, <span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span>&gt;</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>robots in this network, keyed by name</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+72</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="add_robot-instance_method">
+  
+    #<strong>add_robot</strong>(robot)  &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Add a robot to the network without adding it as a task</p>
+
+<p>Useful for dynamically adding robots that will be referenced later.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>robot</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the robot instance to add</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>if a robot with the same name already exists</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+280
+281
+282
+283
+284
+285
+286
+287</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 280</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_add_robot'>add_robot</span><span class='lparen'>(</span><span class='id identifier rubyid_robot'>robot</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='ivar'>@robots</span><span class='period'>.</span><span class='id identifier rubyid_key?'>key?</span><span class='lparen'>(</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Robot &#39;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span><span class='embexpr_end'>}</span><span class='tstring_content'>&#39; already exists in network &#39;</span><span class='embexpr_beg'>#{</span><span class='ivar'>@name</span><span class='embexpr_end'>}</span><span class='tstring_content'>&#39;</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+
+  <span class='ivar'>@robots</span><span class='lbracket'>[</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span>
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="available_robots-instance_method">
+  
+    #<strong>available_robots</strong>  &#x21d2; <tt>Array&lt;<span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span>&gt;</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Get all robots in the network</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Array&lt;<span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span>&gt;</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+268
+269
+270</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 268</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_available_robots'>available_robots</span>
+  <span class='ivar'>@robots</span><span class='period'>.</span><span class='id identifier rubyid_values'>values</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="broadcast-instance_method">
+  
+    #<strong>broadcast</strong>(payload)  &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Broadcast a message to all robots in the network.</p>
+
+<p>This sends a network-wide message that all robots subscribed via ‘on_broadcast` will receive asynchronously.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Pause all robots</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_broadcast'>broadcast</span><span class='lparen'>(</span><span class='label'>event:</span> <span class='symbol'>:pause</span><span class='comma'>,</span> <span class='label'>reason:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>rate limit hit</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Signal completion</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_broadcast'>broadcast</span><span class='lparen'>(</span><span class='label'>event:</span> <span class='symbol'>:phase_complete</span><span class='comma'>,</span> <span class='label'>phase:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>analysis</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>payload</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the message payload</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 195</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_broadcast'>broadcast</span><span class='lparen'>(</span><span class='id identifier rubyid_payload'>payload</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='lbrace'>{</span>
+    <span class='label'>payload:</span> <span class='id identifier rubyid_payload'>payload</span><span class='comma'>,</span>
+    <span class='label'>network:</span> <span class='ivar'>@name</span><span class='comma'>,</span>
+    <span class='label'>timestamp:</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span>
+  <span class='rbrace'>}</span>
+
+  <span class='comment'># Notify handlers asynchronously
+</span>  <span class='ivar'>@broadcast_handlers</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_handler'>handler</span><span class='op'>|</span>
+    <span class='id identifier rubyid_dispatch_async'>dispatch_async</span> <span class='lbrace'>{</span> <span class='id identifier rubyid_handler'>handler</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># Also set in memory so robots can subscribe via memory.subscribe
+</span>  <span class='ivar'>@memory</span><span class='period'>.</span><span class='id identifier rubyid_set'>set</span><span class='lparen'>(</span><span class='const'><span class='object_link'><a href="#BROADCAST_KEY-constant" title="RobotLab::Network::BROADCAST_KEY (constant)">BROADCAST_KEY</a></span></span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="execution_plan-instance_method">
+  
+    #<strong>execution_plan</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Get the execution plan</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+317
+318
+319</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 317</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_execution_plan'>execution_plan</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_execution_plan'>execution_plan</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="on_broadcast-instance_method">
+  
+    #<strong>on_broadcast</strong> {|Hash| ... } &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Register a handler for broadcast messages.</p>
+
+<p>The handler is called asynchronously whenever ‘broadcast` is called.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+      <pre class="example code"><code><span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_on_broadcast'>on_broadcast</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_message'>message</span><span class='op'>|</span>
+  <span class='kw'>case</span> <span class='id identifier rubyid_message'>message</span><span class='lbracket'>[</span><span class='symbol'>:payload</span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='symbol'>:event</span><span class='rbracket'>]</span>
+  <span class='kw'>when</span> <span class='symbol'>:pause</span>
+    <span class='id identifier rubyid_pause_current_work'>pause_current_work</span>
+  <span class='kw'>when</span> <span class='symbol'>:resume</span>
+    <span class='id identifier rubyid_resume_work'>resume_work</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></code></pre>
+    
+  </div>
+
+<p class="tag_title">Yields:</p>
+<ul class="yield">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the broadcast message with :payload, :network, :timestamp</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+230
+231
+232
+233
+234
+235</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 230</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_on_broadcast'>on_broadcast</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Block required for on_broadcast</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_block_given?'>block_given?</span>
+
+  <span class='ivar'>@broadcast_handlers</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_block'>block</span>
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parallel-instance_method">
+  
+    #<strong>parallel</strong>(name = nil, depends_on: :none) { ... } &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Define a parallel execution block</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Named parallel group</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_parallel'>parallel</span> <span class='symbol'>:fetch_data</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:validate</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:fetch_orders</span><span class='comma'>,</span> <span class='id identifier rubyid_orders_robot'>orders_robot</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:fetch_products</span><span class='comma'>,</span> <span class='id identifier rubyid_products_robot'>products_robot</span>
+<span class='kw'>end</span>
+<span class='id identifier rubyid_task'>task</span> <span class='symbol'>:process</span><span class='comma'>,</span> <span class='id identifier rubyid_processor'>processor</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:fetch_data</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>name</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>optional name for the parallel group</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>depends_on</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>, <tt>Array</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>:none</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>dependencies for this group</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Yields:</p>
+<ul class="yield">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'>
+<p>Block containing task definitions</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+151
+152
+153
+154</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 151</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parallel'>parallel</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_parallel'>parallel</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='id identifier rubyid_depends_on'>depends_on</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="reset_memory-instance_method">
+  
+    #<strong>reset_memory</strong>  &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Reset the shared memory.</p>
+
+<p>Clears all values in the network’s shared memory. This is useful between runs if you want to start with a fresh memory state.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+244
+245
+246
+247</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 244</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_reset_memory'>reset_memory</span>
+  <span class='ivar'>@memory</span><span class='period'>.</span><span class='id identifier rubyid_reset'>reset</span>
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="robot-instance_method">
+  
+    #<strong>robot</strong>(name)  &#x21d2; <tt><span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt><sup>?</sup> 
+  
+
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='[]-instance_method'>[]</span></span>
+    </span>
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Get a robot by name</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>name</span>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>Symbol</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt>, <tt>nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+254
+255
+256</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 254</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_robot'>robot</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+  <span class='ivar'>@robots</span><span class='lbracket'>[</span><span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rbracket'>]</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="run-instance_method">
+  
+    #<strong>run</strong>(**run_context)  &#x21d2; <tt>SimpleFlow::Result</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Run the network with the given context</p>
+
+<p>All robots share the network’s memory during execution. The memory is passed to each robot and can be used for inter-robot communication.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+      <pre class="example code"><code><span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_network'>network</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='label'>message:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>I need help with billing</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>user_id:</span> <span class='int'>123</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span>  <span class='comment'># =&gt; RobotResult from last robot
+</span><span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_context'>context</span><span class='lbracket'>[</span><span class='symbol'>:classifier</span><span class='rbracket'>]</span>  <span class='comment'># =&gt; RobotResult from classifier</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>run_context</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>context passed to all robots (message:, user_id:, etc.)</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>SimpleFlow::Result</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>final pipeline result</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 169</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='op'>**</span><span class='id identifier rubyid_run_context'>run_context</span><span class='rparen'>)</span>
+  <span class='comment'># Include shared memory in run params so robots can access it
+</span>  <span class='id identifier rubyid_run_context'>run_context</span><span class='lbracket'>[</span><span class='symbol'>:network_memory</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='ivar'>@memory</span>
+
+  <span class='id identifier rubyid_initial_result'>initial_result</span> <span class='op'>=</span> <span class='const'>SimpleFlow</span><span class='op'>::</span><span class='const'>Result</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span>
+    <span class='id identifier rubyid_run_context'>run_context</span><span class='comma'>,</span>
+    <span class='label'>context:</span> <span class='lbrace'>{</span> <span class='label'>run_params:</span> <span class='id identifier rubyid_run_context'>run_context</span> <span class='rbrace'>}</span>
+  <span class='rparen'>)</span>
+
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_call_parallel'>call_parallel</span><span class='lparen'>(</span><span class='id identifier rubyid_initial_result'>initial_result</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="task-instance_method">
+  
+    #<strong>task</strong>(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)  &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Add a robot as a pipeline task with optional per-task configuration</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Entry point task</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_task'>task</span> <span class='symbol'>:classifier</span><span class='comma'>,</span> <span class='id identifier rubyid_classifier_robot'>classifier_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Task with context and tools</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_task'>task</span> <span class='symbol'>:billing</span><span class='comma'>,</span> <span class='id identifier rubyid_billing_robot'>billing_robot</span><span class='comma'>,</span>
+     <span class='label'>context:</span> <span class='lbrace'>{</span> <span class='label'>department:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>billing</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>escalation:</span> <span class='int'>2</span> <span class='rbrace'>}</span><span class='comma'>,</span>
+     <span class='label'>tools:</span> <span class='lbracket'>[</span><span class='const'>RefundTool</span><span class='comma'>,</span> <span class='const'>InvoiceTool</span><span class='rbracket'>]</span><span class='comma'>,</span>
+     <span class='label'>depends_on:</span> <span class='symbol'>:optional</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Task with dependencies</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_task'>task</span> <span class='symbol'>:writer</span><span class='comma'>,</span> <span class='id identifier rubyid_writer_robot'>writer_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:analyst</span><span class='rbracket'>]</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>name</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>task name</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>robot</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the robot instance</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>context</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>task-specific context (deep-merged with run params)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>mcp</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>, <tt>Array</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>:none</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>MCP server config (:none, :inherit, or array)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>tools</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>, <tt>Array</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>:none</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>tools config (:none, :inherit, or array)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>memory</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Memory.html" title="RobotLab::Memory (class)">Memory</a></span></tt>, <tt>Hash</tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>task-specific memory</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>depends_on</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>, <tt>Array&lt;Symbol&gt;</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>:none</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>dependencies (:none, :optional, or task names)</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 121</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_task'>task</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='id identifier rubyid_robot'>robot</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_task_wrapper'>task_wrapper</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="Task.html" title="RobotLab::Task (class)">Task</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Task.html#initialize-instance_method" title="RobotLab::Task#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+    <span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
+    <span class='label'>robot:</span> <span class='id identifier rubyid_robot'>robot</span><span class='comma'>,</span>
+    <span class='label'>context:</span> <span class='id identifier rubyid_context'>context</span><span class='comma'>,</span>
+    <span class='label'>mcp:</span> <span class='id identifier rubyid_mcp'>mcp</span><span class='comma'>,</span>
+    <span class='label'>tools:</span> <span class='id identifier rubyid_tools'>tools</span><span class='comma'>,</span>
+    <span class='label'>memory:</span> <span class='id identifier rubyid_memory'>memory</span>
+  <span class='rparen'>)</span>
+
+  <span class='ivar'>@robots</span><span class='lbracket'>[</span><span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span>
+  <span class='ivar'>@tasks</span><span class='lbracket'>[</span><span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_task_wrapper'>task_wrapper</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_step'>step</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='id identifier rubyid_task_wrapper'>task_wrapper</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='id identifier rubyid_depends_on'>depends_on</span><span class='rparen'>)</span>
+  <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="to_dot-instance_method">
+  
+    #<strong>to_dot</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Export pipeline to DOT format (Graphviz)</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+309
+310
+311</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 309</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_to_dot'>to_dot</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_dot'>visualize_dot</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="to_h-instance_method">
+  
+    #<strong>to_h</strong>  &#x21d2; <tt>Hash</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Converts the network to a hash representation</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+325
+326
+327
+328
+329
+330
+331
+332</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 325</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
+  <span class='lbrace'>{</span>
+    <span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
+    <span class='label'>robots:</span> <span class='ivar'>@robots</span><span class='period'>.</span><span class='id identifier rubyid_keys'>keys</span><span class='comma'>,</span>
+    <span class='label'>tasks:</span> <span class='ivar'>@tasks</span><span class='period'>.</span><span class='id identifier rubyid_keys'>keys</span><span class='comma'>,</span>
+    <span class='label'>optional_tasks:</span> <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_optional_steps'>optional_steps</span><span class='period'>.</span><span class='id identifier rubyid_to_a'>to_a</span>
+  <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="to_mermaid-instance_method">
+  
+    #<strong>to_mermaid</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Export pipeline to Mermaid format</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+301
+302
+303</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 301</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_to_mermaid'>to_mermaid</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_mermaid'>visualize_mermaid</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="visualize-instance_method">
+  
+    #<strong>visualize</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Visualize the pipeline as ASCII</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+293
+294
+295</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 293</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_visualize'>visualize</span>
+  <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_ascii'>visualize_ascii</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Mon Feb 16 02:37:09 2026 by
+  <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.38 (ruby-3.3.10).
+</div>
+
+    </div>
+  </body>
+</html>
