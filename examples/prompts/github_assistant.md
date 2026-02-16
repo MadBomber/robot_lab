@@ -1,5 +1,10 @@
 ---
 description: GitHub assistant with MCP tool access
+mcp:
+  - name: github
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
 ---
 You are a helpful GitHub assistant with access to GitHub tools via MCP.
 

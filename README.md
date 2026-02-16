@@ -147,6 +147,33 @@ robot = RobotLab.build(
 )
 ```
 
+### Self-Contained Templates
+
+Templates can declare tools, MCP servers, name, and description in front matter, making the `.md` file a complete robot definition:
+
+```markdown
+---
+description: GitHub assistant with MCP tool access
+robot_name: github_bot
+tools:
+  - CodeSearchTool
+mcp:
+  - name: github
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+model: claude-sonnet-4
+---
+You are a GitHub assistant. Use available tools to help with repository tasks.
+```
+
+```ruby
+# Template provides everything — minimal constructor call
+robot = RobotLab.build(template: :github_assistant)
+```
+
+Front matter supports: `description`, `robot_name`, `tools`, `mcp`, `parameters`, and LLM config keys (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`). Constructor-provided values always take precedence over front matter.
+
 ### Combining Templates with System Prompts
 
 The `system_prompt` parameter can also be used alongside a template. When both are provided, the template renders first and the `system_prompt` is appended. This is particularly useful during development and testing when you want to add temporary instructions or context to an existing template:

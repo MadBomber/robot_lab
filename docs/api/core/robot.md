@@ -437,7 +437,18 @@ Templates are `.md` files with optional YAML front matter, loaded via `prompt_ma
 robot = RobotLab.build(name: "bot", template: :assistant, context: { tone: "friendly" })
 ```
 
-Front matter can configure chat options (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`), which are automatically applied to the underlying chat.
+Front matter supports two categories of keys:
+
+**LLM Config:** `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` — applied to the underlying chat.
+
+**Robot Extras:** `robot_name`, `description`, `tools`, `mcp` — applied to the robot's identity and capabilities. Constructor-provided values always take precedence.
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `robot_name` | `String` | Override robot name (when constructor uses the default `"robot"`) |
+| `description` | `String` | Human-readable description |
+| `tools` | `Array<String>` | Tool class names resolved via `Object.const_get` |
+| `mcp` | `Array<Hash>` | MCP server configurations |
 
 ## Configuration Hierarchy
 

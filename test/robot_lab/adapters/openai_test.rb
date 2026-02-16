@@ -69,7 +69,7 @@ class RobotLab::Adapters::OpenAITest < Minitest::Test
 
   # format_tools tests
   def test_format_tools_openai_function_format
-    tool = RobotLab::Tool.new(name: "search", description: "Search") { |i| i }
+    tool = RobotLab::Tool.create(name: "search", description: "Search") { |_args| "ok" }
 
     result = @adapter.format_tools([tool])
 
@@ -80,7 +80,7 @@ class RobotLab::Adapters::OpenAITest < Minitest::Test
   end
 
   def test_format_tools_includes_strict_by_default
-    tool = RobotLab::Tool.new(name: "search") { |i| i }
+    tool = RobotLab::Tool.create(name: "search") { |_args| "ok" }
 
     result = @adapter.format_tools([tool])
 
@@ -88,7 +88,12 @@ class RobotLab::Adapters::OpenAITest < Minitest::Test
   end
 
   def test_format_tools_respects_strict_false
-    tool = RobotLab::Tool.new(name: "search", strict: false) { |i| i }
+    klass = Class.new(RobotLab::Tool) do
+      with_params(strict: false)
+      def execute(**); end
+    end
+    tool = klass.new
+    tool.instance_variable_set(:@custom_name, "search")
 
     result = @adapter.format_tools([tool])
 

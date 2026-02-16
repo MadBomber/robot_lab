@@ -104,6 +104,8 @@ Your tone should be <%= tone %>.
 
 The following YAML front matter keys are applied to the robot's chat automatically:
 
+**LLM Configuration:**
+
 | Key | Description |
 |-----|-------------|
 | `model` | Override the LLM model |
@@ -114,6 +116,97 @@ The following YAML front matter keys are applied to the robot's chat automatical
 | `presence_penalty` | Penalize based on presence |
 | `frequency_penalty` | Penalize based on frequency |
 | `stop` | Stop sequences |
+
+**Robot Identity and Capabilities:**
+
+| Key | Description |
+|-----|-------------|
+| `robot_name` | Override the robot's name (when constructor uses the default) |
+| `description` | Human-readable description of the robot |
+| `tools` | Array of tool class names (resolved via `Object.const_get`) |
+| `mcp` | Array of MCP server configurations |
+
+Constructor-provided values always take precedence over frontmatter values.
+
+### Self-Contained Templates
+
+Templates can declare everything a robot needs — identity, tools, MCP servers, and LLM config — making the `.md` file a complete robot definition:
+
+```markdown title="prompts/github_assistant.md"
+---
+description: GitHub assistant with MCP tool access
+robot_name: github_bot
+mcp:
+  - name: github
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+model: claude-sonnet-4
+temperature: 0.3
+---
+You are a helpful GitHub assistant with access to GitHub tools via MCP.
+Use the available tools to help answer questions about GitHub repositories.
+```
+
+Build the robot with minimal constructor arguments:
+
+```ruby
+# Template provides name, description, MCP config, model, and temperature
+robot = RobotLab.build(template: :github_assistant)
+```
+
+### Tools in Front Matter
+
+Declare tool classes by name in the `tools:` key. RobotLab resolves each string to a Ruby constant and instantiates it:
+
+```markdown title="prompts/order_support.md"
+---
+description: Order support specialist
+tools:
+  - OrderLookup
+  - RefundProcessor
+---
+You help customers with order inquiries and refunds.
+```
+
+```ruby
+# Tools are loaded from frontmatter — no local_tools: needed
+robot = RobotLab.build(template: :order_support)
+```
+
+Tool classes must be defined and loaded before the robot is built. If a tool name cannot be resolved, it is skipped with a warning.
+
+Constructor `local_tools:` overrides frontmatter `tools:` when provided:
+
+```ruby
+# Constructor tools take precedence over frontmatter tools
+robot = RobotLab.build(
+  template: :order_support,
+  local_tools: [OrderLookup]  # Only OrderLookup, not RefundProcessor
+)
+```
+
+### MCP in Front Matter
+
+Declare MCP server configurations directly in the template:
+
+```markdown title="prompts/developer.md"
+---
+description: Developer assistant with filesystem access
+mcp:
+  - name: filesystem
+    transport: stdio
+    command: mcp-server-filesystem
+    args: ["--root", "/home/user/projects"]
+---
+You are a developer assistant with filesystem access.
+```
+
+```ruby
+robot = RobotLab.build(template: :developer)
+```
+
+Constructor `mcp:` overrides frontmatter `mcp:` when provided.
 
 ### Template with System Prompt
 

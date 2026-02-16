@@ -288,8 +288,8 @@ class RobotLab::ToolManifestTest < Minitest::Test
   # from_hash tests
   def test_from_hash_creates_manifest
     hash = {
-      "search" => { description: "Search for items", parameters: {}, handler: nil },
-      "delete" => { description: "Delete an item", parameters: {}, handler: nil }
+      "search" => { description: "Search for items", parameters: nil, handler: ->(_args) { "found" } },
+      "delete" => { description: "Delete an item", parameters: nil, handler: ->(_args) { "deleted" } }
     }
 
     manifest = RobotLab::ToolManifest.from_hash(hash)

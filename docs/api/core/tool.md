@@ -2,27 +2,67 @@
 
 Callable function that robots can use to interact with external systems.
 
-## Class: `RobotLab::Tool`
+## Class: `RobotLab::Tool < RubyLLM::Tool`
+
+RobotLab::Tool inherits from RubyLLM::Tool, adding a `robot:` constructor parameter and a `Tool.create` factory for dynamic tools.
+
+### Subclass Pattern
 
 ```ruby
-tool = RobotLab::Tool.new(
+class GetWeather < RobotLab::Tool
+  description "Get weather for a location"
+
+  param :location, type: "string", desc: "City name or zip code"
+  param :unit, type: "string", desc: "Temperature unit", required: false
+
+  def execute(location:, unit: "celsius")
+    WeatherService.current(location, unit: unit)
+  end
+end
+```
+
+### Factory Pattern
+
+```ruby
+tool = RobotLab::Tool.create(
   name: "get_weather",
-  description: "Get weather for a location",
-  parameters: { location: { type: "string", required: true } },
-  handler: ->(location:, **_) { WeatherService.fetch(location) }
-)
+  description: "Get current weather for a location",
+  parameters: {
+    type: "object",
+    properties: {
+      location: { type: "string", description: "City name" }
+    },
+    required: ["location"]
+  }
+) { |args| WeatherService.current(args[:location]) }
 ```
 
 ## Constructor
 
 ```ruby
-Tool.new(
+Tool.new(robot: nil)
+```
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `robot` | `Robot, nil` | The owning robot instance |
+
+## Class Methods
+
+### Tool.create
+
+Factory for dynamic tools (MCP wrappers, inline tools).
+
+```ruby
+Tool.create(
   name:,
   description: nil,
-  parameters: {},
-  handler:,
-  mcp: false,
-  strict: false
+  parameters: nil,
+  mcp: nil,
+  robot: nil,
+  &handler
 )
 ```
 
@@ -30,14 +70,82 @@ Tool.new(
 
 | Name | Type | Description |
 |------|------|-------------|
-| `name` | `String` | Tool identifier |
+| `name` | `String, Symbol` | Tool identifier |
 | `description` | `String` | What the tool does |
-| `parameters` | `Hash` | Parameter definitions |
-| `handler` | `Proc` | Execution function |
-| `mcp` | `Boolean` | Is this an MCP tool? |
-| `strict` | `Boolean` | Strict parameter validation |
+| `parameters` | `Hash` | JSON Schema parameter definition |
+| `mcp` | `String` | MCP server name |
+| `robot` | `Robot` | Owning robot instance |
+| `&handler` | `Block` | Receives `args` hash, returns result |
+
+## Inherited DSL (from RubyLLM::Tool)
+
+### description
+
+```ruby
+class MyTool < RobotLab::Tool
+  description "What this tool does"
+end
+```
+
+### param
+
+```ruby
+class MyTool < RobotLab::Tool
+  param :name, type: "string", desc: "User's name"
+  param :age, type: "integer", desc: "User's age", required: false
+end
+```
+
+### execute
+
+```ruby
+class MyTool < RobotLab::Tool
+  def execute(name:, age: nil)
+    # Implementation
+  end
+end
+```
+
+### halt
+
+Stop the tool use loop from within execute:
+
+```ruby
+def execute(**)
+  halt("Done processing")
+end
+```
+
+### with_params
+
+Set provider-specific parameters:
+
+```ruby
+class MyTool < RobotLab::Tool
+  with_params(strict: true)
+end
+```
 
 ## Attributes
+
+### robot
+
+```ruby
+tool.robot  # => Robot or nil
+tool.robot = some_robot
+```
+
+Read/write accessor for the owning robot. Set via constructor or assigned later.
+
+### mcp
+
+```ruby
+tool.mcp  # => String or nil
+```
+
+The MCP server name, set via `Tool.create(mcp: "server_name")`.
+
+## Methods
 
 ### name
 
@@ -45,62 +153,39 @@ Tool.new(
 tool.name  # => String
 ```
 
-Tool identifier.
+Returns the tool name. For subclasses, derived from the class name (CamelCase to snake_case). For `create`d tools, returns the explicit name.
 
-### description
-
-```ruby
-tool.description  # => String
-```
-
-Human-readable description.
-
-### parameters
+### mcp?
 
 ```ruby
-tool.parameters  # => Hash
+tool.mcp?  # => Boolean
 ```
 
-Parameter schema.
-
-### handler
-
-```ruby
-tool.handler  # => Proc
-```
-
-Function that executes the tool.
-
-### mcp
-
-```ruby
-tool.mcp  # => Boolean
-```
-
-Whether this is an MCP-sourced tool.
-
-### strict
-
-```ruby
-tool.strict  # => Boolean
-```
-
-Whether to use strict parameter validation.
-
-## Methods
+Whether this is an MCP-provided tool.
 
 ### call
 
 ```ruby
-result = tool.call(
-  params,
-  robot: robot,
-  network: network,
-  state: state
-)
+result = tool.call(args_hash)
 ```
 
-Execute the tool with parameters.
+Inherited from RubyLLM::Tool. Converts string keys to symbols and calls `execute(**args)`.
+
+### params_schema
+
+```ruby
+tool.params_schema  # => Hash or nil
+```
+
+Inherited. Returns the JSON Schema for tool parameters.
+
+### provider_params
+
+```ruby
+tool.provider_params  # => Hash
+```
+
+Inherited. Returns provider-specific parameters (e.g., `{ strict: true }`).
 
 ### to_h
 
@@ -108,7 +193,7 @@ Execute the tool with parameters.
 tool.to_h  # => Hash
 ```
 
-Hash representation.
+Hash representation with `:name`, `:description`, `:mcp`.
 
 ### to_json
 
@@ -124,226 +209,65 @@ JSON representation.
 tool.to_json_schema  # => Hash
 ```
 
-JSON Schema representation for LLM.
+JSON Schema representation for LLM function calling. Returns `{ name:, description:, parameters: }`.
 
-## Parameter Schema
+## Robot-Aware Tools
 
-### Basic Types
-
-```ruby
-parameters: {
-  name: { type: "string" },
-  count: { type: "integer" },
-  price: { type: "number" },
-  active: { type: "boolean" },
-  tags: { type: "array" }
-}
-```
-
-### Required Parameters
+Tools that modify their owning robot use the `robot` accessor:
 
 ```ruby
-parameters: {
-  id: { type: "string", required: true }
-}
-```
+class AdjustTemperature < RobotLab::Tool
+  description "Adjust the robot's creativity level"
 
-### Descriptions
+  param :level, type: "number", desc: "Temperature from 0.0 to 1.0"
 
-```ruby
-parameters: {
-  query: {
-    type: "string",
-    description: "Search query (supports wildcards)"
-  }
-}
-```
-
-### Enums
-
-```ruby
-parameters: {
-  status: {
-    type: "string",
-    enum: ["pending", "active", "completed"]
-  }
-}
-```
-
-### Defaults
-
-```ruby
-parameters: {
-  limit: {
-    type: "integer",
-    default: 10
-  }
-}
-```
-
-## Handler
-
-### Basic Handler
-
-```ruby
-handler: ->(param:, **_context) {
-  do_something(param)
-}
-```
-
-### With Context
-
-```ruby
-handler: ->(param:, robot:, network:, state:) {
-  # robot - The executing Robot
-  # network - The NetworkRun
-  # state - Current State
-
-  user = state.data[:user_id]
-  state.memory.remember("last_action", param)
-
-  perform_action(param, user)
-}
-```
-
-### Error Handling
-
-```ruby
-handler: ->(id:, **_) {
-  record = Record.find_by(id: id)
-
-  if record
-    { success: true, data: record.to_h }
-  else
-    { success: false, error: "Not found" }
-  end
-rescue StandardError => e
-  { success: false, error: e.message }
-}
-```
-
-## Builder DSL
-
-In robot builder:
-
-```ruby
-tool :tool_name do
-  description "What it does"
-
-  parameter :param1, type: :string, required: true
-  parameter :param2, type: :integer, default: 10
-
-  handler do |param1:, param2:, **_context|
-    # Implementation
+  def execute(level:)
+    robot.with_temperature(level)
+    "Temperature adjusted to #{level}"
   end
 end
-```
 
-## ToolManifest
-
-Wrap tools with modified metadata:
-
-```ruby
-manifest = RobotLab::ToolManifest.new(
-  tool: original_tool,
-  name: "custom_name",
-  description: "Custom description"
-)
-
-# Original tool is used, metadata is overridden
-```
-
-### Attributes
-
-- `tool` - The wrapped tool
-- `name` - Override name (or original)
-- `description` - Override description (or original)
-- `aliases` - Alternative names
-
-## Examples
-
-### Simple Tool
-
-```ruby
-tool = Tool.new(
-  name: "current_time",
-  description: "Get the current time",
-  handler: ->(**, _) { Time.now.iso8601 }
+# Pass robot: self when constructing
+robot = RobotLab.build(
+  name: "creative_bot",
+  system_prompt: "You are creative.",
+  local_tools: [AdjustTemperature.new(robot: self)]
 )
 ```
 
-### Tool with Parameters
+## Parameter Types
+
+### String
 
 ```ruby
-tool = Tool.new(
-  name: "search_users",
-  description: "Search users by criteria",
-  parameters: {
-    query: {
-      type: "string",
-      description: "Search query",
-      required: true
-    },
-    limit: {
-      type: "integer",
-      description: "Max results",
-      default: 10
-    },
-    status: {
-      type: "string",
-      enum: ["active", "inactive", "all"],
-      default: "active"
-    }
-  },
-  handler: ->(query:, limit:, status:, **_) {
-    User.search(query, limit: limit, status: status)
-  }
-)
+param :name, type: "string", desc: "User's full name"
 ```
 
-### API Integration Tool
+### Integer
 
 ```ruby
-tool = Tool.new(
-  name: "fetch_stock_price",
-  description: "Get current stock price",
-  parameters: {
-    symbol: { type: "string", required: true }
-  },
-  handler: ->(symbol:, **_) {
-    response = HTTP.get("https://api.stocks.example/#{symbol}")
-
-    if response.status.success?
-      JSON.parse(response.body)
-    else
-      { error: "Failed to fetch", status: response.status.code }
-    end
-  rescue HTTP::Error => e
-    { error: "Network error: #{e.message}" }
-  }
-)
+param :count, type: "integer", desc: "Number of results"
 ```
 
-### Database Tool
+### Number (Float)
 
 ```ruby
-tool = Tool.new(
-  name: "get_order",
-  description: "Get order details",
-  parameters: {
-    order_id: { type: "string", required: true }
-  },
-  handler: ->(order_id:, state:, **_) {
-    user_id = state.data[:user_id]
-    order = Order.find_by(id: order_id, user_id: user_id)
+param :price, type: "number", desc: "Price in dollars"
+```
 
-    if order
-      order.as_json(include: [:items, :shipping])
-    else
-      { error: "Order not found or unauthorized" }
-    end
-  }
-)
+### Boolean
+
+```ruby
+param :active, type: "boolean", desc: "Whether the user is active"
+```
+
+### Required vs Optional
+
+Parameters are required by default. Mark optional with `required: false`:
+
+```ruby
+param :query, type: "string", desc: "Search query"                    # required
+param :limit, type: "integer", desc: "Max results", required: false   # optional
 ```
 
 ## See Also

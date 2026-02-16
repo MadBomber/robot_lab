@@ -183,22 +183,6 @@ module RobotLab
       self
     end
 
-    # Convert to hash for JSON Schema
-    #
-    # @return [Hash] Map of tool names to their JSON schemas
-    #
-    def to_json_schema
-      @tools.transform_values(&:to_json_schema)
-    end
-
-    # Convert to array of ruby_llm Tool classes
-    #
-    # @return [Array<Class>]
-    #
-    def to_ruby_llm_tools
-      @tools.values.map(&:to_ruby_llm_tool)
-    end
-
     # Converts the manifest to a hash representation.
     #
     # @return [Hash<String, Hash>] map of tool names to their hash representations
@@ -221,11 +205,11 @@ module RobotLab
     #
     def self.from_hash(hash)
       tools = hash.map do |name, config|
-        Tool.new(
+        Tool.create(
           name: name,
           description: config[:description],
           parameters: config[:parameters],
-          handler: config[:handler]
+          &config[:handler]
         )
       end
       new(tools)

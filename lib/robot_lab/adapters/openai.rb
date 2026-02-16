@@ -69,13 +69,14 @@ module RobotLab
       def format_tools(tools)
         tools.map do |tool|
           schema = tool.to_json_schema
+          strict = tool.provider_params[:strict]
           {
             type: "function",
             function: {
               name: schema[:name],
               description: schema[:description],
               parameters: schema[:parameters] || { type: "object", properties: {} },
-              strict: tool.strict.nil? ? true : tool.strict
+              strict: strict.nil? ? true : strict
             }.compact
           }
         end

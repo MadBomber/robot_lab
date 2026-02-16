@@ -442,7 +442,36 @@ robot = RobotLab.build(
 )
 ```
 
-Front matter keys like `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, and `stop` are automatically applied to the robot's chat configuration.
+### Front Matter Keys
+
+Templates support two categories of front matter keys:
+
+**LLM Config:** `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` — applied to the robot's chat configuration.
+
+**Robot Extras:** `robot_name`, `description`, `tools`, `mcp` — applied to the robot's identity and capabilities. These make templates self-contained: reading the `.md` file tells you everything about the robot.
+
+```markdown
+---
+description: GitHub assistant with MCP tool access
+robot_name: github_bot
+tools:
+  - CodeSearchTool
+mcp:
+  - name: github
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+model: claude-sonnet-4
+---
+You are a GitHub assistant. Use available tools to help with repository tasks.
+```
+
+```ruby
+# Template provides everything — minimal constructor
+robot = RobotLab.build(template: :github_assistant)
+```
+
+Constructor-provided values (`local_tools:`, `mcp:`, `name:`, `description:`) always take precedence over front matter values.
 
 ## Next Steps
 

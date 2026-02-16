@@ -40,6 +40,10 @@ module RobotLab
       presence_penalty frequency_penalty stop
     ].freeze
 
+    # Front matter keys for robot identity and capabilities.
+    # Note: uses `robot_name` because PM::Metadata reserves `name` for the filename.
+    FRONT_MATTER_EXTRA_KEYS = %i[tools mcp robot_name description].freeze
+
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
     # @!attribute [r] description
@@ -113,6 +117,7 @@ module RobotLab
       stop: nil
     )
       @name = name.to_s
+      @name_from_constructor = (name.to_s != "robot")
       @template = template
       @system_prompt = system_prompt
       @build_context = context
@@ -485,7 +490,10 @@ module RobotLab
     def apply_template_to_chat(context)
       parsed = PM.parse(@template)
 
-      # Extract and apply front matter config to the chat
+      # Extract extra config from front matter (name, description, tools, mcp)
+      apply_front_matter_extras(parsed.metadata)
+
+      # Extract and apply LLM config to the chat (model, temperature, etc.)
       apply_front_matter_config(parsed.metadata)
 
       # Resolve context (could be a Proc)
@@ -530,6 +538,50 @@ module RobotLab
 
       @chat.with_model(metadata.model)
 
+    end
+
+
+    # Extract identity and capability keys from front matter metadata.
+    # Constructor-provided values take precedence over frontmatter.
+    def apply_front_matter_extras(metadata)
+      if metadata.respond_to?(:robot_name) && metadata.robot_name && !@name_from_constructor
+        @name = metadata.robot_name.to_s
+      end
+
+      if metadata.respond_to?(:description) && metadata.description && @description.nil?
+        @description = metadata.description.to_s
+      end
+
+      if metadata.respond_to?(:tools) && metadata.tools.is_a?(Array) && @local_tools.empty?
+        @local_tools = resolve_frontmatter_tools(metadata.tools)
+      end
+
+      if metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array) && ToolConfig.none_value?(@mcp_config)
+        @mcp_config = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
+      end
+    end
+
+
+    # Resolve string tool names from frontmatter to Ruby constants.
+    # Tool subclasses are instantiated; instances are used as-is.
+    # Unresolvable names are skipped with a warning.
+    def resolve_frontmatter_tools(tool_names)
+      tool_names.filter_map do |name|
+        case name
+        when String
+          begin
+            const = Object.const_get(name)
+            const.is_a?(Class) && const < RubyLLM::Tool ? const.new : const
+          rescue NameError
+            RobotLab.config.logger.warn("Robot '#{@name}': tool '#{name}' not found, skipping")
+            nil
+          end
+        when Class
+          name.new
+        else
+          name
+        end
+      end
     end
 
 
@@ -676,13 +728,12 @@ module RobotLab
         tool_name = tool_def[:name]
         mcp_client = client
 
-        tool = Tool.new(
+        tool = Tool.create(
           name: tool_name,
           description: tool_def[:description],
           parameters: tool_def[:inputSchema],
-          mcp: server_name,
-          handler: ->(input, **_opts) { mcp_client.call_tool(tool_name, input) }
-        )
+          mcp: server_name
+        ) { |args| mcp_client.call_tool(tool_name, args) }
 
         @mcp_tools << tool
       end

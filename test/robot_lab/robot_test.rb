@@ -292,8 +292,7 @@ class RobotLab::RobotTest < Minitest::Test
 
   def test_to_h_excludes_nil_values
     robot = RobotLab::Robot.new(
-      name: 'helper',
-      template: :assistant
+      name: 'helper'
     )
 
     hash = robot.to_h
@@ -809,6 +808,116 @@ class RobotLab::RobotTest < Minitest::Test
     bot2 = bot.spawn(system_prompt: 'test')
 
     assert_equal 'robot', bot2.name
+  end
+
+
+  # Frontmatter extras tests
+
+  def test_frontmatter_tools_are_resolved
+    # Define a tool class that frontmatter can reference
+    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
+      description "A test tool defined for frontmatter resolution"
+      param :input, type: "string", desc: "Test input"
+      define_method(:execute) { |input:| "test: #{input}" }
+    }) unless defined?(::FrontmatterTestTool)
+
+    robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_tools_test)
+
+    assert_equal 1, robot.local_tools.size
+    assert_kind_of ::FrontmatterTestTool, robot.local_tools.first
+  end
+
+
+  def test_constructor_tools_override_frontmatter_tools
+    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
+      description "A test tool defined for frontmatter resolution"
+      param :input, type: "string", desc: "Test input"
+      define_method(:execute) { |input:| "test: #{input}" }
+    }) unless defined?(::FrontmatterTestTool)
+
+    my_tool = build_tool(name: 'my_tool') { |i| i }
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :frontmatter_tools_test,
+      local_tools: [my_tool]
+    )
+
+    assert_equal 1, robot.local_tools.size
+    assert_equal 'my_tool', robot.local_tools.first.name
+  end
+
+
+  def test_frontmatter_unresolvable_tool_warns
+    # Create a template referencing a non-existent tool
+    template_path = File.join(ENV['ROBOT_LAB_TEMPLATE_PATH'], 'frontmatter_bad_tool_test.md')
+    File.write(template_path, <<~MD)
+      ---
+      description: Template with bad tool reference
+      tools:
+        - NonExistentToolThatDoesNotExist
+      ---
+      Test robot.
+    MD
+
+    robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_bad_tool_test)
+
+    assert_equal 0, robot.local_tools.size
+  ensure
+    File.delete(template_path) if template_path && File.exist?(template_path)
+  end
+
+
+  def test_frontmatter_mcp_config
+    robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_mcp_test)
+
+    assert_kind_of Array, robot.mcp_config
+    assert_equal 1, robot.mcp_config.size
+    assert_equal "test_server", robot.mcp_config.first[:name]
+    assert_equal "stdio", robot.mcp_config.first[:transport]
+  end
+
+
+  def test_constructor_mcp_overrides_frontmatter_mcp
+    custom_mcp = [{ name: 'custom_server', transport: 'stdio', command: 'test' }]
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :frontmatter_mcp_test,
+      mcp: custom_mcp
+    )
+
+    assert_equal custom_mcp, robot.mcp_config
+  end
+
+
+  def test_frontmatter_name_overrides_default
+    robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_named_test)
+
+    assert_equal 'support_bot', robot.name
+  end
+
+
+  def test_constructor_name_overrides_frontmatter_name
+    robot = RobotLab::Robot.new(name: 'my_custom_name', template: :frontmatter_named_test)
+
+    assert_equal 'my_custom_name', robot.name
+  end
+
+
+  def test_frontmatter_description
+    robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_named_test)
+
+    assert_equal 'Test template with name in frontmatter', robot.description
+  end
+
+
+  def test_constructor_description_overrides_frontmatter
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :frontmatter_named_test,
+      description: 'My custom description'
+    )
+
+    assert_equal 'My custom description', robot.description
   end
 
 

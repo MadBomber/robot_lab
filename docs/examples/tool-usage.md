@@ -94,22 +94,21 @@ if result.tool_calls.any?
 end
 ```
 
-## RobotLab::Tool Inline Pattern
+## RobotLab::Tool.create Pattern
 
-For simpler tools that do not need their own class, use `RobotLab::Tool`:
+For simpler tools that do not need their own class, use `RobotLab::Tool.create`:
 
 ```ruby
 require "robot_lab"
 
 # Define an inline tool
-get_time = RobotLab::Tool.new(
+get_time = RobotLab::Tool.create(
   name: "get_time",
-  description: "Get the current time",
-  handler: ->(_input, **_opts) { Time.now.to_s }
-)
+  description: "Get the current time"
+) { |_args| Time.now.to_s }
 
 # Define a tool with parameters (JSON Schema)
-weather_tool = RobotLab::Tool.new(
+weather_tool = RobotLab::Tool.create(
   name: "get_weather",
   description: "Get weather for a city",
   parameters: {
@@ -118,11 +117,8 @@ weather_tool = RobotLab::Tool.new(
       city: { type: "string", description: "City name" }
     },
     required: ["city"]
-  },
-  handler: ->(input, **_opts) {
-    { city: input[:city], temperature: "72F", condition: "sunny" }
   }
-)
+) { |args| { city: args[:city], temperature: "72F", condition: "sunny" } }
 
 robot = RobotLab.build(
   name: "weather_bot",
@@ -344,11 +340,13 @@ ruby examples/order_assistant.rb
 ## Key Concepts
 
 1. **RubyLLM::Tool subclass**: Define a class with `description`, `param`, and `execute` method
-2. **RobotLab::Tool inline**: Use `RobotLab::Tool.new(name:, description:, handler:)` for simple tools
-3. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
-4. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
-5. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
-6. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
+2. **RobotLab::Tool subclass**: Same DSL plus `robot` accessor for robot-aware tools
+3. **RobotLab::Tool.create**: Use `RobotLab::Tool.create(name:, description:, &block)` for dynamic tools
+4. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
+5. **Frontmatter tools**: Declare tool class names in template YAML front matter (`tools: [Calculator]`) for self-contained templates
+6. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
+7. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
+8. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
 
 ## See Also
 
