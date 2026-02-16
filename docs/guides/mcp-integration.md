@@ -41,6 +41,29 @@ robot = RobotLab.build(
 )
 ```
 
+### In Template Front Matter
+
+MCP servers can be declared directly in a template's YAML front matter, making the template fully self-contained:
+
+```markdown title="prompts/github_assistant.md"
+---
+description: GitHub assistant with MCP tool access
+mcp:
+  - name: github
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+---
+You are a helpful GitHub assistant with access to GitHub tools via MCP.
+```
+
+```ruby
+# MCP config comes from the template — no mcp: parameter needed
+robot = RobotLab.build(template: :github_assistant)
+```
+
+Constructor `mcp:` overrides frontmatter `mcp:` when provided.
+
 ### Hierarchical Configuration
 
 The `mcp:` parameter supports three modes:

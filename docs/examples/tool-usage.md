@@ -343,9 +343,10 @@ ruby examples/order_assistant.rb
 2. **RobotLab::Tool subclass**: Same DSL plus `robot` accessor for robot-aware tools
 3. **RobotLab::Tool.create**: Use `RobotLab::Tool.create(name:, description:, &block)` for dynamic tools
 4. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
-4. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
-5. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
-6. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
+5. **Frontmatter tools**: Declare tool class names in template YAML front matter (`tools: [Calculator]`) for self-contained templates
+6. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
+7. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
+8. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
 
 ## See Also
 

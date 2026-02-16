@@ -81,6 +81,8 @@ weather_tool = RobotLab::Tool.create(
 
 ## Attaching Tools to Robots
 
+### Via Constructor
+
 Pass tools via the `local_tools:` parameter when building a robot:
 
 ```ruby
@@ -90,6 +92,29 @@ robot = RobotLab.build(
   local_tools: [GetWeather, CalculatorTool]
 )
 ```
+
+### Via Template Front Matter
+
+Declare tool class names in the template's YAML front matter. RobotLab resolves each string to a Ruby constant via `Object.const_get` and instantiates it:
+
+```markdown title="prompts/weather_bot.md"
+---
+description: Weather assistant with forecast tools
+tools:
+  - GetWeather
+  - GetForecast
+---
+You are a weather assistant. Use your tools to look up weather information.
+```
+
+```ruby
+# Tools are resolved from frontmatter — no local_tools: needed
+robot = RobotLab.build(template: :weather_bot)
+```
+
+Tool classes must be defined and loaded before building the robot. Unresolvable names are skipped with a warning. Constructor `local_tools:` overrides frontmatter `tools:` when provided.
+
+### Via Chaining
 
 You can also add tools dynamically with chaining:
 
