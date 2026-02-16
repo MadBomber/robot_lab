@@ -435,7 +435,8 @@ class RobotLab::RobotTest < Minitest::Test
   def test_send_message_increments_counter
     bus = TypedBus::MessageBus.new
     alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
-    RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob.on_message { |msg| }
 
     msg1 = alice.send_message(to: :bob, content: "first")
     msg2 = alice.send_message(to: :bob, content: "second")
@@ -448,7 +449,8 @@ class RobotLab::RobotTest < Minitest::Test
   def test_send_message_tracks_in_outbox
     bus = TypedBus::MessageBus.new
     alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
-    RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+    bob.on_message { |msg| }
 
     msg = alice.send_message(to: :bob, content: "task")
 

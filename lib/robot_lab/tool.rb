@@ -116,10 +116,11 @@ module RobotLab
     #
     # @return [Hash] JSON Schema representation
     def to_json_schema
+      schema = params_schema || { "type" => "object", "properties" => {}, "required" => [] }
       {
         name: name,
         description: description,
-        parameters: params_schema || { "type" => "object", "properties" => {}, "required" => [] }
+        parameters: deep_symbolize_keys(schema)
       }.compact
     end
 
@@ -140,6 +141,19 @@ module RobotLab
     # @return [String]
     def to_json(*args)
       to_h.to_json(*args)
+    end
+
+    private
+
+    def deep_symbolize_keys(obj)
+      case obj
+      when Hash
+        obj.each_with_object({}) { |(k, v), h| h[k.to_sym] = deep_symbolize_keys(v) }
+      when Array
+        obj.map { |v| deep_symbolize_keys(v) }
+      else
+        obj
+      end
     end
   end
 end
