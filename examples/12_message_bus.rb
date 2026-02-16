@@ -29,7 +29,7 @@ class Comedian < RobotLab::Robot
       @attempts += 1
       temp = [TEMP_START + TEMP_STEP * (@attempts - 1), 1.0].min
       with_temperature(temp)
-      joke = run(message.content.to_s).last_text_content.strip
+      joke = run(message.content.to_s).reply.strip
       puts "  Bob  [##{@attempts}, t=#{"%.1f" % temp}]: #{joke}"
       reply(message, joke)
     end
@@ -45,7 +45,7 @@ class ComedyCritic < RobotLab::Robot
     @rounds   = 0
     on_message do |message|
       @rounds += 1
-      verdict = run("Evaluate this joke:\n\n#{message.content}").last_text_content.strip
+      verdict = run("Evaluate this joke:\n\n#{message.content}").reply.strip
       puts "  Alice: #{verdict}"
       puts
       @accepted = verdict.start_with?("FUNNY")

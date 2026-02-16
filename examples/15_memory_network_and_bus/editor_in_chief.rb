@@ -12,7 +12,7 @@ class EditorInChief < RobotLab::Robot
 
     on_message do |message|
       @rounds += 1
-      verdict = run("Review this article:\n\n#{message.content}").last_text_content.strip
+      verdict = run("Review this article:\n\n#{message.content}").reply.strip
       @accepted = verdict.start_with?("APPROVED")
       puts "  Chief   [round #{@rounds}]: #{verdict[0..120]}"
 

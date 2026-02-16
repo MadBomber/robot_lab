@@ -29,7 +29,7 @@ class RecruitAnalyst < RobotLab::Tool
           "and insightful. 2-3 sentences max."
       )
     end
-    analysis = analyst.run(robot.log.join("\n")).last_text_content.strip
+    analysis = analyst.run(robot.log.join("\n")).reply.strip
     robot.display&.scout_analyst(specialty, analysis)
     analysis
   rescue => e
@@ -166,7 +166,7 @@ class Scout < RobotLab::Robot
               "patterns, consider recruiting an analyst or refining " \
               "your evaluation criteria."
 
-    notes = run(prompt).last_text_content.strip
+    notes = run(prompt).reply.strip
 
     @display.scout(@log.size, notes)
   end

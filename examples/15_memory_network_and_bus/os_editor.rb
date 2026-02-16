@@ -35,7 +35,7 @@ class OsEditor < RobotLab::Robot
     PROMPT
 
     robot_result = run(composite_prompt, network_memory: @shared_memory)
-    @article = robot_result.last_text_content.to_s
+    @article = robot_result.reply.to_s
 
     path = File.join(OUTPUT_DIR, "combined_article.md")
     File.write(path, "# Combined Article (Editor Draft)\n\n#{@article}\n")

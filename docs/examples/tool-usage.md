@@ -337,16 +337,62 @@ ruby examples/weather_assistant.rb
 ruby examples/order_assistant.rb
 ```
 
+## Interactive User Input
+
+Use the built-in `RobotLab::AskUser` tool to let robots ask the user questions during execution:
+
+```ruby
+require "robot_lab"
+
+robot = RobotLab.build(
+  name: "interviewer",
+  system_prompt: <<~PROMPT,
+    You are a project setup assistant. Interview the user to understand their
+    needs, then summarize the project plan. Use the ask_user tool to gather
+    information one question at a time.
+  PROMPT
+  local_tools: [RobotLab::AskUser],
+  model: "claude-sonnet-4"
+)
+
+result = robot.run("Help me plan a new web application")
+puts "\nProject Plan:\n#{result.last_text_content}"
+```
+
+The robot will ask questions interactively:
+
+```
+[interviewer] What programming language would you like to use?
+  1. Ruby
+  2. Python
+  3. TypeScript
+> 1
+
+[interviewer] Will you need a database?
+> [yes]
+
+[interviewer] What's the main purpose of the application?
+> Customer support portal
+```
+
+For testing, inject `StringIO` objects:
+
+```ruby
+robot.input  = StringIO.new("Ruby\nyes\nCustomer portal\n")
+robot.output = StringIO.new
+```
+
 ## Key Concepts
 
 1. **RubyLLM::Tool subclass**: Define a class with `description`, `param`, and `execute` method
 2. **RobotLab::Tool subclass**: Same DSL plus `robot` accessor for robot-aware tools
 3. **RobotLab::Tool.create**: Use `RobotLab::Tool.create(name:, description:, &block)` for dynamic tools
-4. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
-5. **Frontmatter tools**: Declare tool class names in template YAML front matter (`tools: [Calculator]`) for self-contained templates
-6. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
-7. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
-8. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
+4. **Built-in tools**: `RobotLab::AskUser` for interactive terminal input
+5. **local_tools**: Pass tool classes/instances via `local_tools:` parameter to `RobotLab.build` or `Robot.new`
+6. **Frontmatter tools**: Declare tool class names in template YAML front matter (`tools: [Calculator]`) for self-contained templates
+7. **Error Handling**: Return error hashes (e.g., `{ error: "message" }`) for graceful failures
+8. **Callbacks**: Use `on_tool_call:` and `on_tool_result:` for monitoring
+9. **Result Access**: Check `result.tool_calls` for tool call history, `result.last_text_content` for the final response
 
 ## See Also
 

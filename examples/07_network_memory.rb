@@ -72,7 +72,7 @@ class AnalysisRobot < RobotLab::Robot
 
     # Parse the JSON response and write to shared memory
     if network_memory
-      content = robot_result.last_text_content.to_s
+      content = robot_result.reply.to_s
 
       # Set writer before writing to memory
       network_memory.current_writer = @name
@@ -266,7 +266,7 @@ puts "=" * 60
 puts
 
 if result.value.is_a?(RobotLab::RobotResult)
-  puts result.value.last_text_content
+  puts result.value.reply
 end
 
 puts

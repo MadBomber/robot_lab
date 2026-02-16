@@ -12,6 +12,7 @@
 #   - Template front matter config keys
 #   - Constructor params overriding front matter
 #   - Config hierarchy in action
+#   - AskUser tool for gathering template parameters interactively
 #
 # Usage:
 #   bundle exec ruby examples/09_chaining.rb
@@ -22,6 +23,7 @@ ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 require_relative "../lib/robot_lab"
 require "amazing_print"
 require "hashdiff"
+require "stringio"
 
 # Show a config snapshot and the diff from the previous snapshot.
 # Returns the current hash for use as the next "previous" snapshot.
@@ -167,6 +169,53 @@ bare.with_template(:helper)
 
 puts "After bare.with_template(:helper):"
 show_config(bare, prev_bare)
+puts
+
+# =============================================================================
+# Section 7: AskUser tool for gathering template parameters
+# =============================================================================
+
+puts "--- Section 7: AskUser for Template Parameters ---"
+puts
+puts "The :configurable template declares `task_type: general` in its front"
+puts "matter. That default is offered to the user — they can accept it by"
+puts "pressing Enter or type something else. Parameters with null values"
+puts "have no default and require user input."
+puts
+
+# Build a robot with AskUser — the template's task_type default ("general")
+# is offered to the user, who can accept or override it.
+interactive = RobotLab.build(
+  name: "interactive_demo",
+  template: :configurable,
+  local_tools: [RobotLab::AskUser]
+)
+
+puts "Robot 'interactive_demo' has AskUser in its tools."
+puts "The template renders with the default: task_type = \"general\""
+puts "When run, the robot can call ask_user to let the user confirm"
+puts "or change the value."
+puts
+
+# Simulate what the user would see (no LLM call needed)
+output = StringIO.new
+demo_tool = RobotLab::AskUser.new(robot: interactive)
+interactive.output = output
+interactive.input  = StringIO.new("2\n")
+
+result = demo_tool.call(
+  "question" => "What type of task should I optimize for?",
+  "choices"  => %w[general analysis creative coding research],
+  "default"  => "general"
+)
+
+puts output.string
+puts "User selected: #{result}"
+puts
+puts "The robot would re-render the template with task_type: \"#{result}\""
+puts "producing: \"You are a precise assistant optimized for #{result} tasks.\""
+puts
+puts "If the user had pressed Enter, the default \"general\" would be kept."
 puts
 
 puts "=" * 70

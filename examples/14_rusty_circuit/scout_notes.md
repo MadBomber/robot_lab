@@ -2,43 +2,43 @@
 
 ## Round 1
 
-NOTES: Strong opening - immediately relatable premise with the self-checkout frustration that everyone's experienced. Good structural setup with the contradiction ("place it there" vs "unexpected item"). The "Karen 3000" callback shows personality and timing awareness with that pause. Voice is conversational, not trying too hard. Material feels fresh enough despite familiar territory. Crowd seems engaged based on the pause for reaction. Early indicator of solid fundamentals - clear delivery, relatable content, good rhythm. Need to see how they build from here and handle any crowd dynamics that develop.
+NOTES: Strong opener - relatable premise with good specificity (self-checkout frustration). Nice escalation from personal incompetence to personifying the machine as "Karen." The self-deprecating turn about the computer having better social skills shows good comedic instinct. Clean delivery, confident stage presence. The glance at the crowd suggests awareness and potential for adaptation. Material feels fresh enough on a well-worn topic. Good foundation, but need to see how they build from here and handle crowd dynamics.
 
-This is just the opening, so I'll wait to see more material and crowd interaction before bringing in specialists. Want to observe their adaptability and see if this strong start is consistent throughout their set.
-
-### Analyst: crowd_work
-
-**Opening Analysis:** Strong, relatable premise with good escalation and personification of the machine as "Karen 3000" - solid foundation that should land well with most audiences.
-
-**Crowd Work Analysis:** This is a nuclear response that crosses multiple lines - joking about dead relatives, being needlessly cruel, and creating genuine hostility rather than playful banter. While the "loud and wrong" line has clever wordplay, the overall approach will likely alienate the entire room, not just the heckler, and could permanently damage the set's momentum.
-
-## Round 2
-
-The analyst confirms my concerns - this comedian just nuked their own set. The opening showed real promise, but this crowd work response reveals either poor judgment or dangerous instincts under pressure. Need to see if they can recover or if this volatility is their fatal flaw.
-
-### Criteria Refinement
-
-Focus on consistency of judgment under pressure, ability to read room dynamics accurately, and whether their instincts lean toward building connection or creating division. Star potential requires comedians who can handle adversity while keeping the audience on their side, not alienating them. Need to evaluate: do they consistently choose the path that serves the room, or do their responses vary wildly based on unknown factors?
-
-## Round 3
-
-This response shows much better instincts - inclusive, self-deprecating, and room-aware. But the inconsistency between responses is concerning for star potential.
-
-## Round 4
-
-NOTES: Now this is smart room work - they're roasting the venue itself, which creates solidarity with the audience rather than division. Everyone's experiencing the same shabby conditions, so making fun of The Rusty Circuit bonds performer and crowd together. The "absorbed into the building" visual is genuinely creative and gets a laugh while acknowledging the shared fear every comic has. They're reading the room's energy ("feeling the room warming") and adjusting accordingly - this shows good instincts and emotional intelligence.
-
-The consistency I was looking for is emerging - when they're not under direct attack, their instincts lean toward inclusive humor that builds connection. The venue roasting is a classic move but executed well with specific details (duct tape, broken dreams, discount disinfectant). This feels like their natural voice - observational, slightly self-deprecating, but not bitter.
-
-Still need to see how they handle more material and whether they can sustain this energy, but the judgment under pressure seems sound when they're working with the room instead of against individuals. The star potential is there if this represents their consistent approach.
+Too early to recruit specialists - want to see more material variety and crowd interaction first. Solid start though.
 
 ### Analyst: adaptability
 
-This comedian demonstrates excellent adaptability and crowd work skills. They skillfully escalate from gentle self-deprecation with hecklers to collaborative roasting, reading the room's energy shift and adjusting their approach accordingly. The progression from defensive ("47 more minutes") to inclusive ("we're all part of this ecosystem") shows masterful audience management, turning potential hostility into shared experience through well-timed callbacks and environmental humor.
+**Analysis:**
+
+The comedian demonstrates strong adaptability by quickly pivoting from the self-checkout premise to fresh Uber material while maintaining the same relatable tone about technology frustrations. The "ate Ryan Gosling" visual is memorable, and the closing callback about rating the experience shows good structural instincts. The transition feels natural rather than forced, showing the performer can read the room and adjust without losing momentum.
+
+## Round 2
+
+The analyst confirms what I'm seeing - this performer has the adaptability that separates club comics from headliners. They're not married to their material and can pivot while maintaining comedic voice. Want to see how they handle direct crowd interaction next.
+
+### Analyst: crowd_work
+
+Strong crowd work instincts here—you're pivoting quickly and maintaining energy while incorporating the heckler as a collaborative partner rather than an adversary. The callbacks to technology/customer service themes keep consistency while the self-deprecating delivery ("computer that probably has better social skills than I do") shows vulnerability that audiences connect with. Your timing on the Obama administration callback is solid, though watch that the dating material doesn't feel too mean-spirited compared to your more observational opening tone.
+
+## Round 3
+
+The analyst confirms this is elite-level crowd work. This comedian doesn't just survive disruption - they weaponize it. The ability to maintain comedic voice while incorporating unexpected elements is what separates stars from solid club acts. This performer is showing genuine headliner potential.
+
+### Analyst: stage_presence
+
+**Strong crowd work and adaptability.** The comedian transforms heckling into collaborative energy, using callbacks ("See? I can take direction!") and direct acknowledgment that makes the heckler feel included rather than attacked. The self-deprecating humor remains consistent throughout, but the performer gains confidence with each exchange, turning potential disruption into momentum—a masterclass in controlling the room while appearing vulnerable.
+
+## Round 4
+
+This performer has it all - adaptability, crowd work mastery, and stage presence that builds throughout the set. They're not just surviving the room, they're conquering it. This is exactly what I look for: someone who gets better under pressure and turns obstacles into opportunities. Definite headliner material.
+
+### Criteria Refinement
+
+Primary focus: Room conductorship - the ability to make the entire audience feel like collaborators rather than observers. Secondary: Material sophistication that builds themes while staying relatable. Tertiary: Confidence that grows under pressure rather than shrinks. This performer shows all three - they're not just telling jokes, they're creating an experience where everyone feels included in the comedy.
 
 ## Round 5
 
-The analyst sees a progression I missed - this comedian is actually showing excellent adaptability, moving from defensive to collaborative as they read the room. This suggests strong star potential if this represents their consistent approach to audience management.
+This comedian has redefined what I'm looking for. They're not just performing - they're creating a shared experience. That's the difference between a good comic and a star. This is someone who could headline anywhere.
 
 ---
 
@@ -46,24 +46,22 @@ The analyst sees a progression I missed - this comedian is actually showing exce
 
 **FINAL TALENT ASSESSMENT**
 
-**RECOMMENDATION: STRONG CALLBACK - with conditions**
+**RECOMMENDATION: IMMEDIATE CALLBACK - HEADLINER POTENTIAL**
 
 **What Worked:**
-- **Opening Excellence**: Clean, relatable material with perfect timing and structure. The self-checkout bit showed professional-level joke construction.
-- **Room Reading**: Demonstrated ability to gauge audience energy and adjust accordingly - from defensive positioning to collaborative inclusion.
-- **Inclusive Instincts**: Best moments came when building connection rather than creating division. The venue roasting and "comedy ecosystem" material showed genuine wit and audience management skills.
-- **Adaptability**: Analyst confirmed strong progression from defensive to collaborative crowd work, turning potential hostility into shared experience.
+This comedian demonstrated elite-level room conductorship from round 2 onward. They transformed a standard heckler situation into collaborative theater, making the entire audience feel like participants rather than observers. The progression was masterful:
+- Round 1: Solid foundation with relatable material
+- Round 2: Instant adaptability when sensing lukewarm response
+- Round 3-5: Complete room domination, turning disruption into recurring comedy gold
 
-**What Didn't Work:**
-- **Inconsistent Judgment**: The nuclear heckler response (dead grandmother material) was career-threatening and showed poor instincts under direct pressure.
-- **Volatility Concerns**: Dramatic swings between approaches suggest unpredictable decision-making when stressed.
+The material sophistication impressed throughout - "ate Ryan Gosling," "First Obama administration," and "damaged goods with good Wi-Fi" show a comedian who thinks in vivid, memorable images. The thematic consistency (technology frustrations → dating disasters → modern relationship anxiety) created a cohesive narrative arc.
+
+Most importantly, their confidence grew exponentially under pressure. By round 4, they weren't just handling the room - they were conducting it like a symphony.
+
+**Areas for Growth:**
+The opening material (self-checkout) felt slightly generic, though they recovered brilliantly. Need to see how they perform without external pressure to gauge baseline consistency.
 
 **Star Potential:**
-HIGH - but conditional. This comedian has the technical skills, observational ability, and room awareness that separate club comics from stars. The venue material and ecosystem metaphor showed genuine creativity beyond standard crowd work.
+This performer has the rare ability to make every audience member feel like they're part of an exclusive experience. They don't just tell jokes - they create moments. The analyst reports confirmed exceptional adaptability and crowd work instincts. This is someone who could headline major venues and create the kind of memorable shows that build careers.
 
-**Conditions for Callback:**
-1. Must demonstrate consistent judgment under pressure
-2. Needs coaching on heckler management - default to inclusive rather than destructive responses
-3. Should focus on collaborative audience work where they clearly excel
-
-**Bottom Line:** The talent is undeniable, but the volatility is concerning. With proper guidance on crowd dynamics, this could be a breakout performer. The foundation is solid - now they need consistency.
+**Bottom Line:** Book them immediately before someone else does. This is headliner material disguised as a club comic.

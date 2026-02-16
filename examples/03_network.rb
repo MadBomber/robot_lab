@@ -26,7 +26,7 @@ class ClassifierRobot < RobotLab::Robot
       .continue(robot_result)
 
     # Examine LLM output and activate appropriate specialist
-    category = robot_result.last_text_content.to_s.strip.downcase
+    category = robot_result.reply.to_s.strip.downcase
 
     case category
     when /billing/
@@ -89,13 +89,13 @@ puts "\nConversation flow:"
 if result.context[:classifier]
   classifier_result = result.context[:classifier]
   puts "\n1. Robot: classifier"
-  puts "   Classification: #{classifier_result.last_text_content}"
+  puts "   Classification: #{classifier_result.reply}"
 end
 
 # Show specialist result (the final value)
 if result.value.is_a?(RobotLab::RobotResult)
   puts "\n2. Robot: #{result.value.robot_name}"
-  content = result.value.last_text_content
+  content = result.value.reply
   puts "   Response: #{content[0..200]}..." if content
 end
 

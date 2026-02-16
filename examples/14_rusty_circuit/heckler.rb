@@ -36,7 +36,7 @@ class Heckler < RobotLab::Robot
         "The comedian just said: \"#{message.content}\"\n\n" \
         "React however feels right — heckle, counter-joke, " \
         "show respect, or stay silent."
-      ).last_text_content.strip
+      ).reply.strip
 
       # The heckler chose silence — no output, no feedback
       if verdict.match?(/\[SILENCE\]/i)
