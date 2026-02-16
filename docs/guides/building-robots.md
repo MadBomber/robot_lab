@@ -434,7 +434,7 @@ class Comedian < RobotLab::Robot
     super(name: "bob", template: :comedian, bus: bus)
     on_message do |message|
       joke = run(message.content.to_s).last_text_content.strip
-      reply(message, joke)
+      send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
     end
   end
 end

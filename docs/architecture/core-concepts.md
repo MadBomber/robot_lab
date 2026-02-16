@@ -414,7 +414,7 @@ alice.send_message(to: :bob, content: "Tell me a joke.")
 # Handle incoming messages with auto-ack (1 arg)
 bob.on_message do |message|
   joke = bob.run(message.content.to_s).last_text_content
-  bob.reply(message, joke)
+  bob.send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
 end
 ```
 

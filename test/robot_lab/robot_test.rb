@@ -550,7 +550,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
     bob.on_message do |message|
-      bob.reply(message, "got it")
+      bob.send_reply(to: message.from.to_sym, content: "got it", in_reply_to: message.key)
     end
 
     Async { alice.send_message(to: :bob, content: "hello") }

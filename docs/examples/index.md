@@ -190,7 +190,7 @@ class Comedian < RobotLab::Robot
       temp = [TEMP_START + TEMP_STEP * (@attempts - 1), 1.0].min
       with_temperature(temp)
       joke = run(message.content.to_s).last_text_content.strip
-      reply(message, joke)
+      send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
     end
   end
 
@@ -224,7 +224,7 @@ Key patterns demonstrated:
 
 - **Robot subclasses** with templates for prompt management
 - **Auto-ack** via 1-arg `on_message` blocks
-- **`reply(message, content)`** for correlated responses
+- **`send_reply(to:, content:, in_reply_to:)`** for correlated responses
 - **Temperature ramping** (0.2 &rarr; 1.0) for increasing creativity
 - **Convergence loop** that terminates when the critic approves
 

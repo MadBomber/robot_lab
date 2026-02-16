@@ -31,7 +31,7 @@ class Comedian < RobotLab::Robot
       with_temperature(temp)
       joke = run(message.content.to_s).reply.strip
       puts "  Bob  [##{@attempts}, t=#{"%.1f" % temp}]: #{joke}"
-      reply(message, joke)
+      send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
     end
   end
 
