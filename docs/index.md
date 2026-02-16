@@ -68,14 +68,6 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: Memory System](guides/memory.md)
 
--   :material-history:{ .lg .middle } **Conversation History**
-
-    ---
-
-    Persist and restore conversation threads for long-running interactions.
-
-    [:octicons-arrow-right-24: History Guide](guides/history.md)
-
 </div>
 
 ## Quick Example

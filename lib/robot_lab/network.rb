@@ -58,6 +58,8 @@ module RobotLab
   #   network.broadcast(event: :pause, reason: "rate limit")
   #
   class Network
+    include Utils
+
     # Reserved key for broadcast messages in memory
     BROADCAST_KEY = :_network_broadcast
 
@@ -331,20 +333,5 @@ module RobotLab
       }.compact
     end
 
-    private
-
-    def dispatch_async(&block)
-      # Use Async if available (preferred for fiber-based concurrency)
-      if defined?(Async) && Async::Task.current?
-        Async { block.call }
-      else
-        # Fall back to Thread for basic async dispatch
-        Thread.new do
-          block.call
-        rescue StandardError => e
-          warn "Network broadcast handler error: #{e.message}"
-        end
-      end
-    end
   end
 end
