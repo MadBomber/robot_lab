@@ -4,45 +4,42 @@ LLM provider adapters for unified API access.
 
 ## Overview
 
-Adapters provide a consistent interface to different LLM providers, handling the translation between RobotLab's message format and provider-specific APIs.
+Adapters provide a consistent interface to different LLM providers, handling the translation between RobotLab's message format and provider-specific APIs. RobotLab delegates actual chat/completion calls to [RubyLLM](https://rubyllm.com); adapters handle provider-specific formatting of messages, tools, and responses.
 
 ```ruby
-# Configure globally
-RobotLab.configure do |config|
-  config.default_model = "claude-sonnet-4"
-  # Adapter is selected automatically based on model
-end
-
-# Or configure per-robot
-robot = RobotLab.build do
-  model "gpt-4o"  # Uses OpenAI adapter
-end
+# Adapter is selected automatically based on the provider/model.
+# Configuration uses RobotLab.config (MywayConfig), not a block DSL.
+robot = RobotLab.build(name: "assistant", model: "gpt-4o")  # Uses OpenAI adapter
+result = robot.run("Hello!")
 ```
 
 ## Adapter Selection
 
-Adapters are automatically selected based on model name:
+Adapters are automatically selected based on provider:
 
-| Model Pattern | Adapter |
-|---------------|---------|
-| `claude-*`, `anthropic/*` | Anthropic |
-| `gpt-*`, `o1-*`, `openai/*` | OpenAI |
-| `gemini-*`, `google/*` | Gemini |
+| Provider | Adapter |
+|----------|---------|
+| `:anthropic` | `RobotLab::Adapters::Anthropic` |
+| `:openai` | `RobotLab::Adapters::OpenAI` |
+| `:gemini` | `RobotLab::Adapters::Gemini` |
+| `:azure_openai`, `:grok`, `:ollama`, `:openrouter` | `RobotLab::Adapters::OpenAI` |
+| `:bedrock` | `RobotLab::Adapters::Anthropic` |
+| `:vertexai` | `RobotLab::Adapters::Gemini` |
 
 ## Common Interface
 
-All adapters implement:
+All adapters inherit from `RobotLab::Adapters::Base` and implement:
 
 ```ruby
-adapter.chat(
-  messages: messages,
-  model: model,
-  tools: tools,
-  system: system_prompt,
-  streaming: callback
-)
-# => Response with content and usage
+adapter = RobotLab::Adapters::Registry.for(:anthropic)
+
+adapter.format_messages(messages)       # => Array<Hash> (provider-specific format)
+adapter.parse_response(raw_response)    # => Array<Message> (internal format)
+adapter.format_tools(tools)             # => Array<Hash> (provider-specific tool format)
+adapter.format_tool_choice(choice)      # => provider-specific tool choice value
 ```
+
+Chat/completion calls are handled by RubyLLM, not by the adapters directly.
 
 ## Available Adapters
 
@@ -56,46 +53,70 @@ adapter.chat(
 
 ### API Keys
 
-Set via environment variables:
+Set via environment variables (directly for RubyLLM, or via `ROBOT_LAB_` prefix):
 
 ```bash
+# Direct RubyLLM env vars
 export ANTHROPIC_API_KEY="sk-ant-..."
 export OPENAI_API_KEY="sk-..."
 export GOOGLE_AI_API_KEY="..."
+
+# Or via RobotLab config env vars
+export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY="sk-ant-..."
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY="sk-..."
+export ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY="..."
 ```
 
 ### Custom Endpoints
 
-```ruby
-RobotLab.configure do |config|
-  config.adapter_options = {
-    anthropic: { base_url: "https://custom.anthropic.endpoint" },
-    openai: { base_url: "https://custom.openai.endpoint" }
-  }
-end
+Set via environment variables or YAML config files:
+
+```bash
+# Via environment variables
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_BASE="https://custom.openai.endpoint"
+export ROBOT_LAB_RUBY_LLM__GEMINI_API_BASE="https://custom.gemini.endpoint"
+```
+
+```yaml
+# Or in config/robot_lab.yml
+ruby_llm:
+  openai_api_base: "https://custom.openai.endpoint"
+  gemini_api_base: "https://custom.gemini.endpoint"
 ```
 
 ## Creating Custom Adapters
 
-Implement the adapter interface:
+Implement the adapter interface by subclassing `RobotLab::Adapters::Base`:
 
 ```ruby
-class MyAdapter
-  def chat(messages:, model:, tools: [], system: nil, streaming: nil)
-    # Translate messages to provider format
-    # Make API call
-    # Translate response back
+class MyAdapter < RobotLab::Adapters::Base
+  def initialize
+    super(:my_provider)
+  end
 
-    Response.new(
-      content: content,
-      tool_calls: tool_calls,
-      usage: { input_tokens: x, output_tokens: y }
-    )
+  def format_messages(messages)
+    # Translate internal messages to provider format
+    conversation_messages(messages).map { |msg| { role: msg.role, content: msg.content } }
+  end
+
+  def parse_response(response)
+    # Translate provider response to internal message format
+    [TextMessage.new(role: "assistant", content: response.content)]
+  end
+
+  def format_tools(tools)
+    # Format tools for provider's function calling API
+    tools.map(&:to_json_schema)
+  end
+
+  def format_tool_choice(choice)
+    # Format tool choice for provider
+    choice.to_s
   end
 end
 
 # Register the adapter
-RobotLab.register_adapter(:my_provider, MyAdapter)
+RobotLab::Adapters::Registry.register(:my_provider, MyAdapter)
 ```
 
 ## See Also

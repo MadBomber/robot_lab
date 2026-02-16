@@ -1,54 +1,43 @@
-# State
+# Memory (State Management)
 
-Manages conversation data, results, and memory.
+Memory manages conversation data, results, and runtime state. There is no separate `State` class; `Memory` serves this role.
 
-## Class: `RobotLab::State`
+## Class: `RobotLab::Memory`
 
 ```ruby
-state = RobotLab.create_state(
-  message: "Hello",
+memory = RobotLab.create_memory(
   data: { user_id: "123" }
 )
 ```
 
 ## Attributes
 
-### thread_id
+### session_id
 
 ```ruby
-state.thread_id  # => String | nil
+memory.session_id  # => String | nil
 ```
 
-Conversation thread identifier for persistence.
-
-### memory
-
-```ruby
-state.memory  # => Memory
-```
-
-Shared key-value store.
-
-## Methods
+Conversation session identifier for persistence.
 
 ### data
 
 ```ruby
-state.data  # => StateProxy
+memory.data  # => StateProxy
 ```
 
 Access workflow data as a proxy object.
 
 ```ruby
-state.data[:user_id]          # Hash access
-state.data.user_id            # Method access
-state.data[:status] = "active"
+memory.data[:user_id]          # Hash access
+memory.data.user_id            # Method access
+memory.data[:status] = "active"
 ```
 
 ### results
 
 ```ruby
-state.results  # => Array<RobotResult>
+memory.results  # => Array<RobotResult>
 ```
 
 All robot execution results.
@@ -56,15 +45,17 @@ All robot execution results.
 ### messages
 
 ```ruby
-state.messages  # => Array<Message>
+memory.messages  # => Array<Message>
 ```
 
 Formatted conversation messages for LLM.
 
+## Methods
+
 ### append_result
 
 ```ruby
-state.append_result(robot_result)
+memory.append_result(robot_result)
 ```
 
 Add a robot result to history.
@@ -72,7 +63,7 @@ Add a robot result to history.
 ### set_results
 
 ```ruby
-state.set_results(array_of_results)
+memory.set_results(array_of_results)
 ```
 
 Replace all results.
@@ -80,23 +71,23 @@ Replace all results.
 ### results_from
 
 ```ruby
-state.results_from(5)  # => Array<RobotResult>
+memory.results_from(5)  # => Array<RobotResult>
 ```
 
 Get results starting at index.
 
-### thread_id=
+### session_id=
 
 ```ruby
-state.thread_id = "thread_123"
+memory.session_id = "session_123"
 ```
 
-Set the thread identifier.
+Set the session identifier.
 
 ### format_history
 
 ```ruby
-state.format_history  # => Array<Message>
+memory.format_history  # => Array<Message>
 ```
 
 Format results as conversation history.
@@ -104,7 +95,7 @@ Format results as conversation history.
 ### clone
 
 ```ruby
-new_state = state.clone
+new_memory = memory.clone
 ```
 
 Create a deep copy.
@@ -112,7 +103,7 @@ Create a deep copy.
 ### to_h
 
 ```ruby
-state.to_h  # => Hash
+memory.to_h  # => Hash
 ```
 
 Hash representation.
@@ -120,7 +111,7 @@ Hash representation.
 ### to_json
 
 ```ruby
-state.to_json  # => String
+memory.to_json  # => String
 ```
 
 JSON representation.
@@ -128,7 +119,7 @@ JSON representation.
 ### from_hash (class method)
 
 ```ruby
-state = State.from_hash(hash)
+memory = Memory.from_hash(hash)
 ```
 
 Restore from hash.
@@ -138,7 +129,7 @@ Restore from hash.
 The `data` attribute is a `StateProxy`:
 
 ```ruby
-proxy = state.data
+proxy = memory.data
 
 # Hash-style access
 proxy[:key]
@@ -160,19 +151,18 @@ proxy.empty?
 proxy.size
 ```
 
-## Creating State
+## Creating Memory
 
 ### Basic
 
 ```ruby
-state = RobotLab.create_state(message: "Hello")
+memory = RobotLab.create_memory
 ```
 
 ### With Data
 
 ```ruby
-state = RobotLab.create_state(
-  message: "Process order",
+memory = RobotLab.create_memory(
   data: {
     user_id: "user_123",
     order_id: "ord_456"
@@ -180,25 +170,18 @@ state = RobotLab.create_state(
 )
 ```
 
-### With Thread ID
+### With Session ID
 
 ```ruby
-# Via UserMessage
-message = UserMessage.new("Continue", thread_id: "thread_123")
-state = RobotLab.create_state(message: message)
-
-# Direct assignment
-state = RobotLab.create_state(message: "Continue")
-state.thread_id = "thread_123"
+memory = RobotLab.create_memory
+memory.session_id = "session_123"
 ```
 
 ### With Existing Results
 
 ```ruby
-state = RobotLab.create_state(
-  message: "Follow up",
-  results: previous_results
-)
+memory = RobotLab.create_memory
+memory.set_results(previous_results)
 ```
 
 ## UserMessage
@@ -208,13 +191,13 @@ Enhanced message with metadata:
 ```ruby
 message = UserMessage.new(
   "What's my order status?",
-  thread_id: "thread_123",
+  session_id: "session_123",
   system_prompt: "Respond in Spanish",
   metadata: { source: "web" }
 )
 
 message.content       # => "What's my order status?"
-message.thread_id     # => "thread_123"
+message.session_id    # => "session_123"
 message.system_prompt # => "Respond in Spanish"
 message.metadata      # => { source: "web" }
 message.id            # => UUID
@@ -226,44 +209,44 @@ message.created_at    # => Time
 ### Accessing Data
 
 ```ruby
-state = RobotLab.create_state(
-  message: "Help",
+memory = RobotLab.create_memory(
   data: { user: { name: "Alice", plan: "pro" } }
 )
 
-state.data[:user][:name]  # => "Alice"
-state.data.to_h           # => { user: { name: "Alice", plan: "pro" } }
+memory.data[:user][:name]  # => "Alice"
+memory.data.to_h           # => { user: { name: "Alice", plan: "pro" } }
 ```
 
 ### Working with Results
 
 ```ruby
 # After running network
-state.results.size           # Number of results
-state.results.last           # Most recent
-state.results.map(&:robot_name)  # ["classifier", "support"]
+memory.results.size           # Number of results
+memory.results.last           # Most recent
+memory.results.map(&:robot_name)  # ["classifier", "support"]
 ```
 
-### Using Memory
+### Using Reactive Memory
 
 ```ruby
-state.memory.remember("intent", "billing")
-intent = state.memory.recall("intent")
+memory.set(:intent, "billing")
+intent = memory.get(:intent)
 
-scoped = state.memory.scoped("user:123")
-scoped.remember("preference", "dark_mode")
+memory.subscribe(:status) do |change|
+  puts "Status changed to #{change.value} by #{change.writer}"
+end
 ```
 
 ### Serialization
 
 ```ruby
-# Save state
-json = state.to_json
-File.write("state.json", json)
+# Save memory
+json = memory.to_json
+File.write("memory.json", json)
 
-# Restore state
-data = JSON.parse(File.read("state.json"))
-state = State.from_hash(data)
+# Restore memory
+data = JSON.parse(File.read("memory.json"))
+memory = Memory.from_hash(data)
 ```
 
 ## See Also

@@ -279,24 +279,6 @@ Publish a correlated reply to a specific message. The `in_reply_to` composite ke
 
 **Raises:** `BusError` if no bus is configured.
 
-### reply
-
-```ruby
-robot.reply(message, "Here's my response")
-# => RobotMessage
-```
-
-Convenience method that wraps `send_reply`. Extracts the `from` and `key` from the incoming `RobotMessage` automatically.
-
-**Parameters:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `message` | `RobotMessage` | The message being replied to |
-| `content` | `String`, `Hash` | Reply payload |
-
-**Returns:** `RobotMessage`
-
 ### on_message
 
 ```ruby
@@ -315,14 +297,14 @@ Register a custom handler for incoming bus messages. Block arity controls delive
 # Auto-ack mode (1 arg)
 robot.on_message do |message|
   joke = run(message.content.to_s).last_text_content
-  reply(message, joke)
+  send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
 end
 
 # Manual mode (2 args)
 robot.on_message do |delivery, message|
   if message.content.to_s.length > 10
     delivery.ack!
-    reply(message, "Got it!")
+    send_reply(to: message.from.to_sym, content: "Got it!", in_reply_to: message.key)
   else
     delivery.nack!
   end
@@ -572,7 +554,7 @@ end
 
 bob.on_message do |message|
   joke = bob.run(message.content.to_s).last_text_content
-  bob.reply(message, joke)
+  bob.send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
 end
 
 alice.send_message(to: :bob, content: "Tell me a robot joke.")

@@ -363,14 +363,6 @@ module RobotLab
     end
 
 
-    # Convenience method to reply to a RobotMessage.
-    #
-    # @param message [RobotMessage] the message to reply to
-    # @param content [String, Hash] reply payload
-    # @return [RobotMessage] the reply message
-    def reply(message, content)
-      send_reply(to: message.from.to_sym, content: content, in_reply_to: message.key)
-    end
 
 
     # Register a custom handler for incoming bus messages.

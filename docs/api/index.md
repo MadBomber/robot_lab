@@ -10,9 +10,8 @@ The fundamental building blocks of RobotLab:
 |-------|-------------|
 | [Robot](core/robot.md) | LLM-powered agent with personality and tools |
 | [Network](core/network.md) | Orchestrates multiple robots |
-| [State](core/state.md) | Manages conversation and workflow data |
+| [Memory](core/memory.md) | Reactive key-value store for sharing data |
 | [Tool](core/tool.md) | Custom function robots can call |
-| [Memory](core/memory.md) | Shared key-value store |
 
 ## Messages
 
@@ -21,7 +20,7 @@ Message types for LLM communication:
 | Class | Description |
 |-------|-------------|
 | [UserMessage](messages/user-message.md) | User input with metadata |
-| [TextMessage](messages/text-message.md) | Assistant text response |
+| [TextMessage](messages/text-message.md) | Text message with role |
 | [ToolCallMessage](messages/tool-call-message.md) | Tool execution request |
 | [ToolResultMessage](messages/tool-result-message.md) | Tool execution result |
 
@@ -70,13 +69,13 @@ Conversation persistence:
 
 ```ruby
 # Configuration
-RobotLab.configuration
-RobotLab.configure { |config| ... }
+RobotLab.config              # => Config instance
+RobotLab.reload_config!      # => reload from all sources
 
 # Building
-RobotLab.build { ... }
-RobotLab.create_network { ... }
-RobotLab.create_state(...)
+RobotLab.build(name:, template:, system_prompt:, context:, **options)
+RobotLab.create_network(name:, concurrency:) { ... }
+RobotLab.create_memory(data:, enable_cache:, **options)
 ```
 
 See individual class documentation for detailed method references.

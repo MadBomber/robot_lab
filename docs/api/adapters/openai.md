@@ -6,9 +6,8 @@ Adapter for GPT models via OpenAI API.
 
 ```ruby
 # Automatically used for GPT models
-robot = RobotLab.build do
-  model "gpt-4o"
-end
+robot = RobotLab.build(name: "assistant", model: "gpt-4o")
+result = robot.run("Hello!")
 ```
 
 ## Supported Models
@@ -26,104 +25,100 @@ end
 ### API Key
 
 ```bash
+# Direct RubyLLM env var
 export OPENAI_API_KEY="sk-..."
+
+# Or via RobotLab config
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY="sk-..."
 ```
 
 ### Options
 
+Provider options are configured via environment variables or YAML config files:
+
+```yaml
+# In config/robot_lab.yml
+ruby_llm:
+  openai_api_key: "sk-..."
+  openai_api_base: "https://api.openai.com/v1"
+  openai_organization_id: "org-..."
+  request_timeout: 120
+```
+
 ```ruby
-RobotLab.configure do |config|
-  config.adapter_options = {
-    openai: {
-      base_url: "https://api.openai.com/v1",
-      organization: "org-...",
-      timeout: 120,
-      max_tokens: 4096
-    }
-  }
-end
+# Access configuration values
+RobotLab.config.ruby_llm.openai_api_key
+RobotLab.config.ruby_llm.openai_api_base
+RobotLab.config.ruby_llm.openai_organization_id
 ```
 
 ### Azure OpenAI
 
-```ruby
-RobotLab.configure do |config|
-  config.adapter_options = {
-    openai: {
-      base_url: "https://your-resource.openai.azure.com",
-      api_key: ENV["AZURE_OPENAI_KEY"],
-      api_version: "2024-02-15-preview"
-    }
-  }
-end
+```bash
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_BASE="https://your-resource.openai.azure.com"
+export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY="your-azure-key"
+```
+
+```yaml
+# Or in config/robot_lab.yml
+ruby_llm:
+  openai_api_base: "https://your-resource.openai.azure.com"
+  openai_api_key: "your-azure-key"
 ```
 
 ## Features
 
-### Streaming
-
-```ruby
-result = robot.run(state: state) do |event|
-  case event
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "Calling: #{event.name}"
-  end
-end
-```
-
 ### Tool Use
 
-Tools are automatically converted to OpenAI's function calling format:
+Tools are automatically converted to OpenAI's function calling format by the adapter. Define tools as RubyLLM tool classes and pass them when building the robot:
 
 ```ruby
-robot = RobotLab.build do
-  model "gpt-4o"
+robot = RobotLab.build(
+  name: "weather_bot",
+  model: "gpt-4o",
+  system_prompt: "You are a helpful weather assistant.",
+  local_tools: [GetWeatherTool]
+)
 
-  tool :get_weather do
-    description "Get current weather"
-    parameter :location, type: :string, required: true
-    handler { |location:, **_| WeatherAPI.fetch(location) }
-  end
-end
+result = robot.run("What's the weather in San Francisco?")
 ```
 
-### JSON Mode
+### Adapter-Specific Formatting
+
+The OpenAI adapter uses the base class defaults for tool choice formatting:
 
 ```ruby
-robot = RobotLab.build do
-  model "gpt-4o"
-  template "Always respond with valid JSON."
-  # Response format is automatically configured
-end
+adapter = RobotLab::Adapters::Registry.for(:openai)
+
+# Format tool choice
+adapter.format_tool_choice("auto")       # => "auto"
+adapter.format_tool_choice("any")        # => "required"
+adapter.format_tool_choice("get_weather") # => { type: "function", function: { name: "get_weather" } }
 ```
+
+The OpenAI adapter is also used for compatible providers: Azure OpenAI, Grok, Ollama, and OpenRouter.
 
 ## Response Format
 
+The adapter's `parse_response` method returns internal message objects:
+
 ```ruby
-{
-  content: [TextMessage, ...],
-  tool_calls: [ToolCallMessage, ...],
-  usage: {
-    input_tokens: 150,
-    output_tokens: 250,
-    total_tokens: 400
-  },
-  stop_reason: "stop"
-}
+# TextMessage for text content
+# ToolCallMessage for tool calls
+# Each with normalized attributes regardless of provider
 ```
 
 ## Error Handling
 
+RobotLab uses its own error hierarchy. Provider-specific errors from RubyLLM are raised as-is:
+
 ```ruby
 begin
-  result = robot.run(state: state)
-rescue RobotLab::Adapters::RateLimitError => e
-  sleep(e.retry_after || 60)
-  retry
-rescue RobotLab::Adapters::APIError => e
-  logger.error("OpenAI API error: #{e.message}")
+  result = robot.run("Hello!")
+rescue RobotLab::InferenceError => e
+  logger.error("Inference failed: #{e.message}")
+rescue RobotLab::ConfigurationError => e
+  logger.error("Configuration error: #{e.message}")
 end
 ```
 

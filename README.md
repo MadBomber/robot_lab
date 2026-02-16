@@ -375,7 +375,7 @@ class Comedian < RobotLab::Robot
     super(name: "bob", template: :comedian, bus: bus)
     on_message do |message|
       joke = run(message.content.to_s).last_text_content.strip
-      reply(message, joke)
+      send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
     end
   end
 end
@@ -402,7 +402,7 @@ Key features:
 
 - **Typed channels** — only `RobotMessage` objects are accepted (type enforcement via `typed_bus`)
 - **Auto-ACK** — `on_message { |message| }` auto-acknowledges; use `|delivery, message|` for manual ACK/NACK
-- **Reply correlation** — `reply(message, content)` tracks conversation threads via `in_reply_to`
+- **Reply correlation** — `send_reply(to:, content:, in_reply_to:)` tracks conversation threads
 - **Outbox tracking** — sent messages tracked in `robot.outbox` with status and replies
 - **Independent of Network** — bus communication works without a Network pipeline
 
@@ -451,17 +451,24 @@ Key features:
 
 ## Streaming
 
-Pass a block to `run` to receive real-time events during execution:
+Use a `Streaming::Context` with a publish callback to receive real-time events:
 
 ```ruby
-result = robot.run("Tell me a story") do |event|
+handler = lambda do |event|
   case event[:event]
-  when "text.delta"
+  when RobotLab::Streaming::Events::TEXT_DELTA
     print event[:data][:delta]
-  when "run.completed"
+  when RobotLab::Streaming::Events::RUN_COMPLETED
     puts "\nDone!"
   end
 end
+
+context = RobotLab::Streaming::Context.new(
+  run_id: SecureRandom.uuid,
+  message_id: SecureRandom.uuid,
+  scope: "robot",
+  publish: handler
+)
 ```
 
 ## Rails Integration

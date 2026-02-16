@@ -6,9 +6,8 @@ Adapter for Claude models via Anthropic API.
 
 ```ruby
 # Automatically used for Claude models
-robot = RobotLab.build do
-  model "claude-sonnet-4"
-end
+robot = RobotLab.build(name: "assistant", model: "claude-sonnet-4")
+result = robot.run("Hello!")
 ```
 
 ## Supported Models
@@ -25,92 +24,89 @@ end
 ### API Key
 
 ```bash
+# Direct RubyLLM env var
 export ANTHROPIC_API_KEY="sk-ant-api03-..."
+
+# Or via RobotLab config
+export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY="sk-ant-api03-..."
 ```
 
 ### Options
 
+Provider options are configured via environment variables or YAML config files:
+
+```yaml
+# In config/robot_lab.yml
+ruby_llm:
+  anthropic_api_key: "sk-ant-api03-..."
+  request_timeout: 120
+```
+
 ```ruby
-RobotLab.configure do |config|
-  config.adapter_options = {
-    anthropic: {
-      base_url: "https://api.anthropic.com",
-      api_version: "2024-01-01",
-      timeout: 120,
-      max_tokens: 4096
-    }
-  }
-end
+# Access configuration values
+RobotLab.config.ruby_llm.anthropic_api_key
+RobotLab.config.ruby_llm.request_timeout
 ```
 
 ## Features
 
-### Streaming
-
-```ruby
-result = robot.run(state: state) do |event|
-  case event
-  when :text_delta
-    print event.text
-  when :tool_call
-    puts "Calling: #{event.name}"
-  end
-end
-```
-
 ### Tool Use
 
-Tools are automatically converted to Anthropic's format:
+Tools are automatically converted to Anthropic's format by the adapter. Define tools as RubyLLM tool classes and pass them when building the robot:
 
 ```ruby
-robot = RobotLab.build do
-  model "claude-sonnet-4"
+robot = RobotLab.build(
+  name: "searcher",
+  model: "claude-sonnet-4",
+  system_prompt: "You are a helpful search assistant.",
+  local_tools: [SearchTool]
+)
 
-  tool :search do
-    description "Search the database"
-    parameter :query, type: :string, required: true
-    handler { |query:, **_| Database.search(query) }
-  end
-end
+result = robot.run("Search for Ruby LLM libraries")
 ```
 
-### Extended Thinking
+### Adapter-Specific Formatting
 
-For complex reasoning tasks:
+The Anthropic adapter handles:
+
+- System message as a top-level parameter (not in the messages array)
+- `tool_use` / `tool_result` content block format
+- Anthropic-specific tool choice format (`{ type: "auto" }`, `{ type: "any" }`, `{ type: "tool", name: "..." }`)
 
 ```ruby
-robot = RobotLab.build do
-  model "claude-sonnet-4"
-  # Extended thinking is automatically enabled for supported models
-end
+adapter = RobotLab::Adapters::Registry.for(:anthropic)
+
+# Format tools for Anthropic's API
+formatted = adapter.format_tools(tools)
+# => [{ name: "search", description: "...", input_schema: { ... } }]
+
+# Format tool choice
+adapter.format_tool_choice("auto")   # => { type: "auto" }
+adapter.format_tool_choice("any")    # => { type: "any" }
+adapter.format_tool_choice("search") # => { type: "tool", name: "search" }
 ```
 
 ## Response Format
 
+The adapter's `parse_response` method returns internal message objects:
+
 ```ruby
-{
-  content: [TextMessage, ...],
-  tool_calls: [ToolCallMessage, ...],
-  usage: {
-    input_tokens: 150,
-    output_tokens: 250,
-    cache_creation_input_tokens: 0,
-    cache_read_input_tokens: 0
-  },
-  stop_reason: "end_turn"
-}
+# TextMessage for text content
+# ToolCallMessage for tool calls
+# Each with normalized attributes regardless of provider
 ```
 
 ## Error Handling
 
+RobotLab uses its own error hierarchy. Provider-specific errors from RubyLLM are raised as-is:
+
 ```ruby
 begin
-  result = robot.run(state: state)
-rescue RobotLab::Adapters::RateLimitError => e
-  sleep(e.retry_after)
-  retry
-rescue RobotLab::Adapters::APIError => e
-  logger.error("Anthropic API error: #{e.message}")
+  result = robot.run("Hello!")
+rescue RobotLab::InferenceError => e
+  logger.error("Inference failed: #{e.message}")
+rescue RobotLab::ConfigurationError => e
+  logger.error("Configuration error: #{e.message}")
 end
 ```
 

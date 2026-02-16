@@ -2,9 +2,9 @@
 
 Stream LLM responses in real-time for better user experience.
 
-## Basic Streaming
+## Streaming via Callbacks
 
-Pass a block to `robot.run` to receive streaming events:
+RobotLab robots support streaming through callback methods inherited from RubyLLM::Agent. Register callbacks before calling `run`:
 
 ```ruby
 robot = RobotLab.build(
@@ -12,88 +12,104 @@ robot = RobotLab.build(
   system_prompt: "You are a creative storyteller."
 )
 
-robot.run("Tell me a story about a brave robot") do |event|
-  puts event.inspect
+# Register streaming callback
+robot.on_new_message do |message|
+  print message.content if message.content
 end
+
+result = robot.run("Tell me a story about a brave robot")
 ```
 
-## Event Types
+## Available Callbacks
 
-### Text Deltas
+### on_new_message
 
-Receive text as it is generated:
+Called when the assistant starts generating a new message, with streaming chunks:
 
 ```ruby
-robot.run("Tell me a story") do |event|
-  if event[:event] == "text.delta"
-    print event[:data][:content]
-  end
+robot.on_new_message do |message|
+  print message.content if message.content
 end
 ```
 
-### Tool Calls
+### on_end_message
 
-Know when tools are being called:
+Called when the assistant finishes a message:
 
 ```ruby
-robot.run("What's the weather in Tokyo?") do |event|
-  case event[:event]
-  when "tool_call.start"
-    puts "\nCalling: #{event[:data][:name]}"
-  when "tool_call.complete"
-    puts "Done: #{event[:data][:result]}"
-  end
+robot.on_end_message do |message|
+  puts "\n--- Response complete ---"
+  puts "Content length: #{message.content&.length}"
 end
 ```
 
-### Lifecycle Events
+### on_tool_call
 
-Track execution lifecycle:
+Called when the LLM invokes a tool:
 
 ```ruby
-robot.run("Help me with my task") do |event|
-  case event[:event]
-  when "run.started"
-    puts "Starting..."
-  when "run.completed"
-    puts "Completed!"
-  when "run.failed"
-    puts "Failed: #{event[:data][:error]}"
-  end
+robot.on_tool_call do |tool_call|
+  puts "Calling tool: #{tool_call.name}"
 end
 ```
 
-## Event Reference
+### on_tool_result
 
-| Event | Description | Data |
-|-------|-------------|------|
-| `run.started` | Execution began | `run_id` |
-| `run.completed` | Execution finished | `run_id` |
-| `run.failed` | Error occurred | `run_id`, `error` |
-| `text.delta` | Text content chunk | `content` |
-| `tool_call.start` | Tool execution starting | `name`, `input` |
-| `tool_call.complete` | Tool execution done | `name`, `result` |
-
-## Comprehensive Event Handling
-
-Handle all event types in a single block:
+Called when a tool returns its result:
 
 ```ruby
-robot.run("Analyze this data and generate a report") do |event|
-  case event[:event]
-  when "text.delta"
-    print event[:data][:content]
-  when "tool_call.start"
-    puts "\n[Tool] Calling: #{event[:data][:name]}"
-  when "tool_call.complete"
-    puts "[Tool] Done: #{event[:data][:name]}"
-  when "run.completed"
-    puts "\n--- Complete ---"
-  when "run.failed"
-    puts "\n[Error] #{event[:data][:error]}"
-  end
+robot.on_tool_result do |tool_call, result|
+  puts "Tool #{tool_call.name} returned: #{result}"
 end
 ```
+
+## Comprehensive Callback Setup
+
+Register all callbacks for full visibility:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  local_tools: [WeatherTool]
+)
+
+robot.on_new_message do |message|
+  print message.content if message.content
+end
+
+robot.on_end_message do |_message|
+  puts "\n--- Done ---"
+end
+
+robot.on_tool_call do |tool_call|
+  puts "\n[Tool] Calling: #{tool_call.name}"
+end
+
+robot.on_tool_result do |tool_call, result|
+  puts "[Tool] #{tool_call.name} returned: #{result}"
+end
+
+result = robot.run("What's the weather in Tokyo?")
+```
+
+## Streaming via Chat Block
+
+For more control, pass a block directly to `chat.ask` (the underlying RubyLLM method):
+
+```ruby
+robot = RobotLab.build(
+  name: "chat_bot",
+  system_prompt: "You are a helpful assistant."
+)
+
+# Use the underlying chat directly with a streaming block
+robot.chat.ask("Tell me a story") do |chunk|
+  print chunk.content if chunk.content
+end
+```
+
+Note: Using `chat.ask` directly bypasses Robot's memory resolution and tool hierarchy. Use callbacks with `robot.run` when you need those features.
 
 ## Web Integration
 
@@ -107,9 +123,15 @@ class ChatChannel < ApplicationCable::Channel
       system_prompt: "You are a helpful chat assistant."
     )
 
-    robot.run(data["message"]) do |event|
-      transmit(event)
+    robot.on_new_message do |message|
+      transmit({ event: "text.delta", content: message.content }) if message.content
     end
+
+    robot.on_end_message do |_message|
+      transmit({ event: "run.completed" })
+    end
+
+    robot.run(data["message"])
   end
 end
 ```
@@ -128,9 +150,15 @@ class StreamController < ApplicationController
       system_prompt: "You are helpful."
     )
 
-    robot.run(params[:message]) do |event|
-      response.stream.write("data: #{event.to_json}\n\n")
+    robot.on_new_message do |message|
+      response.stream.write("data: #{message.content}\n\n") if message.content
     end
+
+    robot.on_end_message do |_message|
+      response.stream.write("data: [DONE]\n\n")
+    end
+
+    robot.run(params[:message])
   ensure
     response.stream.close
   end
@@ -142,38 +170,17 @@ end
 ```ruby
 # Using Faye WebSocket
 ws.on :message do |msg|
-  robot.run(msg.data) do |event|
-    ws.send(event.to_json)
+  robot.on_new_message do |message|
+    ws.send(message.content) if message.content
   end
+
+  robot.run(msg.data)
 end
-```
-
-## Buffering
-
-Buffer content for batch processing:
-
-```ruby
-buffer = []
-
-robot.run("Generate a long response") do |event|
-  if event[:event] == "text.delta"
-    buffer << event[:data][:content]
-
-    # Flush every 10 chunks
-    if buffer.size >= 10
-      process_batch(buffer.join)
-      buffer.clear
-    end
-  end
-end
-
-# Final flush
-process_batch(buffer.join) if buffer.any?
 ```
 
 ## Progress Tracking
 
-Track streaming progress:
+Track streaming progress with callbacks:
 
 ```ruby
 class StreamProgress
@@ -182,49 +189,31 @@ class StreamProgress
     @tools = 0
   end
 
-  def handle(event)
-    case event[:event]
-    when "text.delta"
-      @chars += event[:data][:content].length
+  attr_reader :chars, :tools
+
+  def attach(robot)
+    robot.on_new_message do |message|
+      @chars += message.content.length if message.content
       print "\rReceived #{@chars} characters..."
-    when "tool_call.start"
+    end
+
+    robot.on_tool_call do |tool_call|
       @tools += 1
-      puts "\nTool call ##{@tools}: #{event[:data][:name]}"
+      puts "\nTool call ##{@tools}: #{tool_call.name}"
     end
   end
 end
 
 progress = StreamProgress.new
+progress.attach(robot)
 
-robot.run("Process this complex request") do |event|
-  progress.handle(event)
-end
-```
-
-## Error Handling
-
-Handle streaming errors gracefully:
-
-```ruby
-robot.run("Analyze this") do |event|
-  case event[:event]
-  when "run.failed"
-    log_error(event[:data][:error])
-    notify_user("An error occurred")
-  when "text.delta"
-    begin
-      broadcast(event)
-    rescue BroadcastError => e
-      # Client disconnected, but continue processing
-      logger.warn "Broadcast failed: #{e.message}"
-    end
-  end
-end
+result = robot.run("Process this complex request")
+puts "\nTotal: #{progress.chars} chars, #{progress.tools} tool calls"
 ```
 
 ## Without Streaming
 
-When streaming is not needed, simply call `run` without a block:
+When streaming is not needed, simply call `run` without registering callbacks:
 
 ```ruby
 # No streaming - returns RobotResult directly
@@ -234,33 +223,23 @@ puts result.last_text_content
 
 ## Best Practices
 
-### 1. Handle All Event Types
+### 1. Register Callbacks Before Run
 
 ```ruby
-robot.run("Hello") do |event|
-  case event[:event]
-  when "text.delta" then handle_delta(event)
-  when "tool_call.start" then show_tool_indicator(event)
-  when "tool_call.complete" then hide_tool_indicator(event)
-  when "run.completed" then finalize_response
-  when "run.failed" then show_error(event)
-  end
-end
+# Correct: register first, then run
+robot.on_new_message { |msg| print msg.content if msg.content }
+robot.run("Hello")
 ```
 
-### 2. Provide User Feedback
+### 2. Handle Errors in Callbacks
 
 ```ruby
-robot.run("Process my request") do |event|
-  case event[:event]
-  when "run.started"
-    show_typing_indicator
-  when "text.delta"
-    update_message(event[:data][:content])
-  when "tool_call.start"
-    show_status("Looking up information...")
-  when "run.completed"
-    hide_typing_indicator
+robot.on_new_message do |message|
+  begin
+    broadcast(message.content) if message.content
+  rescue BroadcastError => e
+    # Client disconnected, but continue processing
+    logger.warn "Broadcast failed: #{e.message}"
   end
 end
 ```
@@ -269,9 +248,10 @@ end
 
 ```ruby
 begin
-  robot.run("Hello") do |event|
-    stream_to_client(event)
+  robot.on_new_message do |message|
+    stream_to_client(message.content) if message.content
   end
+  robot.run("Hello")
 ensure
   close_stream_connection
 end

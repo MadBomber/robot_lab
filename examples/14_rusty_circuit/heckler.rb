@@ -51,7 +51,7 @@ class Heckler < RobotLab::Robot
       end
 
       # Send feedback to comic's personal channel until the set is done
-      reply(message, verdict) if @rounds < MAX_ROUNDS
+      send_reply(to: message.from.to_sym, content: verdict, in_reply_to: message.key) if @rounds < MAX_ROUNDS
     end
   end
 end

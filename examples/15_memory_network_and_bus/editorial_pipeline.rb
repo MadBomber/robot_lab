@@ -109,7 +109,7 @@ editor.on_message do |message|
   puts "  Editor  [revised]: #{revised[0..120]}..."
   puts "  [editor] Revision written to #{path}"
 
-  editor.reply(message, revised)
+  editor.send_reply(to: message.from.to_sym, content: revised, in_reply_to: message.key)
 end
 
 chief = EditorInChief.new(

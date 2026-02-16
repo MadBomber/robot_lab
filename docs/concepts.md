@@ -167,10 +167,10 @@ robot = RobotLab.build(
 )
 ```
 
-### RobotLab::Tool with Block Handler
+### RobotLab::Tool.create Factory
 
 ```ruby
-tool = RobotLab::Tool.new(
+tool = RobotLab::Tool.create(
   name: "get_weather",
   description: "Get current weather for a location",
   parameters: {
@@ -180,9 +180,7 @@ tool = RobotLab::Tool.new(
     },
     required: ["location"]
   }
-) do |input, **_opts|
-  WeatherService.current(input[:location])
-end
+) { |args| WeatherService.current(args[:location]) }
 ```
 
 ## RobotResult
@@ -374,7 +372,7 @@ alice = RobotLab.build(name: "alice", system_prompt: "You evaluate jokes.", bus:
 # Register handlers
 bob.on_message do |message|
   joke = bob.run(message.content.to_s).last_text_content
-  bob.reply(message, joke)
+  bob.send_reply(to: message.from.to_sym, content: joke, in_reply_to: message.key)
 end
 
 alice.on_message do |message|
@@ -391,7 +389,7 @@ Key features:
 
 - **Typed channels** — only `RobotMessage` objects accepted per channel
 - **Auto-ACK** — 1-arg `on_message` blocks auto-acknowledge; 2-arg blocks give manual control
-- **Reply correlation** — `reply(message, content)` tracks threads via `in_reply_to`
+- **Reply correlation** — `send_reply(to:, content:, in_reply_to:)` tracks threads via `in_reply_to`
 - **Independent of Network** — bus works without a Network pipeline
 
 ### Dynamic Spawning
