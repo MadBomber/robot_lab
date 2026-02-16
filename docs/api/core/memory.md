@@ -1,96 +1,120 @@
 # Memory
 
-Namespaced key-value store for sharing data between robots.
+Reactive key-value store for sharing data between robots.
 
 ## Class: `RobotLab::Memory`
 
 ```ruby
-memory = state.memory
+memory = robot.memory
 
-memory.remember("key", "value")
-value = memory.recall("key")
+memory.set(:key, "value")
+value = memory.get(:key)
 ```
 
 ## Constants
 
-### SHARED_NAMESPACE
+### RESERVED_KEYS
 
 ```ruby
-Memory::SHARED_NAMESPACE  # => "SHARED"
+Memory::RESERVED_KEYS  # => [:data, :results, :messages, :session_id, :cache]
 ```
 
-Conventional namespace for cross-robot data.
+Reserved keys with special accessors and behavior.
 
 ## Constructor
 
 ```ruby
-memory = Memory.new(initial_data = {})
+memory = Memory.new(
+  data: {},
+  results: [],
+  messages: [],
+  session_id: nil,
+  backend: :auto,
+  enable_cache: true,
+  network_name: nil
+)
+```
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `data` | `Hash` | `{}` | Initial runtime data |
+| `results` | `Array` | `[]` | Pre-loaded robot results |
+| `messages` | `Array` | `[]` | Pre-loaded conversation messages |
+| `session_id` | `String, nil` | `nil` | Session identifier |
+| `backend` | `Symbol` | `:auto` | Storage backend (`:auto`, `:redis`, `:hash`) |
+| `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
+| `network_name` | `String, nil` | `nil` | Network this memory belongs to |
+
+## Factory Method
+
+```ruby
+memory = RobotLab.create_memory(data: { user_id: 123 })
 ```
 
 ## Methods
 
-### remember
+### set
 
 ```ruby
-memory.remember(key, value)
+memory.set(:key, value)
 ```
 
-Store a value.
+Store a value and notify subscribers asynchronously.
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `key` | `String`, `Symbol` | Storage key |
+| `key` | `Symbol`, `String` | Storage key |
 | `value` | `Object` | Value to store |
 
-### recall
+### get
 
 ```ruby
-memory.recall(key)  # => Object | nil
+memory.get(:key)                        # => value or nil
+memory.get(:key, wait: true)            # Block until available
+memory.get(:key, wait: 30)              # Block up to 30 seconds
+memory.get(:a, :b, :c, wait: 60)        # Multiple keys, returns Hash
 ```
 
-Retrieve a value.
+Retrieve one or more values, optionally waiting until they exist.
 
 **Parameters:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| `key` | `String`, `Symbol` | Storage key |
+| `keys` | `Symbol`, `String` | One or more keys to retrieve |
+| `wait` | `Boolean`, `Numeric` | `false`: immediate, `true`: block, `Numeric`: timeout |
 
-**Returns:** Stored value or `nil`.
+**Returns:** Single value for one key, `Hash` for multiple keys.
 
-### exists?
+**Raises:** `AwaitTimeout` if timeout expires.
 
-```ruby
-memory.exists?(key)  # => Boolean
-```
-
-Check if key exists.
-
-### forget
+### key?
 
 ```ruby
-memory.forget(key)  # => Object | nil
+memory.key?(:key)  # => Boolean
 ```
 
-Remove a key, returns the value.
+Check if key exists. Aliases: `has_key?`, `include?`.
 
-### all
+### delete
 
 ```ruby
-memory.all  # => Hash
+memory.delete(:key)  # => deleted value
 ```
 
-Get all stored data.
+Remove a key. Cannot delete reserved keys.
 
-### namespaces
+### keys
 
 ```ruby
-memory.namespaces  # => Array<String>
+memory.keys  # => Array<Symbol>
 ```
 
-List all namespaces.
+Get all non-reserved keys.
 
 ### clear
 
@@ -98,217 +122,239 @@ List all namespaces.
 memory.clear
 ```
 
-Clear all data in current scope.
+Clear all non-reserved keys.
 
-### clear_all
-
-```ruby
-memory.clear_all
-```
-
-Clear all data globally.
-
-### search
+### reset
 
 ```ruby
-memory.search(pattern)  # => Hash
+memory.reset
 ```
 
-Find keys matching pattern.
+Reset memory to initial state (clears everything including reserved keys, preserves cache).
 
-**Parameters:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `pattern` | `String` | Glob pattern (e.g., "user:*") |
-
-### stats
+### subscribe
 
 ```ruby
-memory.stats  # => Hash
+sub_id = memory.subscribe(:key1, :key2) do |change|
+  puts "#{change.key} changed: #{change.value}"
+end
 ```
 
-Get memory statistics.
+Subscribe to changes on one or more keys. Callback receives a `MemoryChange` object.
 
-**Returns:**
+**MemoryChange attributes:**
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `key` | `Symbol` | The changed key |
+| `value` | `Object` | New value |
+| `previous` | `Object` | Previous value |
+| `writer` | `String, nil` | Name of robot that wrote |
+| `network_name` | `String, nil` | Network name |
+| `timestamp` | `Time` | When the change occurred |
+| `created?` | `Boolean` | Previous was nil |
+| `updated?` | `Boolean` | Previous was not nil |
+| `deleted?` | `Boolean` | New value is nil |
+
+### subscribe_pattern
 
 ```ruby
-{
-  total_keys: 15,
-  namespaces: ["user", "session"]
-}
+sub_id = memory.subscribe_pattern("analysis:*") do |change|
+  puts "Analysis key #{change.key} updated"
+end
 ```
 
-### scoped
+Subscribe to keys matching a glob pattern (`*` and `?` supported).
+
+### unsubscribe
 
 ```ruby
-scoped_memory = memory.scoped(namespace)  # => ScopedMemory
+memory.unsubscribe(sub_id)  # => Boolean
 ```
 
-Create a scoped view.
+Remove a subscription by its ID.
 
-## ScopedMemory
-
-Scoped view with automatic key prefixing.
-
-### Methods
-
-All Memory methods are available:
+### merge!
 
 ```ruby
-scoped = memory.scoped("user:123")
-
-scoped.remember("name", "Alice")   # Key: "user:123:name"
-scoped.recall("name")              # => "Alice"
-scoped.exists?("name")             # => true
-scoped.forget("name")
-scoped.all                         # Only "user:123:*" keys
-scoped.clear                       # Clear only this scope
+memory.merge!(key1: "value1", key2: "value2")
 ```
 
-### Nested Scopes
+Merge multiple key-value pairs into memory.
+
+## Reserved Key Accessors
+
+### data
 
 ```ruby
-user = memory.scoped("user:123")
-prefs = user.scoped("preferences")
-
-prefs.remember("theme", "dark")
-# Full key: "user:123:preferences:theme"
+memory.data  # => StateProxy
+memory.data[:user_id]          # Hash access
+memory.data.user_id            # Method access
+memory.data[:status] = "active"
 ```
+
+Runtime data accessed through `StateProxy` for method-style access.
+
+### results
+
+```ruby
+memory.results  # => Array<RobotResult>
+```
+
+Accumulated robot results (returns a copy).
+
+### messages
+
+```ruby
+memory.messages  # => Array<Message>
+```
+
+Conversation messages (returns a copy).
+
+### session_id
+
+```ruby
+memory.session_id          # => String | nil
+memory.session_id = "abc"  # Set session identifier
+```
+
+### cache
+
+```ruby
+memory.cache  # => RubyLLM::SemanticCache
+```
+
+Semantic cache module (read-only after initialization).
+
+## Serialization
+
+### to_h
+
+```ruby
+memory.to_h
+# => { data: {...}, results: [...], messages: [...], session_id: "...", custom: {...} }
+```
+
+### to_json
+
+```ruby
+memory.to_json  # => String
+```
+
+### from_hash
+
+```ruby
+memory = Memory.from_hash(hash)
+```
+
+Reconstruct memory from a hash.
+
+### clone
+
+```ruby
+new_memory = memory.clone
+```
+
+Deep copy with fresh subscriptions (cache and network_name preserved).
 
 ## Examples
 
 ### Basic Usage
 
 ```ruby
-state.memory.remember("user_name", "Alice")
-state.memory.remember("order_count", 5)
+robot.memory.set(:user_name, "Alice")
+robot.memory.set(:order_count, 5)
 
-name = state.memory.recall("user_name")  # => "Alice"
-count = state.memory.recall("order_count")  # => 5
+name = robot.memory.get(:user_name)    # => "Alice"
+count = robot.memory.get(:order_count) # => 5
+```
+
+### Bracket Access
+
+```ruby
+robot.memory[:user_id] = 123
+robot.memory[:user_id]  # => 123
 ```
 
 ### Storing Objects
 
 ```ruby
-state.memory.remember("user", {
+robot.memory.set(:user, {
   id: 123,
   name: "Alice",
   plan: "pro"
 })
 
-user = state.memory.recall("user")
+user = robot.memory.get(:user)
 user[:plan]  # => "pro"
 ```
 
-### Scoped Organization
+### Blocking Reads (Network Parallel Execution)
 
 ```ruby
-# User-specific data
-user = state.memory.scoped("user:#{user_id}")
-user.remember("last_login", Time.now)
-user.remember("preferences", { theme: "dark" })
+# In robot A (writer)
+network.memory.set(:sentiment, { score: 0.8, confidence: 0.95 })
 
-# Session-specific data
-session = state.memory.scoped("session:#{session_id}")
-session.remember("page_views", 0)
+# In robot B (reader, may run concurrently)
+result = network.memory.get(:sentiment, wait: true)   # Block indefinitely
+result = network.memory.get(:sentiment, wait: 30)     # Block up to 30s
 
-# Temporary working data
-temp = state.memory.scoped("temp")
-temp.remember("intermediate_result", calculation)
+# Multiple keys with timeout
+results = network.memory.get(:sentiment, :entities, :keywords, wait: 60)
+# => { sentiment: {...}, entities: [...], keywords: [...] }
 ```
 
-### Cross-Robot Communication
+### Reactive Subscriptions
+
+```ruby
+# Subscribe to a key
+memory.subscribe(:raw_data) do |change|
+  enriched = enrich(change.value)
+  memory.set(:enriched, enriched)
+end
+
+# Subscribe with pattern
+memory.subscribe_pattern("user:*") do |change|
+  puts "User key #{change.key} updated by #{change.writer}"
+end
+```
+
+### Cross-Robot Communication via Network Memory
 
 ```ruby
 # In classifier robot
-state.memory.remember("SHARED:intent", "billing")
-state.memory.remember("SHARED:entities", ["order", "refund"])
+network.memory.set(:intent, "billing")
+network.memory.set(:entities, ["order", "refund"])
 
 # In handler robot
-intent = state.memory.recall("SHARED:intent")
-entities = state.memory.recall("SHARED:entities")
+intent = network.memory.get(:intent)
+entities = network.memory.get(:entities)
 ```
 
-### In Tool Handlers
+### Data Proxy
 
 ```ruby
-tool :update_preference do
-  handler do |key:, value:, state:, **_|
-    prefs = state.memory.scoped("preferences")
-    old_value = prefs.recall(key)
-    prefs.remember(key, value)
+memory = RobotLab.create_memory(
+  data: { user: { name: "Alice", plan: "pro" } }
+)
 
-    {
-      success: true,
-      key: key,
-      old_value: old_value,
-      new_value: value
-    }
-  end
-end
+memory.data[:user][:name]  # => "Alice"
+memory.data.to_h           # => { user: { name: "Alice", plan: "pro" } }
 ```
 
-### Search and Iteration
+### Serialization
 
 ```ruby
-# Find all user keys
-user_data = state.memory.search("user:*")
-# => { "user:123:name" => "Alice", "user:123:email" => "..." }
+# Save memory
+json = memory.to_json
+File.write("memory.json", json)
 
-# Process all keys
-state.memory.all.each do |key, value|
-  puts "#{key}: #{value}"
-end
-```
-
-### Cleanup
-
-```ruby
-# Clear temporary data
-state.memory.scoped("temp").clear
-
-# Clear specific namespace
-state.memory.scoped("cache").clear
-
-# Clear everything
-state.memory.clear_all
-```
-
-### Caching Pattern
-
-```ruby
-def cached_fetch(state, key, &block)
-  cache = state.memory.scoped("cache")
-  cached = cache.recall(key)
-  return cached if cached
-
-  result = block.call
-  cache.remember(key, result)
-  result
-end
-
-# Usage
-data = cached_fetch(state, "expensive:#{id}") do
-  ExpensiveService.fetch(id)
-end
-```
-
-### Accumulating Results
-
-```ruby
-# In each robot, accumulate findings
-findings = state.memory.recall("findings") || []
-findings << { robot: robot.name, finding: new_finding }
-state.memory.remember("findings", findings)
-
-# In final robot, aggregate
-all_findings = state.memory.recall("findings")
-summary = all_findings.group_by { |f| f[:robot] }
+# Restore memory
+data = JSON.parse(File.read("memory.json"))
+memory = Memory.from_hash(data)
 ```
 
 ## See Also
 
 - [Memory Guide](../../guides/memory.md)
-- [State](state.md)
 - [State Management Architecture](../../architecture/state-management.md)

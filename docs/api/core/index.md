@@ -12,21 +12,13 @@ classDiagram
         +model: String
         +template: String
         +tools: Array~Tool~
-        +run(state, network)
+        +run(message) Message
     }
 
     class Network {
         +name: String
         +robots: Hash
-        +router: Proc
-        +run(state)
-    }
-
-    class State {
-        +data: StateProxy
-        +results: Array
-        +messages: Array
-        +memory: Memory
+        +run(message)
     }
 
     class Tool {
@@ -37,10 +29,13 @@ classDiagram
     }
 
     class Memory {
-        +remember(key, value)
-        +recall(key)
-        +forget(key)
-        +scoped(namespace)
+        +set(key, value)
+        +get(key)
+        +delete(key)
+        +data: StateProxy
+        +results: Array
+        +messages: Array
+        +session_id: String
     }
 
     class RobotMessage {
@@ -54,8 +49,8 @@ classDiagram
 
     Network --> Robot : contains
     Robot --> Tool : has
-    State --> Memory : has
-    Network --> State : uses
+    Robot --> Memory : uses
+    Network --> Memory : uses
     Robot ..> RobotMessage : sends/receives
 ```
 
@@ -65,10 +60,9 @@ classDiagram
 |-------|---------|
 | [Robot](robot.md) | LLM agent with personality, tools, and model configuration |
 | [Network](network.md) | Container for robots with routing and orchestration |
-| [State](state.md) | Conversation state with data, results, and memory |
 | [Tool](tool.md) | Callable function with parameters and handler |
 | [AskUser](tool.md#built-in-askuser) | Built-in tool for terminal-based user interaction |
-| [Memory](memory.md) | Namespaced key-value store for sharing data |
+| [Memory](memory.md) | Reactive key-value store for sharing data |
 | RobotMessage | Typed envelope for bus-based inter-robot communication |
 
 ## Quick Examples
@@ -76,50 +70,40 @@ classDiagram
 ### Robot
 
 ```ruby
-robot = RobotLab.build do
-  name "assistant"
-  model "claude-sonnet-4"
-  template "You are helpful."
+robot = RobotLab.build(
+  name: "assistant",
+  model: "claude-sonnet-4",
+  system_prompt: "You are helpful.",
+  local_tools: [greet_tool]
+)
 
-  tool :greet do
-    parameter :name, type: :string
-    handler { |name:, **_| "Hello, #{name}!" }
-  end
-end
+result = robot.run("Hello!")
 ```
 
 ### Network
 
 ```ruby
-network = RobotLab.create_network do
-  name "my_network"
-  add_robot robot
-  router ->(args) { args.call_count.zero? ? :assistant : nil }
+network = RobotLab.create_network(name: "my_network") do
+  step :analyzer, analyzer_robot, depends_on: :none
+  step :writer, writer_robot, depends_on: [:analyzer]
 end
-```
 
-### State
-
-```ruby
-state = RobotLab.create_state(
-  message: "Hello",
-  data: { user_id: "123" }
-)
-```
-
-### Tool
-
-```ruby
-tool = RobotLab::Tool.new(
-  name: "get_time",
-  description: "Get current time",
-  handler: ->(**, _) { Time.now.to_s }
-)
+result = network.run(message: "Process this")
 ```
 
 ### Memory
 
 ```ruby
-state.memory.remember("key", "value")
-value = state.memory.recall("key")
+memory = RobotLab.create_memory(data: { user_id: "123" })
+memory.set(:category, "billing")
+memory.get(:category)  # => "billing"
+```
+
+### Tool
+
+```ruby
+tool = RobotLab::Tool.create(
+  name: "get_time",
+  description: "Get current time"
+) { |**_| Time.now.to_s }
 ```

@@ -130,22 +130,21 @@ robot = RobotLab.build(
 )
 ```
 
-### RobotLab::Tool Inline
+### RobotLab::Tool.create Factory
 
 For simpler tools that do not need a class:
 
 ```ruby
-tool = RobotLab::Tool.new(
+tool = RobotLab::Tool.create(
   name: "get_time",
-  description: "Get the current time",
-  handler: ->(_input, **_opts) { Time.now.to_s }
-)
+  description: "Get the current time"
+) { |_args| Time.now.to_s }
 ```
 
 With parameter schema:
 
 ```ruby
-tool = RobotLab::Tool.new(
+tool = RobotLab::Tool.create(
   name: "get_weather",
   description: "Get weather for a location",
   parameters: {
@@ -154,11 +153,8 @@ tool = RobotLab::Tool.new(
       location: { type: "string", description: "City name" }
     },
     required: ["location"]
-  },
-  handler: ->(input, **_opts) {
-    WeatherAPI.current(input[:location])
   }
-)
+) { |args| WeatherAPI.current(args[:location]) }
 ```
 
 ### Tool Execution
@@ -167,10 +163,9 @@ When an LLM decides to use a tool:
 
 1. LLM generates a tool call with tool name and arguments
 2. `@chat` (RubyLLM) identifies the tool from its registered tools
-3. For `RubyLLM::Tool`: calls the `execute` method with keyword arguments
-4. For `RobotLab::Tool`: calls the `call` method with input hash and context
-5. Result is sent back to the LLM for continued processing
-6. Loop repeats until the LLM produces a final text response
+3. Calls the `execute` method with keyword arguments
+4. Result is sent back to the LLM for continued processing
+5. Loop repeats until the LLM produces a final text response
 
 ### Error Handling
 

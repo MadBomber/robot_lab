@@ -20,21 +20,21 @@ Configure history with callbacks:
 ```ruby
 history_config = RobotLab::History::Config.new(
   create_thread: ->(state:, input:, **) {
-    # Create a new thread, return thread_id
-    { thread_id: SecureRandom.uuid }
+    # Create a new thread, return session_id
+    { session_id: SecureRandom.uuid }
   },
 
-  get: ->(thread_id:, **) {
+  get: ->(session_id:, **) {
     # Retrieve history for thread
     # Return Array<RobotResult>
     []
   },
 
-  append_user_message: ->(thread_id:, message:, **) {
+  append_user_message: ->(session_id:, message:, **) {
     # Optional: Store user message
   },
 
-  append_results: ->(thread_id:, new_results:, **) {
+  append_results: ->(session_id:, new_results:, **) {
     # Store new results
   }
 )
@@ -43,9 +43,8 @@ history_config = RobotLab::History::Config.new(
 ### Apply to Network
 
 ```ruby
-network = RobotLab.create_network do
-  name "persistent_chat"
-  history history_config
+network = RobotLab.create_network(name: "persistent_chat") do
+  task :assistant, assistant_robot, depends_on: :none
 end
 ```
 
@@ -57,7 +56,7 @@ Called when starting a new conversation:
 
 ```ruby
 create_thread: ->(state:, input:, **kwargs) {
-  # state - Current State object
+  # state - Current Memory object
   # input - UserMessage or string
   # kwargs - Additional context
 
@@ -66,7 +65,7 @@ create_thread: ->(state:, input:, **kwargs) {
     user_id: state.data[:user_id]
   )
 
-  { thread_id: thread.id.to_s }  # Must return hash with :thread_id
+  { session_id: thread.id.to_s }  # Must return hash with :session_id
 }
 ```
 
@@ -75,11 +74,11 @@ create_thread: ->(state:, input:, **kwargs) {
 Called to retrieve existing history:
 
 ```ruby
-get: ->(thread_id:, **kwargs) {
-  # thread_id - The thread identifier
+get: ->(session_id:, **kwargs) {
+  # session_id - The thread identifier
   # kwargs - Additional context
 
-  Result.where(thread_id: thread_id)
+  Result.where(session_id: session_id)
         .order(:created_at)
         .map { |r| deserialize_result(r) }
 
@@ -92,12 +91,12 @@ get: ->(thread_id:, **kwargs) {
 Called when a user message is added:
 
 ```ruby
-append_user_message: ->(thread_id:, message:, **kwargs) {
-  # thread_id - The thread identifier
+append_user_message: ->(session_id:, message:, **kwargs) {
+  # session_id - The thread identifier
   # message - UserMessage object
 
   Message.create!(
-    thread_id: thread_id,
+    session_id: session_id,
     content: message.content,
     metadata: message.metadata
   )
@@ -109,13 +108,13 @@ append_user_message: ->(thread_id:, message:, **kwargs) {
 Called after robots finish:
 
 ```ruby
-append_results: ->(thread_id:, new_results:, **kwargs) {
-  # thread_id - The thread identifier
+append_results: ->(session_id:, new_results:, **kwargs) {
+  # session_id - The thread identifier
   # new_results - Array<RobotResult>
 
   new_results.each do |result|
     Result.create!(
-      thread_id: thread_id,
+      session_id: session_id,
       robot_name: result.robot_name,
       output_data: serialize_output(result.output),
       stop_reason: result.stop_reason
@@ -134,8 +133,8 @@ adapter = RobotLab::History::ActiveRecordAdapter.new(
   result_model: RobotLabResult
 )
 
-network = RobotLab.create_network do
-  history adapter.to_config
+network = RobotLab.create_network(name: "persistent_chat") do
+  task :assistant, assistant_robot, depends_on: :none
 end
 ```
 
@@ -143,10 +142,10 @@ end
 
 ```ruby title="app/models/robot_lab_thread.rb"
 class RobotLabThread < ApplicationRecord
-  has_many :results, class_name: "RobotLabResult", foreign_key: :thread_id
+  has_many :results, class_name: "RobotLabResult", foreign_key: :session_id
 
   # Required columns:
-  # - thread_id: string
+  # - session_id: string
   # - initial_input: text
   # - input_metadata: jsonb
   # - state_data: jsonb
@@ -157,10 +156,10 @@ end
 
 ```ruby title="app/models/robot_lab_result.rb"
 class RobotLabResult < ApplicationRecord
-  belongs_to :thread, class_name: "RobotLabThread", foreign_key: :thread_id
+  belongs_to :thread, class_name: "RobotLabThread", foreign_key: :session_id
 
   # Required columns:
-  # - thread_id: string
+  # - session_id: string
   # - robot_name: string
   # - sequence_number: integer
   # - output_data: jsonb
@@ -170,16 +169,16 @@ class RobotLabResult < ApplicationRecord
 end
 ```
 
-## Using Thread IDs
+## Using Session IDs
 
 ### Start New Thread
 
 ```ruby
-state = RobotLab.create_state(message: "Hello!")
-result = network.run(state: state)
+memory = RobotLab.create_memory(data: { user_id: "user_123" })
+result = network.run(message: "Hello!")
 
-# Thread ID is assigned automatically
-thread_id = state.thread_id
+# Session ID is assigned automatically
+session_id = memory.session_id
 ```
 
 ### Continue Existing Thread
@@ -188,16 +187,16 @@ thread_id = state.thread_id
 # Option 1: Via UserMessage
 message = RobotLab::UserMessage.new(
   "Continue our conversation",
-  thread_id: existing_thread_id
+  session_id: existing_session_id
 )
-state = RobotLab.create_state(message: message)
+result = network.run(message: message)
 
-# Option 2: Direct assignment
-state = RobotLab.create_state(message: "Continue")
-state.thread_id = existing_thread_id
+# Option 2: Direct assignment on memory
+memory = RobotLab.create_memory
+memory.session_id = existing_session_id
 
 # History is automatically loaded
-result = network.run(state: state)
+result = network.run(message: "Continue")
 ```
 
 ## ThreadManager
@@ -208,13 +207,13 @@ For programmatic control:
 manager = RobotLab::History::ThreadManager.new(history_config)
 
 # Create thread
-thread_id = manager.create_thread(state: state, input: message)
+session_id = manager.create_thread(state: memory, input: message)
 
 # Load history
-results = manager.get_history(thread_id)
+results = manager.get_history(session_id)
 
 # Save state
-manager.save_state(thread_id: thread_id, state: state, since_index: 5)
+manager.save_state(session_id: session_id, state: memory, since_index: 5)
 ```
 
 ## Serialization
@@ -262,19 +261,19 @@ RobotLab::Message.from_hash(hash)
 ```ruby
 history_config = History::Config.new(
   create_thread: ->(state:, input:, **) {
-    thread_id = SecureRandom.uuid
-    Redis.current.hset("threads", thread_id, input.to_s)
-    { thread_id: thread_id }
+    session_id = SecureRandom.uuid
+    Redis.current.hset("threads", session_id, input.to_s)
+    { session_id: session_id }
   },
 
-  get: ->(thread_id:, **) {
-    data = Redis.current.lrange("results:#{thread_id}", 0, -1)
+  get: ->(session_id:, **) {
+    data = Redis.current.lrange("results:#{session_id}", 0, -1)
     data.map { |json| deserialize_result(JSON.parse(json)) }
   },
 
-  append_results: ->(thread_id:, new_results:, **) {
+  append_results: ->(session_id:, new_results:, **) {
     new_results.each do |result|
-      Redis.current.rpush("results:#{thread_id}", result.export.to_json)
+      Redis.current.rpush("results:#{session_id}", result.export.to_json)
     end
   }
 )
@@ -300,15 +299,15 @@ class CustomHistoryAdapter
 
   def create_thread(state:, input:, **)
     id = @storage.create_conversation(input: input.to_s)
-    { thread_id: id }
+    { session_id: id }
   end
 
-  def get(thread_id:, **)
-    @storage.fetch_results(thread_id)
+  def get(session_id:, **)
+    @storage.fetch_results(session_id)
   end
 
-  def append_results(thread_id:, new_results:, **)
-    @storage.store_results(thread_id, new_results)
+  def append_results(session_id:, new_results:, **)
+    @storage.store_results(session_id, new_results)
   end
 end
 ```
@@ -318,8 +317,8 @@ end
 ### 1. Handle Missing Threads
 
 ```ruby
-get: ->(thread_id:, **) {
-  thread = Thread.find_by(thread_id: thread_id)
+get: ->(session_id:, **) {
+  thread = Thread.find_by(session_id: session_id)
   return [] unless thread
 
   thread.results.order(:created_at).map(&:to_robot_result)
@@ -329,7 +328,7 @@ get: ->(thread_id:, **) {
 ### 2. Index for Performance
 
 ```sql
-CREATE INDEX idx_results_thread_id ON robot_lab_results(thread_id);
+CREATE INDEX idx_results_session_id ON robot_lab_results(session_id);
 CREATE INDEX idx_results_created_at ON robot_lab_results(created_at);
 ```
 
@@ -343,8 +342,8 @@ Thread.where("updated_at < ?", 30.days.ago).destroy_all
 ### 4. Limit History Size
 
 ```ruby
-get: ->(thread_id:, **) {
-  Result.where(thread_id: thread_id)
+get: ->(session_id:, **) {
+  Result.where(session_id: session_id)
         .order(created_at: :desc)
         .limit(50)  # Last 50 exchanges
         .reverse

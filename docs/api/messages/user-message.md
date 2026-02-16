@@ -7,16 +7,18 @@ User input with conversation metadata.
 ```ruby
 message = UserMessage.new(
   "What's my order status?",
-  thread_id: "thread_123",
+  session_id: "session_123",
   system_prompt: "Be concise",
   metadata: { source: "web" }
 )
 ```
 
+**Note:** `UserMessage` is a standalone class, not a subclass of `Message`.
+
 ## Constructor
 
 ```ruby
-UserMessage.new(content, thread_id: nil, system_prompt: nil, metadata: {})
+UserMessage.new(content, session_id: nil, system_prompt: nil, metadata: nil, id: nil)
 ```
 
 **Parameters:**
@@ -24,9 +26,10 @@ UserMessage.new(content, thread_id: nil, system_prompt: nil, metadata: {})
 | Name | Type | Description |
 |------|------|-------------|
 | `content` | `String` | Message text |
-| `thread_id` | `String`, `nil` | Conversation thread ID |
+| `session_id` | `String`, `nil` | Conversation session ID |
 | `system_prompt` | `String`, `nil` | Override system prompt |
-| `metadata` | `Hash` | Additional metadata |
+| `metadata` | `Hash`, `nil` | Additional metadata |
+| `id` | `String`, `nil` | Unique message ID (defaults to UUID) |
 
 ## Attributes
 
@@ -38,13 +41,13 @@ message.content  # => String
 
 The message text.
 
-### thread_id
+### session_id
 
 ```ruby
-message.thread_id  # => String | nil
+message.session_id  # => String | nil
 ```
 
-Conversation thread identifier for history persistence.
+Conversation session identifier for history persistence.
 
 ### system_prompt
 
@@ -78,14 +81,6 @@ message.created_at  # => Time
 
 Message creation timestamp.
 
-### role
-
-```ruby
-message.role  # => :user
-```
-
-Always returns `:user`.
-
 ## Methods
 
 ### to_h
@@ -100,10 +95,11 @@ Hash representation.
 
 ```ruby
 {
-  role: :user,
   content: "What's my order status?",
+  session_id: "session_123",
+  system_prompt: "Be concise",
+  metadata: { source: "web" },
   id: "uuid-here",
-  thread_id: "thread_123",
   created_at: "2024-01-15T10:30:00Z"
 }
 ```
@@ -116,6 +112,30 @@ message.to_json  # => String
 
 JSON representation.
 
+### to_message
+
+```ruby
+message.to_message  # => TextMessage
+```
+
+Converts to a `TextMessage` with role `"user"` for use in conversation history.
+
+### to_s
+
+```ruby
+message.to_s  # => String
+```
+
+Returns the content string.
+
+### self.from
+
+```ruby
+UserMessage.from(input)  # => UserMessage
+```
+
+Creates a `UserMessage` from a String, Hash, or existing `UserMessage`.
+
 ## Examples
 
 ### Basic Message
@@ -124,12 +144,12 @@ JSON representation.
 message = UserMessage.new("Hello!")
 ```
 
-### With Thread ID
+### With Session ID
 
 ```ruby
 message = UserMessage.new(
   "Continue our conversation",
-  thread_id: "thread_abc123"
+  session_id: "session_abc123"
 )
 ```
 
@@ -156,16 +176,20 @@ message = UserMessage.new(
 )
 ```
 
-### Creating State
+### Creating from Various Inputs
 
 ```ruby
-message = UserMessage.new("Help", thread_id: "thread_123")
-state = RobotLab.create_state(message: message)
+# From a string
+msg = UserMessage.from("Hello!")
 
-state.thread_id  # => "thread_123"
+# From a hash
+msg = UserMessage.from(content: "Hello!", session_id: "123")
+
+# From an existing UserMessage (returns as-is)
+msg = UserMessage.from(existing_message)
 ```
 
 ## See Also
 
-- [State](../core/state.md)
+- [Memory](../core/memory.md)
 - [TextMessage](text-message.md)

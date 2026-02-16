@@ -167,10 +167,10 @@ robot = RobotLab.build(
 )
 ```
 
-### RobotLab::Tool with Block Handler
+### RobotLab::Tool.create Factory
 
 ```ruby
-tool = RobotLab::Tool.new(
+tool = RobotLab::Tool.create(
   name: "get_weather",
   description: "Get current weather for a location",
   parameters: {
@@ -180,9 +180,7 @@ tool = RobotLab::Tool.new(
     },
     required: ["location"]
   }
-) do |input, **_opts|
-  WeatherService.current(input[:location])
-end
+) { |args| WeatherService.current(args[:location]) }
 ```
 
 ## RobotResult

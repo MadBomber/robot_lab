@@ -340,17 +340,18 @@ puts result.value.last_text_content
 
 ### With Streaming
 
-Stream responses in real-time by passing a block:
+Stream responses in real-time by registering callbacks before calling `run`:
 
 ```ruby
-robot.run("Tell me a story") do |event|
-  case event[:event]
-  when "text.delta"
-    print event[:data][:content]
-  when "tool_call"
-    puts "\nCalling tool: #{event[:data][:name]}"
-  end
+robot.on_new_message do |message|
+  print message.content if message.content
 end
+
+robot.on_tool_call do |tool_call|
+  puts "\nCalling tool: #{tool_call.name}"
+end
+
+result = robot.run("Tell me a story")
 ```
 
 ## Robot Patterns
