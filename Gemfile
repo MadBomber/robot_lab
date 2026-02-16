@@ -21,7 +21,11 @@ end
 
 group :test do
   gem "sqlite3"
+  gem "activesupport", ">= 7.0"
   gem "activerecord", ">= 7.0"
+  gem "railties", ">= 7.0"
+  gem "state_machines"
+  gem "state_machines-activemodel"
   gem "state_machines-activerecord"
   gem "simplecov", require: false
 end

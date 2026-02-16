@@ -2,7 +2,6 @@ PATH
   remote: .
   specs:
     robot_lab (0.0.4)
-      activerecord (>= 7.0)
       activesupport (>= 7.0)
       async (~> 2.0)
       async-http (~> 0.60)
@@ -10,15 +9,11 @@ PATH
       fastembed
       myway_config (~> 0.1)
       prompt_manager (~> 1.0)
-      railties (>= 7.0)
       ruby_llm (~> 1.12)
       ruby_llm-mcp
       ruby_llm-schema
       ruby_llm-semantic_cache
       simple_flow (~> 0.3.0)
-      state_machines
-      state_machines-activemodel
-      state_machines-activerecord
       typed_bus
       zeitwerk (~> 2.6)
 
@@ -325,6 +320,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (>= 7.0)
+  activesupport (>= 7.0)
   aigcm
   amazing_print
   debug
@@ -332,11 +328,14 @@ DEPENDENCIES
   hashdiff
   minitest
   minitest-reporters
+  railties (>= 7.0)
   rake
   robot_lab!
   rubocop
   simplecov
   sqlite3
+  state_machines
+  state_machines-activemodel
   state_machines-activerecord
   vcr
   webmock

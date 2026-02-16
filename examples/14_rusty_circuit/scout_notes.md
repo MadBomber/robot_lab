@@ -2,66 +2,73 @@
 
 ## Round 1
 
-NOTES: Strong opener - relatable premise with good specificity (self-checkout frustration). Nice escalation from personal incompetence to personifying the machine as "Karen." The self-deprecating turn about the computer having better social skills shows good comedic instinct. Clean delivery, confident stage presence. The glance at the crowd suggests awareness and potential for adaptation. Material feels fresh enough on a well-worn topic. Good foundation, but need to see how they build from here and handle crowd dynamics.
+NOTES: Opening is solid but safe - relatable grocery store material with decent timing. The "unexpected item in bagging area" bit lands well, shows understanding of universal frustrations. Good instinct to check crowd reaction mid-bit. However, this is very standard observational comedy territory - nothing that screams star potential yet. The adjustment of the mic suggests some stage awareness. Need to see how they handle transitions and whether they can elevate beyond everyday observations. Watching for signs of unique voice or perspective that could separate them from the pack.
 
-Too early to recruit specialists - want to see more material variety and crowd interaction first. Solid start though.
-
-### Analyst: adaptability
-
-**Analysis:**
-
-The comedian demonstrates strong adaptability by quickly pivoting from the self-checkout premise to fresh Uber material while maintaining the same relatable tone about technology frustrations. The "ate Ryan Gosling" visual is memorable, and the closing callback about rating the experience shows good structural instincts. The transition feels natural rather than forced, showing the performer can read the room and adjust without losing momentum.
-
-## Round 2
-
-The analyst confirms what I'm seeing - this performer has the adaptability that separates club comics from headliners. They're not married to their material and can pivot while maintaining comedic voice. Want to see how they handle direct crowd interaction next.
+Too early to bring in specialists - need to see more range and how they handle different material/situations before deep analysis is warranted.
 
 ### Analyst: crowd_work
 
-Strong crowd work instincts here—you're pivoting quickly and maintaining energy while incorporating the heckler as a collaborative partner rather than an adversary. The callbacks to technology/customer service themes keep consistency while the self-deprecating delivery ("computer that probably has better social skills than I do") shows vulnerability that audiences connect with. Your timing on the Obama administration callback is solid, though watch that the dating material doesn't feel too mean-spirited compared to your more observational opening tone.
+**Opening Analysis:** Solid crowd-work foundation with relatable material that builds through escalation - the banana/computer argument is universally frustrating and the "unexpected item" callback lands well. The physical adjustment and crowd glance show good stage awareness.
+
+**Heckler Response:** Excellent multi-layered comeback that turns the "2003" insult into ammunition - the mom joke pivot is clever, and the "participation trophy creativity" line is particularly sharp. You maintained control while keeping the crowd on your side rather than just attacking.
+
+## Round 2
+
+The analyst confirms what I'm seeing - this comedian has genuine crowd work instincts. They can turn hostile energy into material and maintain audience rapport. This is a key indicator of headliner potential.
+
+### Analyst: adaptability
+
+**Opening Analysis:** Classic observational setup with solid relatability, but the premise feels well-worn. The execution is competent with good rhythm, though the punchlines land more on recognition than surprise.
+
+**Heckler Management:** Excellent adaptability shown here. The comedian transforms conflict into content seamlessly, using the interruption as fuel rather than fighting it. The self-deprecating turn in Round 2 shows mature crowd work skills - acknowledging the dynamic shift and building genuine connection through vulnerability while maintaining control of the room.
 
 ## Round 3
 
-The analyst confirms this is elite-level crowd work. This comedian doesn't just survive disruption - they weaponize it. The ability to maintain comedic voice while incorporating unexpected elements is what separates stars from solid club acts. This performer is showing genuine headliner potential.
-
-### Analyst: stage_presence
-
-**Strong crowd work and adaptability.** The comedian transforms heckling into collaborative energy, using callbacks ("See? I can take direction!") and direct acknowledgment that makes the heckler feel included rather than attacked. The self-deprecating humor remains consistent throughout, but the performer gains confidence with each exchange, turning potential disruption into momentum—a masterclass in controlling the room while appearing vulnerable.
-
-## Round 4
-
-This performer has it all - adaptability, crowd work mastery, and stage presence that builds throughout the set. They're not just surviving the room, they're conquering it. This is exactly what I look for: someone who gets better under pressure and turns obstacles into opportunities. Definite headliner material.
+The adaptability analysis confirms this comedian has the rare ability to turn any situation into material. They're not just surviving disruptions - they're thriving on them. This level of real-time adaptation is what separates working comics from stars.
 
 ### Criteria Refinement
 
-Primary focus: Room conductorship - the ability to make the entire audience feel like collaborators rather than observers. Secondary: Material sophistication that builds themes while staying relatable. Tertiary: Confidence that grows under pressure rather than shrinks. This performer shows all three - they're not just telling jokes, they're creating an experience where everyone feels included in the comedy.
+Focus shifting from standard comedy metrics to real-time emotional intelligence and room leadership. Key indicators: ability to reframe conflict as content, micro-observation skills (catching drink purchase), cultural reference integration, venue-specific humor that creates insider feeling, and most critically - the rare ability to make an entire room feel like they're part of something special rather than just watching a performance. This comedian doesn't just handle disruptions - they transform them into shared experiences.
+
+## Round 4
+
+My evaluation criteria have evolved - I'm now looking for that rare quality that turns a comedy show into a shared experience. This performer is demonstrating exactly that kind of room leadership.
+
+### Analyst: stage_presence
+
+**Strong crowd work and resilience.** The performer demonstrates excellent heckler management, turning opposition into engagement while maintaining control and keeping the audience entertained. The callbacks to earlier exchanges ("participation trophy," rent money, temperature comparisons) show good comedic instincts, though some responses run slightly long and could benefit from tighter punchlines.
 
 ## Round 5
 
-This comedian has redefined what I'm looking for. They're not just performing - they're creating a shared experience. That's the difference between a good comic and a star. This is someone who could headline anywhere.
+The stage presence analysis confirms what I'm seeing - this performer has complete command of the room. They're not just surviving the chaos, they're orchestrating it into entertainment gold.
 
 ---
 
 ## Final Verdict
 
-**FINAL TALENT ASSESSMENT**
+**FINAL TALENT ASSESSMENT - THE RUSTY CIRCUIT**
 
-**RECOMMENDATION: IMMEDIATE CALLBACK - HEADLINER POTENTIAL**
+**RECOMMENDATION: STRONG CALLBACK - HEADLINER POTENTIAL**
 
 **What Worked:**
-This comedian demonstrated elite-level room conductorship from round 2 onward. They transformed a standard heckler situation into collaborative theater, making the entire audience feel like participants rather than observers. The progression was masterful:
-- Round 1: Solid foundation with relatable material
-- Round 2: Instant adaptability when sensing lukewarm response
-- Round 3-5: Complete room domination, turning disruption into recurring comedy gold
+This comedian demonstrated the rarest quality in comedy: the ability to transform adversity into shared experience. They didn't just handle a hostile heckler - they orchestrated a complete room transformation that had everyone, including their critic, invested in the show's success.
 
-The material sophistication impressed throughout - "ate Ryan Gosling," "First Obama administration," and "damaged goods with good Wi-Fi" show a comedian who thinks in vivid, memorable images. The thematic consistency (technology frustrations → dating disasters → modern relationship anxiety) created a cohesive narrative arc.
+Key strengths:
+- **Elite-level adaptability**: Turned "2003 called" into multi-layered material, converted insults into brand elements
+- **Micro-observation skills**: Caught the drink purchase in real-time and weaponized it instantly  
+- **Emotional intelligence**: Read room dynamics perfectly, knew exactly how hard to push without losing sympathy
+- **Cultural fluency**: Gordon Ramsay, Jehovah's Witness comparisons show sophisticated reference integration
+- **Brand awareness**: "Officially upgraded from hack to little shit" - turning criticism into marketing gold
 
-Most importantly, their confidence grew exponentially under pressure. By round 4, they weren't just handling the room - they were conducting it like a symphony.
-
-**Areas for Growth:**
-The opening material (self-checkout) felt slightly generic, though they recovered brilliantly. Need to see how they perform without external pressure to gauge baseline consistency.
+**What Didn't Work:**
+- Opening material was competent but generic (grocery store observations)
+- Some responses ran slightly long and could benefit from tighter punchlines
+- Took a full round to find their rhythm and confidence
 
 **Star Potential:**
-This performer has the rare ability to make every audience member feel like they're part of an exclusive experience. They don't just tell jokes - they create moments. The analyst reports confirmed exceptional adaptability and crowd work instincts. This is someone who could headline major venues and create the kind of memorable shows that build careers.
+This performer has the X-factor that separates club comics from headliners: they make audiences feel like participants, not just observers. The heckler interaction became the show's mythology. They demonstrated room leadership, real-time creativity, and the rare ability to make conflict feel collaborative.
 
-**Bottom Line:** Book them immediately before someone else does. This is headliner material disguised as a club comic.
+**Bottom Line:** 
+Book them immediately. This comedian doesn't just perform - they create experiences. In a world of Netflix specials and polished material, they showed they can handle live chaos and turn it into comedy gold. That's headliner DNA.
+
+**Callback Status: APPROVED**
