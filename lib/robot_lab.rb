@@ -92,6 +92,20 @@ module RobotLab
     end
 
 
+    # Yields the Config object for block-style configuration.
+    #
+    # @yield [Config] the config instance
+    # @return [Config] the config instance
+    #
+    # @example
+    #   RobotLab.configure do |c|
+    #     c.default_model = "claude-sonnet-4"
+    #   end
+    def configure
+      yield config
+    end
+
+
     # Reload configuration from all sources.
     #
     # Clears the cached Config instance, forcing it to be

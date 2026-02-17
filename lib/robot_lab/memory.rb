@@ -555,8 +555,8 @@ module RobotLab
     def clone
       cloned = Memory.new(
         data: deep_dup(data.to_h),
-        results: results.dup,
-        messages: messages.dup,
+        results: results,
+        messages: messages,
         session_id: session_id,
         backend: @backend.is_a?(Hash) ? :hash : :auto,
         enable_cache: @enable_cache,
