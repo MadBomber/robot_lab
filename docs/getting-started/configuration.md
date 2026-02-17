@@ -292,6 +292,86 @@ defaults:
     anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
 ```
 
+## RunConfig: Shared Operational Defaults
+
+`RunConfig` is a configuration object that lets you express operational defaults for LLM settings, tools, callbacks, and infrastructure. Unlike `RobotLab.config` (which is global and static), RunConfig flows through the hierarchy and can be customized at each level:
+
+```
+RobotLab.config (global) -> Network RunConfig -> Robot RunConfig -> Template front matter -> Task RunConfig -> Runtime
+```
+
+### Creating a RunConfig
+
+```ruby
+# Keyword construction
+config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.7)
+
+# Block DSL
+config = RobotLab::RunConfig.new do |c|
+  c.model "claude-sonnet-4"
+  c.temperature 0.7
+  c.max_tokens 2000
+end
+
+# Chaining
+config = RobotLab::RunConfig.new
+  .model("claude-sonnet-4")
+  .temperature(0.7)
+```
+
+### Applying RunConfig
+
+Pass `run_config:` to robots and networks. Explicit constructor kwargs always override the RunConfig:
+
+```ruby
+# Shared config for a team of robots
+shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+
+# Robot uses shared config
+robot = RobotLab.build(
+  name: "writer",
+  system_prompt: "You are a creative writer.",
+  run_config: shared,
+  temperature: 0.9  # overrides shared config's 0.5
+)
+
+# Network applies config to all member robots
+network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot, depends_on: [:analyzer]
+end
+```
+
+### Merging Configs
+
+RunConfig supports merge semantics where the more-specific config's values win:
+
+```ruby
+network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+robot_config   = RobotLab::RunConfig.new(temperature: 0.9)
+effective      = network_config.merge(robot_config)
+effective.model        #=> "claude-sonnet-4" (inherited)
+effective.temperature  #=> 0.9 (overridden)
+```
+
+### Available Fields
+
+| Category | Fields |
+|----------|--------|
+| **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
+| **Tools** | `mcp`, `tools` |
+| **Callbacks** | `on_tool_call`, `on_tool_result` |
+| **Infrastructure** | `bus`, `enable_cache` |
+
+### RunConfig vs RobotLab.config
+
+| | `RobotLab.config` | `RunConfig` |
+|---|---|---|
+| **Scope** | Global (all robots) | Per-network, per-robot, or per-task |
+| **Source** | YAML files, env vars | Code (constructor, block DSL) |
+| **Mutability** | Loaded once, rarely changed | Created per use case, merged |
+| **Purpose** | API keys, timeouts, defaults | Model, temperature, tools per workflow |
+
 ## Robot-Level Configuration
 
 Individual robots can override the global model and other settings:

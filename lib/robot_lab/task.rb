@@ -39,13 +39,14 @@ module RobotLab
     # @param tools [Symbol, Array] tools config (:none, :inherit, or array)
     # @param memory [Memory, Hash, nil] task-specific memory
     #
-    def initialize(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil)
+    def initialize(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil, run_config: nil)
       @name = name.to_sym
       @robot = robot
       @context = context
       @mcp = mcp
       @tools = tools
       @memory = memory
+      @run_config = run_config
     end
 
     # SimpleFlow step interface
@@ -67,6 +68,12 @@ module RobotLab
       run_params[:mcp] = @mcp unless @mcp == :none
       run_params[:tools] = @tools unless @tools == :none
       run_params[:memory] = @memory if @memory
+
+      # Merge task's run_config on top of network's run_config
+      if @run_config
+        network_rc = run_params[:network_run_config]
+        run_params[:network_run_config] = network_rc ? network_rc.merge(@run_config) : @run_config
+      end
 
       # Create enhanced result with merged params
       enhanced_result = result.with_context(:run_params, run_params)

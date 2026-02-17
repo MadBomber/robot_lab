@@ -136,10 +136,49 @@ prev2 = show_config(robot2)
 puts
 
 # =============================================================================
-# Section 5: Bare robot with chaining
+# Section 5: RunConfig as alternative to individual kwargs
 # =============================================================================
 
-puts "--- Section 5: Bare Robot with Chaining ---"
+puts "--- Section 5: RunConfig as Alternative to Individual kwargs ---"
+puts
+
+# Instead of passing model:, temperature:, etc. individually,
+# use a RunConfig to express shared defaults.
+shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+
+puts "RunConfig: #{shared.to_h.inspect}"
+puts
+
+# Robot inherits from RunConfig; constructor kwargs still override
+robot3 = RobotLab.build(
+  name: "runconfig_demo",
+  template: :configurable,
+  context: { task_type: "analysis" },
+  run_config: shared,
+  temperature: 0.8  # overrides RunConfig's 0.5
+)
+
+puts "Robot with run_config: shared, temperature: 0.8"
+puts "(RunConfig sets 0.5, constructor overrides to 0.8)"
+prev3 = show_config(robot3)
+puts
+
+# RunConfig merge semantics
+creative = RobotLab::RunConfig.new(temperature: 0.9, max_tokens: 2000)
+merged = shared.merge(creative)
+
+puts "Merge: shared.merge(creative)"
+puts "  shared:   #{shared.to_h.inspect}"
+puts "  creative: #{creative.to_h.inspect}"
+puts "  merged:   #{merged.to_h.inspect}"
+puts "  (model inherited, temperature overridden, max_tokens added)"
+puts
+
+# =============================================================================
+# Section 6: Bare robot with chaining
+# =============================================================================
+
+puts "--- Section 6: Bare Robot with Chaining ---"
 puts
 
 # A bare robot has no template. Configure entirely via chaining.
@@ -158,10 +197,10 @@ prev_bare = show_config(bare, prev_bare)
 puts
 
 # =============================================================================
-# Section 6: with_template() on an existing robot
+# Section 7: with_template() on an existing robot
 # =============================================================================
 
-puts "--- Section 6: with_template() on Existing Robot ---"
+puts "--- Section 7: with_template() on Existing Robot ---"
 puts
 
 # You can apply a template to a robot after creation.
@@ -172,10 +211,10 @@ show_config(bare, prev_bare)
 puts
 
 # =============================================================================
-# Section 7: AskUser tool for gathering template parameters
+# Section 8: AskUser tool for gathering template parameters
 # =============================================================================
 
-puts "--- Section 7: AskUser for Template Parameters ---"
+puts "--- Section 8: AskUser for Template Parameters ---"
 puts
 puts "The :configurable template declares `task_type: general` in its front"
 puts "matter. That default is offered to the user — they can accept it by"

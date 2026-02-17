@@ -18,7 +18,15 @@ classDiagram
     class Network {
         +name: String
         +robots: Hash
+        +run_config: RunConfig
         +run(message)
+    }
+
+    class RunConfig {
+        +model: String
+        +temperature: Float
+        +merge(other) RunConfig
+        +apply_to(chat)
     }
 
     class Tool {
@@ -48,6 +56,8 @@ classDiagram
     }
 
     Network --> Robot : contains
+    Network --> RunConfig : uses
+    Robot --> RunConfig : uses
     Robot --> Tool : has
     Robot --> Memory : uses
     Network --> Memory : uses
@@ -60,6 +70,7 @@ classDiagram
 |-------|---------|
 | [Robot](robot.md) | LLM agent with personality, tools, and model configuration |
 | [Network](network.md) | Container for robots with routing and orchestration |
+| RunConfig | Shared configuration for LLM, tools, callbacks, and infrastructure |
 | [Tool](tool.md) | Callable function with parameters and handler |
 | [AskUser](tool.md#built-in-askuser) | Built-in tool for terminal-based user interaction |
 | [Memory](memory.md) | Reactive key-value store for sharing data |

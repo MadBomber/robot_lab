@@ -39,33 +39,36 @@ class ClassifierRobot < RobotLab::Robot
   end
 end
 
-# Create specialized robots
+# Shared RunConfig — all robots in this network use the same model
+shared_config = RobotLab::RunConfig.new(model: "claude-3-haiku-20240307")
+
+# Create specialized robots (no model: needed — inherited from RunConfig)
 classifier = ClassifierRobot.new(
   name: "classifier",
   template: :classifier,
-  model: "claude-3-haiku-20240307"
+  run_config: shared_config
 )
 
 billing_robot = RobotLab.build(
   name: "billing",
   template: :billing,
-  model: "claude-3-haiku-20240307"
+  run_config: shared_config
 )
 
 technical_robot = RobotLab.build(
   name: "technical",
   template: :technical,
-  model: "claude-3-haiku-20240307"
+  run_config: shared_config
 )
 
 general_robot = RobotLab.build(
   name: "general",
   template: :general,
-  model: "claude-3-haiku-20240307"
+  run_config: shared_config
 )
 
-# Create network with optional task routing
-network = RobotLab.create_network(name: "support_network") do
+# Create network with optional task routing and shared config
+network = RobotLab.create_network(name: "support_network", run_config: shared_config) do
   task :classifier, classifier, depends_on: :none
   task :billing, billing_robot, depends_on: :optional
   task :technical, technical_robot, depends_on: :optional

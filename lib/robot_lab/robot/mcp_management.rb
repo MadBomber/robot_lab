@@ -11,16 +11,16 @@ module RobotLab
       private
 
       # Resolve MCP hierarchy: runtime -> robot build -> network -> config
-      def resolve_mcp_hierarchy(runtime_value, network:)
-        parent_value = network&.network&.mcp || RobotLab.config.mcp
+      def resolve_mcp_hierarchy(runtime_value, network: nil, network_run_config: nil)
+        parent_value = network_run_config&.mcp || network&.network&.mcp || RobotLab.config.mcp
         build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
         ToolConfig.resolve_mcp(runtime_value, parent_value: build_resolved)
       end
 
 
       # Resolve tools hierarchy: runtime -> robot build -> network -> config
-      def resolve_tools_hierarchy(runtime_value, network:)
-        parent_value = network&.network&.tools || RobotLab.config.tools
+      def resolve_tools_hierarchy(runtime_value, network: nil, network_run_config: nil)
+        parent_value = network_run_config&.tools || network&.network&.tools || RobotLab.config.tools
         build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
         ToolConfig.resolve_tools(runtime_value, parent_value: build_resolved)
       end

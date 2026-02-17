@@ -36,7 +36,8 @@ Robot.new(
   max_tokens: nil,
   presence_penalty: nil,
   frequency_penalty: nil,
-  stop: nil
+  stop: nil,
+  run_config: nil
 )
 ```
 
@@ -58,6 +59,7 @@ Robot.new(
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
+| `run_config` | `RunConfig`, `nil` | `nil` | Shared config merged with explicit kwargs (see [RunConfig](#runconfig)) |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness (0.0-1.0) |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold |
 | `top_k` | `Integer`, `nil` | `nil` | Top-k sampling |
@@ -65,6 +67,8 @@ Robot.new(
 | `presence_penalty` | `Float`, `nil` | `nil` | Penalize based on presence |
 | `frequency_penalty` | `Float`, `nil` | `nil` | Penalize based on frequency |
 | `stop` | `String`, `Array`, `nil` | `nil` | Stop sequences |
+
+When both `run_config:` and explicit kwargs (e.g., `temperature:`) are provided, explicit kwargs always win.
 
 ## Factory Method
 
@@ -97,6 +101,7 @@ If `name` is omitted, it defaults to `"robot"`.
 | `memory` | `Memory` | Inherent memory (used when standalone, not in network) |
 | `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance (nil if not configured) |
 | `outbox` | `Hash` | Sent messages tracked by composite key with status and replies |
+| `run_config` | `RunConfig` | Effective RunConfig (merged from constructor kwargs and passed-in config) |
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration (raw, unresolved) |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration (raw, unresolved) |
 
@@ -441,6 +446,27 @@ Front matter supports two categories of keys:
 | `tools` | `Array<String>` | Tool class names resolved via `Object.const_get` |
 | `mcp` | `Array<Hash>` | MCP server configurations |
 
+## RunConfig
+
+`RunConfig` provides shared operational defaults that flow through the configuration hierarchy. Pass it via the `run_config:` parameter on `Robot.new` or `RobotLab.build`.
+
+```ruby
+shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.7)
+
+robot = RobotLab.build(
+  name: "writer",
+  system_prompt: "You write creatively.",
+  run_config: shared,
+  temperature: 0.9  # explicit kwargs override run_config
+)
+
+robot.run_config  #=> RunConfig with model: "claude-sonnet-4", temperature: 0.9, ...
+```
+
+RunConfig fields: `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`, `mcp`, `tools`, `on_tool_call`, `on_tool_result`, `bus`, `enable_cache`.
+
+See [Configuration: RunConfig](../../getting-started/configuration.md#runconfig-shared-operational-defaults) for full details.
+
 ## Configuration Hierarchy
 
 Tools and MCP servers use hierarchical resolution: **runtime > robot > network > global config**.
@@ -448,11 +474,15 @@ Tools and MCP servers use hierarchical resolution: **runtime > robot > network >
 ```
 RobotLab.config (global)
   |
-  +-- Network
+  +-- Network (run_config:)
   |     |
-  |     +-- Robot (build-time mcp:, tools:)
-  |           |
-  |           +-- run() call (runtime mcp:, tools:)
+  |     +-- Task (run_config:)
+  |     |     |
+  |     |     +-- Robot (run_config: + build-time mcp:, tools:)
+  |     |           |
+  |     |           +-- Template front matter
+  |     |                 |
+  |     |                 +-- run() call (runtime mcp:, tools:)
 ```
 
 Values at each level:

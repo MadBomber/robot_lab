@@ -6,7 +6,6 @@ SimpleCov.start do
   add_filter '/vendor/'
 
   add_group 'Core', 'lib/robot_lab'
-  add_group 'Adapters', 'lib/robot_lab/adapters'
   add_group 'MCP', 'lib/robot_lab/mcp'
   add_group 'History', 'lib/robot_lab/history'
   add_group 'Streaming', 'lib/robot_lab/streaming'
@@ -46,6 +45,12 @@ module RobotLabTestHelpers
   # Create a real Network instance for testing
   def build_network(name:, **options, &block)
     RobotLab::Network.new(name: name, **options, &block)
+  end
+
+
+  # Create a RunConfig for testing
+  def build_run_config(**options, &block)
+    RobotLab::RunConfig.new(**options, &block)
   end
 
 

@@ -66,7 +66,7 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox
+                :bus, :outbox, :run_config
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -97,6 +97,7 @@ module RobotLab
     # @param presence_penalty [Float, nil] penalize based on presence
     # @param frequency_penalty [Float, nil] penalize based on frequency
     # @param stop [String, Array, nil] stop sequences
+    # @param run_config [RunConfig, nil] shared configuration (merged with explicit kwargs)
     def initialize(
       name:,
       template: nil,
@@ -118,7 +119,8 @@ module RobotLab
       max_tokens: nil,
       presence_penalty: nil,
       frequency_penalty: nil,
-      stop: nil
+      stop: nil,
+      run_config: nil
     )
       @name = name.to_s
       @name_from_constructor = (name.to_s != "robot")
@@ -127,12 +129,32 @@ module RobotLab
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
-      @on_tool_call = on_tool_call
-      @on_tool_result = on_tool_result
+
+      # Build RunConfig from explicit kwargs, merged on top of passed-in run_config.
+      # Explicit constructor kwargs always override the shared run_config.
+      explicit_fields = {
+        model: model, temperature: temperature, top_p: top_p, top_k: top_k,
+        max_tokens: max_tokens, presence_penalty: presence_penalty,
+        frequency_penalty: frequency_penalty, stop: stop,
+        on_tool_call: on_tool_call, on_tool_result: on_tool_result,
+        bus: bus, enable_cache: enable_cache
+      }.compact
+
+      # Only include mcp/tools if explicitly set (not the default :none sentinel)
+      resolved_mcp = mcp_servers.any? ? mcp_servers : mcp
+      explicit_fields[:mcp] = resolved_mcp unless ToolConfig.none_value?(resolved_mcp)
+      explicit_fields[:tools] = tools unless ToolConfig.none_value?(tools)
+
+      explicit_config = RunConfig.new(**explicit_fields)
+      @run_config = run_config ? run_config.merge(explicit_config) : explicit_config
+
+      # Extract values from effective config for backward compatibility
+      @on_tool_call = @run_config.on_tool_call
+      @on_tool_result = @run_config.on_tool_result
 
       # Store raw config values for hierarchical resolution
-      @mcp_config = mcp_servers.any? ? mcp_servers : mcp
-      @tools_config = tools
+      @mcp_config = @run_config.mcp || :none
+      @tools_config = @run_config.tools || :none
 
       # MCP state
       @mcp_clients = {}
@@ -140,7 +162,7 @@ module RobotLab
       @mcp_initialized = false
 
       # Bus state (optional inter-robot communication)
-      @bus = bus
+      @bus = @run_config.bus
       @message_counter = 0
       @outbox = {}
       @message_handler = nil
@@ -148,13 +170,14 @@ module RobotLab
       @bus_queue = []
 
       # Inherent memory (used when standalone, not in a network)
-      @memory = Memory.new(enable_cache: enable_cache)
+      cache_enabled = @run_config.key?(:enable_cache) ? @run_config.enable_cache : true
+      @memory = Memory.new(enable_cache: cache_enabled)
 
       # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)
       config = RobotLab.config
 
       # Build chat kwargs for Agent's super
-      resolved_model = model || config.ruby_llm.model
+      resolved_model = @run_config.model || config.ruby_llm.model
       chat_kwargs = { model: resolved_model }
 
       # Create the persistent chat via Agent's initialize
@@ -165,14 +188,14 @@ module RobotLab
       apply_template_to_chat(context) if @template
       @chat.with_instructions(@system_prompt) if @system_prompt
 
-      # Constructor params override template front matter
-      apply_chat_option(:with_temperature, temperature)
-      apply_chat_option(:with_top_p, top_p)
-      apply_chat_option(:with_top_k, top_k)
-      apply_chat_option(:with_max_tokens, max_tokens)
-      apply_chat_option(:with_presence_penalty, presence_penalty)
-      apply_chat_option(:with_frequency_penalty, frequency_penalty)
-      apply_chat_option(:with_stop, stop)
+      # Constructor params override template front matter (use run_config values)
+      apply_chat_option(:with_temperature, @run_config.temperature)
+      apply_chat_option(:with_top_p, @run_config.top_p)
+      apply_chat_option(:with_top_k, @run_config.top_k)
+      apply_chat_option(:with_max_tokens, @run_config.max_tokens)
+      apply_chat_option(:with_presence_penalty, @run_config.presence_penalty)
+      apply_chat_option(:with_frequency_penalty, @run_config.frequency_penalty)
+      apply_chat_option(:with_stop, @run_config.stop)
 
       # Apply callbacks
       @chat.on_tool_call(&@on_tool_call) if @on_tool_call
@@ -216,8 +239,8 @@ module RobotLab
     # @param mcp [Symbol, Array, nil] runtime MCP override
     # @param tools [Symbol, Array, nil] runtime tools override
     # @return [RobotResult]
-    def run(message = nil, network: nil, network_memory: nil, memory: nil, mcp: :none, tools: :none,
-            **kwargs)
+    def run(message = nil, network: nil, network_memory: nil, network_run_config: nil,
+            memory: nil, mcp: :none, tools: :none, **kwargs)
       # Determine which memory to use
       run_memory = resolve_active_memory(network: network, network_memory: network_memory)
 
@@ -235,8 +258,8 @@ module RobotLab
 
       begin
         # Resolve hierarchical MCP and tools configuration
-        resolved_mcp = resolve_mcp_hierarchy(mcp, network: network)
-        resolved_tools = resolve_tools_hierarchy(tools, network: network)
+        resolved_mcp = resolve_mcp_hierarchy(mcp, network: network, network_run_config: network_run_config)
+        resolved_tools = resolve_tools_hierarchy(tools, network: network, network_run_config: network_run_config)
 
         # Initialize or update MCP clients based on resolved config
         ensure_mcp_clients(resolved_mcp)
@@ -342,6 +365,7 @@ module RobotLab
         tools_config: @tools_config,
         mcp_servers: @mcp_clients.keys,
         model: model,
+        run_config: (@run_config.empty? ? nil : @run_config.to_json_hash),
         bus: @bus ? true : nil
       }.compact
     end
@@ -369,6 +393,7 @@ module RobotLab
       tools = run_params.delete(:tools) || :none
       memory = run_params.delete(:memory)
       network_memory = run_params.delete(:network_memory)
+      network_run_config = run_params.delete(:network_run_config)
 
       # Build base context from remaining run params
       base = run_params.dup
@@ -390,6 +415,7 @@ module RobotLab
       merged[:tools] = tools
       merged[:memory] = memory if memory
       merged[:network_memory] = network_memory if network_memory
+      merged[:network_run_config] = network_run_config if network_run_config
 
       merged
     end

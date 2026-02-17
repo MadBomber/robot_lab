@@ -122,6 +122,7 @@ end
 | `mcp` | MCP servers for this task (`:none`, `:inherit`, or array) |
 | `tools` | Tools available to this task (`:none`, `:inherit`, or array) |
 | `memory` | Task-specific memory |
+| `run_config` | Per-task `RunConfig` (merged on top of network's config) |
 | `depends_on` | `:none`, `[:task1]`, or `:optional` |
 
 ## Conditional Routing
@@ -379,6 +380,54 @@ network.available_robots  # => Array of Robot instances
 network.memory            # => Memory instance (shared)
 network.to_h              # => Hash representation
 ```
+
+## Configuration Inheritance
+
+Networks accept a `run_config:` parameter that establishes default LLM settings for all member robots. This is useful when you want consistent behavior across a pipeline without configuring each robot individually.
+
+### Network-Wide Defaults
+
+```ruby
+# All robots in this network use the same model and temperature
+shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+
+network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot, depends_on: [:analyzer]
+  task :reviewer, reviewer_robot, depends_on: [:writer]
+end
+```
+
+### Per-Task Overrides
+
+Individual tasks can override the network's config with their own `run_config:`:
+
+```ruby
+creative_config = RobotLab::RunConfig.new(temperature: 0.9)
+
+network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot,
+       run_config: creative_config,  # writer gets higher temperature
+       depends_on: [:analyzer]
+  task :reviewer, reviewer_robot, depends_on: [:writer]
+end
+```
+
+### Inheritance Chain
+
+The full configuration hierarchy (most-specific wins):
+
+```
+RobotLab.config (global)
+  -> Network run_config
+    -> Task run_config
+      -> Robot run_config (from constructor)
+        -> Template front matter
+          -> Constructor kwargs (model:, temperature:, etc.)
+```
+
+Each layer only overrides values it explicitly sets. Unset values pass through from the parent.
 
 ## Best Practices
 

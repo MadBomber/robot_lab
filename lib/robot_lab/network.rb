@@ -71,7 +71,7 @@ module RobotLab
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
     # @!attribute [r] memory
     #   @return [Memory] shared memory for all robots in the network
-    attr_reader :name, :pipeline, :robots, :memory
+    attr_reader :name, :pipeline, :robots, :memory, :run_config
 
     # Creates a new Network instance.
     #
@@ -86,12 +86,13 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
-    def initialize(name:, concurrency: :auto, memory: nil, &block)
+    def initialize(name:, concurrency: :auto, memory: nil, run_config: nil, &block)
       @name = name.to_s
       @robots = {}
       @tasks = {}
       @pipeline = SimpleFlow::Pipeline.new(concurrency: concurrency)
       @memory = memory || Memory.new(network_name: @name)
+      @run_config = run_config || RunConfig.new
       @broadcast_handlers = []
 
       instance_eval(&block) if block_given?
@@ -120,14 +121,15 @@ module RobotLab
     # @example Task with dependencies
     #   task :writer, writer_robot, depends_on: [:analyst]
     #
-    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)
+    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, run_config: nil, depends_on: :none)
       task_wrapper = Task.new(
         name: name,
         robot: robot,
         context: context,
         mcp: mcp,
         tools: tools,
-        memory: memory
+        memory: memory,
+        run_config: run_config
       )
 
       @robots[name.to_s] = robot
@@ -171,6 +173,9 @@ module RobotLab
     def run(**run_context)
       # Include shared memory in run params so robots can access it
       run_context[:network_memory] = @memory
+
+      # Pass network's run_config so robots can inherit it
+      run_context[:network_run_config] = @run_config unless @run_config.empty?
 
       initial_result = SimpleFlow::Result.new(
         run_context,
@@ -329,7 +334,8 @@ module RobotLab
         name: name,
         robots: @robots.keys,
         tasks: @tasks.keys,
-        optional_tasks: @pipeline.optional_steps.to_a
+        optional_tasks: @pipeline.optional_steps.to_a,
+        run_config: (@run_config.empty? ? nil : @run_config.to_json_hash)
       }.compact
     end
 

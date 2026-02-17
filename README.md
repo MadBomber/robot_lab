@@ -187,6 +187,57 @@ robot = RobotLab.build(
 )
 ```
 
+### Shared Configuration with RunConfig
+
+`RunConfig` lets you define operational defaults that flow through the hierarchy: Network -> Robot -> Template -> Task -> Runtime. Use it to share LLM settings across multiple robots or an entire network.
+
+```ruby
+# Create a shared config
+shared = RobotLab::RunConfig.new(
+  model: "claude-sonnet-4",
+  temperature: 0.7,
+  max_tokens: 2000
+)
+
+# Apply to individual robots
+robot = RobotLab.build(
+  name: "writer",
+  system_prompt: "You are a creative writer.",
+  run_config: shared
+)
+
+# Apply to an entire network (all robots inherit these defaults)
+network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+  task :analyzer, analyzer_robot, depends_on: :none
+  task :writer, writer_robot, depends_on: [:analyzer]
+end
+
+# Robot-specific kwargs always override the shared config
+robot = RobotLab.build(
+  name: "fast_bot",
+  system_prompt: "Be brief.",
+  run_config: shared,
+  temperature: 0.3  # overrides shared config's 0.7
+)
+```
+
+RunConfig supports keyword construction, block DSL, and merge semantics:
+
+```ruby
+# Block DSL
+config = RobotLab::RunConfig.new do |c|
+  c.model "claude-sonnet-4"
+  c.temperature 0.7
+end
+
+# Merge (more-specific wins)
+network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+robot_config   = RobotLab::RunConfig.new(temperature: 0.9)
+effective      = network_config.merge(robot_config)
+effective.temperature  #=> 0.9
+effective.model        #=> "claude-sonnet-4"
+```
+
 ### Chaining Configuration
 
 Robots support method chaining to adjust configuration after creation:
