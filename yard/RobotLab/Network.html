@@ -87,6 +87,11 @@
   
   
   
+  <dl>
+      <dt>Includes:</dt>
+      <dd><span class='object_link'><a href="Utils.html" title="RobotLab::Utils (module)">Utils</a></span></dd>
+  </dl>
+  
   
 
   
@@ -707,7 +712,13 @@
     </ul>
   
 
-<div id="constructor_details" class="method_details_list">
+
+  
+  
+  
+  
+  
+  <div id="constructor_details" class="method_details_list">
   <h2>Constructor Details</h2>
   
     <div class="method_details first">
@@ -821,8 +832,6 @@
       <pre class="lines">
 
 
-87
-88
 89
 90
 91
@@ -830,10 +839,12 @@
 93
 94
 95
-96</pre>
+96
+97
+98</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 87</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 89</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>concurrency:</span> <span class='symbol'>:auto</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
   <span class='ivar'>@name</span> <span class='op'>=</span> <span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
@@ -883,10 +894,10 @@
       <pre class="lines">
 
 
-72</pre>
+74</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 74</span>
 
 <span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
     </td>
@@ -940,12 +951,12 @@
       <pre class="lines">
 
 
-72
-73
-74</pre>
+74
+75
+76</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 74</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_name'>name</span>
   <span class='ivar'>@name</span>
@@ -1001,10 +1012,10 @@
       <pre class="lines">
 
 
-72</pre>
+74</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 74</span>
 
 <span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
     </td>
@@ -1058,10 +1069,10 @@
       <pre class="lines">
 
 
-72</pre>
+74</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 72</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 74</span>
 
 <span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:pipeline</span><span class='comma'>,</span> <span class='symbol'>:robots</span><span class='comma'>,</span> <span class='symbol'>:memory</span></pre>
     </td>
@@ -1155,17 +1166,17 @@
       <pre class="lines">
 
 
-280
-281
 282
 283
 284
 285
 286
-287</pre>
+287
+288
+289</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 280</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 282</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_add_robot'>add_robot</span><span class='lparen'>(</span><span class='id identifier rubyid_robot'>robot</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='ivar'>@robots</span><span class='period'>.</span><span class='id identifier rubyid_key?'>key?</span><span class='lparen'>(</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
@@ -1219,12 +1230,12 @@
       <pre class="lines">
 
 
-268
-269
-270</pre>
+270
+271
+272</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 268</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 270</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_available_robots'>available_robots</span>
   <span class='ivar'>@robots</span><span class='period'>.</span><span class='id identifier rubyid_values'>values</span>
@@ -1314,8 +1325,6 @@
       <pre class="lines">
 
 
-195
-196
 197
 198
 199
@@ -1330,10 +1339,12 @@
 208
 209
 210
-211</pre>
+211
+212
+213</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 195</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 197</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_broadcast'>broadcast</span><span class='lparen'>(</span><span class='id identifier rubyid_payload'>payload</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='lbrace'>{</span>
@@ -1396,12 +1407,12 @@
       <pre class="lines">
 
 
-317
-318
-319</pre>
+319
+320
+321</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 317</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 319</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_execution_plan'>execution_plan</span>
   <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_execution_plan'>execution_plan</span>
@@ -1498,15 +1509,15 @@
       <pre class="lines">
 
 
-230
-231
 232
 233
 234
-235</pre>
+235
+236
+237</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 230</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 232</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_on_broadcast'>on_broadcast</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Block required for on_broadcast</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_block_given?'>block_given?</span>
@@ -1632,13 +1643,13 @@
       <pre class="lines">
 
 
-151
-152
 153
-154</pre>
+154
+155
+156</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 151</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 153</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_parallel'>parallel</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
   <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_parallel'>parallel</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='id identifier rubyid_depends_on'>depends_on</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
@@ -1690,13 +1701,13 @@
       <pre class="lines">
 
 
-244
-245
 246
-247</pre>
+247
+248
+249</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 244</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 246</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_memory'>reset_memory</span>
   <span class='ivar'>@memory</span><span class='period'>.</span><span class='id identifier rubyid_reset'>reset</span>
@@ -1765,12 +1776,12 @@
       <pre class="lines">
 
 
-254
-255
-256</pre>
+256
+257
+258</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 254</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 256</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_robot'>robot</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
   <span class='ivar'>@robots</span><span class='lbracket'>[</span><span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rbracket'>]</span>
@@ -1856,8 +1867,6 @@
       <pre class="lines">
 
 
-169
-170
 171
 172
 173
@@ -1866,10 +1875,12 @@
 176
 177
 178
-179</pre>
+179
+180
+181</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 169</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 171</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='op'>**</span><span class='id identifier rubyid_run_context'>run_context</span><span class='rparen'>)</span>
   <span class='comment'># Include shared memory in run params so robots can access it
@@ -2081,8 +2092,6 @@
       <pre class="lines">
 
 
-121
-122
 123
 124
 125
@@ -2095,10 +2104,12 @@
 132
 133
 134
-135</pre>
+135
+136
+137</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 121</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 123</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_task'>task</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='id identifier rubyid_robot'>robot</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_task_wrapper'>task_wrapper</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="Task.html" title="RobotLab::Task (class)">Task</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="Task.html#initialize-instance_method" title="RobotLab::Task#initialize (method)">new</a></span></span><span class='lparen'>(</span>
@@ -2159,12 +2170,12 @@
       <pre class="lines">
 
 
-309
-310
-311</pre>
+311
+312
+313</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 309</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 311</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_dot'>to_dot</span>
   <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_dot'>visualize_dot</span>
@@ -2213,17 +2224,17 @@
       <pre class="lines">
 
 
-325
-326
 327
 328
 329
 330
 331
-332</pre>
+332
+333
+334</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 325</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 327</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -2277,12 +2288,12 @@
       <pre class="lines">
 
 
-301
-302
-303</pre>
+303
+304
+305</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 301</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 303</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_mermaid'>to_mermaid</span>
   <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_mermaid'>visualize_mermaid</span>
@@ -2331,12 +2342,12 @@
       <pre class="lines">
 
 
-293
-294
-295</pre>
+295
+296
+297</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 293</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/network.rb', line 295</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_visualize'>visualize</span>
   <span class='ivar'>@pipeline</span><span class='period'>.</span><span class='id identifier rubyid_visualize_ascii'>visualize_ascii</span>
@@ -2351,7 +2362,7 @@
 </div>
 
       <div id="footer">
-  Generated on Mon Feb 16 21:36:39 2026 by
+  Generated on Tue Feb 17 00:02:24 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
