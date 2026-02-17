@@ -60,8 +60,8 @@ class Display
 
   def complete(writer)
     puts
-    puts Rainbow("  [#{writer}] marked the book as COMPLETE").green.bright
-    log("\n  [#{writer}] marked the book as COMPLETE")
+    puts Rainbow("  [#{writer}] marked the work as COMPLETE").green.bright
+    log("\n  [#{writer}] marked the work as COMPLETE")
   end
 
   # ── Incoming message (from bus, before LLM processes) ──────
