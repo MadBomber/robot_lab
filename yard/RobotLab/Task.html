@@ -246,7 +246,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil)  &#x21d2; Task </a>
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil, config: nil)  &#x21d2; Task </a>
     
 
     
@@ -302,7 +302,7 @@
     <div class="method_details first">
   <h3 class="signature first" id="initialize-instance_method">
   
-    #<strong>initialize</strong>(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::Task (class)">Task</a></span></tt> 
+    #<strong>initialize</strong>(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil, config: nil)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::Task (class)">Task</a></span></tt> 
   
 
   
@@ -440,18 +440,20 @@
 46
 47
 48
-49</pre>
+49
+50</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/robot_lab/task.rb', line 42</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>robot:</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>robot:</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>config:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='ivar'>@name</span> <span class='op'>=</span> <span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_sym'>to_sym</span>
   <span class='ivar'>@robot</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span>
   <span class='ivar'>@context</span> <span class='op'>=</span> <span class='id identifier rubyid_context'>context</span>
   <span class='ivar'>@mcp</span> <span class='op'>=</span> <span class='id identifier rubyid_mcp'>mcp</span>
   <span class='ivar'>@tools</span> <span class='op'>=</span> <span class='id identifier rubyid_tools'>tools</span>
   <span class='ivar'>@memory</span> <span class='op'>=</span> <span class='id identifier rubyid_memory'>memory</span>
+  <span class='ivar'>@config</span> <span class='op'>=</span> <span class='id identifier rubyid_config'>config</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -636,7 +638,6 @@
       <pre class="lines">
 
 
-59
 60
 61
 62
@@ -653,10 +654,17 @@
 73
 74
 75
-76</pre>
+76
+77
+78
+79
+80
+81
+82
+83</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/task.rb', line 59</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/task.rb', line 60</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
   <span class='comment'># Get current run params and deep merge with task context
@@ -669,6 +677,12 @@
 </span>  <span class='id identifier rubyid_run_params'>run_params</span><span class='lbracket'>[</span><span class='symbol'>:mcp</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='ivar'>@mcp</span> <span class='kw'>unless</span> <span class='ivar'>@mcp</span> <span class='op'>==</span> <span class='symbol'>:none</span>
   <span class='id identifier rubyid_run_params'>run_params</span><span class='lbracket'>[</span><span class='symbol'>:tools</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='ivar'>@tools</span> <span class='kw'>unless</span> <span class='ivar'>@tools</span> <span class='op'>==</span> <span class='symbol'>:none</span>
   <span class='id identifier rubyid_run_params'>run_params</span><span class='lbracket'>[</span><span class='symbol'>:memory</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='ivar'>@memory</span> <span class='kw'>if</span> <span class='ivar'>@memory</span>
+
+  <span class='comment'># Merge task&#39;s config on top of network&#39;s config
+</span>  <span class='kw'>if</span> <span class='ivar'>@config</span>
+    <span class='id identifier rubyid_network_rc'>network_rc</span> <span class='op'>=</span> <span class='id identifier rubyid_run_params'>run_params</span><span class='lbracket'>[</span><span class='symbol'>:network_config</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_run_params'>run_params</span><span class='lbracket'>[</span><span class='symbol'>:network_config</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_network_rc'>network_rc</span> <span class='op'>?</span> <span class='id identifier rubyid_network_rc'>network_rc</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='ivar'>@config</span><span class='rparen'>)</span> <span class='op'>:</span> <span class='ivar'>@config</span>
+  <span class='kw'>end</span>
 
   <span class='comment'># Create enhanced result with merged params
 </span>  <span class='id identifier rubyid_enhanced_result'>enhanced_result</span> <span class='op'>=</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_with_context'>with_context</span><span class='lparen'>(</span><span class='symbol'>:run_params</span><span class='comma'>,</span> <span class='id identifier rubyid_run_params'>run_params</span><span class='rparen'>)</span>
@@ -720,19 +734,19 @@
       <pre class="lines">
 
 
-82
-83
-84
-85
-86
-87
-88
 89
 90
-91</pre>
+91
+92
+93
+94
+95
+96
+97
+98</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/task.rb', line 82</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/task.rb', line 89</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -754,7 +768,7 @@
 </div>
 
       <div id="footer">
-  Generated on Tue Feb 17 00:02:24 2026 by
+  Generated on Tue Feb 17 06:15:39 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

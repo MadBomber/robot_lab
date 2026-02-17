@@ -243,6 +243,55 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 <span class='rparen'>)</span>
 </code></pre>
 
+<h3 id="label-Shared+Configuration+with+RunConfig">Shared Configuration with RunConfig</h3>
+
+<p><code>RunConfig</code> lets you define operational defaults that flow through the hierarchy: Network -&gt; Robot -&gt; Template -&gt; Task -&gt; Runtime. Use it to share LLM settings across multiple robots or an entire network.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Create a shared config
+</span><span class='id identifier rubyid_shared'>shared</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/RunConfig.html" title="RobotLab::RunConfig (class)">RunConfig</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/RunConfig.html#initialize-instance_method" title="RobotLab::RunConfig#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+  <span class='label'>model:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>claude-sonnet-4</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>temperature:</span> <span class='float'>0.7</span><span class='comma'>,</span>
+  <span class='label'>max_tokens:</span> <span class='int'>2000</span>
+<span class='rparen'>)</span>
+
+<span class='comment'># Apply to individual robots
+</span><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>writer</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are a creative writer.</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>config:</span> <span class='id identifier rubyid_shared'>shared</span>
+<span class='rparen'>)</span>
+
+<span class='comment'># Apply to an entire network (all robots inherit these defaults)
+</span><span class='id identifier rubyid_network'>network</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_create_network'><span class='object_link'><a href="RobotLab.html#create_network-class_method" title="RobotLab.create_network (method)">create_network</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>pipeline</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>config:</span> <span class='id identifier rubyid_shared'>shared</span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:analyzer</span><span class='comma'>,</span> <span class='id identifier rubyid_analyzer_robot'>analyzer_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='symbol'>:none</span>
+  <span class='id identifier rubyid_task'>task</span> <span class='symbol'>:writer</span><span class='comma'>,</span> <span class='id identifier rubyid_writer_robot'>writer_robot</span><span class='comma'>,</span> <span class='label'>depends_on:</span> <span class='lbracket'>[</span><span class='symbol'>:analyzer</span><span class='rbracket'>]</span>
+<span class='kw'>end</span>
+
+<span class='comment'># Robot-specific kwargs always override the shared config
+</span><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>fast_bot</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Be brief.</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>config:</span> <span class='id identifier rubyid_shared'>shared</span><span class='comma'>,</span>
+  <span class='label'>temperature:</span> <span class='float'>0.3</span>  <span class='comment'># overrides shared config&#39;s 0.7
+</span><span class='rparen'>)</span>
+</code></pre>
+
+<p>RunConfig supports keyword construction, block DSL, and merge semantics:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Block DSL
+</span><span class='id identifier rubyid_config'>config</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/RunConfig.html" title="RobotLab::RunConfig (class)">RunConfig</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/RunConfig.html#initialize-instance_method" title="RobotLab::RunConfig#initialize (method)">new</a></span></span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_c'>c</span><span class='op'>|</span>
+  <span class='id identifier rubyid_c'>c</span><span class='period'>.</span><span class='id identifier rubyid_model'>model</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>claude-sonnet-4</span><span class='tstring_end'>&quot;</span></span>
+  <span class='id identifier rubyid_c'>c</span><span class='period'>.</span><span class='id identifier rubyid_temperature'>temperature</span> <span class='float'>0.7</span>
+<span class='kw'>end</span>
+
+<span class='comment'># Merge (more-specific wins)
+</span><span class='id identifier rubyid_network_config'>network_config</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/RunConfig.html" title="RobotLab::RunConfig (class)">RunConfig</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/RunConfig.html#initialize-instance_method" title="RobotLab::RunConfig#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>model:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>claude-sonnet-4</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>temperature:</span> <span class='float'>0.5</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_robot_config'>robot_config</span>   <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/RunConfig.html" title="RobotLab::RunConfig (class)">RunConfig</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/RunConfig.html#initialize-instance_method" title="RobotLab::RunConfig#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>temperature:</span> <span class='float'>0.9</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_effective'>effective</span>      <span class='op'>=</span> <span class='id identifier rubyid_network_config'>network_config</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_robot_config'>robot_config</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_effective'>effective</span><span class='period'>.</span><span class='id identifier rubyid_temperature'>temperature</span>  <span class='comment'>#=&gt; 0.9
+</span><span class='id identifier rubyid_effective'>effective</span><span class='period'>.</span><span class='id identifier rubyid_model'>model</span>        <span class='comment'>#=&gt; &quot;claude-sonnet-4&quot;
+</span></code></pre>
+
 <h3 id="label-Chaining+Configuration">Chaining Configuration</h3>
 
 <p>Robots support method chaining to adjust configuration after creation:</p>
@@ -549,7 +598,7 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 </div></div>
 
       <div id="footer">
-  Generated on Tue Feb 17 00:02:23 2026 by
+  Generated on Tue Feb 17 06:15:39 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
