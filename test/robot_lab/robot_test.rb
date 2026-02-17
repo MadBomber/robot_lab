@@ -940,4 +940,109 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes received, 'w1:task'
     assert_includes received, 'w2:task'
   end
+
+
+  # Processing guard tests
+
+  def test_bus_processing_guard_initialized
+    robot = RobotLab::Robot.new(name: 'bot', template: :assistant)
+
+    refute robot.instance_variable_get(:@bus_processing)
+    assert_equal [], robot.instance_variable_get(:@bus_queue)
+  end
+
+
+  def test_bus_processing_guard_queues_concurrent_deliveries
+    bus = TypedBus::MessageBus.new
+    order = []
+
+    bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus)
+    bot.on_message do |message|
+      order << "start:#{message.content}"
+      # Simulate a second message arriving while processing the first.
+      # Because we're inside the handler, @bus_processing is true,
+      # so the second delivery will be queued instead of interleaved.
+      if message.content == "first"
+        second = RobotLab::RobotMessage.build(id: 99, from: "sender", content: "second")
+        bot.send(:handle_incoming_delivery,
+          TypedBus::Delivery.new(second, channel_name: :bot, subscriber_id: 0))
+      end
+      order << "end:#{message.content}"
+    end
+
+    sender = RobotLab::Robot.new(name: 'sender', template: :assistant, bus: bus)
+    Async { sender.send_message(to: :bot, content: "first") }
+
+    # The guard ensures sequential processing: first completes, then second
+    assert_equal ["start:first", "end:first", "start:second", "end:second"], order
+  end
+
+
+  def test_bus_processing_guard_drains_multiple_queued
+    bus = TypedBus::MessageBus.new
+    order = []
+
+    bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus)
+    bot.on_message do |message|
+      order << message.content
+      # Queue two more messages during the first processing
+      if message.content == "first"
+        %w[second third].each_with_index do |content, i|
+          msg = RobotLab::RobotMessage.build(id: 90 + i, from: "sender", content: content)
+          bot.send(:handle_incoming_delivery,
+            TypedBus::Delivery.new(msg, channel_name: :bot, subscriber_id: 0))
+        end
+      end
+    end
+
+    sender = RobotLab::Robot.new(name: 'sender', template: :assistant, bus: bus)
+    Async { sender.send_message(to: :bot, content: "first") }
+
+    assert_equal %w[first second third], order
+  end
+
+
+  def test_bus_processing_guard_resets_on_error
+    bus = TypedBus::MessageBus.new
+    bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus)
+    bot.on_message do |message|
+      raise "boom" if message.content == "explode"
+    end
+
+    sender = RobotLab::Robot.new(name: 'sender', template: :assistant, bus: bus)
+
+    # The error propagates as BusError, but @bus_processing resets
+    begin
+      Async { sender.send_message(to: :bot, content: "explode") }
+    rescue RobotLab::BusError
+      # expected
+    end
+
+    # Guard is reset so subsequent messages can still be processed
+    refute bot.instance_variable_get(:@bus_processing)
+    assert_equal [], bot.instance_variable_get(:@bus_queue)
+  end
+
+
+  def test_bus_processing_guard_correlates_replies_when_queued
+    bus = TypedBus::MessageBus.new
+    alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
+    bob = RobotLab::Robot.new(name: 'bob', template: :assistant, bus: bus)
+
+    # Alice needs an on_message handler to avoid triggering handle_message_via_llm
+    alice_received = []
+    alice.on_message { |message| alice_received << message }
+
+    bob.on_message do |message|
+      bob.send_reply(to: :alice, content: "reply to #{message.content}", in_reply_to: message.key)
+    end
+
+    msg = Async { alice.send_message(to: :bob, content: "hello") }.wait
+
+    wait_until(timeout: 1) { alice.outbox[msg.key][:status] == :replied }
+
+    assert_equal :replied, alice.outbox[msg.key][:status]
+    assert_equal 1, alice.outbox[msg.key][:replies].size
+    assert_equal "reply to hello", alice.outbox[msg.key][:replies].first.content
+  end
 end

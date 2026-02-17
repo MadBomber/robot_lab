@@ -69,10 +69,10 @@ end
 # analysts when they see something worth examining closely.
 #
 # Subscribes to the :room channel to observe performances.
-# Uses a processing guard to serialize run() calls — TypedBus
-# delivers messages in concurrent Async fibers, and interleaved
-# run() calls on the same @chat would corrupt tool_use/tool_result
-# ordering in the Anthropic API.
+# Room deliveries are routed through the core processing guard
+# (BusMessaging#handle_incoming_delivery), which serializes all
+# run() calls to prevent Async fiber interleaving from corrupting
+# chat history.
 #
 class Scout < RobotLab::Robot
   attr_accessor :log, :analysts_spawned, :pending_criteria, :display
@@ -81,8 +81,6 @@ class Scout < RobotLab::Robot
     @log = []
     @analysts_spawned = 0
     @pending_criteria = nil
-    @processing = false
-    @observation_queue = []
     @display = display
 
     super(
@@ -95,20 +93,18 @@ class Scout < RobotLab::Robot
       ]
     )
 
-    # Listen to the room for the comic's performances.
-    # Processing guard prevents concurrent run() calls on @chat —
-    # observations that arrive while processing are queued and
-    # drained sequentially after the current one completes.
-    @bus.subscribe(:room) do |delivery|
-      delivery.ack!
-      message = delivery.message
+    # Handle incoming messages — the core processing guard
+    # serializes all deliveries, preventing concurrent run()
+    # calls from corrupting chat history.
+    on_message do |message|
       next unless message.from == "comic"
+      observe_and_note(message.content.to_s)
+    end
 
-      if @processing
-        @observation_queue << message.content.to_s
-      else
-        process_observation(message.content.to_s)
-      end
+    # Listen to the room for the comic's performances.
+    # Route through the core processing guard.
+    @bus.subscribe(:room) do |delivery|
+      handle_incoming_delivery(delivery)
     end
   end
 
@@ -132,19 +128,6 @@ class Scout < RobotLab::Robot
   end
 
   private
-
-  def process_observation(content)
-    @processing = true
-
-    observe_and_note(content)
-
-    # Drain any observations that arrived while we were processing
-    while (queued = @observation_queue.shift)
-      observe_and_note(queued)
-    end
-
-    @processing = false
-  end
 
   def observe_and_note(content)
     @log << content

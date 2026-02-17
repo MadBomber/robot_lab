@@ -144,6 +144,8 @@ module RobotLab
       @message_counter = 0
       @outbox = {}
       @message_handler = nil
+      @bus_processing = false
+      @bus_queue = []
 
       # Inherent memory (used when standalone, not in a network)
       @memory = Memory.new(enable_cache: enable_cache)
