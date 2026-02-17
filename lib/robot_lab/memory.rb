@@ -693,8 +693,9 @@ module RobotLab
 
     def get_single(key, wait:)
       # Try immediate read
-      value = @mutex.synchronize { @backend[key] }
-      return value unless value.nil? && wait
+      @mutex.synchronize { return @backend[key] if @backend.key?(key) }
+
+      return nil unless wait
 
       # Need to wait
       timeout = wait == true ? nil : wait
@@ -731,8 +732,7 @@ module RobotLab
 
       @waiter_mutex.synchronize do
         # Double-check - value might have arrived while setting up
-        value = @mutex.synchronize { @backend[key] }
-        return value unless value.nil?
+        @mutex.synchronize { return @backend[key] if @backend.key?(key) }
 
         @waiters[key] << waiter
       end
