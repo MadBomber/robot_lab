@@ -8,20 +8,13 @@ module RobotLab
   module Utils
     private
 
-    # Dispatch a block asynchronously using Async fibers or threads.
+    # Dispatch a block asynchronously using Async fibers.
     #
-    # Prefers Async if already inside an Async reactor; falls back
-    # to a plain Thread otherwise.
+    # When already inside an Async reactor, creates a child task.
+    # Otherwise, creates a temporary reactor that runs the block
+    # and cleans up automatically.
     def dispatch_async(&block)
-      if defined?(Async) && Async::Task.current?
-        Async { block.call }
-      else
-        Thread.new do
-          block.call
-        rescue StandardError => e
-          warn "RobotLab async dispatch error: #{e.message}"
-        end
-      end
+      Async { block.call }
     end
 
     # Deep-duplicate a nested Hash/Array structure.
