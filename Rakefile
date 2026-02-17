@@ -48,7 +48,8 @@ namespace :examples do
   # Map of subdirectory-based demos to their entry point scripts
   SUBDIR_ENTRY_POINTS = {
     "14_rusty_circuit" => "open_mic.rb",
-    "15_memory_network_and_bus" => "editorial_pipeline.rb"
+    "15_memory_network_and_bus" => "editorial_pipeline.rb",
+    "16_writers_room" => "writers_room.rb"
   }.freeze
 
   desc "Run all examples"

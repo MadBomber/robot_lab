@@ -11,6 +11,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-02-17 [unreleased]
+
+### Added
+
+- **Writers' Room example** (`examples/16_writers_room/`) — Self-Organizing Group (SOG) demo where identical writer robots collaborate to produce a 10-chapter fiction novella
+  - Writer class with `fresh_chat!` pattern to prevent RubyLLM empty text content block corruption in bus-based robots
+  - 7 tools: Broadcast, DirectMessage, ReadMemory, WriteMemory, ListMemory, SpawnWriter, MarkComplete
+  - Room class with bus, shared memory, writer roster, heartbeat-based progress nudging, and structured logging
+  - Display class with color-coded terminal output, word wrapping, and optional log file
+  - CLI with `--premise`, `--writers`, `--log`, `--timeout`, `-h`/`--help` options
+  - Shared prompt template (`prompts/writer.md`) — all writers use the same instructions with no hierarchy
+- **Network pipeline tests** (`test/robot_lab/network_pipeline_test.rb`) for sequential robot execution and memory sharing
+- **`dispatch_async` error handling** — exceptions inside async dispatch are now logged and contained instead of propagating
+
+### Changed
+
+- Bumped version to 0.0.6
+- **Removed `Errors` module** and related test file — unused error classes cleaned out
+- **Zeitwerk autoloading optimized** — streamlined loader configuration in `lib/robot_lab.rb`
+- Rakefile updated with `16_writers_room` entry point in `SUBDIR_ENTRY_POINTS`
+
+## [0.0.5] - 2026-02-17 [unreleased]
+
+### Added
+
+- **`RunConfig` class** (`lib/robot_lab/run_config.rb`) for shared operational defaults
+  - Field categories: LLM (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`), tools (`mcp`, `tools`), callbacks (`on_tool_call`, `on_tool_result`), infrastructure (`bus`, `enable_cache`)
+  - Keyword construction, block DSL, and method chaining
+  - Merge semantics: more-specific config's non-nil values win
+  - `apply_to(chat)` applies LLM fields to a RubyLLM chat
+  - `from_front_matter(metadata)` extracts config from template YAML front matter
+  - `to_h`, `to_json_hash` (skips Procs/IO), `empty?`, `key?`, `==`, `inspect`
+  - Full test suite (`test/robot_lab/run_config_test.rb`, 39 tests)
+- **`config:` parameter** on `Robot.new`, `Network.new`, `Network#task`, `RobotLab.build`, and `RobotLab.create_network` for passing RunConfig instances
+- **Configuration inheritance chain**: `RobotLab.config` (global) -> `network.config` -> task `config:` -> `robot.config` -> template front matter -> constructor kwargs
+- **`robot.config` / `network.config` accessors** (`attr_reader`) returning the effective RunConfig
+- **`RobotLab.configure`** block-style configuration method yielding the config object
+- **Bus processing guard** (`handle_incoming_delivery`) serializing message deliveries across bus-connected robots to prevent Async fiber re-entrancy corrupting chat message ordering
+- Documentation for RunConfig across README, configuration guide, network guide, and API reference
+- Updated examples (`03_network`, `08_llm_config`, `09_chaining`, `11_network_introspection`) demonstrating RunConfig usage
+
+### Changed
+
+- Bumped version to 0.0.5
+- **Template rendering refactored** to use `RunConfig.from_front_matter` instead of `apply_front_matter_config` — front matter config is now merged with the robot's RunConfig before applying to chat
+- **MCP/tools hierarchy resolution** now accepts `network_config:` parameter instead of directly accessing the network object, enabling RunConfig-driven configuration flow
+- **`dispatch_async`** simplified to exclusively use Async fibers, removing Thread-based fallback
+- **`Memory#get`** improved nil value handling — uses `@backend.key?()` instead of nil check for correct nil value storage and retrieval
+- **`Memory#clone`** optimized — results and messages are referenced directly instead of duplicated
+
 ## [0.0.4] - 2026-02-16 [unreleased]
 
 ### Added

@@ -65,8 +65,16 @@ loader.inflector.inflect(
 
 loader.setup
 
-# Eager load for proper constant resolution
-loader.eager_load
+# These files define multiple classes that Zeitwerk cannot autoload
+# individually (e.g. TextMessage lives in message.rb, not text_message.rb).
+# Require them explicitly so their constants are available without eager loading.
+require_relative 'robot_lab/error'
+require_relative 'robot_lab/message'
+require_relative 'robot_lab/memory'
+
+# Eager load everything in Rails or when explicitly requested.
+# Otherwise Zeitwerk's lazy autoloading keeps boot fast.
+loader.eager_load if defined?(Rails::Engine) || ENV["ROBOT_LAB_EAGER_LOAD"]
 
 module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb

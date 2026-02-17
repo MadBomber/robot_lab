@@ -14,7 +14,11 @@ module RobotLab
     # Otherwise, creates a temporary reactor that runs the block
     # and cleans up automatically.
     def dispatch_async(&block)
-      Async { block.call }
+      Async do
+        block.call
+      rescue => e
+        RobotLab.config.logger.error("dispatch_async error: #{e.class}: #{e.message}")
+      end
     end
 
     # Deep-duplicate a nested Hash/Array structure.
