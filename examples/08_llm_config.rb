@@ -77,18 +77,41 @@ puts "-" * 70
 puts "Configuration hierarchy (highest priority first):"
 puts
 puts "  Per-Robot (override global settings for a specific robot):"
-puts "  9. Run-time context:      kwargs to robot.run re-render template"
-puts "  8. with_* methods:        robot.with_temperature(0.9).ask(...)"
-puts "  7. Constructor params:    Robot.new(model: ..., temperature: ...)"
-puts "  6. Template front matter: model, temperature, etc. in .md YAML header"
+puts "  11. Run-time context:      kwargs to robot.run re-render template"
+puts "  10. with_* methods:        robot.with_temperature(0.9).ask(...)"
+puts "   9. Constructor params:    Robot.new(model: ..., temperature: ...)"
+puts "   8. Template front matter: model, temperature, etc. in .md YAML header"
+puts "   7. Robot RunConfig:       config: passed to Robot constructor"
+puts
+puts "  Network/Task (shared defaults for a group of robots):"
+puts "   6. Task RunConfig:        config: passed to task() in network"
+puts "   5. Network RunConfig:     config: passed to create_network()"
 puts
 puts "  Global (apply to all robots unless overridden):"
-puts "  5. Environment variables: ROBOT_LAB_RUBY_LLM__MODEL, etc."
-puts "  4. Project config:        ./config/robot_lab.yml"
-puts "  3. User config:           ~/.config/robot_lab/config.yml"
-puts "  2. Environment overrides: #{env} section in defaults.yml"
-puts "  1. Bundled defaults:      lib/robot_lab/config/defaults.yml"
+puts "   4. Environment variables: ROBOT_LAB_RUBY_LLM__MODEL, etc."
+puts "   3. Project config:        ./config/robot_lab.yml"
+puts "   2. User config:           ~/.config/robot_lab/config.yml"
+puts "   1. Bundled defaults:      lib/robot_lab/config/defaults.yml + env overrides"
 puts "-" * 70
+puts
+
+# --- RunConfig demonstration ---
+puts "-" * 70
+puts "RunConfig: Shared Operational Defaults"
+puts "-" * 70
+puts
+
+shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+puts "  shared = RunConfig.new(model: \"claude-sonnet-4\", temperature: 0.5)"
+puts "  shared.to_h => #{shared.to_h.inspect}"
+puts
+
+creative = RobotLab::RunConfig.new(temperature: 0.9)
+merged = shared.merge(creative)
+puts "  creative = RunConfig.new(temperature: 0.9)"
+puts "  merged = shared.merge(creative)"
+puts "  merged.to_h => #{merged.to_h.inspect}"
+puts "  (model inherited from shared, temperature overridden by creative)"
 puts
 
 # Create a robot using the configuration
@@ -124,9 +147,15 @@ puts <<~FOOTER
   #{"=" * 70}
   Configuration demonstrated successfully!
 
-  Configuration flows through two layers:
+  Configuration flows through three layers:
     Global (MywayConfig): YAML defaults, env overrides, XDG, env vars
-    Per-Robot: template front matter, constructor params, with_* methods
+    Network/Task (RunConfig): shared defaults for groups of robots
+    Per-Robot: RunConfig, template front matter, constructor params, with_*
+
+  RunConfig lets you express shared defaults that flow through the hierarchy:
+    shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+    network = RobotLab.create_network(name: "team", config: shared) { ... }
+    robot = RobotLab.build(name: "bot", config: shared, temperature: 0.9)
 
   Example environment variable overrides:
     ROBOT_LAB_RUBY_LLM__MODEL=gpt-4

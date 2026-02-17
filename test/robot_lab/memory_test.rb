@@ -668,6 +668,47 @@ class RobotLab::MemoryTest < Minitest::Test
 
   private
 
+  # nil as a valid value
+
+  def test_set_nil_value_is_retrievable
+    @memory.set(:key, nil)
+    assert @memory.key?(:key)
+    assert_nil @memory.get(:key)
+  end
+
+
+  def test_get_single_with_wait_returns_nil_immediately_when_set
+    @memory.set(:key, nil)
+    result = @memory.get(:key, wait: true)
+    assert_nil result
+  end
+
+
+  def test_get_single_with_wait_wakes_on_nil_value
+    result = :not_set
+
+    reader = Thread.new do
+      result = @memory.get(:key, wait: true)
+    end
+
+    sleep 0.01
+    @memory.set(:key, nil)
+
+    reader.join(2)
+
+    assert_nil result
+  end
+
+
+  def test_get_multiple_returns_nil_value_without_waiting
+    @memory.set(:a, nil)
+    @memory.set(:b, "present")
+
+    result = @memory.get(:a, :b)
+    assert_equal({ a: nil, b: "present" }, result)
+  end
+
+
   def mock_robot_result(robot_name)
     RobotLab::RobotResult.new(
       robot_name: robot_name,

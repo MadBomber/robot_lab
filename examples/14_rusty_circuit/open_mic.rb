@@ -23,8 +23,10 @@
 # Communication uses a shared :room channel — the comic publishes
 # performances there, and both the heckler and scout subscribe.
 # The heckler sends feedback directly to the comic's personal channel.
-# The scout uses a processing guard to serialize observations,
-# preventing Async fiber interleaving from corrupting chat history.
+# Room deliveries are routed through the core processing guard
+# (BusMessaging#handle_incoming_delivery), which serializes all
+# run() calls to prevent Async fiber interleaving from corrupting
+# chat history.
 #
 # Style reinventions are injected into the next round's user prompt
 # rather than modifying the chat's system messages, avoiding message
@@ -96,7 +98,7 @@ display.comic("Comic [Opening]", opening)
 # channel, triggering the feedback loop:
 #   room → heckler → comic → room → heckler → comic → ...
 # The loop terminates when the heckler stops replying (MAX_ROUNDS).
-# The scout observes each round via :room with serialized processing.
+# The scout observes each round via :room, serialized by the core guard.
 comic.send_message(to: :room, content: "OPENING: #{opening}")
 
 display.separator

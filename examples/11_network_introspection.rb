@@ -55,16 +55,22 @@ puts "Example 11: Network Visualization & Introspection"
 puts "=" * 70
 puts
 
+# Shared RunConfig for all robots in this network
+shared_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+
+# Per-task RunConfig override for the writer (higher creativity)
+creative_config = RobotLab::RunConfig.new(temperature: 0.9)
+
 # Build robots (no LLM calls, just instances)
 classifier = RobotLab.build(name: "classifier", system_prompt: "Classify input")
 analyst    = RobotLab.build(name: "analyst",    system_prompt: "Analyze data")
 writer     = RobotLab.build(name: "writer",     system_prompt: "Write summary")
 
-# Build network with dependencies and per-task config
-network = RobotLab.create_network(name: "demo_pipeline") do
+# Build network with RunConfig, dependencies, and per-task config
+network = RobotLab.create_network(name: "demo_pipeline", config: shared_config) do
   task :classify, classifier, depends_on: :none
   task :analyze, analyst, context: { depth: "deep" }, depends_on: [:classify]
-  task :write, writer, depends_on: [:analyze]
+  task :write, writer, config: creative_config, depends_on: [:analyze]
 end
 
 # =============================================================================
@@ -179,10 +185,27 @@ ap network["analyze"].to_h
 puts
 
 # =============================================================================
-# Section 5: Broadcast
+# Section 5: RunConfig Introspection
 # =============================================================================
 
-puts "--- Section 5: Broadcast ---"
+puts "--- Section 5: RunConfig Introspection ---"
+puts
+
+puts "Network RunConfig (shared defaults):"
+ap network.config.to_h
+puts
+
+puts "Merged effective config for :write task (network + task override):"
+effective = shared_config.merge(creative_config)
+ap effective.to_h
+puts "  model inherited from network, temperature overridden by task"
+puts
+
+# =============================================================================
+# Section 6: Broadcast
+# =============================================================================
+
+puts "--- Section 6: Broadcast ---"
 puts
 
 broadcast_messages = []
@@ -207,10 +230,10 @@ end
 puts
 
 # =============================================================================
-# Section 6: Shared memory access
+# Section 7: Shared memory access
 # =============================================================================
 
-puts "--- Section 6: Shared Network Memory ---"
+puts "--- Section 7: Shared Network Memory ---"
 puts
 
 puts "network.memory is a #{network.memory.class}"

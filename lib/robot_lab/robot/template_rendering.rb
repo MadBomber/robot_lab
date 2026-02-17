@@ -41,8 +41,11 @@ module RobotLab
         # Extract extra config from front matter (name, description, tools, mcp)
         apply_front_matter_extras(parsed.metadata)
 
-        # Extract and apply LLM config to the chat (model, temperature, etc.)
-        apply_front_matter_config(parsed.metadata)
+        # Extract LLM config from front matter and apply to chat.
+        # Front matter is the base; @config (from constructor kwargs) overrides.
+        fm_config = RunConfig.from_front_matter(parsed.metadata)
+        effective = fm_config.merge(@config)
+        effective.apply_to(@chat)
 
         # Resolve context (could be a Proc)
         resolved_ctx = resolve_context(context, network: nil)
@@ -68,23 +71,6 @@ module RobotLab
         resolved_ctx = resolve_context(merged, network: nil)
         rendered = parsed.to_s(**resolved_ctx)
         @chat.with_instructions(rendered)
-      end
-
-
-      # Extract whitelisted config from front matter and apply to chat
-      def apply_front_matter_config(metadata)
-        FRONT_MATTER_CONFIG_KEYS.each do |key|
-          value = metadata.respond_to?(key) ? metadata.send(key) : nil
-          next unless value
-
-          method = :"with_#{key}"
-          @chat.public_send(method, value) if @chat.respond_to?(method)
-        end
-
-        # Handle model specially (may need with_model)
-        return unless metadata.respond_to?(:model) && metadata.model
-
-        @chat.with_model(metadata.model)
       end
 
 

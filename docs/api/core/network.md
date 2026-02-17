@@ -5,7 +5,7 @@ Orchestrates multiple robots using SimpleFlow pipelines with DAG-based execution
 ## Class: `RobotLab::Network`
 
 ```ruby
-network = RobotLab.create_network(name: "support") do
+network = RobotLab.create_network(name: "support", config: config) do
   task :classifier, classifier_robot, depends_on: :none
   task :billing, billing_robot, depends_on: :optional
 end
@@ -28,6 +28,14 @@ network.robots  # => Hash<String, Robot>
 ```
 
 Hash of robots keyed by name.
+
+### config
+
+```ruby
+network.config  # => RunConfig
+```
+
+Shared operational defaults for all robots in the network. Passed to robots during `run()` so they can inherit network-wide LLM settings. See [RunConfig](../../getting-started/configuration.md#runconfig-shared-operational-defaults).
 
 ### pipeline
 
@@ -64,7 +72,7 @@ Execute the network pipeline.
 ### task
 
 ```ruby
-network.task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, depends_on: :none)
+network.task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none)
 # => self
 ```
 
@@ -80,6 +88,7 @@ Add a task to the pipeline with optional per-task configuration.
 | `mcp` | `:none`, Array | MCP server config (`:none` or array of servers) |
 | `tools` | `:none`, Array | Tools config (`:none` or array of tools) |
 | `memory` | `Memory`, `nil` | Task-specific memory |
+| `config` | `RunConfig`, `nil` | Per-task config (merged on top of network's RunConfig) |
 | `depends_on` | `:none`, `Array<Symbol>`, `:optional` | Task dependencies |
 
 **Dependency Types:**
@@ -153,7 +162,8 @@ Hash representation of network configuration.
   name: "support",
   robots: ["classifier", "billing", "technical"],
   tasks: ["classifier", "billing", "technical"],
-  optional_tasks: [:billing, :technical]
+  optional_tasks: [:billing, :technical],
+  config: { model: "claude-sonnet-4", temperature: 0.7 }  # if set
 }
 ```
 

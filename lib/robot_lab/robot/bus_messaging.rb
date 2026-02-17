@@ -6,8 +6,21 @@ module RobotLab
     #
     # Expects the including class to provide:
     #   @bus, @message_counter, @outbox, @message_handler,
-    #   @bus_subscriber_id, @name
+    #   @bus_subscriber_id, @bus_processing, @bus_queue, @name
     #   and the `run` instance method
+    #
+    # == Processing Guard
+    #
+    # TypedBus delivers messages in concurrent Async fibers. When a robot's
+    # +run()+ yields during HTTP I/O, the Async scheduler can switch to
+    # another fiber delivering a new bus message to the same robot. This
+    # would interleave user messages between +tool_use+ / +tool_result+
+    # pairs in +@chat+, corrupting Anthropic API message ordering.
+    #
+    # The processing guard serializes delivery handling: deliveries that
+    # arrive while the robot is already processing are queued and drained
+    # sequentially after the current one completes.
+    #
     module BusMessaging
       # Send a message to another robot via the bus.
       #
@@ -147,9 +160,29 @@ module RobotLab
 
 
       # Dispatch incoming bus delivery to handler.
+      #
+      # Uses a processing guard to serialize delivery handling. When
+      # the robot is already processing a delivery (e.g., inside a
+      # run() call that yields during HTTP I/O), new deliveries are
+      # queued and drained sequentially after the current one completes.
+      #
       # Auto-ack when the handler takes 1 arg (message only);
       # manual ack/nack when the handler takes 2 args (delivery, message).
       def handle_incoming_delivery(delivery)
+        if @bus_processing
+          @bus_queue << delivery
+          return
+        end
+
+        process_delivery(delivery)
+        drain_bus_queue
+      end
+
+
+      # Process a single delivery (called under the processing guard)
+      def process_delivery(delivery)
+        @bus_processing = true
+
         message = delivery.message
 
         # Correlate replies with outbox entries
@@ -172,6 +205,16 @@ module RobotLab
       rescue => e
         delivery.nack! if delivery.pending?
         raise BusError, "Error handling bus message on robot '#{@name}': #{e.message}"
+      ensure
+        @bus_processing = false
+      end
+
+
+      # Drain queued deliveries sequentially
+      def drain_bus_queue
+        while (queued = @bus_queue.shift)
+          process_delivery(queued)
+        end
       end
 
 

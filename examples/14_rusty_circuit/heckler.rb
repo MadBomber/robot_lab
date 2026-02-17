@@ -11,6 +11,8 @@
 # own jokes using the comedian as the punch line.
 #
 # Subscribes to the :room channel to hear performances.
+# Room deliveries are routed through the core processing guard,
+# which serializes run() calls to prevent Async fiber interleaving.
 # Sends feedback directly to the comic's personal channel.
 #
 class Heckler < RobotLab::Robot
@@ -23,10 +25,10 @@ class Heckler < RobotLab::Robot
 
     super(name: "heckler", template: :open_mic_heckler, bus: bus)
 
-    # Listen to the room for the comic's performances
-    @bus.subscribe(:room) do |delivery|
-      delivery.ack!
-      message = delivery.message
+    # Handle incoming messages — the core processing guard
+    # serializes all deliveries, preventing concurrent run()
+    # calls from corrupting chat history.
+    on_message do |message|
       next unless message.from == "comic"
       next if @rounds >= MAX_ROUNDS
 
@@ -39,9 +41,7 @@ class Heckler < RobotLab::Robot
       ).reply.strip
 
       # The heckler chose silence — no output, no feedback
-      if verdict.match?(/\[SILENCE\]/i)
-        next
-      end
+      next if verdict.match?(/\[SILENCE\]/i)
 
       @display.heckler("Heckler [Round #{@rounds}]", verdict)
 
@@ -52,6 +52,12 @@ class Heckler < RobotLab::Robot
 
       # Send feedback to comic's personal channel until the set is done
       send_reply(to: message.from.to_sym, content: verdict, in_reply_to: message.key) if @rounds < MAX_ROUNDS
+    end
+
+    # Listen to the room for the comic's performances.
+    # Route through the core processing guard.
+    @bus.subscribe(:room) do |delivery|
+      handle_incoming_delivery(delivery)
     end
   end
 end
