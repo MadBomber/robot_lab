@@ -154,11 +154,11 @@ robot3 = RobotLab.build(
   name: "runconfig_demo",
   template: :configurable,
   context: { task_type: "analysis" },
-  run_config: shared,
+  config: shared,
   temperature: 0.8  # overrides RunConfig's 0.5
 )
 
-puts "Robot with run_config: shared, temperature: 0.8"
+puts "Robot with config: shared, temperature: 0.8"
 puts "(RunConfig sets 0.5, constructor overrides to 0.8)"
 prev3 = show_config(robot3)
 puts

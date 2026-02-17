@@ -49,7 +49,7 @@ module RobotLabTestHelpers
 
 
   # Create a RunConfig for testing
-  def build_run_config(**options, &block)
+  def build_config(**options, &block)
     RobotLab::RunConfig.new(**options, &block)
   end
 

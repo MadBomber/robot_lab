@@ -42,9 +42,9 @@ module RobotLab
         apply_front_matter_extras(parsed.metadata)
 
         # Extract LLM config from front matter and apply to chat.
-        # Front matter is the base; @run_config (from constructor kwargs) overrides.
+        # Front matter is the base; @config (from constructor kwargs) overrides.
         fm_config = RunConfig.from_front_matter(parsed.metadata)
-        effective = fm_config.merge(@run_config)
+        effective = fm_config.merge(@config)
         effective.apply_to(@chat)
 
         # Resolve context (could be a Proc)

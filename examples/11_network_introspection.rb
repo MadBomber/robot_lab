@@ -67,10 +67,10 @@ analyst    = RobotLab.build(name: "analyst",    system_prompt: "Analyze data")
 writer     = RobotLab.build(name: "writer",     system_prompt: "Write summary")
 
 # Build network with RunConfig, dependencies, and per-task config
-network = RobotLab.create_network(name: "demo_pipeline", run_config: shared_config) do
+network = RobotLab.create_network(name: "demo_pipeline", config: shared_config) do
   task :classify, classifier, depends_on: :none
   task :analyze, analyst, context: { depth: "deep" }, depends_on: [:classify]
-  task :write, writer, run_config: creative_config, depends_on: [:analyze]
+  task :write, writer, config: creative_config, depends_on: [:analyze]
 end
 
 # =============================================================================
@@ -192,7 +192,7 @@ puts "--- Section 5: RunConfig Introspection ---"
 puts
 
 puts "Network RunConfig (shared defaults):"
-ap network.run_config.to_h
+ap network.config.to_h
 puts
 
 puts "Merged effective config for :write task (network + task override):"

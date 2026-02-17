@@ -71,7 +71,7 @@ module RobotLab
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
     # @!attribute [r] memory
     #   @return [Memory] shared memory for all robots in the network
-    attr_reader :name, :pipeline, :robots, :memory, :run_config
+    attr_reader :name, :pipeline, :robots, :memory, :config
 
     # Creates a new Network instance.
     #
@@ -86,13 +86,13 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
-    def initialize(name:, concurrency: :auto, memory: nil, run_config: nil, &block)
+    def initialize(name:, concurrency: :auto, memory: nil, config: nil, &block)
       @name = name.to_s
       @robots = {}
       @tasks = {}
       @pipeline = SimpleFlow::Pipeline.new(concurrency: concurrency)
       @memory = memory || Memory.new(network_name: @name)
-      @run_config = run_config || RunConfig.new
+      @config = config || RunConfig.new
       @broadcast_handlers = []
 
       instance_eval(&block) if block_given?
@@ -121,7 +121,7 @@ module RobotLab
     # @example Task with dependencies
     #   task :writer, writer_robot, depends_on: [:analyst]
     #
-    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, run_config: nil, depends_on: :none)
+    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none)
       task_wrapper = Task.new(
         name: name,
         robot: robot,
@@ -129,7 +129,7 @@ module RobotLab
         mcp: mcp,
         tools: tools,
         memory: memory,
-        run_config: run_config
+        config: config
       )
 
       @robots[name.to_s] = robot
@@ -174,8 +174,8 @@ module RobotLab
       # Include shared memory in run params so robots can access it
       run_context[:network_memory] = @memory
 
-      # Pass network's run_config so robots can inherit it
-      run_context[:network_run_config] = @run_config unless @run_config.empty?
+      # Pass network's config so robots can inherit it
+      run_context[:network_config] = @config unless @config.empty?
 
       initial_result = SimpleFlow::Result.new(
         run_context,
@@ -335,7 +335,7 @@ module RobotLab
         robots: @robots.keys,
         tasks: @tasks.keys,
         optional_tasks: @pipeline.optional_steps.to_a,
-        run_config: (@run_config.empty? ? nil : @run_config.to_json_hash)
+        config: (@config.empty? ? nil : @config.to_json_hash)
       }.compact
     end
 

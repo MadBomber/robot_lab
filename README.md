@@ -203,11 +203,11 @@ shared = RobotLab::RunConfig.new(
 robot = RobotLab.build(
   name: "writer",
   system_prompt: "You are a creative writer.",
-  run_config: shared
+  config: shared
 )
 
 # Apply to an entire network (all robots inherit these defaults)
-network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+network = RobotLab.create_network(name: "pipeline", config: shared) do
   task :analyzer, analyzer_robot, depends_on: :none
   task :writer, writer_robot, depends_on: [:analyzer]
 end
@@ -216,7 +216,7 @@ end
 robot = RobotLab.build(
   name: "fast_bot",
   system_prompt: "Be brief.",
-  run_config: shared,
+  config: shared,
   temperature: 0.3  # overrides shared config's 0.7
 )
 ```

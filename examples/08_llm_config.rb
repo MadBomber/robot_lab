@@ -81,11 +81,11 @@ puts "  11. Run-time context:      kwargs to robot.run re-render template"
 puts "  10. with_* methods:        robot.with_temperature(0.9).ask(...)"
 puts "   9. Constructor params:    Robot.new(model: ..., temperature: ...)"
 puts "   8. Template front matter: model, temperature, etc. in .md YAML header"
-puts "   7. Robot RunConfig:       run_config: passed to Robot constructor"
+puts "   7. Robot RunConfig:       config: passed to Robot constructor"
 puts
 puts "  Network/Task (shared defaults for a group of robots):"
-puts "   6. Task RunConfig:        run_config: passed to task() in network"
-puts "   5. Network RunConfig:     run_config: passed to create_network()"
+puts "   6. Task RunConfig:        config: passed to task() in network"
+puts "   5. Network RunConfig:     config: passed to create_network()"
 puts
 puts "  Global (apply to all robots unless overridden):"
 puts "   4. Environment variables: ROBOT_LAB_RUBY_LLM__MODEL, etc."
@@ -154,8 +154,8 @@ puts <<~FOOTER
 
   RunConfig lets you express shared defaults that flow through the hierarchy:
     shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
-    network = RobotLab.create_network(name: "team", run_config: shared) { ... }
-    robot = RobotLab.build(name: "bot", run_config: shared, temperature: 0.9)
+    network = RobotLab.create_network(name: "team", config: shared) { ... }
+    robot = RobotLab.build(name: "bot", config: shared, temperature: 0.9)
 
   Example environment variable overrides:
     ROBOT_LAB_RUBY_LLM__MODEL=gpt-4

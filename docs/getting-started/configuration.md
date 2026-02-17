@@ -321,7 +321,7 @@ config = RobotLab::RunConfig.new
 
 ### Applying RunConfig
 
-Pass `run_config:` to robots and networks. Explicit constructor kwargs always override the RunConfig:
+Pass `config:` to robots and networks. Explicit constructor kwargs always override the RunConfig:
 
 ```ruby
 # Shared config for a team of robots
@@ -331,12 +331,12 @@ shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
 robot = RobotLab.build(
   name: "writer",
   system_prompt: "You are a creative writer.",
-  run_config: shared,
+  config: shared,
   temperature: 0.9  # overrides shared config's 0.5
 )
 
 # Network applies config to all member robots
-network = RobotLab.create_network(name: "pipeline", run_config: shared) do
+network = RobotLab.create_network(name: "pipeline", config: shared) do
   task :analyzer, analyzer_robot, depends_on: :none
   task :writer, writer_robot, depends_on: [:analyzer]
 end

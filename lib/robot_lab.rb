@@ -144,7 +144,7 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, run_config: nil, **options)
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, config: nil, **options)
       Robot.new(
         name: name,
         template: template,
@@ -152,7 +152,7 @@ module RobotLab
         context: context,
         enable_cache: enable_cache,
         bus: bus,
-        run_config: run_config,
+        config: config,
         **options
       )
     end
@@ -185,8 +185,8 @@ module RobotLab
     #     step :entities, entity_bot, depends_on: [:fetch]
     #     step :merge, merger, depends_on: [:sentiment, :entities]
     #   end
-    def create_network(name:, concurrency: :auto, run_config: nil, &block)
-      Network.new(name: name, concurrency: concurrency, run_config: run_config, &block)
+    def create_network(name:, concurrency: :auto, config: nil, &block)
+      Network.new(name: name, concurrency: concurrency, config: config, &block)
     end
 
 

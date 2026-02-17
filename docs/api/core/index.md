@@ -18,7 +18,7 @@ classDiagram
     class Network {
         +name: String
         +robots: Hash
-        +run_config: RunConfig
+        +config: RunConfig
         +run(message)
     }
 
