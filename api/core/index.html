@@ -2409,7 +2409,15 @@
     class Network {
         +name: String
         +robots: Hash
+        +config: RunConfig
         +run(message)
+    }
+
+    class RunConfig {
+        +model: String
+        +temperature: Float
+        +merge(other) RunConfig
+        +apply_to(chat)
     }
 
     class Tool {
@@ -2439,6 +2447,8 @@
     }
 
     Network --&gt; Robot : contains
+    Network --&gt; RunConfig : uses
+    Robot --&gt; RunConfig : uses
     Robot --&gt; Tool : has
     Robot --&gt; Memory : uses
     Network --&gt; Memory : uses
@@ -2459,6 +2469,10 @@
 <tr>
 <td><a href="network/">Network</a></td>
 <td>Container for robots with routing and orchestration</td>
+</tr>
+<tr>
+<td>RunConfig</td>
+<td>Shared configuration for LLM, tools, callbacks, and infrastructure</td>
 </tr>
 <tr>
 <td><a href="tool/">Tool</a></td>

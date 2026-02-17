@@ -941,6 +941,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#runconfig-shared-operational-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunConfig: Shared Operational Defaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RunConfig: Shared Operational Defaults">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a RunConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#applying-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying RunConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merging-configs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merging Configs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runconfig-vs-robotlabconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunConfig vs RobotLab.config
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robot-level-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2763,6 +2835,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#runconfig-shared-operational-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunConfig: Shared Operational Defaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RunConfig: Shared Operational Defaults">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a RunConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#applying-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying RunConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merging-configs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merging Configs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runconfig-vs-robotlabconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunConfig vs RobotLab.config
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robot-level-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3268,19 +3412,125 @@
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">ruby_llm</span><span class="p">:</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="nt">anthropic_api_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;%= Rails.application.credentials.anthropic_api_key %&gt;</span>
 </span></code></pre></div>
+<h2 id="runconfig-shared-operational-defaults">RunConfig: Shared Operational Defaults<a class="headerlink" href="#runconfig-shared-operational-defaults" title="Permanent link">&para;</a></h2>
+<p><code>RunConfig</code> is a configuration object that lets you express operational defaults for LLM settings, tools, callbacks, and infrastructure. Unlike <code>RobotLab.config</code> (which is global and static), RunConfig flows through the hierarchy and can be customized at each level:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>RobotLab.config (global) -&gt; Network RunConfig -&gt; Robot RunConfig -&gt; Template front matter -&gt; Task RunConfig -&gt; Runtime
+</span></code></pre></div>
+<h3 id="creating-a-runconfig">Creating a RunConfig<a class="headerlink" href="#creating-a-runconfig" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Keyword construction</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">7</span><span class="p">)</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Block DSL</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">model</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">temperature</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">7</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">max_tokens</span><span class="w"> </span><span class="mi">2000</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="k">end</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1"># Chaining</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">  </span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">)</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">  </span><span class="o">.</span><span class="n">temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">7</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="applying-runconfig">Applying RunConfig<a class="headerlink" href="#applying-runconfig" title="Permanent link">&para;</a></h3>
+<p>Pass <code>config:</code> to robots and networks. Explicit constructor kwargs always override the RunConfig:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Shared config for a team of robots</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">shared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Robot uses shared config</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;writer&quot;</span><span class="p">,</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a creative writer.&quot;</span><span class="p">,</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">shared</span><span class="p">,</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">  </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">9</span><span class="w">  </span><span class="c1"># overrides shared config&#39;s 0.5</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="p">)</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="c1"># Network applies config to all member robots</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">shared</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyzer</span><span class="p">,</span><span class="w"> </span><span class="n">analyzer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyzer</span><span class="o">]</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="merging-configs">Merging Configs<a class="headerlink" href="#merging-configs" title="Permanent link">&para;</a></h3>
+<p>RunConfig supports merge semantics where the more-specific config's values win:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">network_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">robot_config</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">9</span><span class="p">)</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">effective</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">network_config</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">robot_config</span><span class="p">)</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">effective</span><span class="o">.</span><span class="n">model</span><span class="w">        </span><span class="c1">#=&gt; &quot;claude-sonnet-4&quot; (inherited)</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">effective</span><span class="o">.</span><span class="n">temperature</span><span class="w">  </span><span class="c1">#=&gt; 0.9 (overridden)</span>
+</span></code></pre></div>
+<h3 id="available-fields">Available Fields<a class="headerlink" href="#available-fields" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LLM</strong></td>
+<td><code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code></td>
+</tr>
+<tr>
+<td><strong>Tools</strong></td>
+<td><code>mcp</code>, <code>tools</code></td>
+</tr>
+<tr>
+<td><strong>Callbacks</strong></td>
+<td><code>on_tool_call</code>, <code>on_tool_result</code></td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td><code>bus</code>, <code>enable_cache</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="runconfig-vs-robotlabconfig">RunConfig vs RobotLab.config<a class="headerlink" href="#runconfig-vs-robotlabconfig" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>RobotLab.config</code></th>
+<th><code>RunConfig</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Global (all robots)</td>
+<td>Per-network, per-robot, or per-task</td>
+</tr>
+<tr>
+<td><strong>Source</strong></td>
+<td>YAML files, env vars</td>
+<td>Code (constructor, block DSL)</td>
+</tr>
+<tr>
+<td><strong>Mutability</strong></td>
+<td>Loaded once, rarely changed</td>
+<td>Created per use case, merged</td>
+</tr>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>API keys, timeouts, defaults</td>
+<td>Model, temperature, tools per workflow</td>
+</tr>
+</tbody>
+</table>
 <h2 id="robot-level-configuration">Robot-Level Configuration<a class="headerlink" href="#robot-level-configuration" title="Permanent link">&para;</a></h2>
 <p>Individual robots can override the global model and other settings:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Override model for a specific robot</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fast_bot&quot;</span><span class="p">,</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a quick responder.&quot;</span><span class="p">,</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-haiku-3-5&quot;</span><span class="p">,</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="p">)</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># Or use chaining at runtime</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">with_max_tokens</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story.&quot;</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Override model for a specific robot</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fast_bot&quot;</span><span class="p">,</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a quick responder.&quot;</span><span class="p">,</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-haiku-3-5&quot;</span><span class="p">,</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">  </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="p">)</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="c1"># Or use chaining at runtime</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">with_max_tokens</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story.&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="hierarchical-mcp-and-tools">Hierarchical MCP and Tools<a class="headerlink" href="#hierarchical-mcp-and-tools" title="Permanent link">&para;</a></h2>
 <p>MCP servers and tools use a hierarchical configuration: <code>runtime &gt; robot &gt; network &gt; global</code>. Each level can specify:</p>
@@ -3289,21 +3539,21 @@
 <li><code>:none</code> -- No MCP servers or tools at this level</li>
 <li>An explicit array -- Specific servers or tools</li>
 </ul>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Robot inheriting network MCP config</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;agent&quot;</span><span class="p">,</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="p">)</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="c1"># Robot with no MCP, specific tools</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;calculator&quot;</span><span class="p">,</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You solve math problems.&quot;</span><span class="p">,</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span><span class="p">,</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Robot inheriting network MCP config</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;agent&quot;</span><span class="p">,</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="p">)</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="c1"># Robot with no MCP, specific tools</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;calculator&quot;</span><span class="p">,</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You solve math problems.&quot;</span><span class="p">,</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span><span class="p">,</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>

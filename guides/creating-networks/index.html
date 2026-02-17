@@ -1444,6 +1444,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#configuration-inheritance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Inheritance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Inheritance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-wide-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network-Wide Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-task-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Task Overrides
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inheritance-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inheritance Chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3080,6 +3130,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#configuration-inheritance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Inheritance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Inheritance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-wide-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network-Wide Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-task-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Task Overrides
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inheritance-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inheritance Chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3296,6 +3396,10 @@
 <td>Task-specific memory</td>
 </tr>
 <tr>
+<td><code>config</code></td>
+<td>Per-task <code>RunConfig</code> (merged on top of network's config)</td>
+</tr>
+<tr>
 <td><code>depends_on</code></td>
 <td><code>:none</code>, <code>[:task1]</code>, or <code>:optional</code></td>
 </tr>
@@ -3498,37 +3602,71 @@
 </span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="n">network</span><span class="o">.</span><span class="n">memory</span><span class="w">            </span><span class="c1"># =&gt; Memory instance (shared)</span>
 </span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="n">network</span><span class="o">.</span><span class="n">to_h</span><span class="w">              </span><span class="c1"># =&gt; Hash representation</span>
 </span></code></pre></div>
+<h2 id="configuration-inheritance">Configuration Inheritance<a class="headerlink" href="#configuration-inheritance" title="Permanent link">&para;</a></h2>
+<p>Networks accept a <code>config:</code> parameter that establishes default LLM settings for all member robots. This is useful when you want consistent behavior across a pipeline without configuring each robot individually.</p>
+<h3 id="network-wide-defaults">Network-Wide Defaults<a class="headerlink" href="#network-wide-defaults" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># All robots in this network use the same model and temperature</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">shared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">shared</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyzer</span><span class="p">,</span><span class="w"> </span><span class="n">analyzer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyzer</span><span class="o">]</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:reviewer</span><span class="p">,</span><span class="w"> </span><span class="n">reviewer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:writer</span><span class="o">]</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="per-task-overrides">Per-Task Overrides<a class="headerlink" href="#per-task-overrides" title="Permanent link">&para;</a></h3>
+<p>Individual tasks can override the network's config with their own <code>config:</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">creative_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">temperature</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">9</span><span class="p">)</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pipeline&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">shared</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyzer</span><span class="p">,</span><span class="w"> </span><span class="n">analyzer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">       </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">creative_config</span><span class="p">,</span><span class="w">  </span><span class="c1"># writer gets higher temperature</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">       </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyzer</span><span class="o">]</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:reviewer</span><span class="p">,</span><span class="w"> </span><span class="n">reviewer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:writer</span><span class="o">]</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="inheritance-chain">Inheritance Chain<a class="headerlink" href="#inheritance-chain" title="Permanent link">&para;</a></h3>
+<p>The full configuration hierarchy (most-specific wins):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>RobotLab.config (global)
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>  -&gt; Network config
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    -&gt; Task config
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>      -&gt; Robot config (from constructor)
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>        -&gt; Template front matter
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>          -&gt; Constructor kwargs (model:, temperature:, etc.)
+</span></code></pre></div>
+<p>Each layer only overrides values it explicitly sets. Unset values pass through from the parent.</p>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-keep-robots-focused">1. Keep Robots Focused<a class="headerlink" href="#1-keep-robots-focused" title="Permanent link">&para;</a></h3>
 <p>Each robot should have a single responsibility:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Good: focused robots</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">task</span><span class="w"> </span><span class="ss">:classify</span><span class="p">,</span><span class="w"> </span><span class="n">classifier</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">task</span><span class="w"> </span><span class="ss">:respond</span><span class="p">,</span><span class="w"> </span><span class="n">responder</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:classify</span><span class="o">]</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="c1"># Bad: one robot doing everything</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">task</span><span class="w"> </span><span class="ss">:do_everything</span><span class="p">,</span><span class="w"> </span><span class="n">mega_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># Good: focused robots</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">task</span><span class="w"> </span><span class="ss">:classify</span><span class="p">,</span><span class="w"> </span><span class="n">classifier</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="n">task</span><span class="w"> </span><span class="ss">:respond</span><span class="p">,</span><span class="w"> </span><span class="n">responder</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:classify</span><span class="o">]</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="c1"># Bad: one robot doing everything</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="n">task</span><span class="w"> </span><span class="ss">:do_everything</span><span class="p">,</span><span class="w"> </span><span class="n">mega_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
 </span></code></pre></div>
 <h3 id="2-use-per-task-context">2. Use Per-Task Context<a class="headerlink" href="#2-use-per-task-context" title="Permanent link">&para;</a></h3>
 <p>Pass task-specific configuration through context:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">     </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">max_refund</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">     </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">     </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">max_refund</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">     </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
 </span></code></pre></div>
 <h3 id="3-handle-missing-results">3. Handle Missing Results<a class="headerlink" href="#3-handle-missing-results" title="Permanent link">&para;</a></h3>
 <p>Guard against missing optional task results:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">  </span><span class="c1"># Check if optional task ran</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:validator</span><span class="o">]</span>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">    </span><span class="c1"># Use validator result</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">  </span><span class="k">else</span>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">    </span><span class="c1"># Handle missing validation</span>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="c1"># Check if optional task ran</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:validator</span><span class="o">]</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">    </span><span class="c1"># Use validator result</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="w">    </span><span class="c1"># Handle missing validation</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="4-reset-memory-between-runs">4. Reset Memory Between Runs<a class="headerlink" href="#4-reset-memory-between-runs" title="Permanent link">&para;</a></h3>
 <p>If reusing a network, reset shared memory between runs:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">network</span><span class="o">.</span><span class="n">reset_memory</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;New request&quot;</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">network</span><span class="o">.</span><span class="n">reset_memory</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;New request&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
