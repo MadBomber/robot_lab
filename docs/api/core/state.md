@@ -253,4 +253,3 @@ memory = Memory.from_hash(data)
 
 - [State Management Architecture](../../architecture/state-management.md)
 - [Memory](memory.md)
-- [History Guide](../../guides/history.md)

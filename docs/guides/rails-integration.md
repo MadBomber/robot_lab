@@ -512,4 +512,3 @@ end
 
 - [Building Robots](building-robots.md) - Robot patterns
 - [Creating Networks](creating-networks.md) - Network configuration
-- [History Guide](history.md) - Conversation persistence

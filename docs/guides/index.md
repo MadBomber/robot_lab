@@ -34,10 +34,6 @@ If you're new to RobotLab, start here:
 
     Real-time streaming of LLM responses
 
--   [:octicons-database-24: **Conversation History**](history.md)
-
-    Persist and restore conversation threads
-
 -   [:octicons-cpu-24: **Memory System**](memory.md)
 
     Share data between robots with the memory system
@@ -63,6 +59,5 @@ If you're new to RobotLab, start here:
 | [Using Tools](using-tools.md) | Add custom capabilities | 10 min |
 | [MCP Integration](mcp-integration.md) | External tool servers | 10 min |
 | [Streaming](streaming.md) | Real-time responses | 5 min |
-| [History](history.md) | Conversation persistence | 10 min |
 | [Memory](memory.md) | Shared data store | 5 min |
 | [Rails Integration](rails-integration.md) | Rails application setup | 15 min |

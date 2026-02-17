@@ -26,16 +26,3 @@ end
 #   config.openai_api_key = ENV["OPENAI_API_KEY"]
 #   config.gemini_api_key = ENV["GEMINI_API_KEY"]
 # end
-
-# History Persistence (optional)
-#
-# Uncomment to enable conversation history storage:
-#
-# Rails.application.config.after_initialize do
-#   adapter = RobotLab::History::ActiveRecordAdapter.new(
-#     thread_model: RobotLabThread,
-#     result_model: RobotLabResult
-#   )
-#
-#   RobotLab.config.history = adapter.to_config
-# end

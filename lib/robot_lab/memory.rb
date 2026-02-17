@@ -59,6 +59,8 @@ module RobotLab
   #   memory.cache  # => RubyLLM::SemanticCache instance
   #
   class Memory
+    include Utils
+
     # Reserved keys that have special behavior
     RESERVED_KEYS = %i[data results messages session_id cache].freeze
 
@@ -685,17 +687,6 @@ module RobotLab
       ->(result) { result.output + result.tool_calls }
     end
 
-    def deep_dup(obj)
-      case obj
-      when Hash
-        obj.transform_values { |v| deep_dup(v) }
-      when Array
-        obj.map { |v| deep_dup(v) }
-      else
-        obj.dup rescue obj
-      end
-    end
-
     # =========================================================================
     # Reactive Memory Helpers
     # =========================================================================
@@ -792,21 +783,6 @@ module RobotLab
       # Dispatch callbacks asynchronously
       callbacks.each do |callback|
         dispatch_async { callback.call(change) }
-      end
-    end
-
-    def dispatch_async(&block)
-      # Use Async if available (preferred for fiber-based concurrency)
-      if defined?(Async) && Async::Task.current?
-        Async { block.call }
-      else
-        # Fall back to Thread for basic async dispatch
-        Thread.new do
-          block.call
-        rescue StandardError => e
-          # Log but don't crash the notification system
-          warn "Memory subscription callback error: #{e.message}"
-        end
       end
     end
 

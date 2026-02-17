@@ -51,19 +51,17 @@ end
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
 loader.ignore("#{__dir__}/generators")
 loader.ignore("#{__dir__}/robot_lab/rails")
+loader.ignore("#{__dir__}/robot_lab/robot")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
 loader.inflector.inflect(
   'robot_lab' => 'RobotLab',
-  'robotic_model' => 'RoboticModel',
   'mcp' => 'MCP',
   'openai' => 'OpenAI',
   'sse' => 'SSE',
   'streamable_http' => 'StreamableHTTP',
   'websocket' => 'WebSocket'
 )
-
-# NOTE: adapters/ is NOT collapsed since files define RobotLab::Adapters::* classes
 
 loader.setup
 

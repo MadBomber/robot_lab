@@ -16,6 +16,8 @@ module RobotLab
   #   proxy.to_h        # => { count: 1, name: "test" }
   #
   class StateProxy
+    include Utils
+
     # Creates a new StateProxy.
     #
     # @param data [Hash] the initial data
@@ -172,17 +174,5 @@ module RobotLab
       "#<RobotLab::StateProxy #{@data.inspect}>"
     end
 
-    private
-
-    def deep_dup(obj)
-      case obj
-      when Hash
-        obj.transform_values { |v| deep_dup(v) }
-      when Array
-        obj.map { |v| deep_dup(v) }
-      else
-        obj.dup rescue obj
-      end
-    end
   end
 end
