@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-02-17 [unreleased]
+
+### Added
+
+- **Writers' Room example** (`examples/16_writers_room/`) — Self-Organizing Group (SOG) demo where identical writer robots collaborate to produce a 10-chapter fiction novella
+  - Writer class with `fresh_chat!` pattern to prevent RubyLLM empty text content block corruption in bus-based robots
+  - 7 tools: Broadcast, DirectMessage, ReadMemory, WriteMemory, ListMemory, SpawnWriter, MarkComplete
+  - Room class with bus, shared memory, writer roster, heartbeat-based progress nudging, and structured logging
+  - Display class with color-coded terminal output, word wrapping, and optional log file
+  - CLI with `--premise`, `--writers`, `--log`, `--timeout`, `-h`/`--help` options
+  - Shared prompt template (`prompts/writer.md`) — all writers use the same instructions with no hierarchy
+- **Network pipeline tests** (`test/robot_lab/network_pipeline_test.rb`) for sequential robot execution and memory sharing
+- **`dispatch_async` error handling** — exceptions inside async dispatch are now logged and contained instead of propagating
+
+### Changed
+
+- Bumped version to 0.0.6
+- **Removed `Errors` module** and related test file — unused error classes cleaned out
+- **Zeitwerk autoloading optimized** — streamlined loader configuration in `lib/robot_lab.rb`
+- Rakefile updated with `16_writers_room` entry point in `SUBDIR_ENTRY_POINTS`
+
 ## [0.0.5] - 2026-02-17 [unreleased]
 
 ### Added
