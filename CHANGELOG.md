@@ -11,6 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-02-17 [unreleased]
+
+### Added
+
+- **Screenplay mode** for Writers' Room — adapts a finished book into a 4-act made-for-TV movie screenplay (pilot for a series) using the same self-organizing group infrastructure
+  - **Mode Descriptor pattern** — `BOOK_MODE` and `SCREENPLAY_MODE` frozen hashes centralize all mode-variant values (template, unit name/range, completion key, bible/outline keys, output filename)
+  - **Dynamic scene registry** — screenplay writers work at the scene level with a `scene_registry` in shared memory (comma-separated scene numbers); scenes can be dropped or reordered as the adaptation takes shape
+  - **`Room#expected_units`** — public method that returns fixed range for book mode or parses the dynamic registry for screenplay mode; used by heartbeat, completion check, and assembly
+  - **`--screenplay-from PATH`** CLI flag — loads `memory.json` from a previous book run into shared memory before screenplay writers start
+  - **Memory dump** — book mode automatically saves all creative artifacts (story bible, outline, chapters) to `output/memory.json` after completion, enabling the book-to-screenplay pipeline
+  - **Screenplay writer prompt template** (`prompts/screenplay_writer.md`) — source material is read-only, writes to `screenplay_bible`, `scene_outline`, `scene_registry`, `claims`, `scene_1..N`; encourages spawning when unclaimed scenes exceed active writers
+  - **Heartbeat spawn nudging** — heartbeat messages now suggest spawning when unclaimed units outnumber active writers
+- **Output README** (`examples/16_writers_room/output/README.md`) documenting the creative works produced by robot teams (opus_001, opus_002, opus_002_screenplay)
+- **Opus 002** — second novella (*The Awakening of Meridian*) with session notes
+- **Opus 002 Screenplay** — first screenplay adaptation with adaptation discussion notes
+
+### Changed
+
+- Bumped version to 0.0.7
+- **Room class** now requires `mode:` parameter; `assemble_book` renamed to `assemble_output`; `wait_for_completion` and `send_heartbeat` read unit names, ranges, and keys from mode descriptor
+- **Writer class** reads template from `room.mode[:template]` instead of hardcoded `:writer`
+- **MarkCompleteTool** reads mode from `robot.room.mode` for unit range, unit name, and completion key; handles empty registry for dynamic modes
+- **Display#complete** uses mode-neutral "work" instead of "book"
+- Memory subscriptions in CLI are mode-aware (subscribe to mode-specific unit patterns and keys)
+- Updated Gemfile.lock dependencies (Nokogiri, Parser, Rack)
+
 ## [0.0.6] - 2026-02-17 [unreleased]
 
 ### Added
