@@ -40,7 +40,7 @@ class Writer < RobotLab::Robot
 
     super(
       name:        name,
-      template:    :writer,
+      template:    room.mode[:template],
       context:     { writer_name: name },
       bus:         bus,
       config:      config,

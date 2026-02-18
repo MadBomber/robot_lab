@@ -10,12 +10,13 @@ require "logger"
 # is up to the group.
 #
 class Room
-  attr_reader :bus, :memory, :writers, :display, :config, :logger
+  attr_reader :bus, :memory, :writers, :display, :config, :logger, :mode
 
-  def initialize(display:, config: nil, log_path: nil)
+  def initialize(display:, mode:, config: nil, log_path: nil)
     @bus     = TypedBus::MessageBus.new
     @memory  = RobotLab::Memory.new(enable_cache: false)
     @display = display
+    @mode    = mode
     @config  = config
     @writers = {}
 
@@ -64,26 +65,43 @@ class Room
     @logger.info("Seed message published to :room")
   end
 
-  # Wait for the book to be marked complete.
+  # Ordered list of expected unit numbers for the current mode.
+  # Fixed modes return unit_range.to_a; dynamic modes parse the
+  # registry key from memory (comma-separated integers).
+  def expected_units
+    if @mode[:unit_range] == :dynamic
+      registry = @memory.get(@mode[:registry_key])
+      return [] unless registry
+
+      registry.to_s.split(",").map { |s| s.strip.to_i }.sort
+    else
+      @mode[:unit_range].to_a
+    end
+  end
+
+  # Wait for the work to be marked complete.
   # Sends periodic heartbeat messages to :room so the feedback loop
   # doesn't starve — writers only act when messages arrive.
   def wait_for_completion(timeout: 600, poll_interval: 3, heartbeat_interval: 45)
     deadline = Time.now + timeout
     last_heartbeat = Time.now
+    done_key  = @mode[:completion_key]
+    unit_name = @mode[:unit_name]
     @logger.info("Waiting for completion (timeout: #{timeout}s, heartbeat: #{heartbeat_interval}s)")
 
     loop do
-      if @memory.key?(:book_complete)
-        @logger.info("Book marked complete!")
+      if @memory.key?(done_key)
+        @logger.info("Work marked complete!")
         return true
       end
 
       if Time.now > deadline
-        @logger.warn("Timeout reached (#{timeout}s) — book not completed")
-        chapters = (1..10).select { |n| @memory.key?(:"chapter_#{n}") }
-        @logger.warn("Chapters in memory: #{chapters.join(', ')}")
+        @logger.warn("Timeout reached (#{timeout}s) — work not completed")
+        units   = expected_units
+        written = units.select { |n| @memory.key?(:"#{unit_name}_#{n}") }
+        @logger.warn("#{unit_name.capitalize}s in memory: #{written.join(', ')}")
         @logger.warn("Memory keys: #{@memory.keys.join(', ')}")
-        @display.info("Timeout reached (#{timeout}s) — book not completed.")
+        @display.info("Timeout reached (#{timeout}s) — work not completed.")
         return false
       end
 
@@ -97,29 +115,34 @@ class Room
     end
   end
 
-  # Assemble the finished book from memory
-  def assemble_book
-    @logger.info("Assembling book from memory")
-    chapters = (1..10).map do |n|
-      key = :"chapter_#{n}"
+  # Assemble the finished output from memory
+  def assemble_output
+    unit_name   = @mode[:unit_name]
+    bible_key   = @mode[:bible_key]
+    outline_key = @mode[:outline_key]
+    units_list  = expected_units
+
+    @logger.info("Assembling #{@mode[:name]} from memory (#{units_list.size} #{unit_name}s)")
+    units = units_list.map do |n|
+      key = :"#{unit_name}_#{n}"
       content = @memory.get(key)
       if content
-        @logger.info("  chapter_#{n}: #{content.to_s.length} chars")
-        "## Chapter #{n}\n\n#{content}"
+        @logger.info("  #{unit_name}_#{n}: #{content.to_s.length} chars")
+        "## #{unit_name.capitalize} #{n}\n\n#{content}"
       else
-        @logger.warn("  chapter_#{n}: MISSING")
-        "## Chapter #{n}\n\n[Not written]"
+        @logger.warn("  #{unit_name}_#{n}: MISSING")
+        "## #{unit_name.capitalize} #{n}\n\n[Not written]"
       end
     end
 
-    outline = @memory.get(:outline)
-    bible   = @memory.get(:story_bible)
+    outline = @memory.get(outline_key)
+    bible   = @memory.get(bible_key)
 
     parts = []
-    parts << "# Story Bible\n\n#{bible}\n" if bible
-    parts << "# Outline\n\n#{outline}\n"   if outline
+    parts << "# #{bible_key.to_s.tr('_', ' ').split.map(&:capitalize).join(' ')}\n\n#{bible}\n" if bible
+    parts << "# #{outline_key.to_s.tr('_', ' ').split.map(&:capitalize).join(' ')}\n\n#{outline}\n" if outline
     parts << "---\n"
-    parts.concat(chapters)
+    parts.concat(units)
 
     parts.join("\n\n")
   end
@@ -128,19 +151,32 @@ class Room
 
   # Build and send a progress status message to :room
   def send_heartbeat
-    written   = (1..10).select { |n| @memory.key?(:"chapter_#{n}") }
-    missing   = (1..10).reject { |n| @memory.key?(:"chapter_#{n}") }
-    has_bible = @memory.key?(:story_bible)
-    has_outline = @memory.key?(:outline)
+    unit_name   = @mode[:unit_name]
+    bible_key   = @mode[:bible_key]
+    outline_key = @mode[:outline_key]
+    units_list  = expected_units
+    total       = units_list.size
 
-    status = "[ROOM STATUS] Progress: #{written.size}/10 chapters written."
-    status += " Written: #{written.join(', ')}." if written.any?
-    status += " Still needed: #{missing.join(', ')}." if missing.any?
-    status += " Story bible: #{has_bible ? 'yes' : 'NOT YET'}."
-    status += " Outline: #{has_outline ? 'yes' : 'NOT YET'}."
-    status += " Check shared memory, claim an unclaimed chapter, and write it."
+    written     = units_list.select { |n| @memory.key?(:"#{unit_name}_#{n}") }
+    missing     = units_list.reject { |n| @memory.key?(:"#{unit_name}_#{n}") }
+    has_bible   = @memory.key?(bible_key)
+    has_outline = @memory.key?(outline_key)
 
-    @logger.info("Heartbeat -> :room (#{written.size}/10 chapters)")
+    if total.zero?
+      status = "[ROOM STATUS] No #{unit_name}s registered yet."
+      status += " Establish a #{@mode[:registry_key]} first." if @mode[:unit_range] == :dynamic
+    else
+      status = "[ROOM STATUS] Progress: #{written.size}/#{total} #{unit_name}s written."
+      status += " Written: #{written.join(', ')}." if written.any?
+      status += " Still needed: #{missing.join(', ')}." if missing.any?
+      unclaimed = missing.size
+      status += " Spawn more writers if #{unclaimed} unclaimed #{unit_name}s exceed active writers." if unclaimed > @writers.size
+    end
+    status += " #{bible_key.to_s.tr('_', ' ').capitalize}: #{has_bible ? 'yes' : 'NOT YET'}."
+    status += " #{outline_key.to_s.tr('_', ' ').capitalize}: #{has_outline ? 'yes' : 'NOT YET'}."
+    status += " Check shared memory, claim an unclaimed #{unit_name}, and write it."
+
+    @logger.info("Heartbeat -> :room (#{written.size}/#{total} #{unit_name}s)")
     @display.info(status)
 
     # Pick a random writer to deliver the heartbeat through

@@ -142,21 +142,32 @@ end
 class MarkCompleteTool < RobotLab::Tool
   include ToolLogging
 
-  description "Signal that the book is finished — all 10 chapters are written. " \
-              "Only use this when you have verified all chapters exist in shared memory."
+  description "Signal that the work is finished — all units are written. " \
+              "Only use this when you have verified all units exist in shared memory."
 
   def execute
-    # Verify all chapters exist
-    missing = (1..10).reject { |n| robot.shared_memory.key?(:"chapter_#{n}") }
+    mode      = robot.room.mode
+    unit_name = mode[:unit_name]
+    done_key  = mode[:completion_key]
+    units     = robot.room.expected_units
+
+    if units.empty?
+      log&.warn("#{robot.name} TOOL mark_complete REJECTED — no #{unit_name}s registered")
+      return "Cannot mark complete. No #{unit_name}s registered yet."
+    end
+
+    # Verify all registered units exist
+    missing = units.reject { |n| robot.shared_memory.key?(:"#{unit_name}_#{n}") }
 
     if missing.any?
-      log&.warn("#{robot.name} TOOL mark_complete REJECTED — missing chapters: #{missing.join(', ')}")
-      "Cannot mark complete. Missing chapters: #{missing.join(', ')}"
+      labels = missing.map { |n| "#{unit_name}_#{n}" }.join(", ")
+      log&.warn("#{robot.name} TOOL mark_complete REJECTED — missing: #{labels}")
+      "Cannot mark complete. Missing: #{labels}"
     else
       log&.info("#{robot.name} TOOL mark_complete SUCCESS")
-      robot.shared_memory.set(:book_complete, true)
+      robot.shared_memory.set(done_key, true)
       robot.display&.complete(robot.name)
-      "Book marked as complete!"
+      "Work marked as complete!"
     end
   end
 end
