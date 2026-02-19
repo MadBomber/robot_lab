@@ -183,19 +183,28 @@ module RobotLab
       # Create the persistent chat via Agent's initialize
       super(chat: nil, **chat_kwargs)
 
+      # Dynamically delegate all with_* methods from the Chat class
+      define_chat_delegators
+
       # Apply template first (includes front matter config like model, temperature)
       # then constructor params override — constructor is more specific than template.
       apply_template_to_chat(context) if @template
       @chat.with_instructions(@system_prompt) if @system_prompt
 
       # Constructor params override template front matter (use config values)
-      apply_chat_option(:with_temperature, @config.temperature)
-      apply_chat_option(:with_top_p, @config.top_p)
-      apply_chat_option(:with_top_k, @config.top_k)
-      apply_chat_option(:with_max_tokens, @config.max_tokens)
-      apply_chat_option(:with_presence_penalty, @config.presence_penalty)
-      apply_chat_option(:with_frequency_penalty, @config.frequency_penalty)
-      apply_chat_option(:with_stop, @config.stop)
+      @chat.with_temperature(@config.temperature) if @config.temperature
+
+      # These parameters don't have dedicated with_* methods on Chat;
+      # pass them through with_params.
+      extra_params = {
+        top_p: @config.top_p,
+        top_k: @config.top_k,
+        max_tokens: @config.max_tokens,
+        presence_penalty: @config.presence_penalty,
+        frequency_penalty: @config.frequency_penalty,
+        stop: @config.stop
+      }.compact
+      @chat.with_params(**extra_params) if extra_params.any?
 
       # Apply callbacks
       @chat.on_tool_call(&@on_tool_call) if @on_tool_call
@@ -216,17 +225,17 @@ module RobotLab
       m.respond_to?(:id) ? m.id : m.to_s
     end
 
-    # Forward with_* methods to the persistent chat, returning self for chaining
-    %i[
-      with_model with_temperature with_top_p with_top_k with_max_tokens
-      with_presence_penalty with_frequency_penalty with_stop
-      with_instructions with_tool with_tools with_params
-      with_headers with_schema with_context with_thinking
-    ].each do |method|
-      define_method(method) do |*args, **kwargs, &block|
-        @chat.public_send(method, *args, **kwargs, &block)
-        self
-      end
+    # Dynamically delegate all with_* methods from @chat, returning self for chaining.
+    # Discovered from the actual Chat class to avoid maintenance sync issues.
+    private def define_chat_delegators
+      @chat.class.public_instance_methods(false)
+        .select { |m| m.start_with?('with_') }
+        .each do |method_name|
+          define_singleton_method(method_name) do |*args, **kwargs, &block|
+            @chat.public_send(method_name, *args, **kwargs, &block)
+            self
+          end
+        end
     end
 
 
@@ -302,7 +311,7 @@ module RobotLab
 
       @chat.with_instructions(system_prompt) if system_prompt
       @chat.with_model(model) if model
-      apply_chat_option(:with_temperature, temperature)
+      @chat.with_temperature(temperature) if temperature
 
       kwargs.each do |key, value|
         method = :"with_#{key}"
@@ -371,12 +380,6 @@ module RobotLab
     end
 
     private
-
-    # Apply a chat option if the value is non-nil
-    def apply_chat_option(method, value)
-      @chat.public_send(method, value) if value
-    end
-
 
     # Determine which memory to use
     def resolve_active_memory(network: nil, network_memory: nil)

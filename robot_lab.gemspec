@@ -45,7 +45,6 @@ Gem::Specification.new do |spec|
   # Core dependencies
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
-  spec.add_dependency "activesupport", ">= 7.0" # required by ruby_llm (undeclared)
   spec.add_dependency "ruby_llm", "~> 1.12"
   spec.add_dependency "ruby_llm-mcp"
   spec.add_dependency "prompt_manager", "~> 1.0"
