@@ -1399,7 +1399,16 @@
 203
 204
 205
-206</pre>
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 101</span>
@@ -1489,19 +1498,28 @@
   <span class='comment'># Create the persistent chat via Agent&#39;s initialize
 </span>  <span class='kw'>super</span><span class='lparen'>(</span><span class='label'>chat:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_chat_kwargs'>chat_kwargs</span><span class='rparen'>)</span>
 
+  <span class='comment'># Dynamically delegate all with_* methods from the Chat class
+</span>  <span class='id identifier rubyid_define_chat_delegators'>define_chat_delegators</span>
+
   <span class='comment'># Apply template first (includes front matter config like model, temperature)
 </span>  <span class='comment'># then constructor params override — constructor is more specific than template.
 </span>  <span class='id identifier rubyid_apply_template_to_chat'>apply_template_to_chat</span><span class='lparen'>(</span><span class='id identifier rubyid_context'>context</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='ivar'>@template</span>
   <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_instructions'>with_instructions</span><span class='lparen'>(</span><span class='ivar'>@system_prompt</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='ivar'>@system_prompt</span>
 
   <span class='comment'># Constructor params override template front matter (use config values)
-</span>  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_temperature</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_temperature'>temperature</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_top_p</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_top_p'>top_p</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_top_k</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_top_k'>top_k</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_max_tokens</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_max_tokens'>max_tokens</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_presence_penalty</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_presence_penalty'>presence_penalty</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_frequency_penalty</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_frequency_penalty'>frequency_penalty</span><span class='rparen'>)</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_stop</span><span class='comma'>,</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_stop'>stop</span><span class='rparen'>)</span>
+</span>  <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_temperature'>with_temperature</span><span class='lparen'>(</span><span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_temperature'>temperature</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_temperature'>temperature</span>
+
+  <span class='comment'># These parameters don&#39;t have dedicated with_* methods on Chat;
+</span>  <span class='comment'># pass them through with_params.
+</span>  <span class='id identifier rubyid_extra_params'>extra_params</span> <span class='op'>=</span> <span class='lbrace'>{</span>
+    <span class='label'>top_p:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_top_p'>top_p</span><span class='comma'>,</span>
+    <span class='label'>top_k:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_top_k'>top_k</span><span class='comma'>,</span>
+    <span class='label'>max_tokens:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_max_tokens'>max_tokens</span><span class='comma'>,</span>
+    <span class='label'>presence_penalty:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_presence_penalty'>presence_penalty</span><span class='comma'>,</span>
+    <span class='label'>frequency_penalty:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_frequency_penalty'>frequency_penalty</span><span class='comma'>,</span>
+    <span class='label'>stop:</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_stop'>stop</span>
+  <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
+  <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_params'>with_params</span><span class='lparen'>(</span><span class='op'>**</span><span class='id identifier rubyid_extra_params'>extra_params</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_extra_params'>extra_params</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span>
 
   <span class='comment'># Apply callbacks
 </span>  <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_on_tool_call'>on_tool_call</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='ivar'>@on_tool_call</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='ivar'>@on_tool_call</span>
@@ -2394,21 +2412,21 @@
       <pre class="lines">
 
 
-320
-321
-322
-323
-324
-325
-326
-327
-328
 329
 330
-331</pre>
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 320</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 329</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_run_context'>run_context</span> <span class='op'>=</span> <span class='id identifier rubyid_extract_run_context'>extract_run_context</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
@@ -2466,14 +2484,14 @@
       <pre class="lines">
 
 
-346
-347
-348
-349
-350</pre>
+355
+356
+357
+358
+359</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 346</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 355</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_disconnect'>disconnect</span>
   <span class='ivar'>@mcp_clients</span><span class='period'>.</span><span class='id identifier rubyid_each_value'>each_value</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:disconnect</span><span class='rparen'>)</span>
@@ -2529,15 +2547,15 @@
       <pre class="lines">
 
 
-212
-213
-214
-215
-216
-217</pre>
+221
+222
+223
+224
+225
+226</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 212</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 221</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_model'>model</span>
   <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>unless</span> <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_respond_to?'>respond_to?</span><span class='lparen'>(</span><span class='symbol'>:model</span><span class='rparen'>)</span>
@@ -2589,13 +2607,13 @@
       <pre class="lines">
 
 
-337
-338
-339
-340</pre>
+346
+347
+348
+349</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 337</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 346</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_memory'>reset_memory</span>
   <span class='ivar'>@memory</span><span class='period'>.</span><span class='id identifier rubyid_reset'>reset</span>
@@ -2757,15 +2775,6 @@
       <pre class="lines">
 
 
-242
-243
-244
-245
-246
-247
-248
-249
-250
 251
 252
 253
@@ -2800,10 +2809,19 @@
 282
 283
 284
-285</pre>
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 242</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 251</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network_memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network_config:</span> <span class='kw'>nil</span><span class='comma'>,</span>
         <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
@@ -2893,25 +2911,25 @@
       <pre class="lines">
 
 
-356
-357
-358
-359
-360
-361
-362
-363
-364
 365
 366
 367
 368
 369
 370
-371</pre>
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 356</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 365</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -3067,15 +3085,6 @@
       <pre class="lines">
 
 
-296
-297
-298
-299
-300
-301
-302
-303
-304
 305
 306
 307
@@ -3084,10 +3093,19 @@
 310
 311
 312
-313</pre>
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 296</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 305</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_update'>update</span><span class='lparen'>(</span><span class='label'>template:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>model:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>temperature:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_template'>template</span>
@@ -3098,7 +3116,7 @@
 
   <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_instructions'>with_instructions</span><span class='lparen'>(</span><span class='id identifier rubyid_system_prompt'>system_prompt</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_system_prompt'>system_prompt</span>
   <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_model'>with_model</span><span class='lparen'>(</span><span class='id identifier rubyid_model'>model</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_model'>model</span>
-  <span class='id identifier rubyid_apply_chat_option'>apply_chat_option</span><span class='lparen'>(</span><span class='symbol'>:with_temperature</span><span class='comma'>,</span> <span class='id identifier rubyid_temperature'>temperature</span><span class='rparen'>)</span>
+  <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_with_temperature'>with_temperature</span><span class='lparen'>(</span><span class='id identifier rubyid_temperature'>temperature</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_temperature'>temperature</span>
 
   <span class='id identifier rubyid_kwargs'>kwargs</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='id identifier rubyid_value'>value</span><span class='op'>|</span>
     <span class='id identifier rubyid_method'>method</span> <span class='op'>=</span> <span class='symbol'>:&quot;with_</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_key'>key</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
@@ -3117,7 +3135,7 @@
 </div>
 
       <div id="footer">
-  Generated on Wed Feb 18 04:59:33 2026 by
+  Generated on Thu Feb 19 18:03:08 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
