@@ -24,7 +24,7 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     ---
 
-    Build applications with multiple specialized AI agents, each inheriting from `RubyLLM::Agent` with persistent chat and memory.
+    Build applications with multiple specialized Robots (AI agents), each with persistent chat and memory.
 
     [:octicons-arrow-right-24: Learn more](architecture/core-concepts.md)
 
@@ -36,13 +36,45 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: Creating Networks](guides/creating-networks.md)
 
+-   :material-file-document-outline:{ .lg .middle } **Prompt Templates**
+
+    ---
+
+    Self-contained `.md` files with YAML front matter that define a complete robot: prompt, tools, MCP, model, and skills.
+
+    [:octicons-arrow-right-24: Building Robots](guides/building-robots.md)
+
+-   :material-puzzle-outline:{ .lg .middle } **Composable Skills**
+
+    ---
+
+    Mix reusable prompt behaviors into any robot. Skills expand depth-first with automatic cycle detection and config cascading.
+
+    [:octicons-arrow-right-24: Skills Guide](guides/building-robots.md#skills)
+
 -   :material-tools:{ .lg .middle } **Extensible Tools**
 
     ---
 
-    Give robots tools via `RubyLLM::Tool` subclasses or `RobotLab::Tool.new` with block handlers.
+    Give robots custom capabilities via `RobotLab::Tool` subclasses with graceful error handling. Errors are returned to the LLM as plain text.
 
     [:octicons-arrow-right-24: Using Tools](guides/using-tools.md)
+
+-   :material-account-question:{ .lg .middle } **Human-in-the-Loop**
+
+    ---
+
+    The `AskUser` tool lets robots ask users questions interactively with open-ended text, multiple choice, and default values.
+
+    [:octicons-arrow-right-24: Using Tools](guides/using-tools.md)
+
+-   :material-play-speed:{ .lg .middle } **Content Streaming**
+
+    ---
+
+    Stream LLM responses in real-time via stored `on_content:` callbacks, per-call blocks, or both together.
+
+    [:octicons-arrow-right-24: Streaming Guide](guides/streaming.md)
 
 -   :material-server-network:{ .lg .middle } **MCP Integration**
 
@@ -52,14 +84,6 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: MCP Guide](guides/mcp-integration.md)
 
--   :material-message-arrow-right-outline:{ .lg .middle } **Message Bus**
-
-    ---
-
-    Enable bidirectional, cyclic communication between robots via TypedBus for negotiation loops and convergence patterns.
-
-    [:octicons-arrow-right-24: Message Bus](architecture/core-concepts.md#message-bus)
-
 -   :material-memory:{ .lg .middle } **Reactive Memory**
 
     ---
@@ -67,6 +91,38 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
     Robots share data through a reactive key-value memory system with subscriptions, blocking reads, and optional Redis backend.
 
     [:octicons-arrow-right-24: Memory System](guides/memory.md)
+
+-   :material-message-arrow-right-outline:{ .lg .middle } **Message Bus**
+
+    ---
+
+    Bidirectional, cyclic communication between robots via TypedBus for negotiation loops and convergence patterns.
+
+    [:octicons-arrow-right-24: Message Bus](architecture/core-concepts.md#message-bus)
+
+-   :material-creation:{ .lg .middle } **Dynamic Spawning**
+
+    ---
+
+    Robots create new specialist robots at runtime using `spawn`. The bus is created lazily with no upfront wiring required.
+
+    [:octicons-arrow-right-24: Examples](examples/index.md#spawning-robots)
+
+-   :material-layers-outline:{ .lg .middle } **Layered Configuration**
+
+    ---
+
+    Cascading config from YAML files, environment variables, and `RunConfig` objects that flow through the network-robot hierarchy.
+
+    [:octicons-arrow-right-24: Configuration](getting-started/configuration.md)
+
+-   :material-train-car-container:{ .lg .middle } **Rails Integration**
+
+    ---
+
+    Generators, background jobs, and Turbo Stream token broadcasting for real-time streaming to the browser.
+
+    [:octicons-arrow-right-24: Rails Guide](guides/rails-integration.md)
 
 </div>
 

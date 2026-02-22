@@ -1,7 +1,8 @@
 # RobotLab
 
-> [!CAUTION]
-> This gem is under active development. APIs and features may change without notice. See the [CHANGELOG](CHANGELOG.md) for details.
+> [!INFO]
+> See the [CHANGELOG](CHANGELOG.md) for the latest changes.  The [examples directory has a good cross section  of demo apps](examples/README.md) that show-off the various capabilities of the RobotLab library.
+
 <br>
 <table>
 <tr>
@@ -10,25 +11,26 @@
 <em>"Build robots. Solve problems."</em>
 </td>
 <td width="50%" valign="top">
-<strong>Multi-robot LLM workflow orchestration for Ruby</strong><br><br>
-RobotLab enables you to build sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own system prompt, tools, and capabilities.<br><br>
 <strong>Key Features</strong><br>
 
 - <strong>Multi-Robot Architecture</strong> - Build with specialized AI agents<br>
 - <strong>Network Orchestration</strong> - Connect robots with flexible routing<br>
-- <strong>Composable Skills</strong> - Mix reusable behaviors into any robot<br>
-- <strong>Extensible Tools</strong> - Give robots custom capabilities with graceful error handling<br>
-- <strong>Content Streaming</strong> - Stream LLM responses via stored callbacks or per-call blocks<br>
+- <strong>Prompt Templates</strong> - Self-contained .md files with YAML front matter<br>
+- <strong>Composable Skills</strong> - Mix reusable prompt behaviors into any robot<br>
+- <strong>Extensible Tools</strong> - Custom capabilities with graceful error handling<br>
+- <strong>Human-in-the-Loop</strong> - AskUser tool for interactive prompting<br>
+- <strong>Content Streaming</strong> - Stored callbacks, per-call blocks, or both<br>
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
-- <strong>Conversation History</strong> - Persist and restore threads<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
-- <strong>Streaming</strong> - Real-time event streaming<br>
-- <strong>Rails Integration</strong> - Generators and ActiveRecord support
+- <strong>Layered Configuration</strong> - Cascading YAML, env vars, and RunConfig<br>
+- <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting
 </td>
 </tr>
 </table>
+
+<p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) snd explore the [many examples](examples/README.md) available as working demo applications.</p>
 
 ## Installation
 

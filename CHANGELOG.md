@@ -1,8 +1,5 @@
 # Changelog
 
-> [!CAUTION]
-> This gem is under active development. APIs and features may change without notice.
-
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -10,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [0.0.8] - 2026-02-22
+
+### Added
+
+- **Skills as composable templates** — prepend reusable prompt snippets at build time via `skills:` parameter
+  - Skills are regular PromptManager templates (no special subdirectory)
+  - Recursive expansion — skills can declare nested skills via front matter `skills:` key
+  - Depth-first ordering — nested skills appear before their parent
+  - Cycle detection via `Set` of visited IDs; cycles log a warning and skip
+  - Config cascade — skill₁ → skill₂ → ... → main template → constructor kwargs
+  - Shared context — all skills and the main template render with the same `context:` hash
+  - Example: `examples/17_skills.rb` — SRE incident response system with flat and recursive skills
+  - 20 new tests covering expansion, ordering, cycles, config cascade, and factory passthrough
+- **Streaming content callback (`on_content:`)** — wire streaming at robot build time
+  - Stored callback fires on every `run()` call automatically
+  - Pass-through block on `run()` for per-call streaming
+  - When both exist, both fire (stored first, then runtime block)
+  - `effective_streaming_block` merges stored + runtime into a single Proc
+  - Added `:on_content` to `RunConfig::CALLBACK_FIELDS`
+  - 12 new tests
+- **Graceful tool error handling** — `RobotLab::Tool#call` wraps `execute` with `rescue StandardError`
+  - Errors returned as plain string (`"Error (tool_name): message"`) so the LLM can reason about them
+  - Class-level `raise_on_error` opt-out for critical tools
+  - MCP tools inherit the same wrapper via `Tool.create` subclasses
+  - 10 new tests
+- **`RobotRunJob` generator template** (`job.rb.tt`) — turnkey ActiveJob background job for robot runs
+  - Resolves robot class via `constantize.build`
+  - Wires `TurboStreamCallbacks` when `turbo-rails` is available (graceful no-op otherwise)
+  - Persists results via `result.export`; broadcasts completion/error via Turbo Streams
+  - `--skip-job` option on install generator
+- **`TurboStreamCallbacks` module** (`lib/robot_lab/rails_integration/turbo_stream_callbacks.rb`)
+  - `available?` — runtime check for `Turbo::StreamsChannel`
+  - `build_content_callback(stream_name:, target:)` — broadcasts HTML-escaped content chunks
+  - `build_tool_call_callback(stream_name:, target:)` — broadcasts tool call badges
+  - 13 tests
+- **Rails demo app** (`examples/18_rails/`) — minimal hand-built Rails 8 app exercising all Rails integration
+  - ChatRobot with TimeTool, RobotRunJob, Turbo Stream token streaming, SQLite persistence
+  - No asset pipeline — Turbo JS via importmap from CDN
+  - `:async` adapters for both ActiveJob and ActionCable (no Redis, no Solid Queue)
+  - User messages persisted in history; auto-scrolling via MutationObserver; form clears after submit
+  - Rake tasks: `examples:rails_setup`, `examples:rails`
+- **Routing robot example** in Rails integration docs — `ClassifierRobot` subclass with `call(result)` override
+- **Custom tool example** in Rails integration docs — `OrderLookup` tool with ActiveRecord
+
+### Changed
+
+- Bumped version to 0.0.8
+- **Renamed `RobotLab::Rails` → `RobotLab::RailsIntegration`** — eliminates constant shadowing where bare `Rails` inside `module RobotLab` resolved to the gem's own namespace instead of `::Rails`
+  - Moved `lib/robot_lab/rails/` → `lib/robot_lab/rails_integration/`
+  - Updated all require paths, loader.ignore, generator templates, tests, and documentation
+  - Reverted `::Rails` back to bare `Rails` in `config.rb` (shadow eliminated)
+- Rakefile updated with `STANDALONE_APPS` map for standalone demo apps
+- Documentation updates across README, guides, API reference, and examples for all new features
+- Updated Gemfile.lock dependencies
+
+### Fixed
+
+- `RobotLab::Rails` namespace shadowing `::Rails` in `config.rb` (`NoMethodError: undefined method 'root' for module RobotLab::Rails`)
+- MkDocs broken anchor link in `docs/examples/index.md` (`#with-conversation-history` → `#with-memory`)
 
 ## [0.0.7] - 2026-02-17 [unreleased]
 
