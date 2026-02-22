@@ -68,6 +68,8 @@
 </li><li>
 <p>&lt;strong&gt;Network Orchestration&lt;/strong&gt; - Connect robots with flexible routing<br></p>
 </li><li>
+<p>&lt;strong&gt;Composable Skills&lt;/strong&gt; - Mix reusable behaviors into any robot<br></p>
+</li><li>
 <p>&lt;strong&gt;Extensible Tools&lt;/strong&gt; - Give robots custom capabilities<br></p>
 </li><li>
 <p>&lt;strong&gt;MCP Integration&lt;/strong&gt; - Connect to external tool servers<br></p>
@@ -229,7 +231,33 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 </span><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span><span class='label'>template:</span> <span class='symbol'>:github_assistant</span><span class='rparen'>)</span>
 </code></pre>
 
-<p>Front matter supports: <code>description</code>, <code>robot_name</code>, <code>tools</code>, <code>mcp</code>, <code>parameters</code>, and LLM config keys (<code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code>). Constructor-provided values always take precedence over front matter.</p>
+<p>Front matter supports: <code>description</code>, <code>robot_name</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code>, <code>parameters</code>, and LLM config keys (<code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code>). Constructor-provided values always take precedence over front matter.</p>
+
+<h3 id="label-Composable+Skills">Composable Skills</h3>
+
+<p>Skills let you compose robot behaviors from reusable templates. A skill is just a template whose prompt body is prepended before the main template. Use skills to mix in capabilities like “ask clarifying questions”, “respond in JSON”, or “follow safety guidelines” without creating a dedicated template for every combination.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Compose a support robot from reusable skills
+</span><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>support</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>template:</span> <span class='symbol'>:support_agent</span><span class='comma'>,</span>
+  <span class='label'>skills:</span> <span class='lbracket'>[</span><span class='symbol'>:clarifier</span><span class='comma'>,</span> <span class='symbol'>:sentiment_aware</span><span class='comma'>,</span> <span class='symbol'>:json_responder</span><span class='rbracket'>]</span><span class='comma'>,</span>
+  <span class='label'>context:</span> <span class='lbrace'>{</span> <span class='label'>company:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Acme Corp</span><span class='tstring_end'>&quot;</span></span> <span class='rbrace'>}</span>
+<span class='rparen'>)</span>
+</code></pre>
+
+<p>Skills can also be declared in template front matter:</p>
+
+<pre class="code ruby"><code class="ruby">---
+description: Support agent with built-in skills
+skills:
+  - clarifier
+  - sentiment_aware
+---
+You are a support agent for &lt;%= company %&gt;.
+</code></pre>
+
+<p>Skills are expanded depth-first and can reference other skills (with automatic cycle detection). Config cascades through skills in order — later values override earlier ones, and constructor kwargs always win.</p>
 
 <h3 id="label-Combining+Templates+with+System+Prompts">Combining Templates with System Prompts</h3>
 
@@ -598,7 +626,7 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 </div></div>
 
       <div id="footer">
-  Generated on Thu Feb 19 18:03:07 2026 by
+  Generated on Sun Feb 22 17:44:48 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

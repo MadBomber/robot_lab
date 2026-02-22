@@ -185,7 +185,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#build-class_method" title="build (class method)">.<strong>build</strong>(name: &quot;robot&quot;, template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, config: nil, **options)  &#x21d2; Robot </a>
+      <a href="#build-class_method" title="build (class method)">.<strong>build</strong>(name: &quot;robot&quot;, template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil, config: nil, **options)  &#x21d2; Robot </a>
     
 
     
@@ -338,7 +338,7 @@
       <div class="method_details first">
   <h3 class="signature first" id="build-class_method">
   
-    .<strong>build</strong>(name: &quot;robot&quot;, template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, config: nil, **options)  &#x21d2; <tt><span class='object_link'><a href="RobotLab/Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt> 
+    .<strong>build</strong>(name: &quot;robot&quot;, template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil, config: nil, **options)  &#x21d2; <tt><span class='object_link'><a href="RobotLab/Robot.html" title="RobotLab::Robot (class)">Robot</a></span></tt> 
   
 
   
@@ -534,12 +534,13 @@
 163
 164
 165
-166</pre>
+166
+167</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/robot_lab.rb', line 155</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_build'>build</span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>robot</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>template:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>enable_cache:</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='label'>bus:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>config:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_build'>build</span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>robot</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>template:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>enable_cache:</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='label'>bus:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>skills:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>config:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="RobotLab/Robot.html" title="RobotLab::Robot (class)">Robot</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/Robot.html#initialize-instance_method" title="RobotLab::Robot#initialize (method)">new</a></span></span><span class='lparen'>(</span>
     <span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
     <span class='label'>template:</span> <span class='id identifier rubyid_template'>template</span><span class='comma'>,</span>
@@ -547,6 +548,7 @@
     <span class='label'>context:</span> <span class='id identifier rubyid_context'>context</span><span class='comma'>,</span>
     <span class='label'>enable_cache:</span> <span class='id identifier rubyid_enable_cache'>enable_cache</span><span class='comma'>,</span>
     <span class='label'>bus:</span> <span class='id identifier rubyid_bus'>bus</span><span class='comma'>,</span>
+    <span class='label'>skills:</span> <span class='id identifier rubyid_skills'>skills</span><span class='comma'>,</span>
     <span class='label'>config:</span> <span class='id identifier rubyid_config'>config</span><span class='comma'>,</span>
     <span class='op'>**</span><span class='id identifier rubyid_options'>options</span>
   <span class='rparen'>)</span>
@@ -852,12 +854,12 @@
       <pre class="lines">
 
 
-217
 218
-219</pre>
+219
+220</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab.rb', line 217</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab.rb', line 218</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_create_memory'>create_memory</span><span class='lparen'>(</span><span class='label'>data:</span> <span class='lbrace'>{</span><span class='rbrace'>}</span><span class='comma'>,</span> <span class='label'>enable_cache:</span> <span class='kw'>true</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="RobotLab/Memory.html" title="RobotLab::Memory (class)">Memory</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/Memory.html#initialize-instance_method" title="RobotLab::Memory#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>data:</span> <span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='label'>enable_cache:</span> <span class='id identifier rubyid_enable_cache'>enable_cache</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
@@ -1005,12 +1007,12 @@
       <pre class="lines">
 
 
-196
 197
-198</pre>
+198
+199</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab.rb', line 196</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab.rb', line 197</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_create_network'>create_network</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>concurrency:</span> <span class='symbol'>:auto</span><span class='comma'>,</span> <span class='label'>config:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
   <span class='const'><span class='object_link'><a href="RobotLab/Network.html" title="RobotLab::Network (class)">Network</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/Network.html#initialize-instance_method" title="RobotLab::Network#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='label'>concurrency:</span> <span class='id identifier rubyid_concurrency'>concurrency</span><span class='comma'>,</span> <span class='label'>config:</span> <span class='id identifier rubyid_config'>config</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
@@ -1088,7 +1090,7 @@
 </div>
 
       <div id="footer">
-  Generated on Thu Feb 19 18:03:08 2026 by
+  Generated on Sun Feb 22 17:44:49 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
