@@ -337,13 +337,108 @@ class RobotLab::ToolTest < Minitest::Test
 
   # ── Error handling ─────────────────────────────────────────
 
-  def test_execute_raising_propagates_from_call
+  def test_execute_error_returns_plain_string
     tool = RobotLab::Tool.create(name: "error_tool") do |_args|
       raise StandardError, "Something went wrong"
     end
 
-    # RubyLLM::Tool#call does not catch exceptions — they propagate
+    result = tool.call({})
+    assert_equal 'Error (error_tool): Something went wrong', result
+  end
+
+  def test_execute_error_is_logged
+    tool = RobotLab::Tool.create(name: "log_tool") do |_args|
+      raise RuntimeError, "disk full"
+    end
+
+    log_output = StringIO.new
+    original_logger = RobotLab.config.logger
+    RobotLab.config.logger = Logger.new(log_output)
+
+    tool.call({})
+
+    RobotLab.config.logger = original_logger
+    assert_match(/Tool 'log_tool' error: RuntimeError: disk full/, log_output.string)
+  end
+
+  def test_raise_on_error_propagates
+    klass = Class.new(RobotLab::Tool) do
+      self.raise_on_error = true
+      description "Critical tool"
+
+      def execute(**)
+        raise StandardError, "critical failure"
+      end
+    end
+
+    tool = klass.new
     assert_raises(StandardError) { tool.call({}) }
+  ensure
+    klass.raise_on_error = false
+  end
+
+  def test_raise_on_error_defaults_to_false
+    klass = Class.new(RobotLab::Tool) { def execute(**); end }
+    refute klass.raise_on_error?
+  end
+
+  def test_successful_execute_passes_through
+    tool = RobotLab::Tool.create(name: "ok_tool") { |_args| "all good" }
+    assert_equal "all good", tool.call({})
+  end
+
+  def test_factory_tool_gets_error_wrapper
+    tool = RobotLab::Tool.create(name: "factory_fail") do |_args|
+      raise ArgumentError, "bad input"
+    end
+
+    result = tool.call({})
+    assert_equal "Error (factory_fail): bad input", result
+  end
+
+  def test_mcp_tool_gets_error_wrapper
+    tool = RobotLab::Tool.create(name: "mcp_fail", mcp: "github") do |_args|
+      raise IOError, "connection refused"
+    end
+
+    result = tool.call({})
+    assert_equal "Error (mcp_fail): connection refused", result
+  end
+
+  def test_subclass_gets_error_wrapper
+    klass = Class.new(RobotLab::Tool) do
+      description "Failing subclass"
+      param :x, type: "string", desc: "ignored"
+
+      def execute(x:)
+        raise TypeError, "wrong type"
+      end
+    end
+
+    tool = klass.new
+    result = tool.call({ "x" => "test" })
+    assert_equal "Error (#{tool.name}): wrong type", result
+  end
+
+  def test_raise_on_error_is_per_class
+    safe_class = Class.new(RobotLab::Tool) do
+      def execute(**); raise "oops"; end
+    end
+
+    critical_class = Class.new(RobotLab::Tool) do
+      self.raise_on_error = true
+      def execute(**); raise "oops"; end
+    end
+
+    # Safe class returns error string
+    result = safe_class.new.call({})
+    assert result.is_a?(String)
+    assert result.start_with?("Error")
+
+    # Critical class propagates
+    assert_raises(RuntimeError) { critical_class.new.call({}) }
+  ensure
+    critical_class.raise_on_error = false
   end
 
   # ── halt (inherited) ───────────────────────────────────────

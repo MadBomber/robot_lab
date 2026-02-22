@@ -36,12 +36,38 @@ module RobotLab
     #   @return [String, nil] the MCP server name if this is an MCP-provided tool
     attr_reader :mcp
 
+    class << self
+      # When true, exceptions from #execute propagate instead of being caught.
+      # Default: false (graceful error handling).
+      #
+      # @return [Boolean]
+      attr_writer :raise_on_error
+
+      def raise_on_error?
+        defined?(@raise_on_error) ? @raise_on_error : false
+      end
+    end
+
     # Creates a new Tool instance.
     #
     # @param robot [Robot, nil] the owning robot
     def initialize(robot: nil)
       super()
       @robot = robot
+    end
+
+    # Wraps RubyLLM::Tool#call with error handling so the LLM receives
+    # a plain-text error message instead of crashing the run.
+    #
+    # @param args [Hash] the tool arguments from the LLM
+    # @return [Object] the tool result or an error string
+    def call(args)
+      super
+    rescue StandardError => e
+      raise if self.class.raise_on_error?
+
+      RobotLab.config.logger.warn("Tool '#{name}' error: #{e.class}: #{e.message}")
+      "Error (#{name}): #{e.message}"
     end
 
     # Override name to support explicit names for dynamic/MCP tools.
