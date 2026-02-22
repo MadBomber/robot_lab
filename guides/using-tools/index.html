@@ -1447,6 +1447,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-tools-opt-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Tools (Opt-Out)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3055,6 +3094,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-tools-opt-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Tools (Opt-Out)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3421,86 +3499,116 @@
 </span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
-<p>Always handle errors gracefully. Return structured error information so the LLM can decide how to proceed:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">FetchResource</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
+<h3 id="automatic-error-handling">Automatic Error Handling<a class="headerlink" href="#automatic-error-handling" title="Permanent link">&para;</a></h3>
+<p><code>RobotLab::Tool</code> automatically catches <code>StandardError</code> exceptions from <code>execute</code> and returns a plain-text error string to the LLM. The LLM can then reason about the failure and try an alternative approach — without crashing the run.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">FetchResource</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
 </span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Fetch a resource from an external API&quot;</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Resource ID&quot;</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span><span class="w"> </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">::</span><span class="no">NotFound</span>
-</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Resource not found&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="nb">id</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">::</span><span class="no">RateLimited</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rate limited&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">retry_after</span><span class="p">:</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">retry_after</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">StandardError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unexpected error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a><span class="k">end</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Resource ID&quot;</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">    </span><span class="no">ExternalAPI</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="k">end</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">FetchResource</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tool</span><span class="o">.</span><span class="n">call</span><span class="p">({</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;missing&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="c1"># If ExternalAPI.fetch raises, result is:</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="c1"># =&gt; &quot;Error (fetch_resource): connection refused&quot;</span>
+</span></code></pre></div>
+<p>This applies to all <code>RobotLab::Tool</code> variants — subclasses, <code>Tool.create</code> factory tools, and MCP tools. Errors are also logged via <code>RobotLab.config.logger</code> at <code>:warn</code> level.</p>
+<h3 id="critical-tools-opt-out">Critical Tools (Opt-Out)<a class="headerlink" href="#critical-tools-opt-out" title="Permanent link">&para;</a></h3>
+<p>For tools where you want exceptions to propagate (e.g., a tool whose failure should abort the run), set <code>raise_on_error</code> on the class:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CriticalPayment</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">  </span><span class="nb">self</span><span class="o">.</span><span class="n">raise_on_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Process a payment&quot;</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:amount</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:number</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Payment amount&quot;</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">amount</span><span class="p">:)</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="w">    </span><span class="no">PaymentGateway</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">amount</span><span class="p">)</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="k">end</span>
+</span></code></pre></div>
+<p><code>raise_on_error</code> is per-class and defaults to <code>false</code>. Setting it on one class does not affect others.</p>
+<h3 id="manual-error-handling">Manual Error Handling<a class="headerlink" href="#manual-error-handling" title="Permanent link">&para;</a></h3>
+<p>You can still handle specific errors inside <code>execute</code> for domain-specific responses:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">FetchResource</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Fetch a resource from an external API&quot;</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Resource ID&quot;</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span><span class="w"> </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">::</span><span class="no">NotFound</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Resource not found&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="nb">id</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">ExternalAPI</span><span class="o">::</span><span class="no">RateLimited</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rate limited&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">retry_after</span><span class="p">:</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">retry_after</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="w">  </span><span class="c1"># Any other StandardError is still caught by the automatic handler</span>
+</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="tool-callbacks">Tool Callbacks<a class="headerlink" href="#tool-callbacks" title="Permanent link">&para;</a></h2>
 <p>Robots support <code>on_tool_call</code> and <code>on_tool_result</code> callbacks for monitoring tool usage:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">GetWeather</span><span class="o">]</span><span class="p">,</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span><span class="ss">on_tool_call</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Calling: </span><span class="si">#{</span><span class="n">call</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="w">  </span><span class="ss">on_tool_result</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Result: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">GetWeather</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="w">  </span><span class="ss">on_tool_call</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Calling: </span><span class="si">#{</span><span class="n">call</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="w">  </span><span class="ss">on_tool_result</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Result: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="robotlabtoolcreate-with-schema">RobotLab::Tool.create with Schema<a class="headerlink" href="#robotlabtoolcreate-with-schema" title="Permanent link">&para;</a></h2>
 <p>For dynamic tools via <code>Tool.create</code>, pass parameters as a JSON Schema hash:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;search&quot;</span><span class="p">,</span>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Search for items&quot;</span><span class="p">,</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">    </span><span class="ss">properties</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="w">      </span><span class="ss">query</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Search query&quot;</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="w">      </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Max results&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="w">    </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;query&quot;</span><span class="o">]</span>
-</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">args</span><span class="o">|</span><span class="w"> </span><span class="no">Search</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">args</span><span class="o">[</span><span class="ss">:query</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="n">args</span><span class="o">[</span><span class="ss">:limit</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;search&quot;</span><span class="p">,</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Search for items&quot;</span><span class="p">,</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="w">    </span><span class="ss">properties</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="w">      </span><span class="ss">query</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Search query&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="w">      </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Max results&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="w">    </span><span class="p">},</span>
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="w">    </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;query&quot;</span><span class="o">]</span>
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">args</span><span class="o">|</span><span class="w"> </span><span class="no">Search</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">args</span><span class="o">[</span><span class="ss">:query</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="n">args</span><span class="o">[</span><span class="ss">:limit</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-clear-descriptions">1. Clear Descriptions<a class="headerlink" href="#1-clear-descriptions" title="Permanent link">&para;</a></h3>
 <p>Write descriptions that help the LLM understand when and how to use the tool:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Good: Specific and actionable</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">SearchOrders</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Search customer orders by date range, status, or customer email. Returns up to 50 matching orders sorted by date.&quot;</span>
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span><span class="c1"># ...</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="k">end</span>
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>
-</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="c1"># Bad: Vague</span>
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="k">class</span><span class="w"> </span><span class="nc">Search</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Searches stuff&quot;</span>
-</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a><span class="w">  </span><span class="c1"># ...</span>
-</span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Good: Specific and actionable</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">SearchOrders</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Search customer orders by date range, status, or customer email. Returns up to 50 matching orders sorted by date.&quot;</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="c1"># ...</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="k">end</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="c1"># Bad: Vague</span>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="k">class</span><span class="w"> </span><span class="nc">Search</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Searches stuff&quot;</span>
+</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="w">  </span><span class="c1"># ...</span>
+</span><span id="__span-31-11"><a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="2-validate-inputs">2. Validate Inputs<a class="headerlink" href="#2-validate-inputs" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">email</span><span class="p">:)</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="k">unless</span><span class="w"> </span><span class="n">email</span><span class="o">.</span><span class="n">match?</span><span class="p">(</span><span class="sr">/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i</span><span class="p">)</span>
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invalid email format&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">  </span><span class="c1"># ... rest of logic</span>
-</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">email</span><span class="p">:)</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="w">  </span><span class="k">unless</span><span class="w"> </span><span class="n">email</span><span class="o">.</span><span class="n">match?</span><span class="p">(</span><span class="sr">/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i</span><span class="p">)</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">error</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invalid email format&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="w">  </span><span class="c1"># ... rest of logic</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="3-return-structured-data">3. Return Structured Data<a class="headerlink" href="#3-return-structured-data" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Good: Structured and consistent</span>
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="n">_</span><span class="p">)</span>
-</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">    </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span>
-</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">    </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Item&quot;</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">    </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">fetched_at</span><span class="p">:</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="o">.</span><span class="n">iso8601</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="k">end</span>
-</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>
-</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="c1"># Bad: Unstructured</span>
-</span><span id="__span-31-11"><a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="n">_</span><span class="p">)</span>
-</span><span id="__span-31-12"><a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a><span class="w">  </span><span class="s2">&quot;Found item with id 1 named Item&quot;</span>
-</span><span id="__span-31-13"><a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="c1"># Good: Structured and consistent</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="n">_</span><span class="p">)</span>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span><span class="p">{</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">    </span><span class="ss">success</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="w">    </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Item&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a><span class="w">    </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">fetched_at</span><span class="p">:</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="o">.</span><span class="n">iso8601</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a><span class="k">end</span>
+</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a>
+</span><span id="__span-33-10"><a id="__codelineno-33-10" name="__codelineno-33-10" href="#__codelineno-33-10"></a><span class="c1"># Bad: Unstructured</span>
+</span><span id="__span-33-11"><a id="__codelineno-33-11" name="__codelineno-33-11" href="#__codelineno-33-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="n">_</span><span class="p">)</span>
+</span><span id="__span-33-12"><a id="__codelineno-33-12" name="__codelineno-33-12" href="#__codelineno-33-12"></a><span class="w">  </span><span class="s2">&quot;Found item with id 1 named Item&quot;</span>
+</span><span id="__span-33-13"><a id="__codelineno-33-13" name="__codelineno-33-13" href="#__codelineno-33-13"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="4-keep-tools-focused">4. Keep Tools Focused<a class="headerlink" href="#4-keep-tools-focused" title="Permanent link">&para;</a></h3>
 <p>Each tool should do one thing well. Prefer multiple focused tools over one tool that does everything.</p>

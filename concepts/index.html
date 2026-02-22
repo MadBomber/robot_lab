@@ -2847,7 +2847,8 @@
 <li><strong>System Prompt</strong>: Inline instructions (can be used alone or combined with a template)</li>
 <li><strong>Model</strong>: The LLM model to use (defaults to <code>RobotLab.config.ruby_llm.model</code>)</li>
 <li><strong>Skills</strong>: Composable template behaviors prepended before the main template</li>
-<li><strong>Local Tools</strong>: <code>RubyLLM::Tool</code> subclasses or <code>RobotLab::Tool</code> instances</li>
+<li><strong>Local Tools</strong>: <code>RubyLLM::Tool</code> subclasses or <code>RobotLab::Tool</code> instances (with automatic error handling)</li>
+<li><strong>Streaming</strong>: Real-time content via stored <code>on_content</code> callback or per-call block</li>
 <li><strong>Memory</strong>: Persistent key-value store across runs</li>
 </ul>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Robot with template (references prompts/support.md)</span>
@@ -2968,7 +2969,8 @@
 </tbody>
 </table>
 <h2 id="tool">Tool<a class="headerlink" href="#tool" title="Permanent link">&para;</a></h2>
-<p><strong>Tools</strong> give robots the ability to interact with external systems. There are two patterns for defining tools:</p>
+<p><strong>Tools</strong> give robots the ability to interact with external systems. <code>RobotLab::Tool</code> extends <code>RubyLLM::Tool</code> with graceful error handling — if <code>execute</code> raises a <code>StandardError</code>, the error is caught and returned as a plain-text string (<code>"Error (tool_name): message"</code>) so the LLM can reason about it. Critical tools can opt out with <code>self.raise_on_error = true</code>.</p>
+<p>There are two patterns for defining tools:</p>
 <h3 id="rubyllmtool-subclass-preferred">RubyLLM::Tool Subclass (Preferred)<a class="headerlink" href="#rubyllmtool-subclass-preferred" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Calculator</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Performs basic arithmetic operations&quot;</span>
@@ -3244,7 +3246,7 @@
 <h3 id="front-matter-keys">Front Matter Keys<a class="headerlink" href="#front-matter-keys" title="Permanent link">&para;</a></h3>
 <p>Templates support two categories of front matter keys:</p>
 <p><strong>LLM Config:</strong> <code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code> — applied to the robot's chat configuration.</p>
-<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code> — applied to the robot's identity and capabilities. These make templates self-contained: reading the <code>.md</code> file tells you everything about the robot.</p>
+<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code> — applied to the robot's identity and capabilities. These make templates self-contained: reading the <code>.md</code> file tells you everything about the robot.</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>---
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>description: GitHub assistant with MCP tool access
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>robot_name: github_bot
