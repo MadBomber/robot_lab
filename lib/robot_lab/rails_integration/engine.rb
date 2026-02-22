@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RobotLab
-  module Rails
+  module RailsIntegration
     # Rails Engine for RobotLab integration
     #
     # Provides automatic loading of RobotLab components and

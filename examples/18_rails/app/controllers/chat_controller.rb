@@ -12,6 +12,18 @@ class ChatController < ApplicationController
     message = params[:message].to_s.strip
     return redirect_to root_path if message.empty?
 
+    # Persist user message so it appears in history on reload
+    thread = RobotLabThread.find_or_create_by_session_id(thread_id)
+    sequence = thread.results.maximum(:sequence_number).to_i + 1
+    thread.results.create!(
+      robot_name:      "user",
+      sequence_number: sequence,
+      output_data:     [{ role: "user", content: message }],
+      tool_calls_data: [],
+      stop_reason:     "user_message",
+      checksum:        Digest::SHA256.hexdigest(message)
+    )
+
     RobotRunJob.perform_later(
       robot_class: "ChatRobot",
       message:     message,

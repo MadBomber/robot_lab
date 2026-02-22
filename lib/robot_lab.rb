@@ -50,7 +50,7 @@ end
 
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
 loader.ignore("#{__dir__}/generators")
-loader.ignore("#{__dir__}/robot_lab/rails")
+loader.ignore("#{__dir__}/robot_lab/rails_integration")
 loader.ignore("#{__dir__}/robot_lab/robot")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
@@ -223,7 +223,7 @@ end
 
 # Load Rails integration if Rails is defined
 if defined?(Rails::Engine)
-  require 'robot_lab/rails/engine'
-  require 'robot_lab/rails/railtie'
-  require 'robot_lab/rails/turbo_stream_callbacks'
+  require 'robot_lab/rails_integration/engine'
+  require 'robot_lab/rails_integration/railtie'
+  require 'robot_lab/rails_integration/turbo_stream_callbacks'
 end

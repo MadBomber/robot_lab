@@ -163,8 +163,8 @@ module RobotLab
     def resolved_template_path
       return template_path if template_path
 
-      if defined?(::Rails) && ::Rails.root
-        ::Rails.root.join('app', 'prompts').to_s
+      if defined?(Rails) && Rails.root
+        Rails.root.join('app', 'prompts').to_s
       else
         'prompts'
       end
@@ -172,8 +172,8 @@ module RobotLab
 
 
     def default_logger
-      if defined?(::Rails) && ::Rails.respond_to?(:logger)
-        ::Rails.logger
+      if defined?(Rails) && Rails.respond_to?(:logger)
+        Rails.logger
       else
         require 'logger'
         Logger.new($stdout, level: Logger::INFO)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RobotLab
-  module Rails
+  module RailsIntegration
     # Railtie for RobotLab Rails integration
     #
     # Provides configuration hooks and initialization for

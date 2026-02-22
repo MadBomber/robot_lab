@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require 'robot_lab/rails/turbo_stream_callbacks'
+require 'robot_lab/rails_integration/turbo_stream_callbacks'
 require 'erb'
 
 class TurboStreamCallbacksTest < Minitest::Test
@@ -17,18 +17,18 @@ class TurboStreamCallbacksTest < Minitest::Test
   # --- available? ---
 
   def test_available_returns_false_when_turbo_not_defined
-    assert_equal false, RobotLab::Rails::TurboStreamCallbacks.available?
+    assert_equal false, RobotLab::RailsIntegration::TurboStreamCallbacks.available?
   end
 
   def test_available_returns_true_when_turbo_defined
     stub_turbo_streams_channel
-    assert_equal true, RobotLab::Rails::TurboStreamCallbacks.available?
+    assert_equal true, RobotLab::RailsIntegration::TurboStreamCallbacks.available?
   end
 
   # --- build_content_callback ---
 
   def test_build_content_callback_returns_a_proc
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream"
     )
     assert_kind_of Proc, callback
@@ -38,7 +38,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream"
     )
 
@@ -54,7 +54,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream"
     )
 
@@ -66,7 +66,7 @@ class TurboStreamCallbacksTest < Minitest::Test
 
   def test_content_callback_noop_when_turbo_unavailable
     # Turbo is not defined — callback should silently do nothing
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream"
     )
 
@@ -79,7 +79,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream",
       target: "custom_target"
     )
@@ -94,7 +94,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "my_stream_123"
     )
 
@@ -108,7 +108,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
       stream_name: "test_stream"
     )
 
@@ -122,7 +122,7 @@ class TurboStreamCallbacksTest < Minitest::Test
   # --- build_tool_call_callback ---
 
   def test_build_tool_call_callback_returns_a_proc
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
       stream_name: "test_stream"
     )
     assert_kind_of Proc, callback
@@ -132,7 +132,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
       stream_name: "test_stream"
     )
 
@@ -145,7 +145,7 @@ class TurboStreamCallbacksTest < Minitest::Test
   end
 
   def test_tool_call_callback_noop_when_turbo_unavailable
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
       stream_name: "test_stream"
     )
 
@@ -158,7 +158,7 @@ class TurboStreamCallbacksTest < Minitest::Test
     stub_turbo_streams_channel
     broadcasts = capture_broadcasts
 
-    callback = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+    callback = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
       stream_name: "test_stream",
       target: "my_tools"
     )

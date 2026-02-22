@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RobotLab
-  module Rails
+  module RailsIntegration
     # Stateless utility module that builds callback Procs for Turbo Stream broadcasting.
     #
     # Safe to require even without turbo-rails installed — checks at call time
@@ -9,7 +9,7 @@ module RobotLab
     #
     # @example Wire streaming in a background job
     #   stream_name = "robot_lab_thread_#{thread_id}"
-    #   on_content = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+    #   on_content = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
     #     stream_name: stream_name
     #   )
     #   robot = MyRobot.build(on_content: on_content)

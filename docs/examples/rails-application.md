@@ -88,7 +88,7 @@ RobotLab.config.logger  #=> Rails.logger
 
 ### Rails Engine and Railtie
 
-RobotLab provides both a Rails Engine (`RobotLab::Rails::Engine`) and a Railtie (`RobotLab::Rails::Railtie`). These are loaded automatically when Rails is detected. The Engine isolates the RobotLab namespace and adds `app/robots` and `app/tools` to the autoload paths. The Railtie loads rake tasks and generators.
+RobotLab provides both a Rails Engine (`RobotLab::RailsIntegration::Engine`) and a Railtie (`RobotLab::RailsIntegration::Railtie`). These are loaded automatically when Rails is detected. The Engine isolates the RobotLab namespace and adds `app/robots` and `app/tools` to the autoload paths. The Railtie loads rake tasks and generators.
 
 ## Models
 

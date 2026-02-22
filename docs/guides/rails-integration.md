@@ -408,20 +408,20 @@ As the robot generates tokens, they are appended to `#robot_response`. Tool call
 
 #### TurboStreamCallbacks API
 
-`RobotLab::Rails::TurboStreamCallbacks` is a stateless utility module for building callback Procs. Use it outside of `RobotRunJob` for custom streaming setups:
+`RobotLab::RailsIntegration::TurboStreamCallbacks` is a stateless utility module for building callback Procs. Use it outside of `RobotRunJob` for custom streaming setups:
 
 ```ruby
 # Check if Turbo Streams is available
-RobotLab::Rails::TurboStreamCallbacks.available?
+RobotLab::RailsIntegration::TurboStreamCallbacks.available?
 
 # Build a content streaming callback
-on_content = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+on_content = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
   stream_name: "robot_lab_thread_#{thread_id}",
   target: "robot_response"  # default
 )
 
 # Build a tool call badge callback
-on_tool_call = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+on_tool_call = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
   stream_name: "robot_lab_thread_#{thread_id}",
   target: "robot_tools"  # default
 )

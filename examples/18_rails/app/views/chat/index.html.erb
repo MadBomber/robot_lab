@@ -10,15 +10,21 @@
 <div id="chat-scroll">
   <div id="messages">
     <% @results.each do |result| %>
-      <% result.output_messages.each do |msg| %>
-        <div class="message assistant"><%= msg.content %></div>
-      <% end %>
-      <% unless result.tool_call_messages.empty? %>
-        <div>
-          <% result.tool_call_messages.each do |tc| %>
-            <span class="tool-badge">Used: <%= tc.content %></span>
-          <% end %>
-        </div>
+      <% if result.robot_name == "user" %>
+        <% result.output_messages.each do |msg| %>
+          <div class="message user"><%= msg.content %></div>
+        <% end %>
+      <% else %>
+        <% result.output_messages.each do |msg| %>
+          <div class="message assistant"><%= msg.content %></div>
+        <% end %>
+        <% unless result.tool_call_messages.empty? %>
+          <div>
+            <% result.tool_call_messages.each do |tc| %>
+              <span class="tool-badge">Used: <%= tc.content %></span>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     <% end %>
   </div>
@@ -46,6 +52,15 @@
   });
 
   observer.observe(scrollContainer, { childList: true, characterData: true, subtree: true });
+
+  // Clear the input field after form submission
+  document.addEventListener('turbo:submit-end', function(event) {
+    const input = event.target.querySelector('input[name="message"]');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  });
 
   // Scroll to bottom on initial load if there's history
   scrollToBottom();

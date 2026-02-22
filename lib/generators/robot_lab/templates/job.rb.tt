@@ -40,10 +40,10 @@ class RobotRunJob < ApplicationJob
     stream_name = "robot_lab_thread_#{thread_id}"
 
     if turbo_available?
-      on_content = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+      on_content = RobotLab::RailsIntegration::TurboStreamCallbacks.build_content_callback(
         stream_name: stream_name
       )
-      on_tool_call = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+      on_tool_call = RobotLab::RailsIntegration::TurboStreamCallbacks.build_tool_call_callback(
         stream_name: stream_name
       )
       klass.build(on_content: on_content, on_tool_call: on_tool_call)
