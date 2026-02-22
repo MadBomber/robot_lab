@@ -29,7 +29,7 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 ### Advanced Examples
 
 - [Streaming Responses](basic-chat.md#with-streaming)
-- [Persistent Conversations](basic-chat.md#with-conversation-history)
+- [Persistent Conversations](basic-chat.md#with-memory)
 - [MCP Integration](mcp-server.md)
 - [Message Bus Communication](#message-bus)
 - [Spawning Robots](#spawning-robots)
