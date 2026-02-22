@@ -17,6 +17,8 @@ module RobotLab
 
       class_option :skip_migration, type: :boolean, default: false,
                                     desc: "Skip database migration generation"
+      class_option :skip_job, type: :boolean, default: false,
+                              desc: "Skip background job generation"
 
       # Returns the next migration number for ActiveRecord migrations.
       #
@@ -52,6 +54,15 @@ module RobotLab
         template "result_model.rb.tt", "app/models/robot_lab_result.rb"
       end
 
+      # Creates the background job for robot execution.
+      #
+      # @return [void]
+      def create_job
+        return if options[:skip_job]
+
+        template "job.rb.tt", "app/jobs/robot_run_job.rb"
+      end
+
       # Creates the robots and tools directories.
       #
       # @return [void]
@@ -71,6 +82,7 @@ module RobotLab
         say "  1. Run migrations: rails db:migrate"
         say "  2. Configure your LLM API keys in config/initializers/robot_lab.rb"
         say "  3. Generate your first robot: rails g robot_lab:robot MyRobot"
+        say "  4. Enqueue robot runs via RobotRunJob (app/jobs/robot_run_job.rb)" unless options[:skip_job]
         say ""
       end
     end

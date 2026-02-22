@@ -225,4 +225,5 @@ end
 if defined?(Rails::Engine)
   require 'robot_lab/rails/engine'
   require 'robot_lab/rails/railtie'
+  require 'robot_lab/rails/turbo_stream_callbacks'
 end

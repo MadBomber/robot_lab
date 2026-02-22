@@ -17,9 +17,15 @@ config/initializers/robot_lab.rb  # Logger setup
 db/migrate/*_create_robot_lab_tables.rb  # Database tables
 app/models/robot_lab_thread.rb  # Thread model
 app/models/robot_lab_result.rb  # Result model
+app/jobs/robot_run_job.rb  # Background job for robot execution
 app/robots/  # Directory for robots
 app/tools/   # Directory for tools
 ```
+
+Options:
+
+- `--skip-migration` — Skip database migration generation
+- `--skip-job` — Skip background job generation
 
 ### Run Migrations
 
@@ -356,7 +362,80 @@ channel.send({ message: "Hello!", session_id: sessionId });
 
 ## Background Jobs
 
-### Async Processing
+### RobotRunJob (Generated)
+
+The install generator creates `app/jobs/robot_run_job.rb` — an ActiveJob class that wraps robot execution with result persistence and optional Turbo Stream broadcasting.
+
+```ruby
+# Enqueue from a controller
+RobotRunJob.perform_later(
+  robot_class: "SupportRobot",
+  message: params[:message],
+  thread_id: session_id
+)
+
+render json: { status: "processing" }
+```
+
+The job:
+
+1. Finds or creates a `RobotLabThread` by `thread_id`
+2. Resolves the robot class via `constantize.build`
+3. Wires Turbo Stream callbacks when `turbo-rails` is available (graceful no-op otherwise)
+4. Runs the robot and persists the result to `RobotLabResult`
+5. Broadcasts completion or error events via Turbo Streams
+
+Customize the generated job to change queue name, retry policy, or error handling.
+
+### Turbo Stream Token Streaming
+
+When `turbo-rails` is installed, `RobotRunJob` automatically streams content tokens and tool call badges to the browser in real time.
+
+#### View Setup
+
+Subscribe to the thread's Turbo Stream channel in your view:
+
+```erb
+<%%= turbo_stream_from "robot_lab_thread_#{@thread_id}" %>
+
+<div id="robot_response"></div>
+<div id="robot_tools"></div>
+<div id="robot_status">Processing...</div>
+<div id="robot_errors"></div>
+```
+
+As the robot generates tokens, they are appended to `#robot_response`. Tool calls appear as badges in `#robot_tools`. On completion, `#robot_status` is replaced with "Complete".
+
+#### TurboStreamCallbacks API
+
+`RobotLab::Rails::TurboStreamCallbacks` is a stateless utility module for building callback Procs. Use it outside of `RobotRunJob` for custom streaming setups:
+
+```ruby
+# Check if Turbo Streams is available
+RobotLab::Rails::TurboStreamCallbacks.available?
+
+# Build a content streaming callback
+on_content = RobotLab::Rails::TurboStreamCallbacks.build_content_callback(
+  stream_name: "robot_lab_thread_#{thread_id}",
+  target: "robot_response"  # default
+)
+
+# Build a tool call badge callback
+on_tool_call = RobotLab::Rails::TurboStreamCallbacks.build_tool_call_callback(
+  stream_name: "robot_lab_thread_#{thread_id}",
+  target: "robot_tools"  # default
+)
+
+# Wire into a robot at build time
+robot = SupportRobot.build(on_content: on_content, on_tool_call: on_tool_call)
+robot.run(message)
+```
+
+The stream name convention is `"robot_lab_thread_#{thread_id}"`, matching the `RobotLabThread.session_id` pattern.
+
+### Custom Background Job
+
+For full control, write your own job instead of using the generated one:
 
 ```ruby title="app/jobs/process_message_job.rb"
 class ProcessMessageJob < ApplicationJob
@@ -366,7 +445,6 @@ class ProcessMessageJob < ApplicationJob
     robot  = SupportRobot.build
     result = robot.run(message)
 
-    # Notify user of completion via Action Cable
     ActionCable.server.broadcast(
       "chat_#{session_id}",
       {
@@ -377,18 +455,6 @@ class ProcessMessageJob < ApplicationJob
     )
   end
 end
-```
-
-### Enqueue from Controller
-
-```ruby
-ProcessMessageJob.perform_later(
-  session_id: params[:session_id],
-  message: params[:message],
-  user_id: current_user.id
-)
-
-render json: { status: "processing" }
 ```
 
 ## Testing
