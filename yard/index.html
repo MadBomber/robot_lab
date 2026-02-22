@@ -70,7 +70,9 @@
 </li><li>
 <p>&lt;strong&gt;Composable Skills&lt;/strong&gt; - Mix reusable behaviors into any robot<br></p>
 </li><li>
-<p>&lt;strong&gt;Extensible Tools&lt;/strong&gt; - Give robots custom capabilities<br></p>
+<p>&lt;strong&gt;Extensible Tools&lt;/strong&gt; - Give robots custom capabilities with graceful error handling<br></p>
+</li><li>
+<p>&lt;strong&gt;Content Streaming&lt;/strong&gt; - Stream LLM responses via stored callbacks or per-call blocks<br></p>
 </li><li>
 <p>&lt;strong&gt;MCP Integration&lt;/strong&gt; - Connect to external tool servers<br></p>
 </li><li>
@@ -333,6 +335,26 @@ You are a support agent for &lt;%= company %&gt;.
   <span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Write a haiku about Ruby programming</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
 </code></pre>
 
+<h2 id="label-Graceful+Tool+Error+Handling">Graceful Tool Error Handling</h2>
+
+<p><code>RobotLab::Tool</code> automatically catches exceptions in <code>execute</code> and returns a plain-text error to the LLM instead of crashing the run. The LLM can then reason about the error and try an alternative approach.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_tool'>tool</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Tool.html" title="RobotLab::Tool (class)">Tool</a></span></span><span class='period'>.</span><span class='id identifier rubyid_create'><span class='object_link'><a href="RobotLab/Tool.html#create-class_method" title="RobotLab::Tool.create (method)">create</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>fetch_data</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_args'>args</span><span class='op'>|</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>IOError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>connection refused</span><span class='tstring_end'>&quot;</span></span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_tool'>tool</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='comment'># =&gt; &quot;Error (fetch_data): connection refused&quot;
+</span></code></pre>
+
+<p>This applies to all tools — subclasses, factory tools, and MCP tools. For critical tools where you want exceptions to propagate, opt out per class:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='kw'>class</span> <span class='const'>CriticalTool</span> <span class='op'>&lt;</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Tool.html" title="RobotLab::Tool (class)">Tool</a></span></span>
+  <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_raise_on_error'>raise_on_error</span> <span class='op'>=</span> <span class='kw'>true</span>
+  <span class='comment'># ...
+</span><span class='kw'>end</span>
+</code></pre>
+
 <h2 id="label-Creating+a+Robot+with+Tools">Creating a Robot with Tools</h2>
 
 <pre class="code ruby"><code class="ruby"><span class='comment'># Define tools using RubyLLM::Tool
@@ -585,24 +607,44 @@ You are a support agent for &lt;%= company %&gt;.
 
 <h2 id="label-Streaming">Streaming</h2>
 
-<p>Use a <code>Streaming::Context</code> with a publish callback to receive real-time events:</p>
+<p>Stream LLM content in real-time using a stored callback, a per-call block, or both. Each receives a href="https://rubyllm.com/streaming/#basic-streaming"></a> — use <code>chunk.content</code> for the text delta. Chunks also carry <code>model_id</code>, <code>tool_calls</code>, <code>thinking</code>, and token usage on the final chunk.</p>
 
-<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_handler'>handler</span> <span class='op'>=</span> <span class='id identifier rubyid_lambda'>lambda</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_event'>event</span><span class='op'>|</span>
-  <span class='kw'>case</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='symbol'>:event</span><span class='rbracket'>]</span>
-  <span class='kw'>when</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming.html" title="RobotLab::Streaming (module)">Streaming</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming/Events.html" title="RobotLab::Streaming::Events (module)">Events</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming/Events.html#TEXT_DELTA-constant" title="RobotLab::Streaming::Events::TEXT_DELTA (constant)">TEXT_DELTA</a></span></span>
-    <span class='id identifier rubyid_print'>print</span> <span class='id identifier rubyid_event'>event</span><span class='lbracket'>[</span><span class='symbol'>:data</span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='symbol'>:delta</span><span class='rbracket'>]</span>
-  <span class='kw'>when</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming.html" title="RobotLab::Streaming (module)">Streaming</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming/Events.html" title="RobotLab::Streaming::Events (module)">Events</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming/Events.html#RUN_COMPLETED-constant" title="RobotLab::Streaming::Events::RUN_COMPLETED (constant)">RUN_COMPLETED</a></span></span>
-    <span class='id identifier rubyid_puts'>puts</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\nDone!</span><span class='tstring_end'>&quot;</span></span>
-  <span class='kw'>end</span>
-<span class='kw'>end</span>
+<h3 id="label-Stored+Callback+-28on_content-3A-29">Stored Callback (<code>on_content:</code>)</h3>
 
-<span class='id identifier rubyid_context'>context</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming.html" title="RobotLab::Streaming (module)">Streaming</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/Streaming/Context.html" title="RobotLab::Streaming::Context (class)">Context</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="RobotLab/Streaming/Context.html#initialize-instance_method" title="RobotLab::Streaming::Context#initialize (method)">new</a></span></span><span class='lparen'>(</span>
-  <span class='label'>run_id:</span> <span class='const'>SecureRandom</span><span class='period'>.</span><span class='id identifier rubyid_uuid'>uuid</span><span class='comma'>,</span>
-  <span class='label'>message_id:</span> <span class='const'>SecureRandom</span><span class='period'>.</span><span class='id identifier rubyid_uuid'>uuid</span><span class='comma'>,</span>
-  <span class='label'>scope:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>robot</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
-  <span class='label'>publish:</span> <span class='id identifier rubyid_handler'>handler</span>
+<p>Wire streaming at build time. The callback fires on every <code>run()</code> call automatically:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>assistant</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are helpful.</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>on_content:</span> <span class='tlambda'>-&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_chunk'>chunk</span><span class='rparen'>)</span> <span class='tlambeg'>{</span> <span class='id identifier rubyid_print'>print</span> <span class='id identifier rubyid_chunk'>chunk</span><span class='period'>.</span><span class='id identifier rubyid_content'>content</span> <span class='rbrace'>}</span>
 <span class='rparen'>)</span>
+
+<span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Tell me a story</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>  <span class='comment'># streams automatically
+</span></code></pre>
+
+<h3 id="label-Per-Call+Block">Per-Call Block</h3>
+
+<p>Pass a block to <code>run()</code> for one-off streaming:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>assistant</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are helpful.</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+
+<span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Tell me a story</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_chunk'>chunk</span><span class='op'>|</span> <span class='id identifier rubyid_print'>print</span> <span class='id identifier rubyid_chunk'>chunk</span><span class='period'>.</span><span class='id identifier rubyid_content'>content</span> <span class='rbrace'>}</span>
 </code></pre>
+
+<h3 id="label-Both+Together">Both Together</h3>
+
+<p>When both a stored callback and a runtime block are provided, both fire (stored first):</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>assistant</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are helpful.</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>on_content:</span> <span class='tlambda'>-&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_chunk'>chunk</span><span class='rparen'>)</span> <span class='tlambeg'>{</span> <span class='id identifier rubyid_log_chunk'>log_chunk</span><span class='lparen'>(</span><span class='id identifier rubyid_chunk'>chunk</span><span class='period'>.</span><span class='id identifier rubyid_content'>content</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+<span class='rparen'>)</span>
+
+<span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Tell me a story</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_chunk'>chunk</span><span class='op'>|</span> <span class='id identifier rubyid_stream_to_client'>stream_to_client</span><span class='lparen'>(</span><span class='id identifier rubyid_chunk'>chunk</span><span class='period'>.</span><span class='id identifier rubyid_content'>content</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+</code></pre>
+
+<p>The <code>on_content:</code> callback participates in the RunConfig cascade, so it can be set at the network or config level and inherited by robots.</p>
 
 <h2 id="label-Rails+Integration">Rails Integration</h2>
 
@@ -626,7 +668,7 @@ You are a support agent for &lt;%= company %&gt;.
 </div></div>
 
       <div id="footer">
-  Generated on Sun Feb 22 18:12:15 2026 by
+  Generated on Sun Feb 22 19:47:29 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
