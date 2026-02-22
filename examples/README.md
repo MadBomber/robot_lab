@@ -45,6 +45,15 @@ examples/
     scout.rb                  #   Talent scout with analyst spawning
     display.rb                #   Terminal formatting (color, wrapping, file output)
     prompts/                  #   Templates for comic, heckler, and scout
+  18_rails/                   # Minimal Rails 8 demo app (full integration)
+    app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
+    app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
+    app/jobs/robot_run_job.rb #   Background job with Turbo Stream callbacks
+    app/controllers/          #   Chat controller (index + create)
+    app/views/                #   Layout with CDN importmap, chat view with streaming
+    app/models/               #   RobotLabThread, RobotLabResult
+    config/                   #   Minimal Rails 8 config (async adapters, no asset pipeline)
+    db/migrate/               #   Migration from generator template
   prompts/                    # Prompt templates (.md with YAML front matter)
 ```
 
@@ -151,6 +160,27 @@ Terminal output is color-formatted: comic bits in cyan (left-aligned), heckler r
 Demonstrates: Robot subclasses, self-modification via tool side effects, dynamic spawning (`spawn`), shared `:room` channel + personal channels, processing guards for async serialization, `[SILENCE]` opt-out pattern, style reinvention via user-prompt injection.
 
 **Requires:** LLM API key
+
+### 18 — Rails Integration Demo
+
+A minimal, hand-built Rails 8 app that exercises every piece of RobotLab's Rails integration end-to-end. No `rails new` — every file is hand-crafted for minimum size.
+
+**What it demonstrates:**
+- **ChatRobot** with a custom `TimeTool` (`app/robots/`, `app/tools/`)
+- **RobotRunJob** — background execution via `ActiveJob` async adapter
+- **Turbo Stream token streaming** — real-time content chunks broadcast to the browser over ActionCable
+- **Persistence** — `RobotLabThread` + `RobotLabResult` with conversation history
+- **Auto-scrolling chat** — MutationObserver keeps the view pinned to the latest streaming content
+
+**No Redis, no Solid Queue, no asset pipeline.** Uses `:async` adapters for both ActiveJob and ActionCable. Turbo JS loaded via importmap from CDN (`@hotwired/turbo-rails`).
+
+```bash
+cd examples/18_rails
+bin/setup              # bundle install + db:create + db:migrate
+bin/dev                # starts Puma on http://localhost:3000
+```
+
+**Requires:** LLM API key, Ruby 3.2+
 
 ## Prompt Templates
 

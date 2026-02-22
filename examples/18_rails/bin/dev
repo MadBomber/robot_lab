@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+echo "Starting Puma on http://localhost:3000 ..."
+bundle exec rails server -p 3000

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+echo "==> Installing gems..."
+bundle install
+
+echo "==> Creating database..."
+bundle exec rails db:create
+
+echo "==> Running migrations..."
+bundle exec rails db:migrate
+
+echo "==> Done! Run bin/dev to start the server."

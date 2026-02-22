@@ -1,0 +1,52 @@
+<h1>RobotLab Chat</h1>
+
+<%= turbo_stream_from "robot_lab_thread_#{@thread_id}" %>
+
+<%= form_with url: chat_path, method: :post, class: "chat-form" do |f| %>
+  <%= f.text_field :message, placeholder: "Type a message...", autofocus: true, autocomplete: "off" %>
+  <%= f.submit "Send" %>
+<% end %>
+
+<div id="chat-scroll">
+  <div id="messages">
+    <% @results.each do |result| %>
+      <% result.output_messages.each do |msg| %>
+        <div class="message assistant"><%= msg.content %></div>
+      <% end %>
+      <% unless result.tool_call_messages.empty? %>
+        <div>
+          <% result.tool_call_messages.each do |tc| %>
+            <span class="tool-badge">Used: <%= tc.content %></span>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div id="robot_tools"></div>
+  <div id="robot_response" class="message assistant" style="display:none;"></div>
+  <div id="robot_errors"></div>
+  <div id="robot_status"></div>
+</div>
+
+<script>
+  const scrollContainer = document.getElementById('chat-scroll');
+  const responseEl = document.getElementById('robot_response');
+
+  function scrollToBottom() {
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+  }
+
+  // Auto-scroll on any mutation inside the scroll container
+  const observer = new MutationObserver(function() {
+    if (responseEl.textContent.trim().length > 0) {
+      responseEl.style.display = 'block';
+    }
+    scrollToBottom();
+  });
+
+  observer.observe(scrollContainer, { childList: true, characterData: true, subtree: true });
+
+  // Scroll to bottom on initial load if there's history
+  scrollToBottom();
+</script>

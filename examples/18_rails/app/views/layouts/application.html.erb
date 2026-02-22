@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RobotLab Rails Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= action_cable_meta_tag %>
+  <script type="importmap">
+  {
+    "imports": {
+      "@hotwired/turbo": "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/+esm",
+      "@hotwired/turbo-rails": "https://cdn.jsdelivr.net/npm/@hotwired/turbo-rails@8.0.12/+esm",
+      "@rails/actioncable": "https://cdn.jsdelivr.net/npm/@rails/actioncable@8.0.200/+esm"
+    }
+  }
+  </script>
+  <script type="module">
+    import "@hotwired/turbo-rails"
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+    .container { max-width: 720px; width: 100%; padding: 2rem 1rem; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    #chat-scroll { flex: 1; overflow-y: auto; scroll-behavior: smooth; padding-right: 0.25rem; }
+    #chat-scroll::-webkit-scrollbar { width: 6px; }
+    #chat-scroll::-webkit-scrollbar-track { background: transparent; }
+    #chat-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    h1 { color: #7c83ff; margin-bottom: 1.5rem; font-size: 1.5rem; }
+    .chat-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .chat-form input[type="text"] { flex: 1; padding: 0.75rem; border-radius: 8px; border: 1px solid #333; background: #16213e; color: #e0e0e0; font-size: 1rem; }
+    .chat-form input[type="text"]:focus { outline: none; border-color: #7c83ff; }
+    .chat-form button { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; background: #7c83ff; color: #fff; font-size: 1rem; cursor: pointer; }
+    .chat-form button:hover { background: #6a70e0; }
+    .message { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; line-height: 1.5; white-space: pre-wrap; }
+    .message.user { background: #1f4068; margin-left: 4rem; }
+    .message.assistant { background: #16213e; margin-right: 4rem; border: 1px solid #2a2a4a; }
+    .tool-badge { display: inline-block; background: #2d1b69; color: #b8b0ff; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin: 0.25rem 0.25rem 0.25rem 0; }
+    .thinking { color: #7c83ff; font-style: italic; }
+    .complete { color: #4ade80; font-size: 0.85rem; }
+    .error { color: #f87171; background: #2d1320; padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; }
+    #robot_response { white-space: pre-wrap; }
+    .history-label { color: #666; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <%= yield %>
+  </div>
+</body>
+</html>

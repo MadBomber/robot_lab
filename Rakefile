@@ -52,7 +52,12 @@ namespace :examples do
     "16_writers_room" => "writers_room.rb"
   }.freeze
 
-  desc "Run all examples"
+  # Subdirectory demos that are standalone apps (not run via `ruby`)
+  STANDALONE_APPS = {
+    "18_rails" => { setup: "bin/setup", run: "bin/dev" }
+  }.freeze
+
+  desc "Run all examples (excludes standalone apps like 18_rails)"
   task :all do
     # Single-file examples
     Dir.glob("examples/*.rb").sort.each do |example|
@@ -72,6 +77,15 @@ namespace :examples do
       puts '=' * 60
       ruby path
     end
+
+    # Remind about standalone apps
+    STANDALONE_APPS.each do |dir, commands|
+      puts "\n#{'=' * 60}"
+      puts "Skipped: examples/#{dir} (standalone app)"
+      puts "  Setup: cd examples/#{dir} && #{commands[:setup]}"
+      puts "  Run:   cd examples/#{dir} && #{commands[:run]}"
+      puts '=' * 60
+    end
   end
 
   desc "Run a specific example by number (e.g., rake examples:run[1])"
@@ -89,6 +103,16 @@ namespace :examples do
     dir = Dir.glob("examples/#{padded}_*/").first
     if dir
       dir_name = File.basename(dir)
+
+      # Check if it's a standalone app
+      if STANDALONE_APPS.key?(dir_name)
+        commands = STANDALONE_APPS[dir_name]
+        puts "Example #{args[:num]} is a standalone app (#{dir_name})."
+        puts "  Setup: cd examples/#{dir_name} && #{commands[:setup]}"
+        puts "  Run:   cd examples/#{dir_name} && #{commands[:run]}"
+        next
+      end
+
       entry = SUBDIR_ENTRY_POINTS[dir_name]
       if entry && File.exist?(File.join(dir, entry))
         ruby File.join(dir, entry)
@@ -97,6 +121,20 @@ namespace :examples do
       end
     else
       puts "Example #{args[:num]} not found"
+    end
+  end
+
+  desc "Setup the Rails demo app (example 18)"
+  task :rails_setup do
+    Dir.chdir("examples/18_rails") do
+      sh "bin/setup"
+    end
+  end
+
+  desc "Start the Rails demo app (example 18)"
+  task :rails do
+    Dir.chdir("examples/18_rails") do
+      sh "bin/dev"
     end
   end
 end
