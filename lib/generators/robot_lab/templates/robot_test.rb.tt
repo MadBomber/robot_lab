@@ -16,7 +16,7 @@ class <%= class_name %>RobotTest < ActiveSupport::TestCase
   end
 
   test "robot has system prompt" do
-    assert_not_nil @robot.instance_variable_get(:@system)
+    assert_not_nil @robot.system_prompt
   end
 
   # Add more tests as needed:
@@ -24,9 +24,11 @@ class <%= class_name %>RobotTest < ActiveSupport::TestCase
   # test "robot runs successfully" do
   #   result = @robot.run("Hello, I need help")
   #   assert result.is_a?(RobotLab::RobotResult)
+  #   assert_not_nil result.last_text_content
   # end
   #
-  # test "robot uses correct tools" do
-  #   # Test tool invocation
+  # test "robot has expected tools" do
+  #   tool_names = @robot.local_tools.map(&:name)
+  #   assert_includes tool_names, "expected_tool_name"
   # end
 end

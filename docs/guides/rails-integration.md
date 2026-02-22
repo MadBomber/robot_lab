@@ -118,16 +118,78 @@ Robots are plain Ruby classes with a `.build` factory method that calls `RobotLa
 # frozen_string_literal: true
 
 class SupportRobot
-  def self.build
+  def self.build(**options)
     RobotLab.build(
       name: "support",
       description: "Handles customer support inquiries",
+      system_prompt: "You are a helpful support assistant.",
       model: "claude-sonnet-4",
-      template: :support,
-      local_tools: [OrderLookup.new]
+      local_tools: [OrderLookup],
+      **options
     )
   end
 end
+```
+
+### Routing Robot Class
+
+A routing robot classifies requests and activates optional tasks in a Network. It subclasses `RobotLab::Robot` and overrides `call(result)`:
+
+```ruby title="app/robots/classifier_robot.rb"
+# frozen_string_literal: true
+
+class ClassifierRobot < RobotLab::Robot
+  SYSTEM_PROMPT = <<~PROMPT
+    You are a routing robot that classifies user requests.
+
+    Analyze the user's request and respond with ONLY the category name.
+    Valid categories: billing, technical, general
+  PROMPT
+
+  def self.build(**options)
+    new(
+      name: "classifier",
+      description: "Classifies support requests",
+      system_prompt: SYSTEM_PROMPT,
+      **options
+    )
+  end
+
+  def call(result)
+    context = extract_run_context(result)
+    message = context.delete(:message)
+
+    robot_result = run(message, **context)
+
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    category = robot_result.last_text_content.to_s.strip.downcase
+
+    case category
+    when /billing/  then new_result.activate(:billing)
+    when /technical/ then new_result.activate(:technical)
+    else new_result.activate(:general)
+    end
+  end
+end
+```
+
+Use the routing robot as the first task in a network:
+
+```ruby
+classifier = ClassifierRobot.build
+billing    = BillingRobot.build
+technical  = TechnicalRobot.build
+
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier, depends_on: :none
+  task :billing,    billing,    depends_on: :optional
+  task :technical,  technical,  depends_on: :optional
+end
+
+result = network.run(message: "I was charged twice")
 ```
 
 ### Custom Tool

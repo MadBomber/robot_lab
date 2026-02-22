@@ -4,50 +4,56 @@
 #
 # <%= robot_description %>
 #
-# This robot routes requests to other robots based on classification.
+# This robot classifies requests and activates optional tasks in a Network.
+# Use it as the first task in a network with optional downstream tasks:
 #
-class <%= class_name %>Robot
-  include RobotLab::Lifecycle
-
+#   classifier = <%= class_name %>Robot.build
+#   billing    = BillingRobot.build
+#   technical  = TechnicalRobot.build
+#
+#   network = RobotLab.create_network(name: "support") do
+#     task :classifier, classifier, depends_on: :none
+#     task :billing,    billing,    depends_on: :optional
+#     task :technical,  technical,  depends_on: :optional
+#   end
+#
+#   result = network.run(message: "I was charged twice")
+#
+class <%= class_name %>Robot < RobotLab::Robot
   SYSTEM_PROMPT = <<~PROMPT
-    You are a routing robot that classifies user requests and directs them
-    to the appropriate specialist robot.
+    You are a routing robot that classifies user requests.
 
-    Analyze the user's request and determine which robot should handle it.
-    Respond with your classification decision.
+    Analyze the user's request and respond with ONLY the category name.
+    Valid categories: billing, technical, general
   PROMPT
 
-  def self.build
-    RobotLab.create_routing_robot(
+  def self.build(**options)
+    new(
       name: "<%= file_name %>",
       description: "<%= robot_description %>",
-      system: SYSTEM_PROMPT,
-      on_route: method(:route_decision)
+      system_prompt: SYSTEM_PROMPT,
+      **options
     )
   end
 
-  # Determine which robot should handle the request
-  #
-  # @param result [RobotLab::RobotResult] Classification result
-  # @param robot [RobotLab::Robot] This robot
-  # @param network [RobotLab::Network] Parent network
-  # @return [Array<String>, nil] Robot names to route to
-  #
-  def self.route_decision(result:, robot:, network:)
-    # Extract classification from the result
-    output = result.output.last&.content.to_s.downcase
+  # Override call to inspect classification output and activate optional tasks.
+  def call(result)
+    context = extract_run_context(result)
+    message = context.delete(:message)
 
-    # Route based on classification
-    # Example routing logic:
-    # case output
-    # when /billing|payment|invoice/
-    #   ["billing_robot"]
-    # when /technical|bug|error/
-    #   ["technical_robot"]
-    # else
-    #   ["general_robot"]
-    # end
+    robot_result = run(message, **context)
 
-    nil # Return nil to end the network run
+    new_result = result
+      .with_context(@name.to_sym, robot_result)
+      .continue(robot_result)
+
+    category = robot_result.last_text_content.to_s.strip.downcase
+
+    # Route based on classification — customize these patterns
+    case category
+    when /billing/  then new_result.activate(:billing)
+    when /technical/ then new_result.activate(:technical)
+    else new_result.activate(:general)
+    end
   end
 end
