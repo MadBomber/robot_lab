@@ -28,6 +28,7 @@ Robot.new(
   tools: :none,
   on_tool_call: nil,
   on_tool_result: nil,
+  on_content: nil,
   enable_cache: true,
   bus: nil,
   skills: nil,
@@ -58,6 +59,7 @@ Robot.new(
 | `tools` | `Symbol`, `Array` | `:none` | Hierarchical tools config (`:none`, `:inherit`, or tool name array) |
 | `on_tool_call` | `Proc`, `nil` | `nil` | Callback invoked when a tool is called |
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
+| `on_content` | `Proc`, `nil` | `nil` | Stored streaming callback invoked with each content chunk (see [Streaming](#streaming)) |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
@@ -123,7 +125,7 @@ Used by tools like [`AskUser`](tool.md#built-in-askuser) that need terminal IO. 
 ### run
 
 ```ruby
-result = robot.run(message, **kwargs)
+result = robot.run(message, **kwargs, &block)
 # => RobotResult
 ```
 
@@ -140,6 +142,9 @@ Primary execution method. Sends a message to the LLM with memory/MCP/tools resol
 | `mcp` | `Symbol`, `Array` | `:none` | Runtime MCP override |
 | `tools` | `Symbol`, `Array` | `:none` | Runtime tools override |
 | `**kwargs` | `Hash` | `{}` | Additional keyword arguments passed to `Agent#ask` |
+| `&block` | `Proc` | `nil` | Per-call streaming block, receives each content chunk |
+
+When both a stored `on_content` callback and a runtime block are provided, both fire (stored first, then runtime block).
 
 **Returns:** `RobotResult`
 
@@ -152,8 +157,8 @@ result = robot.run("What is 2+2?")
 # With runtime memory
 result = robot.run("Summarize the data", memory: { data: report })
 
-# With streaming block
-result = robot.run("Tell me a story") { |event| print event.text }
+# With per-call streaming block
+result = robot.run("Tell me a story") { |chunk| print chunk.content }
 
 # With runtime overrides
 result = robot.run("Help me", mcp: :none, tools: :none)
@@ -501,9 +506,77 @@ robot = RobotLab.build(
 robot.config  #=> RunConfig with model: "claude-sonnet-4", temperature: 0.9, ...
 ```
 
-RunConfig fields: `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`, `mcp`, `tools`, `on_tool_call`, `on_tool_result`, `bus`, `enable_cache`.
+RunConfig fields: `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`, `mcp`, `tools`, `on_tool_call`, `on_tool_result`, `on_content`, `bus`, `enable_cache`.
 
 See [Configuration: RunConfig](../../getting-started/configuration.md#runconfig-shared-operational-defaults) for full details.
+
+## Streaming
+
+Robots support two complementary approaches for streaming LLM content in real-time.
+
+### The Chunk Object
+
+Both callbacks and blocks receive a [`RubyLLM::Chunk`](https://rubyllm.com/streaming/#basic-streaming) (subclass of `RubyLLM::Message`). Key accessors:
+
+| Accessor | Type | Description |
+|----------|------|-------------|
+| `content` | `String`, `nil` | The text delta for this chunk (`nil` on tool-call or usage-only chunks) |
+| `role` | `Symbol` | Always `:assistant` |
+| `model_id` | `String` | The LLM model ID |
+| `tool_calls` | `Array`, `nil` | Tool call deltas (partial JSON arguments) |
+| `tool_call?` | `Boolean` | Whether this chunk contains tool call data |
+| `thinking` | `Thinking`, `nil` | Extended thinking delta (Anthropic only) |
+| `input_tokens` | `Integer`, `nil` | Input token count (populated on final chunk) |
+| `output_tokens` | `Integer`, `nil` | Output token count (populated on final chunk) |
+| `cached_tokens` | `Integer`, `nil` | Cached prompt tokens (final chunk) |
+
+Most chunks carry only `content` (the text delta). The final chunk(s) carry token usage counts. Tool call chunks have `tool_calls` instead of `content`.
+
+### Stored Callback (`on_content:`)
+
+Wired at build time via constructor or RunConfig. Fires on every `run()` call automatically:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { broadcast(chunk.content) }
+)
+robot.run("Tell me a story")  # streams via stored callback
+```
+
+The `on_content` callback participates in the RunConfig cascade:
+
+```ruby
+config = RobotLab::RunConfig.new(
+  on_content: ->(chunk) { log(chunk.content) }
+)
+robot = RobotLab.build(name: "bot", config: config)
+```
+
+Constructor `on_content:` overrides RunConfig `on_content`.
+
+### Per-Call Block
+
+Pass a block to `run()` for one-off streaming:
+
+```ruby
+robot.run("Tell me a story") { |chunk| print chunk.content }
+```
+
+### Both Together
+
+When both exist, both fire — stored callback first, then runtime block:
+
+```ruby
+robot = RobotLab.build(
+  name: "bot",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { log(chunk.content) }
+)
+robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
+# log() fires first, then stream_to_client()
+```
 
 ## Configuration Hierarchy
 

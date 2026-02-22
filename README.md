@@ -17,7 +17,8 @@ RobotLab enables you to build sophisticated AI applications using multiple speci
 - <strong>Multi-Robot Architecture</strong> - Build with specialized AI agents<br>
 - <strong>Network Orchestration</strong> - Connect robots with flexible routing<br>
 - <strong>Composable Skills</strong> - Mix reusable behaviors into any robot<br>
-- <strong>Extensible Tools</strong> - Give robots custom capabilities<br>
+- <strong>Extensible Tools</strong> - Give robots custom capabilities with graceful error handling<br>
+- <strong>Content Streaming</strong> - Stream LLM responses via stored callbacks or per-call blocks<br>
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Conversation History</strong> - Persist and restore threads<br>
@@ -281,6 +282,28 @@ result = robot
   .run("Write a haiku about Ruby programming")
 ```
 
+## Graceful Tool Error Handling
+
+`RobotLab::Tool` automatically catches exceptions in `execute` and returns a plain-text error to the LLM instead of crashing the run. The LLM can then reason about the error and try an alternative approach.
+
+```ruby
+tool = RobotLab::Tool.create(name: "fetch_data") do |args|
+  raise IOError, "connection refused"
+end
+
+result = tool.call({})
+# => "Error (fetch_data): connection refused"
+```
+
+This applies to all tools — subclasses, factory tools, and MCP tools. For critical tools where you want exceptions to propagate, opt out per class:
+
+```ruby
+class CriticalTool < RobotLab::Tool
+  self.raise_on_error = true
+  # ...
+end
+```
+
 ## Creating a Robot with Tools
 
 ```ruby
@@ -531,25 +554,47 @@ Key features:
 
 ## Streaming
 
-Use a `Streaming::Context` with a publish callback to receive real-time events:
+Stream LLM content in real-time using a stored callback, a per-call block, or both. Each receives a [`RubyLLM::Chunk`](https://rubyllm.com/streaming/#basic-streaming) — use `chunk.content` for the text delta. Chunks also carry `model_id`, `tool_calls`, `thinking`, and token usage on the final chunk.
+
+### Stored Callback (`on_content:`)
+
+Wire streaming at build time. The callback fires on every `run()` call automatically:
 
 ```ruby
-handler = lambda do |event|
-  case event[:event]
-  when RobotLab::Streaming::Events::TEXT_DELTA
-    print event[:data][:delta]
-  when RobotLab::Streaming::Events::RUN_COMPLETED
-    puts "\nDone!"
-  end
-end
-
-context = RobotLab::Streaming::Context.new(
-  run_id: SecureRandom.uuid,
-  message_id: SecureRandom.uuid,
-  scope: "robot",
-  publish: handler
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { print chunk.content }
 )
+
+robot.run("Tell me a story")  # streams automatically
 ```
+
+### Per-Call Block
+
+Pass a block to `run()` for one-off streaming:
+
+```ruby
+robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
+
+robot.run("Tell me a story") { |chunk| print chunk.content }
+```
+
+### Both Together
+
+When both a stored callback and a runtime block are provided, both fire (stored first):
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { log_chunk(chunk.content) }
+)
+
+robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
+```
+
+The `on_content:` callback participates in the RunConfig cascade, so it can be set at the network or config level and inherited by robots.
 
 ## Rails Integration
 

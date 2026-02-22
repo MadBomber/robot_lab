@@ -13,7 +13,8 @@ Each robot has:
 - **System Prompt**: Inline instructions (can be used alone or combined with a template)
 - **Model**: The LLM model to use (defaults to `RobotLab.config.ruby_llm.model`)
 - **Skills**: Composable template behaviors prepended before the main template
-- **Local Tools**: `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances
+- **Local Tools**: `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances (with automatic error handling)
+- **Streaming**: Real-time content via stored `on_content` callback or per-call block
 - **Memory**: Persistent key-value store across runs
 
 ```ruby
@@ -138,7 +139,9 @@ result.continued? # Whether execution continues
 
 ## Tool
 
-**Tools** give robots the ability to interact with external systems. There are two patterns for defining tools:
+**Tools** give robots the ability to interact with external systems. `RobotLab::Tool` extends `RubyLLM::Tool` with graceful error handling — if `execute` raises a `StandardError`, the error is caught and returned as a plain-text string (`"Error (tool_name): message"`) so the LLM can reason about it. Critical tools can opt out with `self.raise_on_error = true`.
+
+There are two patterns for defining tools:
 
 ### RubyLLM::Tool Subclass (Preferred)
 
@@ -447,7 +450,7 @@ Templates support two categories of front matter keys:
 
 **LLM Config:** `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` — applied to the robot's chat configuration.
 
-**Robot Extras:** `robot_name`, `description`, `tools`, `mcp` — applied to the robot's identity and capabilities. These make templates self-contained: reading the `.md` file tells you everything about the robot.
+**Robot Extras:** `robot_name`, `description`, `tools`, `mcp`, `skills` — applied to the robot's identity and capabilities. These make templates self-contained: reading the `.md` file tells you everything about the robot.
 
 ```markdown
 ---

@@ -327,12 +327,54 @@ end
 
 ## Error Handling
 
-Always handle errors gracefully. Return structured error information so the LLM can decide how to proceed:
+### Automatic Error Handling
+
+`RobotLab::Tool` automatically catches `StandardError` exceptions from `execute` and returns a plain-text error string to the LLM. The LLM can then reason about the failure and try an alternative approach — without crashing the run.
 
 ```ruby
-class FetchResource < RubyLLM::Tool
+class FetchResource < RobotLab::Tool
   description "Fetch a resource from an external API"
+  param :id, type: :string, desc: "Resource ID"
 
+  def execute(id:)
+    ExternalAPI.fetch(id)
+  end
+end
+
+tool = FetchResource.new
+result = tool.call({ "id" => "missing" })
+# If ExternalAPI.fetch raises, result is:
+# => "Error (fetch_resource): connection refused"
+```
+
+This applies to all `RobotLab::Tool` variants — subclasses, `Tool.create` factory tools, and MCP tools. Errors are also logged via `RobotLab.config.logger` at `:warn` level.
+
+### Critical Tools (Opt-Out)
+
+For tools where you want exceptions to propagate (e.g., a tool whose failure should abort the run), set `raise_on_error` on the class:
+
+```ruby
+class CriticalPayment < RobotLab::Tool
+  self.raise_on_error = true
+
+  description "Process a payment"
+  param :amount, type: :number, desc: "Payment amount"
+
+  def execute(amount:)
+    PaymentGateway.charge(amount)
+  end
+end
+```
+
+`raise_on_error` is per-class and defaults to `false`. Setting it on one class does not affect others.
+
+### Manual Error Handling
+
+You can still handle specific errors inside `execute` for domain-specific responses:
+
+```ruby
+class FetchResource < RobotLab::Tool
+  description "Fetch a resource from an external API"
   param :id, type: :string, desc: "Resource ID"
 
   def execute(id:)
@@ -342,9 +384,8 @@ class FetchResource < RubyLLM::Tool
     { success: false, error: "Resource not found", id: id }
   rescue ExternalAPI::RateLimited => e
     { success: false, error: "Rate limited", retry_after: e.retry_after }
-  rescue StandardError => e
-    { success: false, error: "Unexpected error: #{e.message}" }
   end
+  # Any other StandardError is still caught by the automatic handler
 end
 ```
 

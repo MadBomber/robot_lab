@@ -508,18 +508,54 @@ puts result.value.last_text_content
 
 ### With Streaming
 
-Stream responses in real-time by registering callbacks before calling `run`:
+Stream LLM content in real-time using a stored callback, a per-call block, or both. Each receives a [`RubyLLM::Chunk`](https://rubyllm.com/streaming/#basic-streaming) object — use `chunk.content` for the text delta. Chunks also carry `model_id`, `tool_calls`, `thinking`, and token usage on the final chunk. See the [Streaming API reference](../api/core/robot.md#streaming) for the full chunk interface.
+
+**Stored callback** — wired at build time, fires on every `run()`:
 
 ```ruby
-robot.on_new_message do |message|
-  print message.content if message.content
-end
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { print chunk.content }
+)
+robot.run("Tell me a story")  # streams automatically
+```
 
-robot.on_tool_call do |tool_call|
-  puts "\nCalling tool: #{tool_call.name}"
-end
+**Per-call block** — passed to `run()`:
 
-result = robot.run("Tell me a story")
+```ruby
+robot.run("Tell me a story") { |chunk| print chunk.content }
+```
+
+**Both together** — stored fires first, then the block:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { log_chunk(chunk.content) }
+)
+robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
+```
+
+The `on_content` callback participates in the RunConfig cascade, so it can be set at the config level and inherited by robots:
+
+```ruby
+config = RobotLab::RunConfig.new(
+  on_content: ->(chunk) { broadcast(chunk.content) }
+)
+robot = RobotLab.build(name: "bot", system_prompt: "...", config: config)
+```
+
+You can also monitor tool activity via callbacks:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "...",
+  on_tool_call: ->(tool_call) { puts "Calling: #{tool_call.name}" },
+  on_tool_result: ->(result) { puts "Result: #{result}" }
+)
 ```
 
 ## Robot Patterns
@@ -750,7 +786,7 @@ robot = RobotLab.build(
 
 ### 4. Handle Tool Errors Gracefully
 
-See [Using Tools: Error Handling](using-tools.md#error-handling) for patterns.
+`RobotLab::Tool` automatically catches exceptions and returns plain-text errors to the LLM. For domain-specific error handling, catch known exceptions in `execute` and return structured data. See [Using Tools: Error Handling](using-tools.md#error-handling) for details.
 
 ## Next Steps
 

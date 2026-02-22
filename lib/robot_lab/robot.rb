@@ -88,6 +88,7 @@ module RobotLab
     # @param tools [Symbol, Array] hierarchical tools config
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
+    # @param on_content [Proc, nil] callback invoked with each streaming content chunk
     # @param enable_cache [Boolean] whether to enable semantic caching
     # @param bus [TypedBus::MessageBus, nil] optional message bus for inter-robot communication
     # @param temperature [Float, nil] controls randomness
@@ -112,6 +113,7 @@ module RobotLab
       tools: :none,
       on_tool_call: nil,
       on_tool_result: nil,
+      on_content: nil,
       enable_cache: true,
       bus: nil,
       skills: nil,
@@ -141,7 +143,7 @@ module RobotLab
         max_tokens: max_tokens, presence_penalty: presence_penalty,
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
-        bus: bus, enable_cache: enable_cache
+        on_content: on_content, bus: bus, enable_cache: enable_cache
       }.compact
 
       # Only include mcp/tools if explicitly set (not the default :none sentinel)
@@ -155,6 +157,7 @@ module RobotLab
       # Extract values from effective config for backward compatibility
       @on_tool_call = @config.on_tool_call
       @on_tool_result = @config.on_tool_result
+      @on_content = @config.on_content
 
       # Store raw config values for hierarchical resolution
       @mcp_config = @config.mcp || :none
@@ -264,9 +267,10 @@ module RobotLab
     # @param memory [Memory, Hash, nil] runtime memory to merge
     # @param mcp [Symbol, Array, nil] runtime MCP override
     # @param tools [Symbol, Array, nil] runtime tools override
+    # @yield [chunk] optional streaming block called with each content chunk
     # @return [RobotResult]
     def run(message = nil, network: nil, network_memory: nil, network_config: nil,
-            memory: nil, mcp: :none, tools: :none, **kwargs)
+            memory: nil, mcp: :none, tools: :none, **kwargs, &block)
       # Determine which memory to use
       run_memory = resolve_active_memory(network: network, network_memory: network_memory)
 
@@ -302,7 +306,8 @@ module RobotLab
 
         # Delegate to Agent's ask (which calls @chat.ask)
         ask_kwargs = kwargs.slice(:with)
-        response = ask(message, **ask_kwargs)
+        streaming = effective_streaming_block(block)
+        response = ask(message, **ask_kwargs, &streaming)
 
         build_result(response, run_memory)
       ensure
@@ -473,6 +478,20 @@ module RobotLab
           tc
         end
       end
+    end
+
+
+    # Merge the stored on_content callback with a runtime streaming block.
+    # If both exist, both fire (stored first, then runtime block).
+    #
+    # @param runtime_block [Proc, nil] block passed to run()
+    # @return [Proc, nil] the effective streaming block
+    def effective_streaming_block(runtime_block)
+      return @on_content unless runtime_block
+      return runtime_block unless @on_content
+
+      stored = @on_content
+      proc { |chunk| stored.call(chunk); runtime_block.call(chunk) }
     end
 
 

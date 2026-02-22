@@ -4,7 +4,7 @@ Callable function that robots can use to interact with external systems.
 
 ## Class: `RobotLab::Tool < RubyLLM::Tool`
 
-RobotLab::Tool inherits from RubyLLM::Tool, adding a `robot:` constructor parameter and a `Tool.create` factory for dynamic tools.
+RobotLab::Tool inherits from RubyLLM::Tool, adding a `robot:` constructor parameter, a `Tool.create` factory for dynamic tools, and graceful error handling that returns plain-text errors to the LLM instead of crashing the run.
 
 ### Subclass Pattern
 
@@ -50,6 +50,15 @@ Tool.new(robot: nil)
 | `robot` | `Robot, nil` | The owning robot instance |
 
 ## Class Methods
+
+### raise_on_error / raise_on_error?
+
+```ruby
+MyTool.raise_on_error = true
+MyTool.raise_on_error?  # => true
+```
+
+Per-class flag controlling whether `call` propagates exceptions from `execute` instead of catching them. Defaults to `false`. Does not affect other tool classes.
 
 ### Tool.create
 
@@ -169,7 +178,24 @@ Whether this is an MCP-provided tool.
 result = tool.call(args_hash)
 ```
 
-Inherited from RubyLLM::Tool. Converts string keys to symbols and calls `execute(**args)`.
+Overrides `RubyLLM::Tool#call` with graceful error handling. Converts string keys to symbols and calls `execute(**args)`. If `execute` raises a `StandardError`, the error is caught and returned as a plain-text string the LLM can reason about:
+
+```
+Error (tool_name): exception message
+```
+
+The error is also logged via `RobotLab.config.logger` at `:warn` level.
+
+To propagate exceptions instead of catching them (for critical tools), set `raise_on_error` on the class:
+
+```ruby
+class CriticalTool < RobotLab::Tool
+  self.raise_on_error = true
+  # ...
+end
+```
+
+`raise_on_error` is per-class (defaults to `false`) and does not affect other tool classes.
 
 ### params_schema
 

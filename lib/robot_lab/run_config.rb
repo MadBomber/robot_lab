@@ -38,7 +38,7 @@ module RobotLab
     TOOL_FIELDS = %i[mcp tools].freeze
 
     # Callback fields (Procs)
-    CALLBACK_FIELDS = %i[on_tool_call on_tool_result].freeze
+    CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content].freeze
 
     # Infrastructure fields
     INFRA_FIELDS = %i[bus enable_cache].freeze

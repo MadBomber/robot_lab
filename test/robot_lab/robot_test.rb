@@ -1320,4 +1320,161 @@ class RobotLab::RobotTest < Minitest::Test
     hash = robot.to_h
     refute hash.key?(:skills)
   end
+
+
+  # ── Streaming: on_content callback ──────────────────────────
+
+  def test_on_content_stored_from_constructor
+    callback = ->(chunk) { chunk }
+
+    robot = RobotLab::Robot.new(
+      name: 'streamer',
+      template: :assistant,
+      on_content: callback
+    )
+
+    assert_equal callback, robot.instance_variable_get(:@on_content)
+  end
+
+
+  def test_on_content_stored_via_config
+    callback = ->(chunk) { chunk }
+    config = RobotLab::RunConfig.new(on_content: callback)
+
+    robot = RobotLab::Robot.new(
+      name: 'streamer',
+      template: :assistant,
+      config: config
+    )
+
+    assert_equal callback, robot.instance_variable_get(:@on_content)
+  end
+
+
+  def test_on_content_constructor_overrides_config
+    config_cb = ->(chunk) { "config: #{chunk}" }
+    constructor_cb = ->(chunk) { "constructor: #{chunk}" }
+    config = RobotLab::RunConfig.new(on_content: config_cb)
+
+    robot = RobotLab::Robot.new(
+      name: 'streamer',
+      template: :assistant,
+      on_content: constructor_cb,
+      config: config
+    )
+
+    assert_equal constructor_cb, robot.instance_variable_get(:@on_content)
+  end
+
+
+  def test_on_content_nil_by_default
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant
+    )
+
+    assert_nil robot.instance_variable_get(:@on_content)
+  end
+
+
+  def test_on_content_via_build_factory
+    callback = ->(chunk) { chunk }
+
+    robot = RobotLab.build(
+      name: 'streamer',
+      template: :assistant,
+      on_content: callback
+    )
+
+    assert_equal callback, robot.instance_variable_get(:@on_content)
+  end
+
+
+  def test_effective_streaming_block_stored_only
+    callback = ->(chunk) { chunk }
+
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      on_content: callback
+    )
+
+    result = robot.send(:effective_streaming_block, nil)
+    assert_equal callback, result
+  end
+
+
+  def test_effective_streaming_block_runtime_only
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant
+    )
+
+    runtime = ->(chunk) { chunk }
+    result = robot.send(:effective_streaming_block, runtime)
+    assert_equal runtime, result
+  end
+
+
+  def test_effective_streaming_block_neither
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant
+    )
+
+    result = robot.send(:effective_streaming_block, nil)
+    assert_nil result
+  end
+
+
+  def test_effective_streaming_block_both_fires_both
+    stored_chunks = []
+    runtime_chunks = []
+
+    stored = ->(chunk) { stored_chunks << chunk }
+    runtime = ->(chunk) { runtime_chunks << chunk }
+
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      on_content: stored
+    )
+
+    combined = robot.send(:effective_streaming_block, runtime)
+    combined.call("hello")
+    combined.call("world")
+
+    assert_equal %w[hello world], stored_chunks
+    assert_equal %w[hello world], runtime_chunks
+  end
+
+
+  def test_effective_streaming_block_both_stored_fires_first
+    order = []
+
+    stored = ->(_chunk) { order << :stored }
+    runtime = ->(_chunk) { order << :runtime }
+
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      on_content: stored
+    )
+
+    combined = robot.send(:effective_streaming_block, runtime)
+    combined.call("test")
+
+    assert_equal [:stored, :runtime], order
+  end
+
+
+  def test_on_content_in_run_config_fields
+    assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_content
+    assert_includes RobotLab::RunConfig::FIELDS, :on_content
+  end
+
+
+  def test_on_content_not_serializable
+    assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_content
+  end
 end

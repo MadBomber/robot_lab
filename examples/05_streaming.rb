@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example 5: Streaming Events
+# Example 5: Streaming Content
 #
-# Demonstrates real-time streaming of robot responses.
+# Demonstrates real-time streaming of LLM responses using:
+#   1. Stored callback (on_content:) — wired at build time
+#   2. Per-call block — passed to run()
+#   3. Both together — stored fires first, then block
 #
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/05_streaming.rb
@@ -13,109 +16,125 @@ ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
 
-# Create a streaming handler
-streaming_handler = lambda do |event|
-  case event[:event]
-  when RobotLab::Streaming::Events::RUN_STARTED
-    puts "[#{event[:data][:scope]}] Run started: #{event[:data][:run_id]}"
-    puts "-" * 40
+# Send logger output to a file instead of stdout
+require 'logger'
+log_file = File.join(__dir__, "05.log")
+RobotLab.config.logger = Logger.new(log_file)
+RubyLLM.configure { |c| c.logger = Logger.new(log_file) }
 
-  when RobotLab::Streaming::Events::TEXT_DELTA
-    # Print text deltas without newline for streaming effect
-    print event[:data][:delta]
-    $stdout.flush
+puts "Streaming Content Example"
+puts "=" * 50
+puts ""
 
-  when RobotLab::Streaming::Events::TOOL_CALL_ARGUMENTS_DELTA
-    puts "[Tool call] #{event[:data][:tool_name]}: #{event[:data][:delta]}"
+# ── 1. Stored callback (on_content:) ─────────────────────────────
+#
+# Wire streaming at build time. The callback fires on every run() call.
 
-  when RobotLab::Streaming::Events::TOOL_CALL_OUTPUT_DELTA
-    puts "[Tool output] #{event[:data][:delta]}"
+puts "1. Stored callback (on_content:)"
+puts "-" * 50
 
-  when RobotLab::Streaming::Events::RUN_COMPLETED
-    puts ""
-    puts "-" * 40
-    puts "[#{event[:data][:scope]}] Run completed"
-
-  when RobotLab::Streaming::Events::RUN_FAILED
-    puts ""
-    puts "[ERROR] Run failed: #{event[:data][:error]}"
-
-  else
-    # Log other events at debug level
-    # puts "[DEBUG] #{event[:event]}: #{event[:data].keys.join(', ')}"
-  end
-end
-
-# Create streaming context for testing
-context = RobotLab::Streaming::Context.new(
-  run_id: SecureRandom.uuid,
-  message_id: SecureRandom.uuid,
-  scope: "robot",
-  publish: streaming_handler
+chunks_received = 0
+robot = RobotLab.build(
+  name: "storyteller",
+  system_prompt: "You are a concise storyteller. Keep responses under 3 sentences.",
+  on_content: ->(chunk) {
+    print chunk.content
+    chunks_received += 1
+  }
 )
 
-puts "Streaming Events Example"
-puts "=" * 40
+result = robot.run("Tell me a one-sentence fact about Ruby programming.")
+
+puts ""
+puts "(#{chunks_received} chunks streamed)"
 puts ""
 
-# Simulate streaming events
-puts "Simulating streaming events:"
-puts ""
+# ── 2. Per-call block ────────────────────────────────────────────
+#
+# Pass a block to run() for one-off streaming.
 
-# Simulate run started
-context.publish_event(
-  event: RobotLab::Streaming::Events::RUN_STARTED,
-  data: {}
+puts "2. Per-call block"
+puts "-" * 50
+
+block_chunks = 0
+bare_robot = RobotLab.build(
+  name: "factbot",
+  system_prompt: "You are concise. Answer in one sentence."
 )
 
-# Simulate text streaming
-text = "Hello! I'm demonstrating streaming output. Each word appears as it's generated, creating a real-time effect."
-text.split(" ").each do |word|
-  context.publish_event(
-    event: RobotLab::Streaming::Events::TEXT_DELTA,
-    data: { delta: word + " " }
-  )
-  sleep 0.1 # Simulate generation delay
-end
+bare_robot.run("What year was Ruby created?") { |chunk|
+  print chunk.content
+  block_chunks += 1
+}
 
-# Simulate completion
-context.publish_event(
-  event: RobotLab::Streaming::Events::RUN_COMPLETED,
-  data: {}
+puts ""
+puts "(#{block_chunks} chunks streamed)"
+puts ""
+
+# ── 3. Both together ────────────────────────────────────────────
+#
+# When both exist, both fire: stored callback first, then block.
+
+puts "3. Both together (stored fires first, then block)"
+puts "-" * 50
+
+stored_log = []
+block_log  = []
+
+combo_robot = RobotLab.build(
+  name: "combo",
+  system_prompt: "You are concise. Answer in one sentence.",
+  on_content: ->(chunk) { stored_log << chunk.content }
 )
 
-puts ""
-puts "=" * 40
-puts ""
-puts "Using streaming with a robot:"
-puts ""
-puts <<~CODE
-  # Create robot with template
-  robot = RobotLab.build(
-    name: "streamer",
-    template: :helper,
-    model: "claude-3-haiku-20240307"
-  )
-
-  # Run with streaming callback
-  result = robot.run("Tell me a story") do |event|
-    case event[:event]
-    when "text.delta"
-      print event[:data][:delta]
-    when "run.completed"
-      puts "\\nDone!"
-    end
-  end
-CODE
+combo_robot.run("What is Matz's full name?") { |chunk|
+  block_log << chunk.content
+  print chunk.content
+}
 
 puts ""
-puts "Or with a network:"
+puts "(stored callback saw #{stored_log.length} chunks, block saw #{block_log.length} chunks)"
+puts "Callbacks fired in sync: #{stored_log == block_log}"
 puts ""
-puts <<~CODE
-  streaming_handler = ->(event) { broadcast_to_websocket(event) }
 
-  network.run(
-    message: "Process this request",
-    streaming: streaming_handler
-  )
-CODE
+# ── 4. Via RunConfig ─────────────────────────────────────────────
+#
+# on_content participates in the config cascade.
+
+puts "4. Via RunConfig (config cascade)"
+puts "-" * 50
+
+config_chunks = 0
+config = RobotLab::RunConfig.new(
+  on_content: ->(chunk) {
+    print chunk.content
+    config_chunks += 1
+  }
+)
+
+config_robot = RobotLab.build(
+  name: "config_bot",
+  system_prompt: "You are concise. Answer in one sentence.",
+  config: config
+)
+
+config_robot.run("Who designed the Ruby programming language?")
+
+puts ""
+puts "(#{config_chunks} chunks streamed via RunConfig)"
+puts ""
+
+# ── Summary ──────────────────────────────────────────────────────
+
+puts "=" * 50
+puts "Summary"
+puts ""
+puts <<~SUMMARY
+  on_content: callback  — wired at build time, fires every run()
+  run() { |chunk| ... } — per-call streaming block
+  Both together         — stored fires first, then block
+  RunConfig             — on_content participates in config cascade
+
+  For structured event streaming (lifecycle events, tool deltas,
+  sequencing), see RobotLab::Streaming::Context and Events.
+SUMMARY
