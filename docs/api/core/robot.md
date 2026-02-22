@@ -30,6 +30,7 @@ Robot.new(
   on_tool_result: nil,
   enable_cache: true,
   bus: nil,
+  skills: nil,
   temperature: nil,
   top_p: nil,
   top_k: nil,
@@ -59,6 +60,7 @@ Robot.new(
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
+| `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
 | `config` | `RunConfig`, `nil` | `nil` | Shared config merged with explicit kwargs (see [RunConfig](#runconfig)) |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness (0.0-1.0) |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold |
@@ -80,6 +82,7 @@ robot = RobotLab.build(
   context: {},
   enable_cache: true,
   bus: nil,           # Optional TypedBus::MessageBus
+  skills: nil,        # Optional skill templates
   **options           # All other Robot.new parameters
 )
 # => RobotLab::Robot
@@ -95,6 +98,7 @@ If `name` is omitted, it defaults to `"robot"`.
 | `description` | `String`, `nil` | Human-readable description |
 | `template` | `Symbol`, `nil` | Prompt template identifier |
 | `system_prompt` | `String`, `nil` | Inline system prompt |
+| `skills` | `Array<Symbol>`, `nil` | Constructor-provided skill template IDs (nil if none) |
 | `local_tools` | `Array` | Locally defined tools |
 | `mcp_clients` | `Hash<String, MCP::Client>` | Connected MCP clients, keyed by server name |
 | `mcp_tools` | `Array<Tool>` | Tools discovered from MCP servers |
@@ -408,7 +412,7 @@ robot.to_h
 # => Hash
 ```
 
-Returns a hash representation of the robot including name, description, template, system_prompt, local_tools, mcp_tools, mcp_config, tools_config, mcp_servers, model, and bus (true if configured, omitted otherwise).
+Returns a hash representation of the robot including name, description, template, skills, system_prompt, local_tools, mcp_tools, mcp_config, tools_config, mcp_servers, model, and bus (true if configured, omitted otherwise). Nil values are compacted out.
 
 ## Memory Behavior
 
@@ -437,7 +441,7 @@ Front matter supports two categories of keys:
 
 **LLM Config:** `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` — applied to the underlying chat.
 
-**Robot Extras:** `robot_name`, `description`, `tools`, `mcp` — applied to the robot's identity and capabilities. Constructor-provided values always take precedence.
+**Robot Extras:** `robot_name`, `description`, `tools`, `mcp`, `skills` — applied to the robot's identity and capabilities. Constructor-provided values always take precedence.
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -445,6 +449,40 @@ Front matter supports two categories of keys:
 | `description` | `String` | Human-readable description |
 | `tools` | `Array<String>` | Tool class names resolved via `Object.const_get` |
 | `mcp` | `Array<Hash>` | MCP server configurations |
+| `skills` | `Array<Symbol>` | Skill templates to prepend (recursive, with cycle detection) |
+
+## Skills
+
+Skills compose robot behaviors from reusable templates. Each skill is a standard `.md` template whose prompt body is prepended before the main template. Skills are expanded depth-first with automatic cycle detection.
+
+**Constructor:** `skills:` accepts `Symbol` or `Array<Symbol>`:
+
+```ruby
+robot = RobotLab.build(
+  name: "support",
+  template: :support,
+  skills: [:clarifier, :json_responder]
+)
+```
+
+**Front matter:** templates can declare skills via `skills:` key:
+
+```markdown
+---
+skills:
+  - clarifier
+  - json_responder
+---
+Main template body here.
+```
+
+Constructor `skills:` and front matter `skills:` are combined (constructor first, then front matter). Skills can nest (a skill can declare its own `skills:` in front matter).
+
+**Config cascade:** skill config merges in processing order (deepest first). Later values override earlier. Constructor kwargs always win.
+
+**Prompt order:** skill bodies are concatenated in expansion order, followed by the main template body. All are joined with `"\n\n"` and set as system instructions via a single `with_instructions` call.
+
+**Cycle detection:** if skills form a cycle, the duplicate is skipped with a logger warning.
 
 ## RunConfig
 
@@ -559,6 +597,18 @@ result = robot.run("Search for popular Ruby repos")
 robot.disconnect
 ```
 
+### Robot with Skills
+
+```ruby
+robot = RobotLab.build(
+  name: "support",
+  template: :support,
+  skills: [:clarifier, :safety, :json_responder],
+  context: { company: "Acme Corp" }
+)
+result = robot.run("I need help with my order")
+```
+
 ### Bare Robot with Chaining
 
 ```ruby
@@ -628,6 +678,6 @@ bot.send_message(to: :someone, content: "Hello!")
 
 ## See Also
 
-- [Building Robots Guide](../../guides/building-robots.md)
+- [Building Robots Guide](../../guides/building-robots.md) (includes [Composable Skills](../../guides/building-robots.md#composable-skills))
 - [Tool](tool.md)
 - [Network](network.md)

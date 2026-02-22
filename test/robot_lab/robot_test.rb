@@ -1045,4 +1045,279 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, alice.outbox[msg.key][:replies].size
     assert_equal "reply to hello", alice.outbox[msg.key][:replies].first.content
   end
+
+
+  # === Skills tests ===
+
+  def test_skills_single_symbol_accepted
+    robot = RobotLab::Robot.new(name: 'bot', skills: :skill_a_test)
+
+    assert_equal [:skill_a_test], robot.skills
+  end
+
+
+  def test_skills_array_accepted
+    robot = RobotLab::Robot.new(name: 'bot', skills: [:skill_a_test, :skill_b_test])
+
+    assert_equal [:skill_a_test, :skill_b_test], robot.skills
+  end
+
+
+  def test_skills_prepend_body_before_main
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_a_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    # Skill body should appear before main template body
+    skill_pos = instructions.index("Skill A")
+    main_pos = instructions.index("helpful assistant")
+    assert skill_pos, "Skill A body not found in instructions"
+    assert main_pos, "Main template body not found in instructions"
+    assert skill_pos < main_pos, "Skill body should appear before main template body"
+  end
+
+
+  def test_skills_ordering_preserved
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_a_test, :skill_b_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    pos_a = instructions.index("Skill A")
+    pos_b = instructions.index("Skill B")
+    assert pos_a, "Skill A body not found"
+    assert pos_b, "Skill B body not found"
+    assert pos_a < pos_b, "Skill A should appear before Skill B"
+  end
+
+
+  def test_skills_recursive_expansion
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      skills: [:skill_nested_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    # Leaf should appear before nested (depth-first)
+    leaf_pos = instructions.index("leaf skill")
+    nested_pos = instructions.index("nested skill")
+    assert leaf_pos, "Leaf skill body not found"
+    assert nested_pos, "Nested skill body not found"
+    assert leaf_pos < nested_pos, "Leaf should appear before nested (depth-first)"
+  end
+
+
+  def test_skills_cycle_detection_skips_and_warns
+    # This should not raise or infinite loop
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      skills: [:skill_cycle_a_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    # Both cycle templates should have their bodies present (first visit)
+    assert_includes instructions, "cycle A"
+    assert_includes instructions, "cycle B"
+  end
+
+
+  def test_skills_self_reference_skipped
+    # Should not infinite loop
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      skills: [:skill_self_ref_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    assert_includes instructions, "self-referencing"
+  end
+
+
+  def test_skills_main_template_excluded_from_skills
+    # skill_refs_main_test has skills: [assistant], which is the main template
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_refs_main_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    # The main template body should appear only once (at the end)
+    # skill_refs_main_test references :assistant but it's already the main template
+    assert_includes instructions, "helpful assistant"
+    assert_includes instructions, "skill that references"
+  end
+
+
+  def test_skills_config_cascade
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_config_test]
+    )
+
+    # Main template has no temperature override, so skill's 0.9 should be base.
+    # But constructor didn't set temperature, so the accumulated config applies.
+    # skill_config_test sets temperature: 0.9
+    chat = robot.instance_variable_get(:@chat)
+    temp = chat.instance_variable_get(:@temperature)
+    assert_equal 0.9, temp
+  end
+
+
+  def test_skills_constructor_config_overrides_all
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_config_test],
+      temperature: 0.3
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    temp = chat.instance_variable_get(:@temperature)
+    assert_equal 0.3, temp
+  end
+
+
+  def test_skills_description_cascade
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :assistant,
+      skills: [:skill_description_test]
+    )
+
+    # Main template description ("Helpful assistant with tool access") overwrites
+    # skill description because main template is processed last
+    assert_equal "Helpful assistant with tool access", robot.description
+  end
+
+
+  def test_skills_constructor_description_overrides
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant,
+      skills: [:skill_description_test],
+      description: 'My custom description'
+    )
+
+    assert_equal 'My custom description', robot.description
+  end
+
+
+  def test_skills_from_front_matter
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :template_with_skills_test
+    )
+
+    instructions = system_instructions(robot)
+
+    assert_includes instructions, "Skill A"
+    assert_includes instructions, "main template with skills from front matter"
+  end
+
+
+  def test_skills_constructor_and_frontmatter_combined
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :template_with_skills_test,
+      skills: [:skill_b_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    # Constructor skill_b_test + front matter skill_a_test + main template
+    assert_includes instructions, "Skill B"
+    assert_includes instructions, "Skill A"
+    assert_includes instructions, "main template with skills from front matter"
+  end
+
+
+  def test_skills_shared_context
+    robot = RobotLab::Robot.new(
+      name: 'robot',
+      template: :parameterized_main_test,
+      skills: [:skill_with_params_test],
+      context: { company_name: "Acme Corp" }
+    )
+
+    instructions = system_instructions(robot)
+
+    # Both skill and main template should render with the same context
+    assert_includes instructions, "You work for Acme Corp"
+    assert_includes instructions, "Welcome to Acme Corp support"
+  end
+
+
+  def test_skills_without_main_template
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      skills: [:skill_a_test]
+    )
+
+    instructions = system_instructions(robot)
+
+    assert_includes instructions, "Skill A"
+    assert_nil robot.template
+  end
+
+
+  def test_no_skills_unchanged_behavior
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant
+    )
+
+    assert_nil robot.skills
+    assert_nil robot.instance_variable_get(:@expanded_skills)
+
+    instructions = system_instructions(robot)
+    assert_includes instructions, "helpful assistant"
+  end
+
+
+  def test_build_factory_passes_skills
+    robot = RobotLab.build(
+      name: 'bot',
+      skills: [:skill_a_test, :skill_b_test]
+    )
+
+    assert_equal [:skill_a_test, :skill_b_test], robot.skills
+    instructions = system_instructions(robot)
+    assert_includes instructions, "Skill A"
+    assert_includes instructions, "Skill B"
+  end
+
+
+  def test_to_h_includes_skills
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      skills: [:skill_a_test]
+    )
+
+    hash = robot.to_h
+    assert_equal [:skill_a_test], hash[:skills]
+  end
+
+
+  def test_to_h_excludes_nil_skills
+    robot = RobotLab::Robot.new(
+      name: 'bot',
+      template: :assistant
+    )
+
+    hash = robot.to_h
+    refute hash.key?(:skills)
+  end
 end

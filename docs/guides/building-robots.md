@@ -125,6 +125,7 @@ The following YAML front matter keys are applied to the robot's chat automatical
 | `description` | Human-readable description of the robot |
 | `tools` | Array of tool class names (resolved via `Object.const_get`) |
 | `mcp` | Array of MCP server configurations |
+| `skills` | Array of skill template symbols to prepend (see [Composable Skills](#composable-skills)) |
 
 Constructor-provided values always take precedence over frontmatter values.
 
@@ -218,6 +219,173 @@ robot = RobotLab.build(
   template: :support,
   context: { company: "TechCo" },
   system_prompt: "Always respond in Spanish."
+)
+```
+
+## Composable Skills
+
+Skills let you compose robot behaviors from reusable templates without creating a dedicated template for every combination. A skill is just a regular template whose prompt body gets prepended before the main template's body.
+
+### Why Skills?
+
+Consider a support agent that needs to:
+
+- Ask clarifying questions before acting
+- Detect customer sentiment
+- Respond in structured JSON
+
+Without skills, you'd create a single monolithic template or copy-paste shared instructions across templates. With skills, each behavior is a standalone template that can be mixed into any robot.
+
+### Defining a Skill
+
+A skill is a standard `.md` template file. There is no special syntax — any template can be used as a skill:
+
+```markdown title="prompts/clarifier.md"
+---
+description: Ask clarifying questions before acting
+---
+Before answering, consider whether the user's request is ambiguous.
+If so, ask one focused clarifying question before proceeding.
+```
+
+```markdown title="prompts/json_responder.md"
+---
+description: Respond in structured JSON
+temperature: 0.2
+---
+Always respond with valid JSON. Use this structure:
+{"answer": "...", "confidence": 0.0-1.0, "sources": [...]}
+```
+
+### Using Skills via Constructor
+
+Pass `skills:` as a symbol or array of symbols:
+
+```ruby
+# Single skill
+robot = RobotLab.build(
+  name: "bot",
+  template: :support,
+  skills: :clarifier
+)
+
+# Multiple skills
+robot = RobotLab.build(
+  name: "bot",
+  template: :support,
+  skills: [:clarifier, :json_responder],
+  context: { company: "Acme Corp" }
+)
+```
+
+The resulting system prompt is composed in order: clarifier body, then json_responder body, then the main support template body.
+
+### Using Skills via Front Matter
+
+Templates can declare skills directly in their front matter:
+
+```markdown title="prompts/smart_support.md"
+---
+description: Support agent with built-in skills
+skills:
+  - clarifier
+  - json_responder
+parameters:
+  company: null
+---
+You are a support agent for <%= company %>.
+Help customers with their inquiries.
+```
+
+```ruby
+# Skills are loaded from front matter automatically
+robot = RobotLab.build(
+  template: :smart_support,
+  context: { company: "Acme Corp" }
+)
+```
+
+Constructor `skills:` and front matter `skills:` are combined — constructor skills are processed first, then front matter skills.
+
+### Nested Skills
+
+Skills can reference other skills, enabling layered composition:
+
+```markdown title="prompts/safety.md"
+---
+description: Safety guidelines
+skills:
+  - content_filter
+  - pii_redactor
+---
+Follow all safety guidelines when responding.
+```
+
+Nested skills are expanded depth-first. For the example above, the prompt order would be: content_filter, pii_redactor, safety, then the main template.
+
+### Cycle Detection
+
+If skills form a cycle (A references B, B references A), RobotLab detects it automatically, logs a warning, and skips the duplicate. This prevents infinite loops.
+
+### Config Cascade
+
+Skills can include LLM configuration in their front matter. Config cascades in processing order — later values override earlier ones:
+
+```markdown title="prompts/creative_mode.md"
+---
+description: Enable creative responses
+temperature: 0.9
+top_p: 0.95
+---
+Be creative and imaginative in your responses.
+```
+
+```ruby
+robot = RobotLab.build(
+  name: "writer",
+  template: :article_writer,
+  skills: [:creative_mode]
+)
+# temperature is 0.9 from the skill (unless the main template or constructor overrides it)
+```
+
+The precedence order (highest wins):
+
+1. Constructor kwargs (`temperature: 0.3`)
+2. Main template front matter
+3. Later skills override earlier skills
+4. First skill in the list
+
+### Skills Without a Main Template
+
+Skills work without a main template — useful for quick composition:
+
+```ruby
+robot = RobotLab.build(
+  name: "safe_bot",
+  skills: [:safety, :json_responder],
+  system_prompt: "You answer questions about our product."
+)
+```
+
+### Shared Context
+
+All skills and the main template render with the same `context:` hash. Define parameters in each skill's front matter and pass values through the shared context:
+
+```markdown title="prompts/branded.md"
+---
+description: Brand-aware responses
+parameters:
+  company_name: null
+---
+You represent <%= company_name %>. Always maintain brand voice.
+```
+
+```ruby
+robot = RobotLab.build(
+  template: :support,
+  skills: [:branded],
+  context: { company_name: "Acme Corp" }  # shared with all skills
 )
 ```
 
@@ -556,7 +724,19 @@ robot = RobotLab.build(
 )
 ```
 
-### 2. Use Templates for Reusable Prompts
+### 2. Compose Behaviors with Skills
+
+Instead of creating monolithic templates, break behaviors into composable skills:
+
+```ruby
+robot = RobotLab.build(
+  name: "support",
+  template: :support,
+  skills: [:clarifier, :safety, :json_responder]
+)
+```
+
+### 3. Use Templates for Reusable Prompts
 
 Templates keep prompts in version-controlled files and allow parameterization:
 
@@ -568,7 +748,7 @@ robot = RobotLab.build(
 )
 ```
 
-### 3. Handle Tool Errors Gracefully
+### 4. Handle Tool Errors Gracefully
 
 See [Using Tools: Error Handling](using-tools.md#error-handling) for patterns.
 

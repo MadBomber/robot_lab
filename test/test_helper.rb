@@ -54,6 +54,15 @@ module RobotLabTestHelpers
   end
 
 
+  # Extract the system instructions from a robot's chat
+  def system_instructions(robot)
+    chat = robot.instance_variable_get(:@chat)
+    messages = chat.instance_variable_get(:@messages)
+    sys = messages&.find { |m| m.role.to_s == 'system' }
+    sys&.content
+  end
+
+
   # Create a Tool for testing
   def build_tool(name:, description: 'Test tool', &block)
     RobotLab::Tool.create(

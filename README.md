@@ -16,6 +16,7 @@ RobotLab enables you to build sophisticated AI applications using multiple speci
 
 - <strong>Multi-Robot Architecture</strong> - Build with specialized AI agents<br>
 - <strong>Network Orchestration</strong> - Connect robots with flexible routing<br>
+- <strong>Composable Skills</strong> - Mix reusable behaviors into any robot<br>
 - <strong>Extensible Tools</strong> - Give robots custom capabilities<br>
 - <strong>MCP Integration</strong> - Connect to external tool servers<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
@@ -172,7 +173,35 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 robot = RobotLab.build(template: :github_assistant)
 ```
 
-Front matter supports: `description`, `robot_name`, `tools`, `mcp`, `parameters`, and LLM config keys (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`). Constructor-provided values always take precedence over front matter.
+Front matter supports: `description`, `robot_name`, `tools`, `mcp`, `skills`, `parameters`, and LLM config keys (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`). Constructor-provided values always take precedence over front matter.
+
+### Composable Skills
+
+Skills let you compose robot behaviors from reusable templates. A skill is just a template whose prompt body is prepended before the main template. Use skills to mix in capabilities like "ask clarifying questions", "respond in JSON", or "follow safety guidelines" without creating a dedicated template for every combination.
+
+```ruby
+# Compose a support robot from reusable skills
+robot = RobotLab.build(
+  name: "support",
+  template: :support_agent,
+  skills: [:clarifier, :sentiment_aware, :json_responder],
+  context: { company: "Acme Corp" }
+)
+```
+
+Skills can also be declared in template front matter:
+
+```markdown
+---
+description: Support agent with built-in skills
+skills:
+  - clarifier
+  - sentiment_aware
+---
+You are a support agent for <%= company %>.
+```
+
+Skills are expanded depth-first and can reference other skills (with automatic cycle detection). Config cascades through skills in order — later values override earlier ones, and constructor kwargs always win.
 
 ### Combining Templates with System Prompts
 

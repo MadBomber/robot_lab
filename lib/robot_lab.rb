@@ -152,7 +152,7 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, config: nil, **options)
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil, config: nil, **options)
       Robot.new(
         name: name,
         template: template,
@@ -160,6 +160,7 @@ module RobotLab
         context: context,
         enable_cache: enable_cache,
         bus: bus,
+        skills: skills,
         config: config,
         **options
       )

@@ -12,6 +12,7 @@ Each robot has:
 - **Template**: A `.md` file with YAML front matter managed by prompt_manager, referenced by symbol
 - **System Prompt**: Inline instructions (can be used alone or combined with a template)
 - **Model**: The LLM model to use (defaults to `RobotLab.config.ruby_llm.model`)
+- **Skills**: Composable template behaviors prepended before the main template
 - **Local Tools**: `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances
 - **Memory**: Persistent key-value store across runs
 

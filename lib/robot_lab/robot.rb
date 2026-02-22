@@ -66,7 +66,7 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox, :config
+                :bus, :outbox, :config, :skills
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -97,6 +97,7 @@ module RobotLab
     # @param presence_penalty [Float, nil] penalize based on presence
     # @param frequency_penalty [Float, nil] penalize based on frequency
     # @param stop [String, Array, nil] stop sequences
+    # @param skills [Symbol, Array<Symbol>, nil] skill templates to prepend
     # @param config [RunConfig, nil] shared configuration (merged with explicit kwargs)
     def initialize(
       name:,
@@ -113,6 +114,7 @@ module RobotLab
       on_tool_result: nil,
       enable_cache: true,
       bus: nil,
+      skills: nil,
       temperature: nil,
       top_p: nil,
       top_k: nil,
@@ -129,6 +131,8 @@ module RobotLab
       @build_context = context
       @description = description
       @local_tools = Array(local_tools)
+      @skills = skills ? Array(skills).map(&:to_sym) : nil
+      @expanded_skills = nil
 
       # Build RunConfig from explicit kwargs, merged on top of passed-in config.
       # Explicit constructor kwargs always override the shared config.
@@ -186,9 +190,22 @@ module RobotLab
       # Dynamically delegate all with_* methods from the Chat class
       define_chat_delegators
 
-      # Apply template first (includes front matter config like model, temperature)
-      # then constructor params override — constructor is more specific than template.
-      apply_template_to_chat(context) if @template
+      # Gather all skill IDs from constructor + main template front matter
+      all_skill_ids = Array(@skills)
+      if @template
+        parsed_main = PM.parse(@template)
+        fm_skills = extract_skills_from_metadata(parsed_main.metadata)
+        all_skill_ids = all_skill_ids + fm_skills
+      end
+
+      if all_skill_ids.any?
+        # Skills path: expand skills, merge config, concatenate bodies
+        apply_skills_and_template_to_chat(all_skill_ids, context)
+      elsif @template
+        # Standard path: single template, no skills
+        apply_template_to_chat(context)
+      end
+
       @chat.with_instructions(@system_prompt) if @system_prompt
 
       # Constructor params override template front matter (use config values)
@@ -367,6 +384,7 @@ module RobotLab
         name: name,
         description: description,
         template: template,
+        skills: @skills,
         system_prompt: system_prompt,
         local_tools: local_tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
         mcp_tools: mcp_tools.map(&:name),
