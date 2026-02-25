@@ -26,17 +26,22 @@ module RobotLab
       end
 
 
-      # Ensure MCP clients are initialized for the given server configs
+      # Ensure MCP clients are initialized for the given server configs.
+      # On subsequent calls, retries any servers that previously failed to connect.
       def ensure_mcp_clients(mcp_servers)
         return if mcp_servers.empty?
 
         needed_servers = mcp_servers.map { |s| s.is_a?(Hash) ? s[:name] : s.to_s }.compact
-        return if @mcp_initialized && (@mcp_clients.keys.sort == needed_servers.sort)
 
-        disconnect if @mcp_initialized
+        if @mcp_initialized
+          # Already initialized — retry any servers that are needed but not connected
+          retry_failed_servers(mcp_servers, needed_servers)
+          return
+        end
 
         @mcp_clients = {}
         @mcp_tools = []
+        @failed_mcp_configs = {}
 
         mcp_servers.each do |server_config|
           init_mcp_client(server_config)
@@ -55,8 +60,48 @@ module RobotLab
           @mcp_clients[server_name] = client
           discover_mcp_tools(client, server_name)
         else
+          server_name = extract_server_name(server_config)
+          @failed_mcp_configs[server_name] = server_config
           RobotLab.config.logger.warn(
-            "Robot '#{@name}' failed to connect to MCP server: #{server_config[:name] || server_config}"
+            "Robot '#{@name}' failed to connect to MCP server: #{server_name}"
+          )
+        end
+      rescue StandardError => e
+        server_name = extract_server_name(server_config)
+        @failed_mcp_configs[server_name] = server_config
+        RobotLab.config.logger.warn(
+          "Robot '#{@name}' error connecting to MCP server '#{server_name}': #{e.message}"
+        )
+      end
+
+
+      # Retry connecting to servers that previously failed
+      def retry_failed_servers(mcp_servers, needed_servers)
+        return if @failed_mcp_configs.nil? || @failed_mcp_configs.empty?
+
+        # Only retry servers that are still needed and still failed
+        to_retry = @failed_mcp_configs.select { |name, _| needed_servers.include?(name) }
+        return if to_retry.empty?
+
+        to_retry.each do |name, server_config|
+          RobotLab.config.logger.info(
+            "Robot '#{@name}' retrying MCP server: #{name}"
+          )
+
+          client = MCP::Client.new(server_config)
+          client.connect
+
+          if client.connected?
+            @mcp_clients[name] = client
+            @failed_mcp_configs.delete(name)
+            discover_mcp_tools(client, name)
+            RobotLab.config.logger.info(
+              "Robot '#{@name}' successfully connected to MCP server '#{name}' on retry"
+            )
+          end
+        rescue StandardError => e
+          RobotLab.config.logger.warn(
+            "Robot '#{@name}' retry failed for MCP server '#{name}': #{e.message}"
           )
         end
       end
@@ -82,6 +127,18 @@ module RobotLab
         RobotLab.config.logger.info(
           "Robot '#{@name}' discovered #{tools.size} tools from MCP server '#{server_name}'"
         )
+      end
+
+
+      def extract_server_name(server_config)
+        case server_config
+        when Hash
+          server_config[:name] || server_config['name'] || server_config.to_s
+        when MCP::Server
+          server_config.name
+        else
+          server_config.to_s
+        end
       end
     end
   end

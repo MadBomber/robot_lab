@@ -8,15 +8,23 @@ module RobotLab
       # @abstract Subclass and implement {#connect}, {#send_request}, {#close}
       #
       class Base
+        # Default timeout for request operations (in seconds)
+        DEFAULT_TIMEOUT = 15
+
         # @!attribute [r] config
         #   @return [Hash] the transport configuration
-        attr_reader :config
+        # @!attribute [r] timeout
+        #   @return [Numeric] request timeout in seconds
+        attr_reader :config, :timeout
 
         # Creates a new transport instance.
         #
-        # @param config [Hash] transport configuration options
+        # @param config [Hash] transport configuration options.
+        #   May include a :timeout key (in seconds) that controls how long
+        #   blocking operations wait before raising an error.
         def initialize(config)
           @config = config.transform_keys(&:to_sym)
+          @timeout = @config.delete(:timeout) || DEFAULT_TIMEOUT
         end
 
         # Connect to the server

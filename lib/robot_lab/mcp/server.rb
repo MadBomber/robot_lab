@@ -24,20 +24,28 @@ module RobotLab
       # Valid transport types for MCP connections
       VALID_TRANSPORT_TYPES = %w[stdio sse ws websocket streamable-http http].freeze
 
+      # Default timeout for MCP requests (in seconds)
+      DEFAULT_TIMEOUT = 15
+
       # @!attribute [r] name
       #   @return [String] the server name
       # @!attribute [r] transport
       #   @return [Hash] the transport configuration
-      attr_reader :name, :transport
+      # @!attribute [r] timeout
+      #   @return [Numeric] request timeout in seconds
+      attr_reader :name, :transport, :timeout
 
       # Creates a new Server configuration.
       #
       # @param name [String] the server name
       # @param transport [Hash] the transport configuration
+      # @param timeout [Numeric, nil] request timeout in seconds (default: 15)
+      # @param _extra [Hash] additional keys are silently ignored for forward compatibility
       # @raise [ArgumentError] if transport type is invalid or required fields are missing
-      def initialize(name:, transport:)
+      def initialize(name:, transport:, timeout: nil, **_extra)
         @name = name.to_s
         @transport = normalize_transport(transport)
+        @timeout = normalize_timeout(timeout)
         validate!
       end
 
@@ -54,7 +62,8 @@ module RobotLab
       def to_h
         {
           name: name,
-          transport: transport
+          transport: transport,
+          timeout: timeout
         }
       end
 
@@ -78,6 +87,15 @@ module RobotLab
         when "ws", "websocket", "sse", "streamable-http", "http"
           raise ArgumentError, "Transport requires :url" unless transport[:url]
         end
+      end
+
+      def normalize_timeout(value)
+        return DEFAULT_TIMEOUT if value.nil?
+
+        seconds = value.to_f
+        # If the caller passed milliseconds (>= 1000), convert to seconds
+        seconds = seconds / 1000.0 if seconds >= 1000
+        [seconds, 1].max
       end
     end
   end

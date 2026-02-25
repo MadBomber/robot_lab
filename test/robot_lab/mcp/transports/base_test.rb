@@ -8,7 +8,7 @@ class RobotLab::MCP::Transports::BaseTest < Minitest::Test
     transport = RobotLab::MCP::Transports::Base.new(config)
 
     assert_equal "http://example.com", transport.config[:url]
-    assert_equal 30, transport.config[:timeout]
+    assert_equal 30, transport.timeout
   end
 
   def test_initialization_symbolizes_string_keys
@@ -16,7 +16,13 @@ class RobotLab::MCP::Transports::BaseTest < Minitest::Test
     transport = RobotLab::MCP::Transports::Base.new(config)
 
     assert_equal "http://example.com", transport.config[:url]
-    assert_equal 30, transport.config[:timeout]
+    assert_equal 30, transport.timeout
+  end
+
+  def test_initialization_uses_default_timeout
+    transport = RobotLab::MCP::Transports::Base.new(url: "http://example.com")
+
+    assert_equal RobotLab::MCP::Transports::Base::DEFAULT_TIMEOUT, transport.timeout
   end
 
   def test_connect_raises_not_implemented

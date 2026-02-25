@@ -162,15 +162,17 @@ module RobotLab
       end
 
       def create_transport
+        config = @server.transport.merge(timeout: @server.timeout)
+
         case @server.transport_type
         when "stdio"
-          Transports::Stdio.new(@server.transport)
+          Transports::Stdio.new(config)
         when "ws", "websocket"
-          Transports::WebSocket.new(@server.transport)
+          Transports::WebSocket.new(config)
         when "sse"
-          Transports::SSE.new(@server.transport)
+          Transports::SSE.new(config)
         when "streamable-http", "http"
-          Transports::StreamableHTTP.new(@server.transport)
+          Transports::StreamableHTTP.new(config)
         else
           raise MCPError, "Unsupported transport type: #{@server.transport_type}"
         end

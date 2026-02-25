@@ -66,7 +66,7 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox, :config, :skills
+                :bus, :outbox, :config, :skills, :provider
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -108,6 +108,7 @@ module RobotLab
       description: nil,
       local_tools: [],
       model: nil,
+      provider: nil,
       mcp_servers: [],
       mcp: :none,
       tools: :none,
@@ -186,6 +187,15 @@ module RobotLab
       # Build chat kwargs for Agent's super
       resolved_model = @config.model || config.ruby_llm.model
       chat_kwargs = { model: resolved_model }
+
+      # Pass provider through for local providers (Ollama, GPUStack, etc.)
+      # RubyLLM auto-sets assume_model_exists for local providers when
+      # provider is specified.
+      @provider = provider
+      if @provider
+        chat_kwargs[:provider] = @provider
+        chat_kwargs[:assume_model_exists] = true
+      end
 
       # Create the persistent chat via Agent's initialize
       super(chat: nil, **chat_kwargs)
@@ -354,11 +364,26 @@ module RobotLab
       # Extract the message from run context
       message = run_context.delete(:message)
 
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       robot_result = run(message, **run_context)
+      robot_result.duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
       result
         .with_context(@name.to_sym, robot_result)
         .continue(robot_result)
+    rescue Exception => e # rubocop:disable Lint/RescueException
+      # Catch all errors (including SecurityError, Timeout::Error, etc.)
+      # so one failing robot doesn't crash the entire network pipeline.
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      error_result = RobotResult.new(
+        robot_name: @name,
+        output: [TextMessage.new(role: 'assistant', content: "Error: #{e.class}: #{e.message}")]
+      )
+      error_result.duration = elapsed
+
+      result
+        .with_context(@name.to_sym, error_result)
+        .continue(error_result)
     end
 
 
@@ -371,6 +396,26 @@ module RobotLab
     end
 
 
+    # Eagerly connect to configured MCP servers and discover tools.
+    # Normally MCP connections are lazy (established on first run).
+    # Call this to connect early, e.g. to display connection status at startup.
+    #
+    # @return [self]
+    def connect_mcp!
+      resolved_mcp = resolve_mcp_hierarchy(@mcp_config)
+      ensure_mcp_clients(resolved_mcp) if resolved_mcp.is_a?(Array) && resolved_mcp.any?
+      self
+    end
+
+    # Returns server names that failed to connect.
+    #
+    # @return [Array<String>]
+    def failed_mcp_server_names
+      return [] unless @failed_mcp_configs
+
+      @failed_mcp_configs.keys
+    end
+
     # Disconnect all MCP clients and bus channel.
     #
     # @return [self]
@@ -378,6 +423,83 @@ module RobotLab
       @mcp_clients.each_value(&:disconnect)
       teardown_bus_channel if @bus
       self
+    end
+
+
+    # --- Public APIs for external MCP and history management (A4) ---
+
+    # Inject pre-connected MCP clients and their tools into this robot.
+    # Used by host applications (e.g. AIA) that manage MCP connections
+    # externally and need to pass them to robots without re-connecting.
+    #
+    # @param clients [Hash<String, MCP::Client>] connected MCP clients by server name
+    # @param tools [Array<Tool>] tools discovered from the MCP servers
+    # @return [self]
+    def inject_mcp!(clients:, tools:)
+      @mcp_clients = clients
+      @mcp_tools = tools
+      @mcp_initialized = true
+      self
+    end
+
+    # Access the underlying RubyLLM::Chat instance.
+    # Useful for checkpoint/restore operations that need direct
+    # access to conversation state.
+    #
+    # @return [RubyLLM::Chat]
+    def chat
+      @chat
+    end
+
+    # Return the conversation messages from the underlying chat.
+    #
+    # @return [Array<RubyLLM::Message>]
+    def messages
+      @chat.messages
+    end
+
+    # Clear conversation messages, optionally keeping the system prompt.
+    #
+    # @param keep_system [Boolean] whether to preserve the system message
+    # @return [self]
+    def clear_messages(keep_system: true)
+      if keep_system
+        system_msg = @chat.messages.find { |m| m.role == :system }
+        @chat.instance_variable_set(:@messages, [])
+        @chat.add_message(system_msg) if system_msg
+      else
+        @chat.instance_variable_set(:@messages, [])
+      end
+      self
+    end
+
+    # Replace conversation messages with a saved set (for checkpoint restore).
+    #
+    # @param messages [Array<RubyLLM::Message>] the messages to restore
+    # @return [self]
+    def replace_messages(messages)
+      @chat.instance_variable_set(:@messages, messages)
+      self
+    end
+
+    # Return the provider for this robot's chat.
+    # Useful for displaying model/provider info without reaching
+    # into chat internals.
+    #
+    # @return [String, nil]
+    def chat_provider
+      m = @chat.model
+      m.respond_to?(:provider) ? m.provider : nil
+    rescue StandardError
+      nil
+    end
+
+    # Find an MCP client by server name.
+    #
+    # @param server_name [String] the MCP server name
+    # @return [MCP::Client, nil]
+    def mcp_client(server_name)
+      @mcp_clients[server_name]
     end
 
 
@@ -460,7 +582,8 @@ module RobotLab
         robot_name: @name,
         output: output,
         tool_calls: normalize_tool_calls(tool_calls),
-        stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil
+        stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil,
+        raw: response
       )
     end
 

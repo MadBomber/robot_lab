@@ -30,13 +30,15 @@ module RobotLab
     #   @return [String, nil] reason execution stopped
     attr_reader :robot_name, :output, :tool_calls, :created_at, :id, :stop_reason
 
+    # @!attribute [rw] duration
+    #   @return [Float, nil] elapsed seconds for this run
     # @!attribute [rw] prompt
     #   @return [Array<Message>, nil] the prompt messages used (debug)
     # @!attribute [rw] history
     #   @return [Array<Message>, nil] the history used (debug)
     # @!attribute [rw] raw
     #   @return [Object, nil] the raw LLM response (debug)
-    attr_accessor :prompt, :history, :raw
+    attr_accessor :duration, :prompt, :history, :raw
 
     # Creates a new RobotResult instance.
     #
