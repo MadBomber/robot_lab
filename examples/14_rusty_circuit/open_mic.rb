@@ -59,7 +59,7 @@ end
 
 bus     = TypedBus::MessageBus.new
 display = Display.new(
-  scout_path: File.join(__dir__, "scout_notes.md"),
+  scout_path: File.join(__dir__, "output", "scout_notes.md"),
   log_path: log_path
 )
 
