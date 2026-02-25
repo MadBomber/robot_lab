@@ -121,6 +121,33 @@
   <p class="children"><span class='object_link'><a href="SSE.html" title="RobotLab::MCP::Transports::SSE (class)">SSE</a></span>, <span class='object_link'><a href="Stdio.html" title="RobotLab::MCP::Transports::Stdio (class)">Stdio</a></span>, <span class='object_link'><a href="StreamableHTTP.html" title="RobotLab::MCP::Transports::StreamableHTTP (class)">StreamableHTTP</a></span>, <span class='object_link'><a href="WebSocket.html" title="RobotLab::MCP::Transports::WebSocket (class)">WebSocket</a></span></p>
 </div>
 
+  
+    <h2>
+      Constant Summary
+      <small><a href="#" class="constants_summary_toggle">collapse</a></small>
+    </h2>
+
+    <dl class="constants">
+      
+        <dt id="DEFAULT_TIMEOUT-constant" class="">DEFAULT_TIMEOUT =
+          <div class="docstring">
+  <div class="discussion">
+    
+<p>Default timeout for request operations (in seconds)</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+        </dt>
+        <dd><pre class="code"><span class='int'>15</span></pre></dd>
+      
+    </dl>
+  
+
 
 
 
@@ -130,7 +157,7 @@
       <li class="public ">
   <span class="summary_signature">
     
-      <a href="#config-instance_method" title="#config (instance method)">#<strong>config</strong>  &#x21d2; Object </a>
+      <a href="#config-instance_method" title="#config (instance method)">#<strong>config</strong>  &#x21d2; Hash </a>
     
 
     
@@ -150,7 +177,36 @@
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Returns the value of attribute config.</p>
+<p>The transport configuration.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#timeout-instance_method" title="#timeout (instance method)">#<strong>timeout</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute timeout.</p>
 </div></span>
   
 </li>
@@ -329,7 +385,7 @@
       
         &mdash;
         <div class='inline'>
-<p>transport configuration options</p>
+<p>transport configuration options. May include a :timeout key (in seconds) that controls how long blocking operations wait before raising an error.</p>
 </div>
       
     </li>
@@ -343,15 +399,17 @@
       <pre class="lines">
 
 
-18
-19
-20</pre>
+25
+26
+27
+28</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 18</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 25</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_config'>config</span><span class='rparen'>)</span>
   <span class='ivar'>@config</span> <span class='op'>=</span> <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_transform_keys'>transform_keys</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_sym</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout</span> <span class='op'>=</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_delete'>delete</span><span class='lparen'>(</span><span class='symbol'>:timeout</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='const'><span class='object_link'><a href="#DEFAULT_TIMEOUT-constant" title="RobotLab::MCP::Transports::Base::DEFAULT_TIMEOUT (constant)">DEFAULT_TIMEOUT</a></span></span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -368,7 +426,7 @@
       <div class="method_details first">
   <h3 class="signature first" id="config-instance_method">
   
-    #<strong>config</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+    #<strong>config</strong>  &#x21d2; <tt>Hash</tt>  <span class="extras">(readonly)</span>
   
 
   
@@ -377,7 +435,68 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Returns the value of attribute config.</p>
+<p>Returns the transport configuration.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the transport configuration</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+18
+19
+20</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 18</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_config'>config</span>
+  <span class='ivar'>@config</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="timeout-instance_method">
+  
+    #<strong>timeout</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute timeout.</p>
 
 
   </div>
@@ -391,16 +510,12 @@
       <pre class="lines">
 
 
-13
-14
-15</pre>
+18</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 13</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 18</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_config'>config</span>
-  <span class='ivar'>@config</span>
-<span class='kw'>end</span></pre>
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:config</span><span class='comma'>,</span> <span class='symbol'>:timeout</span></pre>
     </td>
   </tr>
 </table>
@@ -465,12 +580,12 @@
       <pre class="lines">
 
 
-43
-44
-45</pre>
+51
+52
+53</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 43</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 51</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_close'>close</span>
   <span class='id identifier rubyid_raise'>raise</span> <span class='const'>NotImplementedError</span>
@@ -532,12 +647,12 @@
       <pre class="lines">
 
 
-26
-27
-28</pre>
+34
+35
+36</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 26</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 34</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connect'>connect</span>
   <span class='id identifier rubyid_raise'>raise</span> <span class='const'>NotImplementedError</span>
@@ -591,12 +706,12 @@
       <pre class="lines">
 
 
-50
-51
-52</pre>
+58
+59
+60</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 50</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 58</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connected?'>connected?</span>
   <span class='kw'>false</span>
@@ -683,12 +798,12 @@
       <pre class="lines">
 
 
-35
-36
-37</pre>
+43
+44
+45</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 35</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/base.rb', line 43</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_send_request'>send_request</span><span class='lparen'>(</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_raise'>raise</span> <span class='const'>NotImplementedError</span>
@@ -703,7 +818,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Feb 22 21:53:39 2026 by
+  Generated on Wed Feb 25 05:48:34 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

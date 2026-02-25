@@ -106,7 +106,7 @@
     
 <p>StdIO transport for local MCP servers</p>
 
-<p>Spawns a subprocess and communicates via stdin/stdout.</p>
+<p>Spawns a subprocess and communicates via stdin/stdout. All blocking I/O is wrapped with a configurable timeout so a missing or hung server cannot block the caller forever.</p>
 
 
   </div>
@@ -118,9 +118,8 @@
     
       
       <pre class="example code"><code><span class='id identifier rubyid_transport'>transport</span> <span class='op'>=</span> <span class='const'>Stdio</span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="#initialize-instance_method" title="RobotLab::MCP::Transports::Stdio#initialize (method)">new</a></span></span><span class='lparen'>(</span>
-  <span class='label'>command:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mcp-server-filesystem</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
-  <span class='label'>args:</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--root</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/data</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span><span class='comma'>,</span>
-  <span class='label'>env:</span> <span class='lbrace'>{</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>DEBUG</span><span class='tstring_end'>&quot;</span></span> <span class='op'>=&gt;</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>true</span><span class='tstring_end'>&quot;</span></span> <span class='rbrace'>}</span>
+  <span class='lbrace'>{</span> <span class='label'>command:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mcp-server-filesystem</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>args:</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--root</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/data</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span> <span class='rbrace'>}</span><span class='comma'>,</span>
+  <span class='label'>timeout:</span> <span class='int'>10</span>
 <span class='rparen'>)</span></code></pre>
     
   </div>
@@ -129,13 +128,19 @@
 </div>
 
 
+  <h2>Constant Summary</h2>
+  
+  <h3 class="inherited">Constants inherited
+     from <span class='object_link'><a href="Base.html" title="RobotLab::MCP::Transports::Base (class)">Base</a></span></h3>
+  <p class="inherited"><span class='object_link'><a href="Base.html#DEFAULT_TIMEOUT-constant" title="RobotLab::MCP::Transports::Base::DEFAULT_TIMEOUT (constant)">Base::DEFAULT_TIMEOUT</a></span></p>
+
 
 
 
   <h2>Instance Attribute Summary</h2>
   
   <h3 class="inherited">Attributes inherited from <span class='object_link'><a href="Base.html" title="RobotLab::MCP::Transports::Base (class)">Base</a></span></h3>
-  <p class="inherited"><span class='object_link'><a href="Base.html#config-instance_method" title="RobotLab::MCP::Transports::Base#config (method)">#config</a></span></p>
+  <p class="inherited"><span class='object_link'><a href="Base.html#config-instance_method" title="RobotLab::MCP::Transports::Base#config (method)">#config</a></span>, <span class='object_link'><a href="Base.html#timeout-instance_method" title="RobotLab::MCP::Transports::Base#timeout (method)">#timeout</a></span></p>
 
 
   
@@ -364,6 +369,19 @@
           
         </li>
       
+        <li>
+          <span class="name">:timeout</span>
+          <span class="type">(<tt>Numeric</tt>)</span>
+          <span class="default">
+            
+          </span>
+          
+            &mdash; <div class='inline'>
+<p>request timeout in seconds (default: 15)</p>
+</div>
+          
+        </li>
+      
     </ul>
   
 
@@ -374,17 +392,17 @@
       <pre class="lines">
 
 
-27
-28
-29
 30
 31
 32
 33
-34</pre>
+34
+35
+36
+37</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 27</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 30</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_config'>config</span><span class='rparen'>)</span>
   <span class='kw'>super</span>
@@ -445,30 +463,20 @@
       <pre class="lines">
 
 
-90
-91
-92
-93
-94
-95
-96
-97
-98
-99
-100</pre>
+109
+110
+111
+112
+113
+114</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 90</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 109</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_close'>close</span>
   <span class='kw'>return</span> <span class='kw'>self</span> <span class='kw'>unless</span> <span class='ivar'>@connected</span>
 
-  <span class='ivar'>@stdin</span><span class='op'>&amp;.</span><span class='id identifier rubyid_close'>close</span>
-  <span class='ivar'>@stdout</span><span class='op'>&amp;.</span><span class='id identifier rubyid_close'>close</span>
-  <span class='ivar'>@stderr</span><span class='op'>&amp;.</span><span class='id identifier rubyid_close'>close</span>
-  <span class='ivar'>@wait_thread</span><span class='op'>&amp;.</span><span class='id identifier rubyid_kill'>kill</span> <span class='kw'>if</span> <span class='ivar'>@wait_thread</span><span class='op'>&amp;.</span><span class='id identifier rubyid_alive?'>alive?</span>
-
-  <span class='ivar'>@connected</span> <span class='op'>=</span> <span class='kw'>false</span>
+  <span class='id identifier rubyid_cleanup_process'>cleanup_process</span>
   <span class='kw'>self</span>
 <span class='kw'>end</span></pre>
     </td>
@@ -520,7 +528,7 @@
       
         &mdash;
         <div class='inline'>
-<p>if connection fails</p>
+<p>if the server process cannot be started or does not respond to the MCP initialize handshake within the timeout period</p>
 </div>
       
     </li>
@@ -533,10 +541,6 @@
       <pre class="lines">
 
 
-40
-41
-42
-43
 44
 45
 46
@@ -550,10 +554,25 @@
 54
 55
 56
-57</pre>
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 40</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 44</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connect'>connect</span>
   <span class='kw'>return</span> <span class='kw'>self</span> <span class='kw'>if</span> <span class='ivar'>@connected</span>
@@ -562,16 +581,27 @@
   <span class='id identifier rubyid_args'>args</span> <span class='op'>=</span> <span class='ivar'>@config</span><span class='lbracket'>[</span><span class='symbol'>:args</span><span class='rbracket'>]</span> <span class='op'>||</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
   <span class='id identifier rubyid_env'>env</span> <span class='op'>=</span> <span class='ivar'>@config</span><span class='lbracket'>[</span><span class='symbol'>:env</span><span class='rbracket'>]</span> <span class='op'>||</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
 
-  <span class='comment'># Merge with current environment
-</span>  <span class='id identifier rubyid_full_env'>full_env</span> <span class='op'>=</span> <span class='const'>ENV</span><span class='period'>.</span><span class='id identifier rubyid_to_h'>to_h</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_env'>env</span><span class='period'>.</span><span class='id identifier rubyid_transform_keys'>transform_keys</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_s</span><span class='rparen'>)</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_full_env'>full_env</span> <span class='op'>=</span> <span class='const'>ENV</span><span class='period'>.</span><span class='id identifier rubyid_to_h'>to_h</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_env'>env</span><span class='period'>.</span><span class='id identifier rubyid_transform_keys'>transform_keys</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_s</span><span class='rparen'>)</span><span class='rparen'>)</span>
 
   <span class='ivar'>@stdin</span><span class='comma'>,</span> <span class='ivar'>@stdout</span><span class='comma'>,</span> <span class='ivar'>@stderr</span><span class='comma'>,</span> <span class='ivar'>@wait_thread</span> <span class='op'>=</span> <span class='const'>Open3</span><span class='period'>.</span><span class='id identifier rubyid_popen3'>popen3</span><span class='lparen'>(</span><span class='id identifier rubyid_full_env'>full_env</span><span class='comma'>,</span> <span class='id identifier rubyid_command'>command</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+
+  <span class='comment'># Verify the process actually started
+</span>  <span class='kw'>unless</span> <span class='ivar'>@wait_thread</span><span class='period'>.</span><span class='id identifier rubyid_alive?'>alive?</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>MCP server process exited immediately (command: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_command'>command</span><span class='embexpr_end'>}</span><span class='tstring_content'>)</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+
   <span class='ivar'>@connected</span> <span class='op'>=</span> <span class='kw'>true</span>
 
-  <span class='comment'># Initialize MCP protocol
+  <span class='comment'># Initialize MCP protocol — this must complete within the timeout
 </span>  <span class='id identifier rubyid_send_initialize'>send_initialize</span>
 
   <span class='kw'>self</span>
+<span class='kw'>rescue</span> <span class='const'>Errno</span><span class='op'>::</span><span class='const'>ENOENT</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_e'>e</span>
+  <span class='id identifier rubyid_cleanup_process'>cleanup_process</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>MCP server command not found: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_command'>command</span><span class='embexpr_end'>}</span><span class='tstring_content'> (</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_e'>e</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span><span class='embexpr_end'>}</span><span class='tstring_content'>)</span><span class='tstring_end'>&quot;</span></span>
+<span class='kw'>rescue</span> <span class='const'>Timeout</span><span class='op'>::</span><span class='const'>Error</span>
+  <span class='id identifier rubyid_cleanup_process'>cleanup_process</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>MCP server &#39;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_command'>command</span><span class='embexpr_end'>}</span><span class='tstring_content'>&#39; did not respond within </span><span class='embexpr_beg'>#{</span><span class='ivar'>@timeout</span><span class='embexpr_end'>}</span><span class='tstring_content'>s</span><span class='tstring_end'>&quot;</span></span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -622,12 +652,12 @@
       <pre class="lines">
 
 
-105
-106
-107</pre>
+119
+120
+121</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 105</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 119</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connected?'>connected?</span>
   <span class='ivar'>@connected</span> <span class='op'>&amp;&amp;</span> <span class='ivar'>@wait_thread</span><span class='op'>&amp;.</span><span class='id identifier rubyid_alive?'>alive?</span>
@@ -706,7 +736,7 @@
       
         &mdash;
         <div class='inline'>
-<p>if not connected or no response</p>
+<p>if not connected, no response, or timeout</p>
 </div>
       
     </li>
@@ -719,53 +749,61 @@
       <pre class="lines">
 
 
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
 79
 80
 81
 82
 83
 84
-85</pre>
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 64</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/transports/stdio.rb', line 79</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_send_request'>send_request</span><span class='lparen'>(</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Not connected</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='ivar'>@connected</span>
 
-  <span class='comment'># Write JSON-RPC message
-</span>  <span class='id identifier rubyid_json'>json</span> <span class='op'>=</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_to_json'>to_json</span>
-  <span class='ivar'>@stdin</span><span class='period'>.</span><span class='id identifier rubyid_puts'>puts</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='rparen'>)</span>
-  <span class='ivar'>@stdin</span><span class='period'>.</span><span class='id identifier rubyid_flush'>flush</span>
+  <span class='const'>Timeout</span><span class='period'>.</span><span class='id identifier rubyid_timeout'>timeout</span><span class='lparen'>(</span><span class='ivar'>@timeout</span><span class='comma'>,</span> <span class='const'>Timeout</span><span class='op'>::</span><span class='const'>Error</span><span class='rparen'>)</span> <span class='kw'>do</span>
+    <span class='id identifier rubyid_json'>json</span> <span class='op'>=</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_to_json'>to_json</span>
+    <span class='ivar'>@stdin</span><span class='period'>.</span><span class='id identifier rubyid_puts'>puts</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='rparen'>)</span>
+    <span class='ivar'>@stdin</span><span class='period'>.</span><span class='id identifier rubyid_flush'>flush</span>
 
-  <span class='comment'># Read response, skipping notifications
-</span>  <span class='id identifier rubyid_loop'>loop</span> <span class='kw'>do</span>
-    <span class='id identifier rubyid_response_line'>response_line</span> <span class='op'>=</span> <span class='ivar'>@stdout</span><span class='period'>.</span><span class='id identifier rubyid_gets'>gets</span>
-    <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>No response from MCP server</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_response_line'>response_line</span>
+    <span class='id identifier rubyid_loop'>loop</span> <span class='kw'>do</span>
+      <span class='id identifier rubyid_response_line'>response_line</span> <span class='op'>=</span> <span class='ivar'>@stdout</span><span class='period'>.</span><span class='id identifier rubyid_gets'>gets</span>
+      <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>No response from MCP server (EOF on stdout)</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_response_line'>response_line</span>
 
-    <span class='id identifier rubyid_parsed'>parsed</span> <span class='op'>=</span> <span class='const'>JSON</span><span class='period'>.</span><span class='id identifier rubyid_parse'>parse</span><span class='lparen'>(</span><span class='id identifier rubyid_response_line'>response_line</span><span class='comma'>,</span> <span class='label'>symbolize_names:</span> <span class='kw'>true</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_parsed'>parsed</span> <span class='op'>=</span> <span class='const'>JSON</span><span class='period'>.</span><span class='id identifier rubyid_parse'>parse</span><span class='lparen'>(</span><span class='id identifier rubyid_response_line'>response_line</span><span class='comma'>,</span> <span class='label'>symbolize_names:</span> <span class='kw'>true</span><span class='rparen'>)</span>
 
-    <span class='comment'># Skip notifications (messages without an id)
-</span>    <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_parsed'>parsed</span><span class='lbracket'>[</span><span class='symbol'>:method</span><span class='rbracket'>]</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_parsed'>parsed</span><span class='period'>.</span><span class='id identifier rubyid_key?'>key?</span><span class='lparen'>(</span><span class='symbol'>:id</span><span class='rparen'>)</span>
+      <span class='comment'># Skip notifications (messages without an id)
+</span>      <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_parsed'>parsed</span><span class='lbracket'>[</span><span class='symbol'>:method</span><span class='rbracket'>]</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_parsed'>parsed</span><span class='period'>.</span><span class='id identifier rubyid_key?'>key?</span><span class='lparen'>(</span><span class='symbol'>:id</span><span class='rparen'>)</span>
 
-    <span class='comment'># Return responses (messages with an id)
-</span>    <span class='kw'>return</span> <span class='id identifier rubyid_parsed'>parsed</span>
+      <span class='kw'>return</span> <span class='id identifier rubyid_parsed'>parsed</span>
+    <span class='kw'>end</span>
   <span class='kw'>end</span>
+<span class='kw'>rescue</span> <span class='const'>Timeout</span><span class='op'>::</span><span class='const'>Error</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>MCP server did not respond within </span><span class='embexpr_beg'>#{</span><span class='ivar'>@timeout</span><span class='embexpr_end'>}</span><span class='tstring_content'>s</span><span class='tstring_end'>&quot;</span></span>
+<span class='kw'>rescue</span> <span class='const'>Errno</span><span class='op'>::</span><span class='const'>EPIPE</span><span class='comma'>,</span> <span class='const'>IOError</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_e'>e</span>
+  <span class='ivar'>@connected</span> <span class='op'>=</span> <span class='kw'>false</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'><span class='object_link'><a href="../../MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>MCP server connection lost: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_e'>e</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -777,7 +815,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Feb 22 21:53:39 2026 by
+  Generated on Wed Feb 25 05:48:34 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

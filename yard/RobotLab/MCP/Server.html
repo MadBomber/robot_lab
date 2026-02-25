@@ -164,6 +164,22 @@
         </dt>
         <dd><pre class="code"><span class='qwords_beg'>%w[</span><span class='tstring_content'>stdio</span><span class='words_sep'> </span><span class='tstring_content'>sse</span><span class='words_sep'> </span><span class='tstring_content'>ws</span><span class='words_sep'> </span><span class='tstring_content'>websocket</span><span class='words_sep'> </span><span class='tstring_content'>streamable-http</span><span class='words_sep'> </span><span class='tstring_content'>http</span><span class='tstring_end'>]</span></span><span class='period'>.</span><span class='id identifier rubyid_freeze'>freeze</span></pre></dd>
       
+        <dt id="DEFAULT_TIMEOUT-constant" class="">DEFAULT_TIMEOUT =
+          <div class="docstring">
+  <div class="discussion">
+    
+<p>Default timeout for MCP requests (in seconds)</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+        </dt>
+        <dd><pre class="code"><span class='int'>15</span></pre></dd>
+      
     </dl>
   
 
@@ -205,7 +221,7 @@
       <li class="public ">
   <span class="summary_signature">
     
-      <a href="#transport-instance_method" title="#transport (instance method)">#<strong>transport</strong>  &#x21d2; Object </a>
+      <a href="#timeout-instance_method" title="#timeout (instance method)">#<strong>timeout</strong>  &#x21d2; Object </a>
     
 
     
@@ -225,7 +241,36 @@
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Returns the value of attribute transport.</p>
+<p>Returns the value of attribute timeout.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#transport-instance_method" title="#transport (instance method)">#<strong>transport</strong>  &#x21d2; Hash </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>The transport configuration.</p>
 </div></span>
   
 </li>
@@ -247,7 +292,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, transport:)  &#x21d2; Server </a>
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, transport:, timeout: nil, **_extra)  &#x21d2; Server </a>
     
 
     
@@ -327,7 +372,7 @@
     <div class="method_details first">
   <h3 class="signature first" id="initialize-instance_method">
   
-    #<strong>initialize</strong>(name:, transport:)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::MCP::Server (class)">Server</a></span></tt> 
+    #<strong>initialize</strong>(name:, transport:, timeout: nil, **_extra)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::MCP::Server (class)">Server</a></span></tt> 
   
 
   
@@ -377,6 +422,40 @@
       
     </li>
   
+    <li>
+      
+        <span class='name'>timeout</span>
+      
+      
+        <span class='type'>(<tt>Numeric</tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>request timeout in seconds (default: 15)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>_extra</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>additional keys are silently ignored for forward compatibility</p>
+</div>
+      
+    </li>
+  
 </ul>
 
 <p class="tag_title">Raises:</p>
@@ -404,18 +483,20 @@
       <pre class="lines">
 
 
-38
-39
-40
-41
-42</pre>
+45
+46
+47
+48
+49
+50</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 38</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 45</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>transport:</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>transport:</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid__extra'>_extra</span><span class='rparen'>)</span>
   <span class='ivar'>@name</span> <span class='op'>=</span> <span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
   <span class='ivar'>@transport</span> <span class='op'>=</span> <span class='id identifier rubyid_normalize_transport'>normalize_transport</span><span class='lparen'>(</span><span class='id identifier rubyid_transport'>transport</span><span class='rparen'>)</span>
+  <span class='ivar'>@timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_normalize_timeout'>normalize_timeout</span><span class='lparen'>(</span><span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_validate!'>validate!</span>
 <span class='kw'>end</span></pre>
     </td>
@@ -474,12 +555,12 @@
       <pre class="lines">
 
 
-31
-32
-33</pre>
+36
+37
+38</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 31</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_name'>name</span>
   <span class='ivar'>@name</span>
@@ -492,9 +573,9 @@
       
       <span id=""></span>
       <div class="method_details ">
-  <h3 class="signature " id="transport-instance_method">
+  <h3 class="signature " id="timeout-instance_method">
   
-    #<strong>transport</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+    #<strong>timeout</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
   
 
   
@@ -503,7 +584,7 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Returns the value of attribute transport.</p>
+<p>Returns the value of attribute timeout.</p>
 
 
   </div>
@@ -517,12 +598,69 @@
       <pre class="lines">
 
 
-31</pre>
+36</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 31</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
 
-<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span></pre>
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="transport-instance_method">
+  
+    #<strong>transport</strong>  &#x21d2; <tt>Hash</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the transport configuration.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the transport configuration</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+36</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
+
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span></pre>
     </td>
   </tr>
 </table>
@@ -574,20 +712,22 @@
       <pre class="lines">
 
 
-54
-55
-56
-57
-58
-59</pre>
+62
+63
+64
+65
+66
+67
+68</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 54</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 62</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
     <span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
-    <span class='label'>transport:</span> <span class='id identifier rubyid_transport'>transport</span>
+    <span class='label'>transport:</span> <span class='id identifier rubyid_transport'>transport</span><span class='comma'>,</span>
+    <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span>
   <span class='rbrace'>}</span>
 <span class='kw'>end</span></pre>
     </td>
@@ -639,12 +779,12 @@
       <pre class="lines">
 
 
-47
-48
-49</pre>
+55
+56
+57</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 47</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 55</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_transport_type'>transport_type</span>
   <span class='ivar'>@transport</span><span class='lbracket'>[</span><span class='symbol'>:type</span><span class='rbracket'>]</span>
@@ -659,7 +799,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Feb 22 21:53:38 2026 by
+  Generated on Wed Feb 25 05:48:34 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

@@ -61,34 +61,38 @@
 <h1 id="label-RobotLab">RobotLab</h1>
 
 <blockquote>
-<p>[!CAUTION] This gem is under active development. APIs and features may change without notice. See the <a href="CHANGELOG_md.html">CHANGELOG</a> for details. <br> &lt;table&gt; &lt;tr&gt; &lt;td width=“50%” align=“center” valign=“top”&gt; &lt;img src=“docs/assets/images/robot_lab.jpg” alt=“RobotLab”&gt;<br> <em>“Build robots. Solve problems.”</em> &lt;/td&gt; &lt;td width=“50%” valign=“top”&gt; &lt;strong&gt;Multi-robot LLM workflow orchestration for Ruby&lt;/strong&gt;<br> RobotLab enables you to build sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own system prompt, tools, and capabilities.<br> &lt;strong&gt;Key Features&lt;/strong&gt;<br></p>
+<p>[!INFO] See the <a href="CHANGELOG_md.html">CHANGELOG</a> for the latest changes. The <a href="examples/README_md.html">examples directory has a good cross section of demo apps</a> that show-off the various capabilities of the RobotLab library.</p>
 </blockquote>
+
+<p><br> &lt;table&gt; &lt;tr&gt; &lt;td width=“50%” align=“center” valign=“top”&gt; &lt;img src=“docs/assets/images/robot_lab.jpg” alt=“RobotLab”&gt;<br> <em>“Build robots. Solve problems.”</em> &lt;/td&gt; &lt;td width=“50%” valign=“top”&gt; &lt;strong&gt;Key Features&lt;/strong&gt;<br></p>
 <ul><li>
 <p>&lt;strong&gt;Multi-Robot Architecture&lt;/strong&gt; - Build with specialized AI agents<br></p>
 </li><li>
 <p>&lt;strong&gt;Network Orchestration&lt;/strong&gt; - Connect robots with flexible routing<br></p>
 </li><li>
-<p>&lt;strong&gt;Composable Skills&lt;/strong&gt; - Mix reusable behaviors into any robot<br></p>
+<p>&lt;strong&gt;Prompt Templates&lt;/strong&gt; - Self-contained .md files with YAML front matter<br></p>
 </li><li>
-<p>&lt;strong&gt;Extensible Tools&lt;/strong&gt; - Give robots custom capabilities with graceful error handling<br></p>
+<p>&lt;strong&gt;Composable Skills&lt;/strong&gt; - Mix reusable prompt behaviors into any robot<br></p>
 </li><li>
-<p>&lt;strong&gt;Content Streaming&lt;/strong&gt; - Stream LLM responses via stored callbacks or per-call blocks<br></p>
+<p>&lt;strong&gt;Extensible Tools&lt;/strong&gt; - Custom capabilities with graceful error handling<br></p>
+</li><li>
+<p>&lt;strong&gt;Human-in-the-Loop&lt;/strong&gt; - AskUser tool for interactive prompting<br></p>
+</li><li>
+<p>&lt;strong&gt;Content Streaming&lt;/strong&gt; - Stored callbacks, per-call blocks, or both<br></p>
 </li><li>
 <p>&lt;strong&gt;MCP Integration&lt;/strong&gt; - Connect to external tool servers<br></p>
 </li><li>
 <p>&lt;strong&gt;Shared Memory&lt;/strong&gt; - Reactive key-value store with subscriptions<br></p>
 </li><li>
-<p>&lt;strong&gt;Conversation History&lt;/strong&gt; - Persist and restore threads<br></p>
-</li><li>
 <p>&lt;strong&gt;Message Bus&lt;/strong&gt; - Bidirectional robot communication via TypedBus<br></p>
 </li><li>
 <p>&lt;strong&gt;Dynamic Spawning&lt;/strong&gt; - Robots create new robots at runtime<br></p>
 </li><li>
-<p>&lt;strong&gt;Streaming&lt;/strong&gt; - Real-time event streaming<br></p>
+<p>&lt;strong&gt;Layered Configuration&lt;/strong&gt; - Cascading YAML, env vars, and RunConfig<br></p>
 </li><li>
-<p>&lt;strong&gt;Rails Integration&lt;/strong&gt; - Generators and ActiveRecord support &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
+<p>&lt;strong&gt;Rails Integration&lt;/strong&gt; - Generators, background jobs, Turbo Stream broadcasting &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
 </li></ul>
-
+<p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) snd explore the [many examples](examples/README.md) available as working demo applications.</p>
 <h2 id="label-Installation">Installation</h2>
 
 <pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_add'>add</span> <span class='id identifier rubyid_robot_lab'>robot_lab</span>
@@ -668,7 +672,7 @@ You are a support agent for &lt;%= company %&gt;.
 </div></div>
 
       <div id="footer">
-  Generated on Sun Feb 22 21:53:37 2026 by
+  Generated on Wed Feb 25 05:48:32 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
