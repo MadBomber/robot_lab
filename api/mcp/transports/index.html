@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -2908,24 +2908,29 @@
 <h2 id="base-interface">Base Interface<a class="headerlink" href="#base-interface" title="Permanent link">&para;</a></h2>
 <p>All transports inherit from <code>RobotLab::MCP::Transports::Base</code> and implement:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">Base</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:config</span><span class="w">  </span><span class="c1"># =&gt; Hash (symbolized keys)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="no">DEFAULT_TIMEOUT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span><span class="w">  </span><span class="c1"># seconds</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="w">        </span><span class="c1"># Establish connection, returns self</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">send_request</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="w">  </span><span class="c1"># Send JSON-RPC message, returns Hash response</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="w">          </span><span class="c1"># Close connection, returns self</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">connected?</span><span class="w">     </span><span class="c1"># Returns Boolean</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">end</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:config</span><span class="w">   </span><span class="c1"># =&gt; Hash (symbolized keys, :timeout removed)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:timeout</span><span class="w">  </span><span class="c1"># =&gt; Numeric (seconds, extracted from config)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="w">        </span><span class="c1"># Establish connection, returns self</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">send_request</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="w">  </span><span class="c1"># Send JSON-RPC message, returns Hash response</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="w">          </span><span class="c1"># Close connection, returns self</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">connected?</span><span class="w">     </span><span class="c1"># Returns Boolean</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>The <code>timeout</code> is extracted from the config hash during initialization (and removed from <code>config</code>). If not provided, it defaults to <code>DEFAULT_TIMEOUT</code> (15 seconds). The timeout is propagated from <code>MCP::Server</code> through <code>MCP::Client</code> to the transport.</p>
 <h2 id="stdio-transport">Stdio Transport<a class="headerlink" href="#stdio-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::Stdio</code></p>
-<p>Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (one per line). Automatically sends MCP <code>initialize</code> and <code>notifications/initialized</code> on connect.</p>
+<p>Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (one per line). Automatically sends MCP <code>initialize</code> and <code>notifications/initialized</code> on connect. All blocking I/O is wrapped with <code>Timeout.timeout</code> so a missing or hung server cannot block the caller forever.</p>
 <h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-filesystem&quot;</span><span class="p">,</span><span class="w">      </span><span class="c1"># Required: executable command</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="ss">args</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;--root&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/data&quot;</span><span class="o">]</span><span class="p">,</span><span class="w">             </span><span class="c1"># Optional: command arguments</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;DEBUG&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1"># Optional: environment variables</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;DEBUG&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="w"> </span><span class="p">},</span><span class="w">            </span><span class="c1"># Optional: environment variables</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">                            </span><span class="c1"># Optional: request timeout in seconds (default: 15)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -2955,26 +2960,36 @@
 <td>No</td>
 <td>Environment variables (merged with current env)</td>
 </tr>
+<tr>
+<td><code>timeout</code></td>
+<td><code>Numeric</code></td>
+<td>No</td>
+<td>Request timeout in seconds (default: 15)</td>
+</tr>
 </tbody>
 </table>
 <h3 id="behavior">Behavior<a class="headerlink" href="#behavior" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Uses <code>Open3.popen3</code> to spawn the subprocess</li>
+<li>Verifies the process actually started (raises <code>MCPError</code> if it exits immediately)</li>
 <li>Writes JSON-RPC messages to stdin (one per line)</li>
 <li>Reads responses from stdout, skipping notifications (messages without <code>id</code>)</li>
+<li>All blocking reads are wrapped with <code>Timeout.timeout</code> — raises <code>MCPError</code> if the server does not respond within the timeout period</li>
 <li><code>connected?</code> returns <code>true</code> when the subprocess is alive</li>
-<li><code>close</code> terminates stdin, stdout, stderr, and kills the subprocess</li>
+<li><code>close</code> calls <code>cleanup_process</code> to reliably close stdin, stdout, stderr and kill the subprocess</li>
+<li>Handles <code>Errno::ENOENT</code> (command not found), <code>Errno::EPIPE</code> / <code>IOError</code> (broken pipe / connection lost), and <code>Timeout::Error</code> (hung server) with clear error messages</li>
 </ul>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">Stdio</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-filesystem&quot;</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">args</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;--root&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/data&quot;</span><span class="o">]</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;DEBUG&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">transport</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;DEBUG&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;true&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">transport</span><span class="o">.</span><span class="n">connect</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
 </span></code></pre></div>
 <h2 id="websocket-transport">WebSocket Transport<a class="headerlink" href="#websocket-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::WebSocket</code></p>
@@ -3161,7 +3176,11 @@
 <p>Specific error cases:
 - <strong>Not connected</strong> -- calling <code>send_request</code> before <code>connect</code> raises <code>MCPError</code>
 - <strong>Missing gem</strong> -- WebSocket, SSE, and HTTP transports raise <code>MCPError</code> with a <code>LoadError</code> message if required gems are not installed
-- <strong>No response</strong> -- Stdio transport raises <code>MCPError</code> if the subprocess produces no output</p>
+- <strong>No response</strong> -- Stdio transport raises <code>MCPError</code> if the subprocess produces no output (EOF on stdout)
+- <strong>Command not found</strong> -- Stdio transport raises <code>MCPError</code> with the original <code>Errno::ENOENT</code> message
+- <strong>Timeout</strong> -- Stdio transport raises <code>MCPError</code> if the server does not respond within the configured timeout
+- <strong>Broken pipe</strong> -- Stdio transport raises <code>MCPError</code> and marks itself disconnected on <code>Errno::EPIPE</code> or <code>IOError</code>
+- <strong>Immediate exit</strong> -- Stdio transport raises <code>MCPError</code> if the server process exits immediately after spawn</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../">MCP Overview</a></li>

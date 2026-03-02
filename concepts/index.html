@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -2846,6 +2846,7 @@
 <li><strong>Template</strong>: A <code>.md</code> file with YAML front matter managed by prompt_manager, referenced by symbol</li>
 <li><strong>System Prompt</strong>: Inline instructions (can be used alone or combined with a template)</li>
 <li><strong>Model</strong>: The LLM model to use (defaults to <code>RobotLab.config.ruby_llm.model</code>)</li>
+<li><strong>Provider</strong>: Optional LLM provider for local models (Ollama, GPUStack, etc.)</li>
 <li><strong>Skills</strong>: Composable template behaviors prepended before the main template</li>
 <li><strong>Local Tools</strong>: <code>RubyLLM::Tool</code> subclasses or <code>RobotLab::Tool</code> instances (with automatic error handling)</li>
 <li><strong>Streaming</strong>: Real-time content via stored <code>on_content</code> callback or per-call block</li>
@@ -3014,12 +3015,15 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1"># =&gt; &quot;Hi there!&quot; (String or nil)</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1"># =&gt; [TextMessage, ...] array of output messages</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1"># =&gt; [] array of tool call results</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1"># =&gt; &quot;assistant&quot;</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1"># =&gt; &quot;end_turn&quot; or nil</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1"># =&gt; false</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1"># =&gt; &quot;a1b2c3d4...&quot; (for dedup)</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">              </span><span class="c1"># =&gt; alias for last_text_content</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1"># =&gt; [TextMessage, ...] array of output messages</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1"># =&gt; [] array of tool call results</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1"># =&gt; &quot;assistant&quot;</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1"># =&gt; &quot;end_turn&quot; or nil</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1"># =&gt; false</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1"># =&gt; &quot;a1b2c3d4...&quot; (for dedup)</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="w">           </span><span class="c1"># =&gt; Float or nil (elapsed seconds, set in pipeline execution)</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">result</span><span class="o">.</span><span class="n">raw</span><span class="w">                </span><span class="c1"># =&gt; raw LLM response object</span>
 </span></code></pre></div>
 <h2 id="memory">Memory<a class="headerlink" href="#memory" title="Permanent link">&para;</a></h2>
 <p><strong>Memory</strong> is a reactive key-value store that provides persistent storage across robot executions. Standalone robots use their own inherent memory; robots in a network share the network's memory.</p>
