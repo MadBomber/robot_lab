@@ -291,6 +291,24 @@ network = RobotLab.create_network(name: "multi_analysis") do
 end
 ```
 
+### Pipeline Error Resilience
+
+When a robot raises an exception during pipeline execution, the error is caught and wrapped in a `RobotResult` with the error message as content. This ensures one failing robot does not crash the entire network:
+
+```ruby
+# If billing_robot raises an error, the network continues
+# The error is available in the result context:
+result = network.run(message: "Process this")
+billing_result = result.context[:billing]
+
+if billing_result&.last_text_content&.start_with?("Error:")
+  puts "Billing failed: #{billing_result.last_text_content}"
+  puts "Took: #{billing_result.duration}s"
+end
+```
+
+Each robot's `RobotResult` includes a `duration` field (elapsed seconds) that is set automatically during pipeline execution, even for errored results.
+
 ### Conditional Continuation
 
 A robot can halt execution early:

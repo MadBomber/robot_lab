@@ -12,6 +12,7 @@ Each robot has:
 - **Template**: A `.md` file with YAML front matter managed by prompt_manager, referenced by symbol
 - **System Prompt**: Inline instructions (can be used alone or combined with a template)
 - **Model**: The LLM model to use (defaults to `RobotLab.config.ruby_llm.model`)
+- **Provider**: Optional LLM provider for local models (Ollama, GPUStack, etc.)
 - **Skills**: Composable template behaviors prepended before the main template
 - **Local Tools**: `RubyLLM::Tool` subclasses or `RobotLab::Tool` instances (with automatic error handling)
 - **Streaming**: Real-time content via stored `on_content` callback or per-call block
@@ -195,12 +196,15 @@ tool = RobotLab::Tool.create(
 result = robot.run("Hello!")
 
 result.last_text_content  # => "Hi there!" (String or nil)
+result.reply              # => alias for last_text_content
 result.output             # => [TextMessage, ...] array of output messages
 result.tool_calls         # => [] array of tool call results
 result.robot_name         # => "assistant"
 result.stop_reason        # => "end_turn" or nil
 result.has_tool_calls?    # => false
 result.checksum           # => "a1b2c3d4..." (for dedup)
+result.duration           # => Float or nil (elapsed seconds, set in pipeline execution)
+result.raw                # => raw LLM response object
 ```
 
 ## Memory

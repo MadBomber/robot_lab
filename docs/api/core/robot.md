@@ -23,6 +23,7 @@ Robot.new(
   description: nil,
   local_tools: [],
   model: nil,
+  provider: nil,
   mcp_servers: [],
   mcp: :none,
   tools: :none,
@@ -54,6 +55,7 @@ Robot.new(
 | `description` | `String`, `nil` | `nil` | Human-readable description of what the robot does |
 | `local_tools` | `Array` | `[]` | Tools defined locally (`RubyLLM::Tool` subclasses or `RobotLab::Tool` instances) |
 | `model` | `String`, `nil` | `nil` | LLM model ID (falls back to `RobotLab.config.ruby_llm.model`) |
+| `provider` | `String`, `Symbol`, `nil` | `nil` | LLM provider for local providers (e.g., `:ollama`, `:gpustack`). Automatically sets `assume_model_exists: true` |
 | `mcp_servers` | `Array` | `[]` | Legacy MCP server configurations |
 | `mcp` | `Symbol`, `Array` | `:none` | Hierarchical MCP config (`:none`, `:inherit`, or server array) |
 | `tools` | `Symbol`, `Array` | `:none` | Hierarchical tools config (`:none`, `:inherit`, or tool name array) |
@@ -101,6 +103,7 @@ If `name` is omitted, it defaults to `"robot"`.
 | `template` | `Symbol`, `nil` | Prompt template identifier |
 | `system_prompt` | `String`, `nil` | Inline system prompt |
 | `skills` | `Array<Symbol>`, `nil` | Constructor-provided skill template IDs (nil if none) |
+| `provider` | `String`, `nil` | LLM provider name (e.g., `"ollama"`) — set when using local providers |
 | `local_tools` | `Array` | Locally defined tools |
 | `mcp_clients` | `Hash<String, MCP::Client>` | Connected MCP clients, keyed by server name |
 | `mcp_tools` | `Array<Tool>` | Tools discovered from MCP servers |
@@ -239,7 +242,9 @@ robot.call(result)
 # => SimpleFlow::Result
 ```
 
-SimpleFlow step interface. Extracts the message from `result.context[:run_params]`, calls `run`, and wraps the output in a continued `SimpleFlow::Result`.
+SimpleFlow step interface. Extracts the message from `result.context[:run_params]`, calls `run`, and wraps the output in a continued `SimpleFlow::Result`. Automatically records `RobotResult#duration` (elapsed seconds).
+
+If the robot raises any exception during execution, the error is caught and wrapped in a `RobotResult` with the error message as content. This ensures one failing robot does not crash the entire network pipeline.
 
 Override this method in subclasses for custom routing logic (e.g., classifiers).
 
@@ -400,6 +405,142 @@ bot = RobotLab.build(name: "bot").with_bus
 bot.with_bus(bus1)  # joins bus1
 bot.with_bus(bus2)  # leaves bus1, joins bus2
 ```
+
+### connect_mcp!
+
+```ruby
+robot.connect_mcp!
+# => self
+```
+
+Eagerly connect to configured MCP servers and discover tools. Normally MCP connections are lazy (established on first `run`). Call this to connect early, e.g., to display connection status at startup.
+
+**Returns:** `self`
+
+### failed_mcp_server_names
+
+```ruby
+robot.failed_mcp_server_names
+# => Array<String>
+```
+
+Returns server names that failed to connect. Useful for displaying connection status or deciding whether to retry.
+
+### inject_mcp!
+
+```ruby
+robot.inject_mcp!(clients: mcp_clients, tools: mcp_tools)
+# => self
+```
+
+Inject pre-connected MCP clients and their tools into this robot. Used by host applications that manage MCP connections externally and need to pass them to robots without re-connecting.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `clients` | `Hash<String, MCP::Client>` | Connected MCP clients keyed by server name |
+| `tools` | `Array<Tool>` | Tools discovered from the MCP servers |
+
+**Returns:** `self`
+
+**Example:**
+
+```ruby
+# Host app manages MCP connections
+clients = { "github" => github_client }
+tools   = github_client.list_tools.map { |t| RobotLab::Tool.from_mcp(t) }
+
+robot.inject_mcp!(clients: clients, tools: tools)
+```
+
+### chat
+
+```ruby
+robot.chat
+# => RubyLLM::Chat
+```
+
+Access the underlying `RubyLLM::Chat` instance. Useful for checkpoint/restore operations that need direct access to conversation state.
+
+### messages
+
+```ruby
+robot.messages
+# => Array<RubyLLM::Message>
+```
+
+Return the conversation messages from the underlying chat.
+
+### clear_messages
+
+```ruby
+robot.clear_messages(keep_system: true)
+# => self
+```
+
+Clear conversation messages, optionally keeping the system prompt.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `keep_system` | `Boolean` | `true` | Whether to preserve the system message |
+
+**Returns:** `self`
+
+### replace_messages
+
+```ruby
+robot.replace_messages(messages)
+# => self
+```
+
+Replace conversation messages with a saved set. Useful for checkpoint/restore workflows.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `messages` | `Array<RubyLLM::Message>` | The messages to restore |
+
+**Returns:** `self`
+
+**Example:**
+
+```ruby
+# Save a checkpoint
+saved = robot.messages.dup
+
+# ... later, restore it
+robot.replace_messages(saved)
+```
+
+### chat_provider
+
+```ruby
+robot.chat_provider
+# => String or nil
+```
+
+Return the provider for this robot's chat. Useful for displaying model/provider info without reaching into chat internals.
+
+### mcp_client
+
+```ruby
+robot.mcp_client("github")
+# => MCP::Client or nil
+```
+
+Find an MCP client by server name.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `server_name` | `String` | The MCP server name |
+
+**Returns:** `MCP::Client` or `nil`
 
 ### disconnect
 
@@ -651,6 +792,18 @@ robot = RobotLab.build(
   local_tools: [Calculator]
 )
 result = robot.run("What is 15 * 7?")
+```
+
+### Robot with Local Provider
+
+```ruby
+robot = RobotLab.build(
+  name: "local_bot",
+  model: "llama3.2",
+  provider: :ollama,
+  system_prompt: "You are helpful."
+)
+result = robot.run("Hello!")
 ```
 
 ### Robot with MCP

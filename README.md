@@ -20,7 +20,8 @@
 - <strong>Extensible Tools</strong> - Custom capabilities with graceful error handling<br>
 - <strong>Human-in-the-Loop</strong> - AskUser tool for interactive prompting<br>
 - <strong>Content Streaming</strong> - Stored callbacks, per-call blocks, or both<br>
-- <strong>MCP Integration</strong> - Connect to external tool servers<br>
+- <strong>MCP Integration</strong> - Connect to external tool servers with timeouts and retry<br>
+- <strong>Local LLM Providers</strong> - Ollama, GPUStack, LM Studio via provider passthrough<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
@@ -69,6 +70,19 @@ result = robot.run("What is the capital of France?")
 
 puts result.last_text_content
 # => "The capital of France is Paris."
+```
+
+### Local LLM Providers
+
+For local LLM providers (Ollama, GPUStack, LM Studio, etc.), use the `provider:` parameter:
+
+```ruby
+robot = RobotLab.build(
+  name: "local_bot",
+  model: "llama3.2",
+  provider: :ollama,
+  system_prompt: "You are a helpful assistant."
+)
 ```
 
 ### Configuration
@@ -443,14 +457,15 @@ puts result.value.last_text_content
 Connect to external tool servers via Model Context Protocol:
 
 ```ruby
-# Configure MCP server
+# Configure MCP server (with optional timeout)
 filesystem_server = {
   name: "filesystem",
   transport: {
     type: "stdio",
     command: "mcp-server-filesystem",
     args: ["/path/to/allowed/directory"]
-  }
+  },
+  timeout: 30  # seconds (default: 15)
 }
 
 # Create robot with MCP server - tools are auto-discovered
@@ -460,9 +475,17 @@ robot = RobotLab.build(
   mcp: [filesystem_server]
 )
 
+# Optionally connect eagerly (default is lazy on first run)
+robot.connect_mcp!
+
+# Check connection status
+puts "Failed: #{robot.failed_mcp_server_names}" if robot.failed_mcp_server_names.any?
+
 # Robot can now use filesystem tools
 result = robot.run("List the files in the current directory")
 ```
+
+MCP connections are resilient: failed servers are automatically retried on subsequent `run()` calls, and one failing server does not prevent others from connecting.
 
 ## Message Bus
 

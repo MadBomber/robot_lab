@@ -50,6 +50,21 @@ robot = RobotLab.build(
 )
 ```
 
+### Provider
+
+For local LLM providers (Ollama, GPUStack, LM Studio, etc.), use the `provider:` parameter. This tells RubyLLM to skip model validation and connect directly:
+
+```ruby
+robot = RobotLab.build(
+  name: "local_bot",
+  model: "llama3.2",
+  provider: :ollama,
+  system_prompt: "You are a helpful assistant."
+)
+```
+
+When `provider:` is set, `assume_model_exists: true` is automatically applied. The provider is available via `robot.provider`.
+
 ### System Prompt
 
 An inline string that defines the robot's personality and behavior:
@@ -479,10 +494,13 @@ The `run` method returns a `RobotResult` with:
 
 ```ruby
 result.last_text_content  # => "Hi there! How can I help?"
+result.reply              # => alias for last_text_content
 result.output             # => Array of output messages
 result.tool_calls         # => Array of tool call results
 result.robot_name         # => "assistant"
 result.stop_reason        # => stop reason from the LLM
+result.duration           # => Float (elapsed seconds, set in pipeline execution)
+result.raw                # => raw LLM response object
 ```
 
 ### With Runtime Memory

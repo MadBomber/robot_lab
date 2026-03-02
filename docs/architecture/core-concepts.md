@@ -9,7 +9,7 @@ A Robot is the primary unit of computation in RobotLab. It is a subclass of `Rub
 - A unique identity (name, description)
 - A personality (system prompt and/or template)
 - Capabilities (tools, MCP connections)
-- Model and inference configuration
+- Model, provider, and inference configuration
 - Inherent memory (key-value store)
 
 ### Robot Anatomy

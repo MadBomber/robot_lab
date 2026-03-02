@@ -8,6 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-03-02
+
+### Added
+
+- **Provider passthrough** — `provider:` parameter on Robot constructor for local LLM providers (Ollama, GPUStack, etc.)
+  - Automatically sets `assume_model_exists: true` when provider is specified
+  - Exposed via `robot.provider` accessor
+- **MCP request timeouts** — configurable timeout for all MCP transports
+  - `MCP::Server` accepts `timeout:` parameter (default 15s); auto-converts millisecond values
+  - `MCP::Transports::Base` extracts and exposes `timeout` from config
+  - `MCP::Transports::Stdio` wraps all blocking I/O with `Timeout.timeout` — hung servers no longer block the caller forever
+  - Timeout propagated from `MCP::Server` through `MCP::Client` to transport layer
+- **MCP connection resilience** — improved error handling and retry logic
+  - `ensure_mcp_clients` retries previously failed servers on subsequent calls
+  - `@failed_mcp_configs` tracks servers that failed to connect
+  - `robot.failed_mcp_server_names` — query which MCP servers are down
+  - `robot.connect_mcp!` — eagerly connect to MCP servers (normally lazy)
+  - `init_mcp_client` rescues `StandardError` so one bad server doesn't prevent others from connecting
+  - `cleanup_process` in Stdio transport for reliable resource cleanup
+  - Better error messages for command-not-found (`Errno::ENOENT`), broken pipe (`Errno::EPIPE`), and EOF conditions
+- **`robot.inject_mcp!`** — inject pre-connected MCP clients and tools from an external host application
+- **Conversation management APIs** on Robot
+  - `robot.chat` — access the underlying `RubyLLM::Chat` instance
+  - `robot.messages` — return conversation messages
+  - `robot.clear_messages(keep_system:)` — clear history, optionally preserving the system prompt
+  - `robot.replace_messages(messages)` — restore a saved conversation (checkpoint/restore)
+  - `robot.chat_provider` — query the provider name without reaching into chat internals
+  - `robot.mcp_client(server_name)` — find an MCP client by server name
+- **`RobotResult#duration`** — elapsed seconds for a robot run, set automatically during pipeline execution
+- **`RobotResult#raw`** — raw LLM response stored on every result (previously only settable via accessor)
+- **Pipeline error resilience** — `Robot#call` (pipeline step) rescues all exceptions so one failing robot doesn't crash the entire network; error is captured in a `RobotResult` with the elapsed duration
+
+### Changed
+
+- Bumped version to 0.0.9
+- Display `scout_path` in Rusty Circuit example updated to use `output/` subdirectory
+- Updated `onnxruntime` dependency to 0.11.0
+- Updated Gemfile.lock dependencies (erb, minitest, rails-html-sanitizer, json_schemer)
+
 ## [0.0.8] - 2026-02-22
 
 ### Added

@@ -36,6 +36,7 @@ Accepts either a `Server` instance or a Hash configuration. When a Hash is provi
 |-----|------|----------|-------------|
 | `name` | `String` | Yes | Server identifier |
 | `transport` | `Hash` | Yes | Transport configuration (must include `type`) |
+| `timeout` | `Numeric` | No | Request timeout in seconds (default: 15). Propagated to the transport layer |
 
 **Raises:** `ArgumentError` if the config is neither a `Server` nor a `Hash`.
 

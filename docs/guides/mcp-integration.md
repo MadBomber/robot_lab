@@ -101,6 +101,26 @@ Global (RobotLab.config.mcp)
       -> Runtime (robot.run("msg", mcp: [...]))
 ```
 
+## Timeout Configuration
+
+All transports support a configurable request timeout. The default is 15 seconds. Set a custom timeout at the server level:
+
+```ruby
+robot = RobotLab.build(
+  name: "patient_bot",
+  system_prompt: "You help with slow operations.",
+  mcp: [
+    {
+      name: "heavy_server",
+      transport: { type: "stdio", command: "heavy-mcp-server" },
+      timeout: 60  # seconds
+    }
+  ]
+)
+```
+
+Values >= 1000 are auto-converted from milliseconds to seconds. The minimum timeout is 1 second.
+
 ## Transport Types
 
 ### Stdio Transport
@@ -290,6 +310,50 @@ client.list_resources       # => Array of resource definitions
 client.disconnect
 ```
 
+## Connection Resilience
+
+### Eager Connection
+
+By default, MCP connections are lazy — established on the first `run()` call. Use `connect_mcp!` to connect early:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You help with tasks.",
+  mcp: [
+    { name: "github", transport: { type: "stdio", command: "mcp-server-github" } },
+    { name: "filesystem", transport: { type: "stdio", command: "mcp-server-fs" } }
+  ]
+)
+
+robot.connect_mcp!
+
+# Check which servers failed
+if robot.failed_mcp_server_names.any?
+  puts "Failed to connect: #{robot.failed_mcp_server_names.join(', ')}"
+end
+```
+
+### Automatic Retry
+
+Failed MCP servers are automatically retried on subsequent `run()` calls. If a server was down when the robot first connected, it will be retried transparently:
+
+```ruby
+robot.run("First message")       # github connects, filesystem fails
+# ... filesystem comes back up ...
+robot.run("Second message")      # filesystem retried and connects
+```
+
+### Injecting External MCP Clients
+
+Host applications that manage MCP connections externally can inject pre-connected clients into a robot:
+
+```ruby
+robot.inject_mcp!(clients: my_clients, tools: my_tools)
+```
+
+This skips the normal connection process and marks the robot as MCP-initialized.
+
 ## Error Handling
 
 ### Connection Errors
@@ -302,8 +366,16 @@ rescue RobotLab::MCPError => e
 end
 ```
 
-!!! tip
-    MCP connection failures are logged as warnings but do not raise errors by default. The robot will continue without MCP tools if a server is unreachable.
+MCP connection failures are logged as warnings but do not raise errors by default. The robot will continue without MCP tools if a server is unreachable. One failing server does not prevent other servers from connecting.
+
+### Timeout Errors
+
+Stdio transports wrap all blocking I/O with a configurable timeout. If a server does not respond within the timeout period, an `MCPError` is raised with a descriptive message:
+
+```ruby
+# Server that takes too long will raise:
+# RobotLab::MCPError: MCP server 'heavy-server' did not respond within 15s
+```
 
 ## Disconnecting
 

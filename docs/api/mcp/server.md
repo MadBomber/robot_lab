@@ -13,31 +13,42 @@ server = RobotLab::MCP::Server.new(
   name: "filesystem",
   transport: { type: "stdio", command: "mcp-server-filesystem", args: ["--root", "/data"] }
 )
+
+# With custom timeout
+server = RobotLab::MCP::Server.new(
+  name: "slow_server",
+  transport: { type: "stdio", command: "heavy-mcp-server" },
+  timeout: 30
+)
 ```
 
 ## Constructor
 
 ```ruby
-Server.new(name:, transport:)
+Server.new(name:, transport:, timeout: nil, **_extra)
 ```
 
 **Parameters:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| `name` | `String` | Unique server identifier |
-| `transport` | `Hash` | Transport configuration (must include `type`) |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `name` | `String` | **required** | Unique server identifier |
+| `transport` | `Hash` | **required** | Transport configuration (must include `type`) |
+| `timeout` | `Numeric`, `nil` | `15` | Request timeout in seconds. Values >= 1000 are auto-converted from milliseconds. Minimum 1 second |
 
 **Raises:** `ArgumentError` if:
 - The transport type is not one of the valid types
 - A stdio transport is missing the `:command` key
 - A network transport (ws, websocket, sse, streamable-http, http) is missing the `:url` key
 
-## Valid Transport Types
+## Constants
 
 ```ruby
 RobotLab::MCP::Server::VALID_TRANSPORT_TYPES
 # => ["stdio", "sse", "ws", "websocket", "streamable-http", "http"]
+
+RobotLab::MCP::Server::DEFAULT_TIMEOUT
+# => 15  (seconds)
 ```
 
 ## Attributes
@@ -58,6 +69,14 @@ server.transport  # => Hash
 
 The normalized transport configuration hash (keys are symbols, type is downcased).
 
+### timeout
+
+```ruby
+server.timeout  # => Numeric
+```
+
+Request timeout in seconds. Defaults to `DEFAULT_TIMEOUT` (15). Values >= 1000 passed to the constructor are auto-converted from milliseconds to seconds. The minimum is 1 second.
+
 ## Methods
 
 ### transport_type
@@ -71,10 +90,10 @@ Returns the transport type string (e.g., `"stdio"`, `"ws"`, `"sse"`).
 ### to_h
 
 ```ruby
-server.to_h  # => { name: "...", transport: { ... } }
+server.to_h  # => { name: "...", transport: { ... }, timeout: 15 }
 ```
 
-Converts the server configuration to a hash representation.
+Converts the server configuration to a hash representation (includes `timeout`).
 
 ## Transport Configuration Options
 

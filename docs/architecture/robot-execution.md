@@ -164,7 +164,8 @@ def build_result(response, _memory)
     robot_name: @name,
     output: output,
     tool_calls: normalize_tool_calls(tool_calls),
-    stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil
+    stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil,
+    raw: response
   )
 end
 ```
@@ -182,9 +183,12 @@ result.tool_calls       # => [ToolResultMessage, ...]
 result.stop_reason      # => "stop" or nil
 result.created_at       # => Time
 result.id               # => UUID string
+result.duration         # => Float or nil (elapsed seconds, set in pipeline execution)
+result.raw              # => raw LLM response object
 
 # Convenience methods
 result.last_text_content  # => "Hi there!" (last text message content)
+result.reply              # => alias for last_text_content
 result.has_tool_calls?    # => false
 result.stopped?           # => true
 ```
@@ -275,17 +279,31 @@ sequenceDiagram
     Robot-->>SF: result.continue(robot_result)
 ```
 
-The `Task` wrapper deep-merges per-task configuration (context, mcp, tools) before delegating to the robot's `call`. The base `Robot#call` extracts the message and calls `run`:
+The `Task` wrapper deep-merges per-task configuration (context, mcp, tools) before delegating to the robot's `call`. The base `Robot#call` extracts the message, calls `run`, and records the elapsed time in `RobotResult#duration`. If the robot raises any exception, the error is caught and wrapped in a `RobotResult` so one failing robot does not crash the entire pipeline:
 
 ```ruby
 def call(result)
   run_context = extract_run_context(result)
   message = run_context.delete(:message)
+
+  start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
   robot_result = run(message, **run_context)
+  robot_result.duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
   result
     .with_context(@name.to_sym, robot_result)
     .continue(robot_result)
+rescue Exception => e
+  # Error is wrapped in a RobotResult with the elapsed duration
+  error_result = RobotResult.new(
+    robot_name: @name,
+    output: [TextMessage.new(role: 'assistant', content: "Error: #{e.class}: #{e.message}")]
+  )
+  error_result.duration = elapsed
+
+  result
+    .with_context(@name.to_sym, error_result)
+    .continue(error_result)
 end
 ```
 

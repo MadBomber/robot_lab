@@ -21,7 +21,10 @@ All transports inherit from `RobotLab::MCP::Transports::Base` and implement:
 
 ```ruby
 class RobotLab::MCP::Transports::Base
-  attr_reader :config  # => Hash (symbolized keys)
+  DEFAULT_TIMEOUT = 15  # seconds
+
+  attr_reader :config   # => Hash (symbolized keys, :timeout removed)
+  attr_reader :timeout  # => Numeric (seconds, extracted from config)
 
   def connect        # Establish connection, returns self
   def send_request(message)  # Send JSON-RPC message, returns Hash response
@@ -30,11 +33,13 @@ class RobotLab::MCP::Transports::Base
 end
 ```
 
+The `timeout` is extracted from the config hash during initialization (and removed from `config`). If not provided, it defaults to `DEFAULT_TIMEOUT` (15 seconds). The timeout is propagated from `MCP::Server` through `MCP::Client` to the transport.
+
 ## Stdio Transport
 
 **Class:** `RobotLab::MCP::Transports::Stdio`
 
-Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (one per line). Automatically sends MCP `initialize` and `notifications/initialized` on connect.
+Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (one per line). Automatically sends MCP `initialize` and `notifications/initialized` on connect. All blocking I/O is wrapped with `Timeout.timeout` so a missing or hung server cannot block the caller forever.
 
 ### Configuration
 
@@ -43,7 +48,8 @@ Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (o
   type: "stdio",
   command: "mcp-server-filesystem",      # Required: executable command
   args: ["--root", "/data"],             # Optional: command arguments
-  env: { "DEBUG" => "true" }             # Optional: environment variables
+  env: { "DEBUG" => "true" },            # Optional: environment variables
+  timeout: 10                            # Optional: request timeout in seconds (default: 15)
 }
 ```
 
@@ -52,14 +58,18 @@ Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (o
 | `command` | `String` | Yes | Executable command to spawn |
 | `args` | `Array<String>` | No | Command arguments |
 | `env` | `Hash` | No | Environment variables (merged with current env) |
+| `timeout` | `Numeric` | No | Request timeout in seconds (default: 15) |
 
 ### Behavior
 
 - Uses `Open3.popen3` to spawn the subprocess
+- Verifies the process actually started (raises `MCPError` if it exits immediately)
 - Writes JSON-RPC messages to stdin (one per line)
 - Reads responses from stdout, skipping notifications (messages without `id`)
+- All blocking reads are wrapped with `Timeout.timeout` — raises `MCPError` if the server does not respond within the timeout period
 - `connected?` returns `true` when the subprocess is alive
-- `close` terminates stdin, stdout, stderr, and kills the subprocess
+- `close` calls `cleanup_process` to reliably close stdin, stdout, stderr and kill the subprocess
+- Handles `Errno::ENOENT` (command not found), `Errno::EPIPE` / `IOError` (broken pipe / connection lost), and `Timeout::Error` (hung server) with clear error messages
 
 ### Example
 
@@ -67,7 +77,8 @@ Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (o
 transport = RobotLab::MCP::Transports::Stdio.new(
   command: "mcp-server-filesystem",
   args: ["--root", "/data"],
-  env: { "DEBUG" => "true" }
+  env: { "DEBUG" => "true" },
+  timeout: 10
 )
 
 transport.connect
@@ -243,7 +254,11 @@ end
 Specific error cases:
 - **Not connected** -- calling `send_request` before `connect` raises `MCPError`
 - **Missing gem** -- WebSocket, SSE, and HTTP transports raise `MCPError` with a `LoadError` message if required gems are not installed
-- **No response** -- Stdio transport raises `MCPError` if the subprocess produces no output
+- **No response** -- Stdio transport raises `MCPError` if the subprocess produces no output (EOF on stdout)
+- **Command not found** -- Stdio transport raises `MCPError` with the original `Errno::ENOENT` message
+- **Timeout** -- Stdio transport raises `MCPError` if the server does not respond within the configured timeout
+- **Broken pipe** -- Stdio transport raises `MCPError` and marks itself disconnected on `Errno::EPIPE` or `IOError`
+- **Immediate exit** -- Stdio transport raises `MCPError` if the server process exits immediately after spawn
 
 ## See Also
 
