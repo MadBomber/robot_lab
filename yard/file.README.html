@@ -80,7 +80,9 @@
 </li><li>
 <p>&lt;strong&gt;Content Streaming&lt;/strong&gt; - Stored callbacks, per-call blocks, or both<br></p>
 </li><li>
-<p>&lt;strong&gt;MCP Integration&lt;/strong&gt; - Connect to external tool servers<br></p>
+<p>&lt;strong&gt;MCP Integration&lt;/strong&gt; - Connect to external tool servers with timeouts and retry<br></p>
+</li><li>
+<p>&lt;strong&gt;Local LLM Providers&lt;/strong&gt; - Ollama, GPUStack, LM Studio via provider passthrough<br></p>
 </li><li>
 <p>&lt;strong&gt;Shared Memory&lt;/strong&gt; - Reactive key-value store with subscriptions<br></p>
 </li><li>
@@ -90,7 +92,13 @@
 </li><li>
 <p>&lt;strong&gt;Layered Configuration&lt;/strong&gt; - Cascading YAML, env vars, and RunConfig<br></p>
 </li><li>
-<p>&lt;strong&gt;Rails Integration&lt;/strong&gt; - Generators, background jobs, Turbo Stream broadcasting &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
+<p>&lt;strong&gt;Rails Integration&lt;/strong&gt; - Generators, background jobs, Turbo Stream broadcasting<br></p>
+</li><li>
+<p>&lt;strong&gt;Token &amp; Cost Tracking&lt;/strong&gt; - Per-run and cumulative token counts on every robot<br></p>
+</li><li>
+<p>&lt;strong&gt;Tool Loop Circuit Breaker&lt;/strong&gt; - <code>max_tool_rounds:</code> guards against runaway tool call loops<br></p>
+</li><li>
+<p>&lt;strong&gt;Learning Accumulation&lt;/strong&gt; - <code>robot.learn()</code> builds up cross-run observations with deduplication &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
 </li></ul>
 <p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) snd explore the [many examples](examples/README.md) available as working demo applications.</p>
 <h2 id="label-Installation">Installation</h2>
@@ -130,6 +138,18 @@
 <span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_last_text_content'>last_text_content</span>
 <span class='comment'># =&gt; &quot;The capital of France is Paris.&quot;
 </span></code></pre>
+
+<h3 id="label-Local+LLM+Providers">Local LLM Providers</h3>
+
+<p>For local LLM providers (Ollama, GPUStack, LM Studio, etc.), use the <code>provider:</code> parameter:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>local_bot</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>model:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>llama3.2</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>provider:</span> <span class='symbol'>:ollama</span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are a helpful assistant.</span><span class='tstring_end'>&quot;</span></span>
+<span class='rparen'>)</span>
+</code></pre>
 
 <h3 id="label-Configuration">Configuration</h3>
 
@@ -491,15 +511,16 @@ You are a support agent for &lt;%= company %&gt;.
 
 <p>Connect to external tool servers via Model Context Protocol:</p>
 
-<pre class="code ruby"><code class="ruby"><span class='comment'># Configure MCP server
+<pre class="code ruby"><code class="ruby"><span class='comment'># Configure MCP server (with optional timeout)
 </span><span class='id identifier rubyid_filesystem_server'>filesystem_server</span> <span class='op'>=</span> <span class='lbrace'>{</span>
   <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>filesystem</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
   <span class='label'>transport:</span> <span class='lbrace'>{</span>
     <span class='label'>type:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>stdio</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
     <span class='label'>command:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mcp-server-filesystem</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
     <span class='label'>args:</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/path/to/allowed/directory</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span>
-  <span class='rbrace'>}</span>
-<span class='rbrace'>}</span>
+  <span class='rbrace'>}</span><span class='comma'>,</span>
+  <span class='label'>timeout:</span> <span class='int'>30</span>  <span class='comment'># seconds (default: 15)
+</span><span class='rbrace'>}</span>
 
 <span class='comment'># Create robot with MCP server - tools are auto-discovered
 </span><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
@@ -508,9 +529,17 @@ You are a support agent for &lt;%= company %&gt;.
   <span class='label'>mcp:</span> <span class='lbracket'>[</span><span class='id identifier rubyid_filesystem_server'>filesystem_server</span><span class='rbracket'>]</span>
 <span class='rparen'>)</span>
 
+<span class='comment'># Optionally connect eagerly (default is lazy on first run)
+</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_connect_mcp!'>connect_mcp!</span>
+
+<span class='comment'># Check connection status
+</span><span class='id identifier rubyid_puts'>puts</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Failed: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_failed_mcp_server_names'>failed_mcp_server_names</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>if</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_failed_mcp_server_names'>failed_mcp_server_names</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span>
+
 <span class='comment'># Robot can now use filesystem tools
 </span><span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>List the files in the current directory</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
 </code></pre>
+
+<p>MCP connections are resilient: failed servers are automatically retried on subsequent <code>run()</code> calls, and one failing server does not prevent others from connecting.</p>
 
 <h2 id="label-Message+Bus">Message Bus</h2>
 
@@ -650,6 +679,73 @@ You are a support agent for &lt;%= company %&gt;.
 
 <p>The <code>on_content:</code> callback participates in the RunConfig cascade, so it can be set at the network or config level and inherited by robots.</p>
 
+<h2 id="label-Token+-26+Cost+Tracking">Token &amp; Cost Tracking</h2>
+
+<p>Every <code>robot.run()</code> returns a <code>RobotResult</code> that carries token usage for that call. The robot itself accumulates running totals across all runs.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span><span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>analyst</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are helpful.</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+
+<span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>What is a stack?</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+<span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_input_tokens'>input_tokens</span>   <span class='comment'># tokens sent to the LLM this run
+</span><span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_output_tokens'>output_tokens</span>  <span class='comment'># tokens generated this run
+</span>
+<span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_total_input_tokens'>total_input_tokens</span>   <span class='comment'># cumulative across all runs
+</span><span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_total_output_tokens'>total_output_tokens</span>
+</code></pre>
+
+<p>To start a fresh cost batch without rebuilding the robot, call <code>reset_token_totals</code>. This resets the <strong>accounting counter only</strong> — the chat history keeps accumulating, so subsequent <code>input_tokens</code> will reflect the full context window sent to the API:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_reset_token_totals'>reset_token_totals</span>
+<span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_total_input_tokens'>total_input_tokens</span>  <span class='comment'># =&gt; 0
+</span></code></pre>
+
+<p>Token counts are zero for providers that do not return usage data.</p>
+
+<h2 id="label-Tool+Loop+Circuit+Breaker">Tool Loop Circuit Breaker</h2>
+
+<p>Set <code>max_tool_rounds:</code> to prevent a robot from looping indefinitely through tool calls. When the limit is exceeded, <code>RobotLab::ToolLoopError</code> is raised.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>runner</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Execute every step.</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>local_tools:</span> <span class='lbracket'>[</span><span class='const'>StepTool</span><span class='rbracket'>]</span><span class='comma'>,</span>
+  <span class='label'>max_tool_rounds:</span> <span class='int'>10</span>
+<span class='rparen'>)</span>
+
+<span class='kw'>begin</span>
+  <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Run all steps.</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+<span class='kw'>rescue</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="RobotLab/ToolLoopError.html" title="RobotLab::ToolLoopError (class)">ToolLoopError</a></span></span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_e'>e</span>
+  <span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_e'>e</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span>  <span class='comment'># &quot;Tool call limit of 10 exceeded&quot;
+</span><span class='kw'>end</span>
+</code></pre>
+
+<p>After a <code>ToolLoopError</code> the chat contains a dangling <code>tool_use</code> block with no matching <code>tool_result</code>. Most providers (including Anthropic) will reject any subsequent request with that history. Call <code>clear_messages</code> before reusing the robot:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_clear_messages'>clear_messages</span>   <span class='comment'># flushes broken history; system prompt is kept
+</span><span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_robot'>robot</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Something new.</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>  <span class='comment'># robot is healthy again
+</span></code></pre>
+
+<h2 id="label-Learning+Accumulation">Learning Accumulation</h2>
+
+<p><code>robot.learn(text)</code> records a cross-run observation. On each subsequent <code>run()</code>, active learnings are automatically prepended to the user message as a <code>LEARNINGS FROM PREVIOUS RUNS:</code> block so the LLM can incorporate prior context without needing a persistent chat:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_reviewer'>reviewer</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='period'>.</span><span class='id identifier rubyid_build'><span class='object_link'><a href="RobotLab.html#build-class_method" title="RobotLab.build (method)">build</a></span></span><span class='lparen'>(</span>
+  <span class='label'>name:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>reviewer</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>system_prompt:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>You are a Ruby code reviewer.</span><span class='tstring_end'>&quot;</span></span>
+<span class='rparen'>)</span>
+
+<span class='id identifier rubyid_reviewer'>reviewer</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Review snippet A</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+<span class='id identifier rubyid_reviewer'>reviewer</span><span class='period'>.</span><span class='id identifier rubyid_learn'>learn</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>This codebase prefers map/collect over manual array accumulation</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+
+<span class='id identifier rubyid_reviewer'>reviewer</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Review snippet B</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>  <span class='comment'># learning is injected automatically
+</span></code></pre>
+
+<p>Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot’s <code>Memory</code> and survive a robot rebuild when the same <code>Memory</code> object is reused.</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_reviewer'>reviewer</span><span class='period'>.</span><span class='id identifier rubyid_learnings'>learnings</span>          <span class='comment'># =&gt; [&quot;This codebase prefers map/collect...&quot;]
+</span><span class='id identifier rubyid_reviewer'>reviewer</span><span class='period'>.</span><span class='id identifier rubyid_learn'>learn</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>new fact</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>  <span class='comment'># deduplicates before storing
+</span></code></pre>
+
 <h2 id="label-Rails+Integration">Rails Integration</h2>
 
 <pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_rails'>rails</span> <span class='id identifier rubyid_generate'>generate</span> <span class='label'>robot_lab:</span><span class='id identifier rubyid_install'>install</span>
@@ -672,7 +768,7 @@ You are a support agent for &lt;%= company %&gt;.
 </div></div>
 
       <div id="footer">
-  Generated on Wed Feb 25 05:48:33 2026 by
+  Generated on Sat Mar 21 20:17:36 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

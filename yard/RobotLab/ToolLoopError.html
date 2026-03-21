@@ -4,7 +4,7 @@
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>
-  Exception: RobotLab::Error
+  Exception: RobotLab::ToolLoopError
   
     &mdash; Documentation by YARD 0.9.38
   
@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="../css/common.css" type="text/css" />
 
 <script type="text/javascript">
-  pathId = "RobotLab::Error";
+  pathId = "RobotLab::ToolLoopError";
   relpath = '../';
 </script>
 
@@ -36,10 +36,10 @@
       <div id="header">
         <div id="menu">
   
-    <a href="../_index.html">Index (E)</a> &raquo;
+    <a href="../_index.html">Index (T)</a> &raquo;
     <span class='title'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span>
      &raquo; 
-    <span class="title">Error</span>
+    <span class="title">ToolLoopError</span>
   
 </div>
 
@@ -59,7 +59,7 @@
         <div class="clear"></div>
       </div>
 
-      <div id="content"><h1>Exception: RobotLab::Error
+      <div id="content"><h1>Exception: RobotLab::ToolLoopError
   
   
   
@@ -69,14 +69,18 @@
   <dl>
     <dt>Inherits:</dt>
     <dd>
-      <span class="inheritName">StandardError</span>
+      <span class="inheritName"><span class='object_link'><a href="InferenceError.html" title="RobotLab::InferenceError (class)">InferenceError</a></span></span>
       
         <ul class="fullTree">
           <li>Object</li>
           
             <li class="next">StandardError</li>
           
-            <li class="next">RobotLab::Error</li>
+            <li class="next"><span class='object_link'><a href="Error.html" title="RobotLab::Error (class)">Error</a></span></li>
+          
+            <li class="next"><span class='object_link'><a href="InferenceError.html" title="RobotLab::InferenceError (class)">InferenceError</a></span></li>
+          
+            <li class="next">RobotLab::ToolLoopError</li>
           
         </ul>
         <a href="#" class="inheritanceTree">show all</a>
@@ -104,19 +108,22 @@
 <h2>Overview</h2><div class="docstring">
   <div class="discussion">
     
-<p>Base error class for all RobotLab errors.</p>
-
-<p>All RobotLab-specific exceptions inherit from this class.</p>
+<p>Raised when a robot’s tool call loop exceeds the configured limit.</p>
 
 
   </div>
 </div>
 <div class="tags">
   
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+      <pre class="example code"><code><span class='id identifier rubyid_raise'>raise</span> <span class='const'>ToolLoopError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Circuit breaker: 26 tool calls exceeded max_tool_rounds (25)</span><span class='tstring_end'>&quot;</span></span></code></pre>
+    
+  </div>
 
-</div><div id="subclasses">
-  <h2>Direct Known Subclasses</h2>
-  <p class="children"><span class='object_link'><a href="AwaitTimeout.html" title="RobotLab::AwaitTimeout (class)">AwaitTimeout</a></span>, <span class='object_link'><a href="BusError.html" title="RobotLab::BusError (class)">BusError</a></span>, <span class='object_link'><a href="ConfigurationError.html" title="RobotLab::ConfigurationError (class)">ConfigurationError</a></span>, <span class='object_link'><a href="InferenceError.html" title="RobotLab::InferenceError (class)">InferenceError</a></span>, <span class='object_link'><a href="MCPError.html" title="RobotLab::MCPError (class)">MCPError</a></span>, <span class='object_link'><a href="ToolNotFoundError.html" title="RobotLab::ToolNotFoundError (class)">ToolNotFoundError</a></span></p>
+
 </div>
 
 
@@ -125,7 +132,18 @@
 
 
 
-
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
 
 </div>
