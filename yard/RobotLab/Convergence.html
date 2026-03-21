@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Module: RobotLab::Convergence
+  
+    &mdash; Documentation by YARD 0.9.38
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" />
+
+<script type="text/javascript">
+  pathId = "RobotLab::Convergence";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (C)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span>
+     &raquo; 
+    <span class="title">Convergence</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Module: RobotLab::Convergence
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+
+  
+  
+  
+  
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/robot_lab/convergence.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>TF-IDF cosine similarity utilities for detecting semantic convergence between two texts.</p>
+
+<p>Common use cases:</p>
+<ul><li>
+<p>Checking whether two independent verifiers have reached the same conclusion</p>
+</li><li>
+<p>Skipping a reconciler LLM call when verifiers already agree (fast-path)</p>
+</li><li>
+<p>Detecting when a multi-robot debate has converged on a consensus</p>
+</li></ul>
+
+<p>Requires the optional ‘classifier’ gem (~&gt; 2.3).</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Skip reconciler when verifiers agree</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_score'>score</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'>Convergence</span><span class='period'>.</span><span class='id identifier rubyid_similarity'><span class='object_link'><a href="#similarity-class_method" title="RobotLab::Convergence.similarity (method)">similarity</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_result_a'>result_a</span><span class='period'>.</span><span class='id identifier rubyid_reply'>reply</span><span class='comma'>,</span> <span class='id identifier rubyid_result_b'>result_b</span><span class='period'>.</span><span class='id identifier rubyid_reply'>reply</span><span class='rparen'>)</span>
+
+<span class='id identifier rubyid_router'>router</span> <span class='op'>=</span> <span class='tlambda'>-&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span> <span class='kw'>do</span>
+  <span class='id identifier rubyid_a'>a</span> <span class='op'>=</span> <span class='id identifier rubyid_args'>args</span><span class='period'>.</span><span class='id identifier rubyid_context'>context</span><span class='lbracket'>[</span><span class='symbol'>:verifier_a</span><span class='rbracket'>]</span><span class='op'>&amp;.</span><span class='id identifier rubyid_reply'>reply</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
+  <span class='id identifier rubyid_b'>b</span> <span class='op'>=</span> <span class='id identifier rubyid_args'>args</span><span class='period'>.</span><span class='id identifier rubyid_context'>context</span><span class='lbracket'>[</span><span class='symbol'>:verifier_b</span><span class='rbracket'>]</span><span class='op'>&amp;.</span><span class='id identifier rubyid_reply'>reply</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
+  <span class='const'><span class='object_link'><a href="../RobotLab.html" title="RobotLab (module)">RobotLab</a></span></span><span class='op'>::</span><span class='const'>Convergence</span><span class='period'>.</span><span class='id identifier rubyid_detected?'><span class='object_link'><a href="#detected%3F-class_method" title="RobotLab::Convergence.detected? (method)">detected?</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_a'>a</span><span class='comma'>,</span> <span class='id identifier rubyid_b'>b</span><span class='rparen'>)</span> <span class='op'>?</span> <span class='kw'>nil</span> <span class='op'>:</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>reconciler</span><span class='tstring_end'>&quot;</span></span><span class='rbracket'>]</span>
+<span class='kw'>end</span></code></pre>
+    
+  </div>
+
+
+</div>
+  
+    <h2>
+      Constant Summary
+      <small><a href="#" class="constants_summary_toggle">collapse</a></small>
+    </h2>
+
+    <dl class="constants">
+      
+        <dt id="DEFAULT_THRESHOLD-constant" class="">DEFAULT_THRESHOLD =
+          <div class="docstring">
+  <div class="discussion">
+    
+<p>Default cosine similarity threshold above which texts are convergent.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+        </dt>
+        <dd><pre class="code"><span class='float'>0.85</span></pre></dd>
+      
+        <dt id="MIN_TEXT_LENGTH-constant" class="">MIN_TEXT_LENGTH =
+          <div class="docstring">
+  <div class="discussion">
+    
+<p>Minimum text length (characters) for meaningful TF-IDF scoring. Texts shorter than this always return 0.0 similarity.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+        </dt>
+        <dd><pre class="code"><span class='int'>30</span></pre></dd>
+      
+    </dl>
+  
+
+
+
+
+
+
+
+  
+    <h2>
+      Class Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#detected%3F-class_method" title="detected? (class method)">.<strong>detected?</strong>(text_a, text_b, threshold: DEFAULT_THRESHOLD)  &#x21d2; Boolean </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Determine whether two texts are semantically convergent.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#similarity-class_method" title="similarity (class method)">.<strong>similarity</strong>(text_a, text_b)  &#x21d2; Float </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Compute cosine similarity between two texts using stemmed term frequencies.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+
+  <div id="class_method_details" class="method_details_list">
+    <h2>Class Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="detected?-class_method">
+  
+    .<strong>detected?</strong>(text_a, text_b, threshold: DEFAULT_THRESHOLD)  &#x21d2; <tt>Boolean</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Determine whether two texts are semantically convergent.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>text_a</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>text_b</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>threshold</span>
+      
+      
+        <span class='type'>(<tt>Float</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>DEFAULT_THRESHOLD</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>minimum similarity to declare convergence (default 0.85)</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="DependencyError.html" title="RobotLab::DependencyError (class)">DependencyError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>if the ‘classifier’ gem is not installed</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>if threshold is outside [0.0, 1.0]</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+38
+39
+40
+41
+42
+43
+44</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/convergence.rb', line 38</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_detected?'>detected?</span><span class='lparen'>(</span><span class='id identifier rubyid_text_a'>text_a</span><span class='comma'>,</span> <span class='id identifier rubyid_text_b'>text_b</span><span class='comma'>,</span> <span class='label'>threshold:</span> <span class='const'><span class='object_link'><a href="#DEFAULT_THRESHOLD-constant" title="RobotLab::Convergence::DEFAULT_THRESHOLD (constant)">DEFAULT_THRESHOLD</a></span></span><span class='rparen'>)</span>
+  <span class='kw'>unless</span> <span class='lparen'>(</span><span class='float'>0.0</span><span class='op'>..</span><span class='float'>1.0</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_cover?'>cover?</span><span class='lparen'>(</span><span class='id identifier rubyid_threshold'>threshold</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>threshold must be in [0.0, 1.0], got </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_threshold'>threshold</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_similarity'>similarity</span><span class='lparen'>(</span><span class='id identifier rubyid_text_a'>text_a</span><span class='comma'>,</span> <span class='id identifier rubyid_text_b'>text_b</span><span class='rparen'>)</span> <span class='op'>&gt;=</span> <span class='id identifier rubyid_threshold'>threshold</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="similarity-class_method">
+  
+    .<strong>similarity</strong>(text_a, text_b)  &#x21d2; <tt>Float</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Compute cosine similarity between two texts using stemmed term frequencies.</p>
+
+<p>Uses <tt>String#word_hash</tt> (provided by the classifier gem) to build stemmed, stopword-filtered term-frequency vectors, then computes L2-normalized cosine similarity. Term frequencies (no IDF) are used because IDF on a 2-document corpus collapses shared terms to zero, which would incorrectly penalize texts that agree on the same topic.</p>
+
+<p>Returns 0.0 when either text is blank or shorter than <code>MIN_TEXT_LENGTH</code>.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>text_a</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>text_b</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Float</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>in [0.0, 1.0]</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="DependencyError.html" title="RobotLab::DependencyError (class)">DependencyError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>if the ‘classifier’ gem is not installed</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+60
+61
+62
+63
+64
+65
+66
+67</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/convergence.rb', line 60</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_similarity'>similarity</span><span class='lparen'>(</span><span class='id identifier rubyid_text_a'>text_a</span><span class='comma'>,</span> <span class='id identifier rubyid_text_b'>text_b</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_a'>a</span> <span class='op'>=</span> <span class='id identifier rubyid_text_a'>text_a</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
+  <span class='id identifier rubyid_b'>b</span> <span class='op'>=</span> <span class='id identifier rubyid_text_b'>text_b</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
+
+  <span class='kw'>return</span> <span class='float'>0.0</span> <span class='kw'>if</span> <span class='id identifier rubyid_a'>a</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span> <span class='op'>&lt;</span> <span class='const'><span class='object_link'><a href="#MIN_TEXT_LENGTH-constant" title="RobotLab::Convergence::MIN_TEXT_LENGTH (constant)">MIN_TEXT_LENGTH</a></span></span> <span class='op'>||</span> <span class='id identifier rubyid_b'>b</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span> <span class='op'>&lt;</span> <span class='const'><span class='object_link'><a href="#MIN_TEXT_LENGTH-constant" title="RobotLab::Convergence::MIN_TEXT_LENGTH (constant)">MIN_TEXT_LENGTH</a></span></span>
+
+  <span class='const'><span class='object_link'><a href="TextAnalysis.html" title="RobotLab::TextAnalysis (module)">TextAnalysis</a></span></span><span class='period'>.</span><span class='id identifier rubyid_tf_cosine_similarity'><span class='object_link'><a href="TextAnalysis.html#tf_cosine_similarity-class_method" title="RobotLab::TextAnalysis.tf_cosine_similarity (method)">tf_cosine_similarity</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_a'>a</span><span class='comma'>,</span> <span class='id identifier rubyid_b'>b</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Sat Mar 21 21:16:35 2026 by
+  <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.38 (ruby-3.3.10).
+</div>
+
+    </div>
+  </body>
+</html>

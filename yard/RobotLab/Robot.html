@@ -885,6 +885,30 @@
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#compress_history-instance_method" title="#compress_history (instance method)">#<strong>compress_history</strong>(recent_turns: 3, keep_threshold: 0.6, drop_threshold: 0.2, summarizer: nil)  &#x21d2; self </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Compress conversation history using TF-IDF relevance scoring.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#connect_mcp!-instance_method" title="#connect_mcp! (instance method)">#<strong>connect_mcp!</strong>  &#x21d2; self </a>
     
 
@@ -3312,15 +3336,15 @@
       <pre class="lines">
 
 
-521
-522
-523
-524
-525
-526</pre>
+551
+552
+553
+554
+555
+556</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 521</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 551</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_chat_provider'>chat_provider</span>
   <span class='id identifier rubyid_m'>m</span> <span class='op'>=</span> <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_model'>model</span>
@@ -3417,6 +3441,163 @@
     <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_instance_variable_set'>instance_variable_set</span><span class='lparen'>(</span><span class='symbol'>:@messages</span><span class='comma'>,</span> <span class='lbracket'>[</span><span class='rbracket'>]</span><span class='rparen'>)</span>
   <span class='kw'>end</span>
   <span class='kw'>self</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="compress_history-instance_method">
+  
+    #<strong>compress_history</strong>(recent_turns: 3, keep_threshold: 0.6, drop_threshold: 0.2, summarizer: nil)  &#x21d2; <tt>self</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Compress conversation history using TF-IDF relevance scoring.</p>
+
+<p>Old turns are tiered against the most recent context:</p>
+<ul><li>
+<p>High relevance (score &gt;= keep_threshold)          → kept verbatim</p>
+</li><li>
+<p>Medium relevance (drop_threshold..keep_threshold) → summarized or dropped</p>
+</li><li>
+<p>Low relevance (score &lt; drop_threshold)            → dropped</p>
+</li></ul>
+
+<p>System messages and tool call/result messages are always preserved. The most recent <code>recent_turns</code> pairs are also always kept verbatim.</p>
+
+<p>Requires the optional ‘classifier’ gem (~&gt; 2.3). Raises <code>DependencyError</code> if not installed.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>recent_turns</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>3</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>turn pairs to protect at the end (default 3)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>keep_threshold</span>
+      
+      
+        <span class='type'>(<tt>Float</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>0.6</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>cosine score &gt;= this → keep verbatim (default 0.6)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>drop_threshold</span>
+      
+      
+        <span class='type'>(<tt>Float</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>0.2</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>cosine score &lt; this → drop (default 0.2)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>summarizer</span>
+      
+      
+        <span class='type'>(<tt>#<span class='object_link'><a href="#call-instance_method" title="RobotLab::Robot#call (method)">call</a></span></tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>callable(text) -&gt; String for medium-tier; nil drops medium-tier instead of summarizing</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>self</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 535</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_compress_history'>compress_history</span><span class='lparen'>(</span><span class='label'>recent_turns:</span> <span class='int'>3</span><span class='comma'>,</span> <span class='label'>keep_threshold:</span> <span class='float'>0.6</span><span class='comma'>,</span> <span class='label'>drop_threshold:</span> <span class='float'>0.2</span><span class='comma'>,</span> <span class='label'>summarizer:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_compressed'>compressed</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="HistoryCompressor.html" title="RobotLab::HistoryCompressor (class)">HistoryCompressor</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="HistoryCompressor.html#initialize-instance_method" title="RobotLab::HistoryCompressor#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+    <span class='label'>messages:</span>       <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_messages'>messages</span><span class='comma'>,</span>
+    <span class='label'>recent_turns:</span>   <span class='id identifier rubyid_recent_turns'>recent_turns</span><span class='comma'>,</span>
+    <span class='label'>keep_threshold:</span> <span class='id identifier rubyid_keep_threshold'>keep_threshold</span><span class='comma'>,</span>
+    <span class='label'>drop_threshold:</span> <span class='id identifier rubyid_drop_threshold'>drop_threshold</span><span class='comma'>,</span>
+    <span class='label'>summarizer:</span>     <span class='id identifier rubyid_summarizer'>summarizer</span>
+  <span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_call'><span class='object_link'><a href="HistoryCompressor.html#call-instance_method" title="RobotLab::HistoryCompressor#call (method)">call</a></span></span>
+  <span class='id identifier rubyid_replace_messages'>replace_messages</span><span class='lparen'>(</span><span class='id identifier rubyid_compressed'>compressed</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -3756,24 +3937,24 @@
       <pre class="lines">
 
 
-548
-549
-550
-551
-552
-553
-554
-555
-556
-557
-558
-559
-560
-561
-562</pre>
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 548</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 578</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_learn'>learn</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_text'>text</span> <span class='op'>=</span> <span class='id identifier rubyid_text'>text</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
@@ -3854,12 +4035,12 @@
       <pre class="lines">
 
 
-532
-533
-534</pre>
+562
+563
+564</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 532</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 562</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_mcp_client'>mcp_client</span><span class='lparen'>(</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rparen'>)</span>
   <span class='ivar'>@mcp_clients</span><span class='lbracket'>[</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rbracket'>]</span>
@@ -4159,14 +4340,14 @@
       <pre class="lines">
 
 
-568
-569
-570
-571
-572</pre>
+598
+599
+600
+601
+602</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 568</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 598</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_token_totals'>reset_token_totals</span>
   <span class='ivar'>@total_input_tokens</span> <span class='op'>=</span> <span class='int'>0</span>
@@ -4517,26 +4698,26 @@
       <pre class="lines">
 
 
-578
-579
-580
-581
-582
-583
-584
-585
-586
-587
-588
-589
-590
-591
-592
-593
-594</pre>
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 578</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 608</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -4743,7 +4924,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sat Mar 21 20:20:57 2026 by
+  Generated on Sat Mar 21 21:16:36 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
