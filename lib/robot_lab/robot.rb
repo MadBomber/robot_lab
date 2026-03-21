@@ -543,6 +543,59 @@ module RobotLab
       replace_messages(compressed)
     end
 
+    # Delegate a task to another robot, synchronously or asynchronously.
+    #
+    # **Synchronous** (default, +async: false+): blocks until the delegatee
+    # finishes and returns a +RobotResult+ annotated with +delegated_by+,
+    # +duration+, and token counts.
+    #
+    # **Asynchronous** (+async: true+): starts the delegatee in a background
+    # thread and returns a +DelegationFuture+ immediately. Call +future.value+
+    # to block for the result, or +future.resolved?+ to poll.
+    #
+    # @example Synchronous
+    #   result = manager.delegate(to: analyst, task: "What are the risks?")
+    #   puts result.reply          # analyst's answer
+    #   puts result.delegated_by   # => "manager"
+    #   puts result.duration       # => 1.43 (seconds)
+    #
+    # @example Async fan-out
+    #   f1 = manager.delegate(to: summarizer, task: "summarize ...", async: true)
+    #   f2 = manager.delegate(to: analyst,    task: "analyze ...",   async: true)
+    #   summary  = f1.value          # blocks if not yet done
+    #   analysis = f2.value(timeout: 30)
+    #
+    # @param to [Robot] the robot to delegate to
+    # @param task [String] the message to send
+    # @param async [Boolean] when true, returns a DelegationFuture immediately
+    # @param kwargs [Hash] additional keyword args forwarded to Robot#run
+    # @return [RobotResult] when async: false
+    # @return [DelegationFuture] when async: true
+    def delegate(to:, task:, async: false, **kwargs)
+      if async
+        future = DelegationFuture.new(robot_name: to.name, delegated_by: @name)
+        delegator_name = @name
+
+        Thread.new do
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          result = to.run(task, **kwargs)
+          result.duration     = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          result.delegated_by = delegator_name
+          future.resolve!(result)
+        rescue => e
+          future.reject!(e)
+        end
+
+        future
+      else
+        started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        result = to.run(task, **kwargs)
+        result.duration     = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+        result.delegated_by = @name
+        result
+      end
+    end
+
     # Return the provider for this robot's chat.
     # Useful for displaying model/provider info without reaching
     # into chat internals.

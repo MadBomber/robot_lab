@@ -904,6 +904,61 @@ class RobotLab::MemoryTest < Minitest::Test
     refute_nil change.timestamp
   end
 
+  # =========================================================================
+  # Notification coalescing
+  # =========================================================================
+
+  def test_single_subscriber_receives_notification
+    received = []
+    @memory.subscribe(:alpha) { |change| received << change.value }
+    @memory[:alpha] = "hello"
+    wait_until(timeout: 1) { received.size == 1 }
+    assert_equal ["hello"], received
+  end
+
+  def test_multiple_subscribers_same_key_all_notified
+    a = []
+    b = []
+    @memory.subscribe(:beta) { |change| a << change.value }
+    @memory.subscribe(:beta) { |change| b << change.value }
+    @memory[:beta] = 42
+    wait_until(timeout: 1) { a.size == 1 && b.size == 1 }
+    assert_equal [42], a
+    assert_equal [42], b
+  end
+
+  def test_rapid_writes_all_notifications_delivered
+    received = []
+    @memory.subscribe(:counter) { |change| received << change.value }
+    5.times { |i| @memory[:counter] = i }
+    wait_until(timeout: 2) { received.size == 5 }
+    assert_equal 5, received.size
+    assert_equal (0..4).to_a, received.sort
+  end
+
+  def test_notifications_from_different_keys_all_delivered
+    results = Hash.new { |h, k| h[k] = [] }
+    @memory.subscribe(:x) { |change| results[:x] << change.value }
+    @memory.subscribe(:y) { |change| results[:y] << change.value }
+    @memory[:x] = "ex"
+    @memory[:y] = "why"
+    wait_until(timeout: 1) { results[:x].size == 1 && results[:y].size == 1 }
+    assert_equal ["ex"],  results[:x]
+    assert_equal ["why"], results[:y]
+  end
+
+  def test_coalescing_drainer_resets_after_drain
+    received = []
+    @memory.subscribe(:tap) { |change| received << change.value }
+    @memory[:tap] = "first"
+    wait_until(timeout: 1) { received.size == 1 }
+
+    # Second write after drainer has finished — must still be delivered
+    @memory[:tap] = "second"
+    wait_until(timeout: 1) { received.size == 2 }
+    assert_equal %w[first second], received
+  end
+
   private
 
   def mock_robot_result(robot_name)

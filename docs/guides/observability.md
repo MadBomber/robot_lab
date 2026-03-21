@@ -7,6 +7,7 @@ Facilities that help you monitor, control, improve, and scale robot behaviour:
 - **Learning Accumulation** — build up cross-run observations that guide future runs
 - **Context Window Compression** — prune irrelevant history to stay within token budgets
 - **Convergence Detection** — detect when independent agents reach the same conclusion
+- **Structured Delegation** — synchronous inter-robot calls with duration and token metadata
 
 ---
 
@@ -392,6 +393,88 @@ gem "classifier", "~> 2.3"
 
 ---
 
+---
+
+## Structured Delegation
+
+### The Problem
+
+RobotLab has two existing patterns for one robot to involve another:
+
+- **Pipelines** — predefined sequences where robots share memory and run in order
+- **Bus messaging** — fire-and-forget pub/sub with no return value
+
+Neither gives you a synchronous call that returns a result with provenance and cost metadata. `delegate` fills that gap.
+
+### Synchronous delegation
+
+Blocks until the delegatee finishes and returns a `RobotResult` annotated with provenance and timing:
+
+```ruby
+result = manager.delegate(to: specialist, task: "Analyze this data: ...")
+
+puts result.reply          # specialist's answer
+puts result.robot_name     # => "specialist"   (who did the work)
+puts result.delegated_by   # => "manager"      (who asked)
+puts result.duration       # => 1.43           (wall-clock seconds)
+puts result.input_tokens   # => 812
+puts result.output_tokens  # => 94
+```
+
+All keyword arguments are forwarded to the delegatee's `run()`:
+
+```ruby
+result = manager.delegate(to: worker, task: "hello", company_name: "Acme")
+```
+
+### Asynchronous delegation — parallel fan-out
+
+Pass `async: true` to get a `DelegationFuture` back immediately. The delegatee runs in a background thread. Call `future.value` to block for the result, or `future.resolved?` to poll without blocking.
+
+```ruby
+# Fire both delegations simultaneously
+f1 = manager.delegate(to: summarizer, task: "Summarize: #{doc}", async: true)
+f2 = manager.delegate(to: analyst,    task: "Key metric: #{doc}", async: true)
+
+# Both are running in parallel here
+puts f1.resolved?   # false (probably)
+
+# Collect when ready (optional timeout in seconds)
+summary  = f1.value(timeout: 30)
+analysis = f2.value(timeout: 30)
+```
+
+If the delegatee raises an error, `future.value` re-raises it. If `timeout:` expires before the result arrives, `DelegationFuture::DelegationTimeout` is raised.
+
+### When to Use Each Pattern
+
+| Pattern | Return value | Concurrent | Use when |
+|---|---|---|---|
+| `pipeline` | shared memory | yes (parallel groups) | fixed workflow graph |
+| `bus` messaging | none (fire-and-forget) | yes | notify without waiting for a reply |
+| `delegate` | `RobotResult` with metadata | no | need the result back, one at a time |
+| `delegate(async: true)` | `DelegationFuture` | yes | parallel fan-out, collect results later |
+
+### Full Example
+
+```ruby
+manager    = RobotLab.build(name: "manager",    system_prompt: "You are a project manager.")
+summarizer = RobotLab.build(name: "summarizer", system_prompt: "Summarize in 1-2 sentences.")
+analyst    = RobotLab.build(name: "analyst",    system_prompt: "Identify the key metric.")
+
+# Parallel fan-out
+f1 = manager.delegate(to: summarizer, task: "Summarize: #{document}", async: true)
+f2 = manager.delegate(to: analyst,    task: "Key metric: #{document}", async: true)
+
+summary  = f1.value(timeout: 60)
+analysis = f2.value(timeout: 60)
+
+puts "#{summary.robot_name} (#{summary.duration.round(2)}s): #{summary.reply}"
+puts "#{analysis.robot_name} (#{analysis.duration.round(2)}s): #{analysis.reply}"
+```
+
+---
+
 ## See Also
 
 - [Robot API](../api/core/robot.md#token--cost-tracking)
@@ -400,3 +483,4 @@ gem "classifier", "~> 2.3"
 - [Example 21 — Learning Accumulation Loop](../../examples/21_learning_loop.rb)
 - [Example 22 — Context Window Compression](../../examples/22_context_compression.rb)
 - [Example 23 — Convergence Detection](../../examples/23_convergence.rb)
+- [Example 24 — Structured Delegation](../../examples/24_structured_delegation.rb)
