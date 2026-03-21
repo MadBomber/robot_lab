@@ -101,6 +101,47 @@ class RobotLab::ToolConfigTest < Minitest::Test
     assert_equal [tool1], result
   end
 
+  def test_filter_tools_with_string_tool
+    result = RobotLab::ToolConfig.filter_tools(
+      ["search", "refund"],
+      allowed_names: ["search"]
+    )
+    assert_equal ["search"], result
+  end
+
+  def test_filter_tools_with_symbol_tool
+    result = RobotLab::ToolConfig.filter_tools(
+      [:search, :refund],
+      allowed_names: ["search"]
+    )
+    assert_equal [:search], result
+  end
+
+  def test_resolve_mcp_with_inherit
+    result = RobotLab::ToolConfig.resolve_mcp(:inherit, parent_value: ["server1"])
+    assert_equal ["server1"], result
+  end
+
+  def test_resolve_mcp_with_none
+    result = RobotLab::ToolConfig.resolve_mcp(:none, parent_value: ["server1"])
+    assert_equal [], result
+  end
+
+  def test_resolve_mcp_with_explicit_value
+    result = RobotLab::ToolConfig.resolve_mcp(["server2"], parent_value: ["server1"])
+    assert_equal ["server2"], result
+  end
+
+  def test_resolve_with_inherit_and_empty_parent
+    result = RobotLab::ToolConfig.resolve(:inherit, parent_value: [])
+    assert_equal [], result
+  end
+
+  def test_resolve_tools_with_none
+    result = RobotLab::ToolConfig.resolve_tools(:none, parent_value: %w[tool1])
+    assert_equal [], result
+  end
+
   private
 
   class MockTool

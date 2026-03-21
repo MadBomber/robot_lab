@@ -356,6 +356,95 @@ class RobotLab::MCP::ClientTest < Minitest::Test
     assert_equal({ raw: "not valid json" }, result)
   end
 
+  def test_connect_real_success_path
+    # mcp/client.rb lines 50, 52: success path (@connected = true + return self)
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" }
+    )
+    # Stub create_transport to return a mock that doesn't need real connection
+    mock = MockTransport.new
+    client.define_singleton_method(:create_transport) { mock }
+    result = client.connect
+    assert_same client, result
+    assert client.connected?
+  end
+
+  def test_connect_handles_failure_gracefully
+    # mcp/client.rb lines 53-56: rescue StandardError in connect
+    client = RobotLab::MCP::Client.new(
+      name: "failing_server",
+      transport: { type: "stdio", command: "nonexistent-command-xyz" }
+    )
+    # The real connect will try to spawn "nonexistent-command-xyz" and fail
+    result = client.connect
+    # Should return self (not raise) and not be connected
+    assert_same client, result
+    refute client.connected?
+  end
+
+  def test_create_transport_builds_stdio_transport
+    # mcp/client.rb lines 165-169: create_transport for stdio
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" }
+    )
+    transport = client.send(:create_transport)
+    assert_instance_of RobotLab::MCP::Transports::Stdio, transport
+  end
+
+  def test_create_transport_builds_websocket_transport
+    # mcp/client.rb lines 170-171: create_transport for websocket
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "ws", url: "ws://localhost:8080" }
+    )
+    transport = client.send(:create_transport)
+    assert_instance_of RobotLab::MCP::Transports::WebSocket, transport
+  end
+
+  def test_create_transport_builds_sse_transport
+    # mcp/client.rb lines 172-173: create_transport for sse
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "sse", url: "http://localhost:8080/sse" }
+    )
+    transport = client.send(:create_transport)
+    assert_instance_of RobotLab::MCP::Transports::SSE, transport
+  end
+
+  def test_create_transport_builds_streamable_http_transport
+    # mcp/client.rb lines 174-175: create_transport for streamable-http
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "streamable-http", url: "http://localhost:8080" }
+    )
+    transport = client.send(:create_transport)
+    assert_instance_of RobotLab::MCP::Transports::StreamableHTTP, transport
+  end
+
+  def test_create_transport_raises_for_unknown_type
+    # mcp/client.rb lines 176-177: else branch raises MCPError
+    # We need to bypass validation to create a client with invalid type
+    client = RobotLab::MCP::Client.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" }
+    )
+    # Override the server's transport_type to simulate unknown
+    server = client.instance_variable_get(:@server)
+    server.instance_variable_set(:@transport, server.transport.merge(type: "unknown-xyz"))
+    assert_raises(RobotLab::MCPError) do
+      client.send(:create_transport)
+    end
+  end
+
+  def test_parse_response_handles_other_types
+    # mcp/client.rb line 205: else branch returns response as-is
+    client = build_mock_client
+    result = client.send(:parse_response, 42)
+    assert_equal 42, result
+  end
+
   private
 
   def build_mock_client(responses: {})

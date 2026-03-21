@@ -26,7 +26,10 @@
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
 - <strong>Layered Configuration</strong> - Cascading YAML, env vars, and RunConfig<br>
-- <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting
+- <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting<br>
+- <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>
+- <strong>Tool Loop Circuit Breaker</strong> - <code>max_tool_rounds:</code> guards against runaway tool call loops<br>
+- <strong>Learning Accumulation</strong> - <code>robot.learn()</code> builds up cross-run observations with deduplication
 </td>
 </tr>
 </table>
@@ -620,6 +623,79 @@ robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
 ```
 
 The `on_content:` callback participates in the RunConfig cascade, so it can be set at the network or config level and inherited by robots.
+
+## Token & Cost Tracking
+
+Every `robot.run()` returns a `RobotResult` that carries token usage for that call. The robot itself accumulates running totals across all runs.
+
+```ruby
+robot = RobotLab.build(name: "analyst", system_prompt: "You are helpful.")
+
+result = robot.run("What is a stack?")
+puts result.input_tokens   # tokens sent to the LLM this run
+puts result.output_tokens  # tokens generated this run
+
+puts robot.total_input_tokens   # cumulative across all runs
+puts robot.total_output_tokens
+```
+
+To start a fresh cost batch without rebuilding the robot, call `reset_token_totals`. This resets the **accounting counter only** — the chat history keeps accumulating, so subsequent `input_tokens` will reflect the full context window sent to the API:
+
+```ruby
+robot.reset_token_totals
+puts robot.total_input_tokens  # => 0
+```
+
+Token counts are zero for providers that do not return usage data.
+
+## Tool Loop Circuit Breaker
+
+Set `max_tool_rounds:` to prevent a robot from looping indefinitely through tool calls. When the limit is exceeded, `RobotLab::ToolLoopError` is raised.
+
+```ruby
+robot = RobotLab.build(
+  name: "runner",
+  system_prompt: "Execute every step.",
+  local_tools: [StepTool],
+  max_tool_rounds: 10
+)
+
+begin
+  robot.run("Run all steps.")
+rescue RobotLab::ToolLoopError => e
+  puts e.message  # "Tool call limit of 10 exceeded"
+end
+```
+
+After a `ToolLoopError` the chat contains a dangling `tool_use` block with no matching `tool_result`. Most providers (including Anthropic) will reject any subsequent request with that history. Call `clear_messages` before reusing the robot:
+
+```ruby
+robot.clear_messages   # flushes broken history; system prompt is kept
+result = robot.run("Something new.")  # robot is healthy again
+```
+
+## Learning Accumulation
+
+`robot.learn(text)` records a cross-run observation. On each subsequent `run()`, active learnings are automatically prepended to the user message as a `LEARNINGS FROM PREVIOUS RUNS:` block so the LLM can incorporate prior context without needing a persistent chat:
+
+```ruby
+reviewer = RobotLab.build(
+  name: "reviewer",
+  system_prompt: "You are a Ruby code reviewer."
+)
+
+reviewer.run("Review snippet A")
+reviewer.learn("This codebase prefers map/collect over manual array accumulation")
+
+reviewer.run("Review snippet B")  # learning is injected automatically
+```
+
+Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot's `Memory` and survive a robot rebuild when the same `Memory` object is reused.
+
+```ruby
+reviewer.learnings          # => ["This codebase prefers map/collect..."]
+reviewer.learn("new fact")  # deduplicates before storing
+```
 
 ## Rails Integration
 

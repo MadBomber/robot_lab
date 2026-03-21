@@ -196,4 +196,38 @@ class RobotLab::MCP::ServerTest < Minitest::Test
 
     assert_equal "websocket", server.transport_type
   end
+
+  # normalize_timeout tests (mcp/server.rb lines 95, 97, 98)
+  def test_normalize_timeout_with_seconds_value
+    # lines 95, 98: non-millisecond value returned as-is (clamped to min 1)
+    server = RobotLab::MCP::Server.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" },
+      timeout: 30
+    )
+    # 30 seconds < 1000, stays as 30.0
+    assert_equal 30.0, server.timeout
+  end
+
+  def test_normalize_timeout_converts_milliseconds_to_seconds
+    # lines 97: milliseconds >= 1000 are converted to seconds
+    server = RobotLab::MCP::Server.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" },
+      timeout: 5000
+    )
+    # 5000ms = 5.0 seconds
+    assert_equal 5.0, server.timeout
+  end
+
+  def test_normalize_timeout_clamps_to_minimum_one_second
+    # line 98: [seconds, 1].max ensures minimum of 1 second
+    server = RobotLab::MCP::Server.new(
+      name: "test",
+      transport: { type: "stdio", command: "echo" },
+      timeout: 0.5
+    )
+    # 0.5 seconds < 1 minimum, so result is 1.0
+    assert_equal 1.0, server.timeout
+  end
 end

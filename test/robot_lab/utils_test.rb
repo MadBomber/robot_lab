@@ -60,4 +60,33 @@ class RobotLab::UtilsTest < Minitest::Test
       RobotLab.config.logger = original_logger
     end
   end
+
+  def test_deep_dup_hash
+    original = { a: 1, b: { c: 2 } }
+    duped = @harness.send(:deep_dup, original)
+    duped[:b][:c] = 99
+    assert_equal 2, original[:b][:c]
+  end
+
+  def test_deep_dup_array
+    original = [1, [2, 3], { a: 4 }]
+    duped = @harness.send(:deep_dup, original)
+    duped[1] << 99
+    assert_equal [2, 3], original[1]
+  end
+
+  def test_deep_dup_scalar_returns_dup
+    result = @harness.send(:deep_dup, "hello")
+    assert_equal "hello", result
+  end
+
+  def test_deep_dup_integer_returns_same
+    result = @harness.send(:deep_dup, 42)
+    assert_equal 42, result
+  end
+
+  def test_deep_dup_nil_returns_nil
+    result = @harness.send(:deep_dup, nil)
+    assert_nil result
+  end
 end

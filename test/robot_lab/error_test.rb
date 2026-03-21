@@ -87,4 +87,61 @@ class RobotLab::ErrorTest < Minitest::Test
 
     assert caught
   end
+
+  # ToolLoopError tests
+  def test_tool_loop_error_exists
+    assert defined?(RobotLab::ToolLoopError)
+  end
+
+  def test_tool_loop_error_inherits_inference_error
+    assert RobotLab::ToolLoopError < RobotLab::InferenceError
+  end
+
+  def test_tool_loop_error_inherits_error
+    assert RobotLab::ToolLoopError < RobotLab::Error
+  end
+
+  def test_tool_loop_error_can_be_raised
+    error = assert_raises(RobotLab::ToolLoopError) do
+      raise RobotLab::ToolLoopError, "Circuit breaker triggered: 26 tool calls exceeded max_tool_rounds (25)"
+    end
+
+    assert_match(/Circuit breaker triggered/, error.message)
+  end
+
+  def test_tool_loop_error_caught_as_inference_error
+    caught = nil
+
+    begin
+      raise RobotLab::ToolLoopError, "loop"
+    rescue RobotLab::InferenceError => e
+      caught = e
+    end
+
+    assert_instance_of RobotLab::ToolLoopError, caught
+  end
+
+  def test_bus_error_inherits_from_error
+    assert RobotLab::BusError < RobotLab::Error
+  end
+
+  def test_bus_error_can_be_raised
+    error = assert_raises(RobotLab::BusError) do
+      raise RobotLab::BusError, "No bus configured on this robot"
+    end
+
+    assert_equal "No bus configured on this robot", error.message
+  end
+
+  def test_await_timeout_inherits_from_error
+    assert RobotLab::AwaitTimeout < RobotLab::Error
+  end
+
+  def test_await_timeout_can_be_raised
+    error = assert_raises(RobotLab::AwaitTimeout) do
+      raise RobotLab::AwaitTimeout, "Timeout waiting for :key after 30 seconds"
+    end
+
+    assert_match(/Timeout/, error.message)
+  end
 end

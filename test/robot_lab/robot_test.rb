@@ -1477,4 +1477,866 @@ class RobotLab::RobotTest < Minitest::Test
   def test_on_content_not_serializable
     assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_content
   end
+
+
+  # =========================================================================
+  # Token tracking
+  # =========================================================================
+
+  def test_robot_starts_with_zero_token_totals
+    robot = build_robot(name: "bot", system_prompt: "test")
+    assert_equal 0, robot.total_input_tokens
+    assert_equal 0, robot.total_output_tokens
+  end
+
+
+  def test_reset_token_totals
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.instance_variable_set(:@total_input_tokens, 500)
+    robot.instance_variable_set(:@total_output_tokens, 200)
+    robot.reset_token_totals
+    assert_equal 0, robot.total_input_tokens
+    assert_equal 0, robot.total_output_tokens
+  end
+
+
+  def test_run_accumulates_tokens_from_response
+    robot = build_robot(name: "bot", system_prompt: "test")
+    tokens = RubyLLM::Tokens.new(input: 100, output: 50)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("test")
+
+    assert_equal 100, robot.total_input_tokens
+    assert_equal 50, robot.total_output_tokens
+  end
+
+
+  def test_run_accumulates_tokens_across_multiple_runs
+    robot = build_robot(name: "bot", system_prompt: "test")
+    tokens = RubyLLM::Tokens.new(input: 100, output: 50)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("first")
+    robot.run("second")
+
+    assert_equal 200, robot.total_input_tokens
+    assert_equal 100, robot.total_output_tokens
+  end
+
+
+  def test_result_includes_per_run_tokens
+    robot = build_robot(name: "bot", system_prompt: "test")
+    tokens = RubyLLM::Tokens.new(input: 75, output: 30)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    result = robot.run("test")
+
+    assert_equal 75, result.input_tokens
+    assert_equal 30, result.output_tokens
+  end
+
+
+  # =========================================================================
+  # Tool loop circuit breaker
+  # =========================================================================
+
+  def test_circuit_breaker_raises_when_limit_exceeded
+    robot = build_robot(name: "bot", system_prompt: "test", max_tool_rounds: 2)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "done", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+
+    # Stub ask to fire the tool_call hook 3 times (exceeds max of 2)
+    chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
+      3.times { @on[:tool_call]&.call(Object.new) }
+      fake_response
+    end
+
+    assert_raises(RobotLab::ToolLoopError) { robot.run("test") }
+  end
+
+
+  def test_circuit_breaker_does_not_raise_at_limit
+    robot = build_robot(name: "bot", system_prompt: "test", max_tool_rounds: 3)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "done", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+
+    chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
+      3.times { @on[:tool_call]&.call(Object.new) }
+      fake_response
+    end
+
+    result = robot.run("test")
+    assert_equal "done", result.reply
+  end
+
+
+  def test_circuit_breaker_restores_original_callback_after_run
+    called = []
+    user_cb = ->(tc) { called << tc }
+    robot = build_robot(name: "bot", system_prompt: "test",
+                        max_tool_rounds: 5, on_tool_call: user_cb)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("test")
+
+    # After run, the chat's on_tool_call should be the original user callback
+    assert_equal user_cb, chat.instance_variable_get(:@on)[:tool_call]
+  end
+
+
+  def test_no_circuit_breaker_when_max_tool_rounds_not_set
+    robot = build_robot(name: "bot", system_prompt: "test")
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    # Should not raise even with no limit configured
+    result = robot.run("test")
+    assert_equal "ok", result.reply
+  end
+
+
+  # =========================================================================
+  # Learning accumulation
+  # =========================================================================
+
+  def test_robot_starts_with_empty_learnings
+    robot = build_robot(name: "bot", system_prompt: "test")
+    assert_empty robot.learnings
+  end
+
+
+  def test_learn_adds_insight
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("Always check the cache first")
+    assert_includes robot.learnings, "Always check the cache first"
+  end
+
+
+  def test_learn_returns_self_for_chaining
+    robot = build_robot(name: "bot", system_prompt: "test")
+    result = robot.learn("insight one")
+    assert_equal robot, result
+  end
+
+
+  def test_learn_deduplicates_exact_match
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("check the cache")
+    robot.learn("check the cache")
+    assert_equal 1, robot.learnings.size
+  end
+
+
+  def test_learn_deduplicates_when_new_is_substring_of_existing
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("always check the cache before fetching")
+    robot.learn("check the cache")  # shorter, already covered
+    assert_equal 1, robot.learnings.size
+    assert_includes robot.learnings, "always check the cache before fetching"
+  end
+
+
+  def test_learn_replaces_existing_when_new_is_superset
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("check the cache")
+    robot.learn("always check the cache before fetching")  # supersedes
+    assert_equal 1, robot.learnings.size
+    assert_includes robot.learnings, "always check the cache before fetching"
+  end
+
+
+  def test_learn_ignores_empty_string
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("")
+    robot.learn("   ")
+    assert_empty robot.learnings
+  end
+
+
+  def test_learnings_injected_into_run_message
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("always be concise")
+
+    received_message = nil
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |msg = nil, **_kw, &_b|
+      received_message = msg
+      fake_response
+    end
+
+    robot.run("do the task")
+
+    assert_includes received_message, "LEARNINGS FROM PREVIOUS RUNS:"
+    assert_includes received_message, "always be concise"
+    assert_includes received_message, "do the task"
+  end
+
+
+  def test_no_learnings_injection_when_learnings_empty
+    robot = build_robot(name: "bot", system_prompt: "test")
+
+    received_message = nil
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |msg = nil, **_kw, &_b|
+      received_message = msg
+      fake_response
+    end
+
+    robot.run("do the task")
+
+    assert_equal "do the task", received_message
+  end
+
+
+  def test_learnings_persisted_to_memory
+    robot = build_robot(name: "bot", system_prompt: "test")
+    robot.learn("retry on transient errors")
+    stored = robot.memory.get(:learnings)
+    assert_equal ["retry on transient errors"], stored
+  end
+
+
+  # =========================================================================
+  # Robot#update method
+  # =========================================================================
+
+  def test_update_returns_self
+    robot = build_robot(name: "bot", template: :assistant)
+    result = robot.update
+    assert_equal robot, result
+  end
+
+  def test_update_with_template_changes_template
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.update(template: :helper)
+    assert_equal :helper, robot.template
+  end
+
+  def test_update_with_system_prompt
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.update(system_prompt: "New instructions.")
+    # System instructions should contain the new prompt
+    instructions = system_instructions(robot)
+    assert_includes instructions.to_s, "New instructions."
+  end
+
+  def test_update_with_model
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.update(model: "claude-sonnet-4")
+    assert_includes robot.model, "claude-sonnet-4"
+  end
+
+  def test_update_with_temperature
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.update(temperature: 0.5)
+    chat = robot.instance_variable_get(:@chat)
+    assert_equal 0.5, chat.instance_variable_get(:@temperature)
+  end
+
+
+  # =========================================================================
+  # Robot#run with Memory parameter
+  # =========================================================================
+
+  def test_run_with_memory_object_uses_provided_memory
+    robot = build_robot(name: "bot", system_prompt: "test")
+    custom_memory = RobotLab::Memory.new
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("test", memory: custom_memory)
+    # No assertion needed; just verify it doesn't raise
+    pass
+  end
+
+  def test_run_with_hash_memory_merges_into_memory
+    robot = build_robot(name: "bot", system_prompt: "test")
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    # Memory merged from a hash: the value should be in robot's memory after run
+    robot.run("test", memory: { extra_key: "extra_value" })
+    assert_equal "extra_value", robot.memory.get(:extra_key)
+  end
+
+
+  # =========================================================================
+  # Robot#with_template
+  # =========================================================================
+
+  def test_with_template_changes_template
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.with_template(:helper)
+    assert_equal :helper, robot.template
+  end
+
+  def test_with_template_returns_self
+    robot = build_robot(name: "bot", template: :assistant)
+    result = robot.with_template(:helper)
+    assert_equal robot, result
+  end
+
+
+  # =========================================================================
+  # RobotLab module methods
+  # =========================================================================
+
+  def test_configure_yields_config
+    yielded = nil
+    RobotLab.configure { |c| yielded = c }
+    assert_equal RobotLab.config, yielded
+  end
+
+  def test_create_memory_returns_memory_instance
+    memory = RobotLab.create_memory
+    assert_instance_of RobotLab::Memory, memory
+  end
+
+  def test_create_memory_with_data
+    memory = RobotLab.create_memory(data: { key: "value" })
+    assert_equal "value", memory.data[:key]
+  end
+
+  def test_create_memory_with_cache_disabled
+    memory = RobotLab.create_memory(enable_cache: false)
+    assert_nil memory.cache
+  end
+
+  def test_create_network_returns_network_instance
+    network = RobotLab.create_network(name: "test_net")
+    assert_instance_of RobotLab::Network, network
+  end
+
+  def test_create_network_with_block
+    robot = build_robot(name: "r1", system_prompt: "test")
+    r = robot
+    network = RobotLab.create_network(name: "block_net") do
+      task :r1, r, depends_on: :none
+    end
+    assert_equal 1, network.robots.size
+  end
+
+
+  # =========================================================================
+  # chat_provider, inject_mcp!, clear_messages, replace_messages
+  # =========================================================================
+
+  def test_chat_provider_returns_provider_or_nil
+    robot = build_robot(name: "bot", template: :assistant)
+    # May return nil or a provider string — just ensure it doesn't raise
+    result = robot.chat_provider
+    assert result.nil? || result.is_a?(String)
+  end
+
+  def test_inject_mcp_sets_clients_and_tools
+    robot = build_robot(name: "bot", template: :assistant)
+    mock_client = Object.new
+    mock_tool = build_tool(name: "injected_tool") { |i| i }
+
+    robot.inject_mcp!(clients: { "test_server" => mock_client }, tools: [mock_tool])
+
+    assert_equal({ "test_server" => mock_client }, robot.mcp_clients)
+    assert_equal [mock_tool], robot.mcp_tools
+    assert robot.instance_variable_get(:@mcp_initialized)
+  end
+
+  def test_inject_mcp_returns_self
+    robot = build_robot(name: "bot", template: :assistant)
+    result = robot.inject_mcp!(clients: {}, tools: [])
+    assert_equal robot, result
+  end
+
+  def test_clear_messages_removes_non_system
+    robot = build_robot(name: "bot", system_prompt: "Be helpful.")
+    chat = robot.instance_variable_get(:@chat)
+    # Add a user message
+    msg = Struct.new(:role, :content).new(:user, "hello")
+    chat.instance_variable_get(:@messages) << msg
+
+    robot.clear_messages
+    # After clear, only system message should remain
+    messages = chat.instance_variable_get(:@messages)
+    assert messages.all? { |m| m.role.to_s == "system" }
+  end
+
+  def test_clear_messages_without_keep_system_removes_all
+    robot = build_robot(name: "bot", system_prompt: "Be helpful.")
+    robot.clear_messages(keep_system: false)
+    chat = robot.instance_variable_get(:@chat)
+    messages = chat.instance_variable_get(:@messages)
+    assert_empty messages
+  end
+
+  def test_replace_messages_sets_messages
+    robot = build_robot(name: "bot", system_prompt: "test")
+    new_messages = []
+    robot.replace_messages(new_messages)
+    chat = robot.instance_variable_get(:@chat)
+    assert_equal new_messages, chat.instance_variable_get(:@messages)
+  end
+
+  def test_messages_delegates_to_chat
+    robot = build_robot(name: "bot", system_prompt: "test")
+    result = robot.messages
+    assert result.is_a?(Array)
+  end
+
+  def test_reset_memory_returns_self
+    robot = build_robot(name: "bot", system_prompt: "test")
+    result = robot.reset_memory
+    assert_equal robot, result
+  end
+
+  def test_failed_mcp_server_names_empty_by_default
+    robot = build_robot(name: "bot", template: :assistant)
+    assert_equal [], robot.failed_mcp_server_names
+  end
+
+  def test_mcp_client_returns_nil_for_unknown_server
+    robot = build_robot(name: "bot", template: :assistant)
+    assert_nil robot.mcp_client("nonexistent_server")
+  end
+
+  def test_failed_mcp_server_names_with_failed_configs
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.instance_variable_set(:@failed_mcp_configs, { "dead_server" => { name: "dead_server" } })
+    assert_equal ["dead_server"], robot.failed_mcp_server_names
+  end
+
+  def test_connect_mcp_returns_self
+    robot = build_robot(name: "bot", template: :assistant)
+    result = robot.connect_mcp!
+    assert_equal robot, result
+  end
+
+  def test_with_temperature_delegator_updates_chat
+    robot = build_robot(name: "bot", template: :assistant)
+    result = robot.with_temperature(0.7)
+    # Returns self for chaining
+    assert_equal robot, result
+    chat = robot.instance_variable_get(:@chat)
+    assert_equal 0.7, chat.instance_variable_get(:@temperature)
+  end
+
+  def test_update_with_extra_kwargs
+    robot = build_robot(name: "bot", template: :assistant)
+    # This tests the kwargs.each branch in update
+    # with_temperature should be callable via kwargs
+    robot.update(temperature: 0.4)
+    chat = robot.instance_variable_get(:@chat)
+    assert_equal 0.4, chat.instance_variable_get(:@temperature)
+  end
+
+  def test_extract_run_context_with_string_value
+    robot = build_robot(name: "bot", template: :assistant)
+    result = ::SimpleFlow::Result.new("string message", context: {})
+    context = robot.send(:extract_run_context, result)
+    assert_equal "string message", context[:message]
+  end
+
+  def test_extract_run_context_with_robot_result_value
+    robot = build_robot(name: "bot", template: :assistant)
+    robot_result = RobotLab::RobotResult.new(
+      robot_name: "prior",
+      output: [RobotLab::TextMessage.new(role: "assistant", content: "prior output")]
+    )
+    result = ::SimpleFlow::Result.new(robot_result, context: {})
+    context = robot.send(:extract_run_context, result)
+    assert_equal "prior output", context[:message]
+  end
+
+  def test_extract_run_context_with_hash_value
+    robot = build_robot(name: "bot", template: :assistant)
+    result = ::SimpleFlow::Result.new({ message: "hash message", extra: "data" }, context: {})
+    context = robot.send(:extract_run_context, result)
+    assert_equal "hash message", context[:message]
+  end
+
+  def test_extract_run_context_with_other_value
+    robot = build_robot(name: "bot", template: :assistant)
+    result = ::SimpleFlow::Result.new(42, context: {})
+    context = robot.send(:extract_run_context, result)
+    assert_equal "42", context[:message]
+  end
+
+  def test_build_result_with_no_content_returns_empty_output
+    robot = build_robot(name: "bot", template: :assistant)
+    # Response with nil content should produce empty output
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: nil, tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    result = robot.run("test")
+    assert_empty result.output
+  end
+
+
+  # =========================================================================
+  # Template with required params (rerender_template path)
+  # =========================================================================
+
+  def test_template_with_required_params_rerenders_at_run_time
+    # parameterized_main_test.md has required param company_name: null
+    robot = RobotLab::Robot.new(
+      name: "param_bot",
+      template: :parameterized_main_test
+    )
+
+    received_message = nil
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |msg = nil, **_kw, &_b| received_message = msg; fake_response }
+
+    robot.run("test", company_name: "Acme Corp")
+
+    # The template should be re-rendered with the provided context
+    instructions = system_instructions(robot)
+    assert_includes instructions, "Acme Corp"
+  end
+
+
+  def test_skills_rerender_at_run_time_with_params
+    # skill_with_params_test.md has company_name param; parameterized_main_test has company_name: null
+    robot = RobotLab::Robot.new(
+      name: "param_skill_bot",
+      template: :parameterized_main_test,
+      skills: [:skill_with_params_test]
+    )
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    # Run with context param — this will trigger rerender_template with expanded_skills
+    robot.run("test", company_name: "TestCo")
+
+    instructions = system_instructions(robot)
+    assert_includes instructions, "TestCo"
+  end
+
+  def test_skill_with_robot_name_sets_robot_name
+    # skill_with_robot_name_test.md has robot_name in frontmatter
+    # accumulate_extras line 201 + apply_accumulated_extras line 223
+    robot = RobotLab::Robot.new(
+      name: "robot",
+      skills: [:skill_with_robot_name_test]
+    )
+    # name from skill frontmatter should apply because @name_from_constructor is false
+    assert_equal "skill_named_bot", robot.name
+  end
+
+  def test_skill_with_robot_name_does_not_override_constructor_name
+    # apply_accumulated_extras: skips robot_name when @name_from_constructor is true
+    robot = RobotLab::Robot.new(
+      name: "my_custom_name",
+      skills: [:skill_with_robot_name_test]
+    )
+    assert_equal "my_custom_name", robot.name
+  end
+
+  def test_skill_with_tools_sets_local_tools
+    # accumulate_extras line 209 + apply_accumulated_extras line 231
+    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
+      description "A frontmatter test tool"
+      def execute = "ok"
+    }) unless defined?(::FrontmatterTestTool)
+
+    robot = RobotLab::Robot.new(
+      name: "robot",
+      skills: [:skill_with_tools_test]
+    )
+    assert_equal 1, robot.local_tools.size
+  end
+
+  def test_skill_with_mcp_sets_mcp_config
+    # accumulate_extras line 213 + apply_accumulated_extras line 235
+    robot = RobotLab::Robot.new(
+      name: "robot",
+      skills: [:skill_with_mcp_test]
+    )
+    mcp_config = robot.instance_variable_get(:@mcp_config)
+    assert_kind_of Array, mcp_config
+    assert_equal 1, mcp_config.size
+    assert_equal "skill_server", mcp_config.first[:name]
+  end
+
+  def test_resolve_frontmatter_tools_with_class
+    # resolve_frontmatter_tools line 290: when Class => name.new
+    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
+      description "A frontmatter test tool"
+      def execute = "ok"
+    }) unless defined?(::FrontmatterTestTool)
+
+    robot = RobotLab::Robot.new(name: "robot", template: :assistant)
+    result = robot.send(:resolve_frontmatter_tools, [::FrontmatterTestTool])
+    assert_equal 1, result.size
+    assert_instance_of ::FrontmatterTestTool, result.first
+  end
+
+  def test_resolve_frontmatter_tools_with_instance
+    # resolve_frontmatter_tools line 292: else branch (instance passed directly)
+    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
+      description "A frontmatter test tool"
+      def execute = "ok"
+    }) unless defined?(::FrontmatterTestTool)
+
+    tool_instance = ::FrontmatterTestTool.new
+    robot = RobotLab::Robot.new(name: "robot", template: :assistant)
+    result = robot.send(:resolve_frontmatter_tools, [tool_instance])
+    assert_equal 1, result.size
+    assert_equal tool_instance, result.first
+  end
+
+  def test_update_with_non_standard_kwargs_calls_chat_method
+    # robot.rb lines 379-381: kwargs.each block for non-explicit params
+    robot = build_robot(name: "bot", template: :assistant)
+    chat = robot.instance_variable_get(:@chat)
+    # with_top_p should exist as a chat method (dynamically delegated)
+    if chat.respond_to?(:with_top_p)
+      robot.update(top_p: 0.9)
+      assert_equal 0.9, chat.instance_variable_get(:@top_p)
+    else
+      # Fallback: test that update returns self with unknown kwargs (no raise)
+      result = robot.update(nonexistent_param: "value")
+      assert_equal robot, result
+    end
+  end
+
+  def test_provider_sets_chat_kwargs
+    # robot.rb lines 211-212: provider branch sets chat_kwargs when @provider is set
+    # Configure fake ollama endpoint so RubyLLM doesn't raise on missing config
+    RubyLLM.configure { |c| c.ollama_api_base = "http://localhost:11434" }
+    robot = RobotLab::Robot.new(
+      name: "local_bot",
+      provider: "ollama",
+      model: "llama3.2"
+    )
+    provider = robot.instance_variable_get(:@provider)
+    assert_equal "ollama", provider
+  ensure
+    RubyLLM.configure { |c| c.ollama_api_base = nil }
+  end
+
+  def test_ensure_mcp_clients_with_failing_server_stores_failed_config
+    # mcp_management.rb lines 34, 36, 42-50, 55-56, 58, 62-68
+    robot = build_robot(name: "bot", template: :assistant)
+    failing_config = [{ name: "bad_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
+    robot.send(:ensure_mcp_clients, failing_config)
+    # Failed connection should be stored
+    assert_equal ["bad_server"], robot.failed_mcp_server_names
+  end
+
+  def test_ensure_mcp_clients_second_call_retries_failed
+    # mcp_management.rb lines 36-39: second call with already-initialized retries failed servers
+    robot = build_robot(name: "bot", template: :assistant)
+    failing_config = [{ name: "bad_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
+    robot.send(:ensure_mcp_clients, failing_config)
+    # Second call with same config should hit the retry path (line 36-38)
+    robot.send(:ensure_mcp_clients, failing_config)
+    assert_equal ["bad_server"], robot.failed_mcp_server_names
+  end
+
+  def test_ensure_mcp_clients_success_path
+    # mcp_management.rb lines 59-61, 113-115, 117, 122, 124, 127: success path when client connects
+    robot = build_robot(name: "bot", template: :assistant)
+    server_config = { name: "ok_server", transport: { type: "stdio", command: "nonexistent" } }
+
+    # Build a mock client that reports connected and has tools
+    tool_defs = [
+      { name: "search", description: "Search tool", inputSchema: { type: "object", properties: {} } }
+    ]
+    mock_client = Object.new
+    mock_client.define_singleton_method(:connect) {}
+    mock_client.define_singleton_method(:connected?) { true }
+    mock_client.define_singleton_method(:list_tools) { tool_defs }
+    mock_client.define_singleton_method(:server) {
+      s = Object.new; s.define_singleton_method(:name) { "ok_server" }; s
+    }
+
+    # Stub MCP::Client.new to return our mock
+    RobotLab::MCP::Client.define_singleton_method(:new) { |*args, **kwargs| mock_client }
+
+    robot.send(:ensure_mcp_clients, [server_config])
+
+    # The client should be registered in @mcp_clients
+    clients = robot.instance_variable_get(:@mcp_clients)
+    assert_equal mock_client, clients["ok_server"]
+    # Tools should be discovered
+    mcp_tools = robot.instance_variable_get(:@mcp_tools)
+    assert_equal 1, mcp_tools.size
+
+    # Call the discovered tool to cover mcp_management.rb line 122 (the call_tool block)
+    mock_client.define_singleton_method(:call_tool) { |name, args| "tool_result" }
+    result = mcp_tools.first.execute
+    assert_equal "tool_result", result
+  ensure
+    # Restore MCP::Client.new
+    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
+  end
+
+  def test_ensure_mcp_clients_exception_path
+    # mcp_management.rb lines 70-72: rescue StandardError in init_mcp_client
+    robot = build_robot(name: "bot", template: :assistant)
+    # Pass invalid transport type to trigger exception in MCP::Client.new
+    invalid_config = [{ name: "bad_server", transport: { type: "invalid_transport_xyz" } }]
+    # This should not raise, just store the failure
+    robot.send(:ensure_mcp_clients, invalid_config)
+    assert_equal ["bad_server"], robot.failed_mcp_server_names
+  end
+
+  def test_retry_failed_servers_success_path
+    # mcp_management.rb lines 95-98: retry succeeds and registers client
+    robot = build_robot(name: "bot", template: :assistant)
+    failing_config = [{ name: "retry_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
+
+    # First call: fails and records
+    robot.send(:ensure_mcp_clients, failing_config)
+    assert_equal ["retry_server"], robot.failed_mcp_server_names
+
+    # Build a mock client that reports connected for the retry
+    tool_defs = [{ name: "retry_tool", description: "Retry tool", inputSchema: { type: "object", properties: {} } }]
+    mock_client = Object.new
+    mock_client.define_singleton_method(:connect) {}
+    mock_client.define_singleton_method(:connected?) { true }
+    mock_client.define_singleton_method(:list_tools) { tool_defs }
+    mock_client.define_singleton_method(:server) {
+      s = Object.new; s.define_singleton_method(:name) { "retry_server" }; s
+    }
+
+    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs| mock_client }
+    # Second call: should hit retry path and succeed
+    robot.send(:ensure_mcp_clients, failing_config)
+    # After successful retry, not in failed list anymore
+    assert_equal [], robot.failed_mcp_server_names
+    # Tool should be discovered from the retry
+    mcp_tools = robot.instance_variable_get(:@mcp_tools)
+    assert_equal 1, mcp_tools.size
+  ensure
+    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
+  end
+
+  def test_retry_failed_servers_exception_path
+    # mcp_management.rb lines 103-105: rescue in retry_failed_servers when retry itself fails
+    robot = build_robot(name: "bot", template: :assistant)
+    failing_config = [{ name: "retry_fail_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
+
+    # First call: fails and records as failed
+    robot.send(:ensure_mcp_clients, failing_config)
+    assert_equal ["retry_fail_server"], robot.failed_mcp_server_names
+
+    # Make MCP::Client.new raise during retry
+    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs|
+      raise StandardError, "retry connection error"
+    }
+
+    # Second call: retry path should rescue and log warn
+    robot.send(:ensure_mcp_clients, failing_config)
+    # Server remains in failed list since retry failed
+    assert_equal ["retry_fail_server"], robot.failed_mcp_server_names
+  ensure
+    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
+  end
+
+  def test_extract_server_name_with_mcp_server_object
+    # mcp_management.rb line 138: MCP::Server branch in extract_server_name
+    robot = build_robot(name: "bot", template: :assistant)
+    server = RobotLab::MCP::Server.new(
+      name: "my_mcp_server",
+      transport: { type: "stdio", command: "echo" }
+    )
+    name = robot.send(:extract_server_name, server)
+    assert_equal "my_mcp_server", name
+  end
+
+  def test_extract_server_name_with_other_type
+    # mcp_management.rb line 140: else branch in extract_server_name
+    robot = build_robot(name: "bot", template: :assistant)
+    # Pass an object that isn't a Hash or MCP::Server
+    custom = Object.new
+    custom.define_singleton_method(:to_s) { "custom_server" }
+    name = robot.send(:extract_server_name, custom)
+    assert_equal "custom_server", name
+  end
+
+  def test_chat_provider_returns_nil_on_error
+    # robot.rb line 525: rescue branch in chat_provider
+    robot = build_robot(name: "bot", template: :assistant)
+    chat = robot.instance_variable_get(:@chat)
+    # Override model to raise an error when accessed
+    chat.define_singleton_method(:model) { raise StandardError, "model error" }
+    result = robot.send(:chat_provider)
+    assert_nil result
+  end
+
+  def test_handle_message_via_llm_default_handler
+    # bus_messaging.rb lines 203, 223-225: handle_message_via_llm called when no on_message set
+    bus = TypedBus::MessageBus.new
+    replies = []
+
+    # alice will receive replies from bob's LLM handler
+    alice = RobotLab::Robot.new(name: "alice", template: :assistant, bus: bus)
+    alice.on_message { |msg| replies << msg }
+
+    # bob has NO on_message set, so incoming messages go to handle_message_via_llm
+    bob = RobotLab::Robot.new(name: "bob", template: :assistant, bus: bus)
+
+    # Stub bob's chat.ask to return a fake LLM response
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "LLM reply from bob", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    bob_chat = bob.instance_variable_get(:@chat)
+    bob_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    Async { alice.send_message(to: :bob, content: "hello bob") }
+
+    # Wait for reply to propagate
+    wait_until(timeout: 2) { replies.size >= 1 }
+
+    assert_equal 1, replies.size
+    assert_equal "LLM reply from bob", replies.first.content
+  end
 end

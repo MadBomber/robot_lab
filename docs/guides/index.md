@@ -38,6 +38,10 @@ If you're new to RobotLab, start here:
 
     Share data between robots with the memory system
 
+-   [:octicons-pulse-24: **Observability & Safety**](observability.md)
+
+    Token tracking, circuit breakers, and learning accumulation
+
 </div>
 
 ## Framework Integration
@@ -61,3 +65,4 @@ If you're new to RobotLab, start here:
 | [Streaming](streaming.md) | Real-time responses | 5 min |
 | [Memory](memory.md) | Shared data store | 5 min |
 | [Rails Integration](rails-integration.md) | Rails application setup | 15 min |
+| [Observability & Safety](observability.md) | Token tracking, circuit breaker, learning loop | 10 min |

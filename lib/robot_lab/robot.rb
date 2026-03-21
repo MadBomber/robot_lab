@@ -66,7 +66,8 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox, :config, :skills, :provider
+                :bus, :outbox, :config, :skills, :provider,
+                :total_input_tokens, :total_output_tokens, :learnings
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -125,6 +126,8 @@ module RobotLab
       presence_penalty: nil,
       frequency_penalty: nil,
       stop: nil,
+      max_tool_rounds: nil,
+      token_budget: nil,
       config: nil
     )
       @name = name.to_s
@@ -144,7 +147,8 @@ module RobotLab
         max_tokens: max_tokens, presence_penalty: presence_penalty,
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
-        on_content: on_content, bus: bus, enable_cache: enable_cache
+        on_content: on_content, bus: bus, enable_cache: enable_cache,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget
       }.compact
 
       # Only include mcp/tools if explicitly set (not the default :none sentinel)
@@ -177,9 +181,20 @@ module RobotLab
       @bus_processing = false
       @bus_queue = []
 
+      # Token tracking
+      @total_input_tokens = 0
+      @total_output_tokens = 0
+
+      # Learning accumulation
+      @learnings = []
+
       # Inherent memory (used when standalone, not in a network)
       cache_enabled = @config.key?(:enable_cache) ? @config.enable_cache : true
       @memory = Memory.new(enable_cache: cache_enabled)
+
+      # Restore persisted learnings from inherent memory if present
+      persisted = @memory.get(:learnings)
+      @learnings = Array(persisted) if persisted
 
       # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)
       config = RobotLab.config
@@ -314,13 +329,29 @@ module RobotLab
         run_context = kwargs.except(:with)
         rerender_template(run_context) if @template && run_context.any?
 
+        # Prepend accumulated learnings to the user message
+        effective_message = inject_learnings(message)
+
+        # Install circuit breaker for this run if max_tool_rounds is configured
+        install_circuit_breaker if @config.max_tool_rounds
+
         # Delegate to Agent's ask (which calls @chat.ask)
         ask_kwargs = kwargs.slice(:with)
         streaming = effective_streaming_block(block)
-        response = ask(message, **ask_kwargs, &streaming)
+        response = ask(effective_message, **ask_kwargs, &streaming)
 
-        build_result(response, run_memory)
+        result = build_result(response, run_memory)
+
+        # Enforce token budget if configured
+        budget = @config.token_budget
+        if budget && @total_input_tokens + @total_output_tokens > budget
+          raise InferenceError,
+                "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
+        end
+
+        result
       ensure
+        restore_tool_call_callback if @config.max_tool_rounds
         run_memory.current_writer = previous_writer
       end
     end
@@ -503,6 +534,44 @@ module RobotLab
     end
 
 
+    # Add a learning to this robot's accumulation store.
+    #
+    # Deduplicates by bidirectional substring matching: a new learning is
+    # skipped if it is already contained within an existing learning, or
+    # an existing learning is contained within the new one (the new one
+    # wins and replaces the weaker entry).
+    #
+    # Learnings are persisted to the robot's inherent memory under :learnings.
+    #
+    # @param text [String] the insight to record
+    # @return [self]
+    def learn(text)
+      text = text.to_s.strip
+      return self if text.empty?
+
+      # Remove any existing learning that is a substring of the new one
+      @learnings.reject! { |existing| text.include?(existing) }
+
+      # Skip if any existing learning already covers the new one
+      unless @learnings.any? { |existing| existing.include?(text) }
+        @learnings << text
+        @memory.set(:learnings, @learnings.dup)
+      end
+
+      self
+    end
+
+
+    # Reset cumulative token counters to zero.
+    #
+    # @return [self]
+    def reset_token_totals
+      @total_input_tokens = 0
+      @total_output_tokens = 0
+      self
+    end
+
+
     # Converts the robot to a hash representation
     #
     # @return [Hash]
@@ -578,12 +647,28 @@ module RobotLab
 
       tool_calls = response.respond_to?(:tool_calls) ? (response.tool_calls || []) : []
 
+      # Extract token usage from the response
+      input_toks = 0
+      output_toks = 0
+      if response.respond_to?(:tokens) && response.tokens
+        input_toks = response.tokens.input.to_i
+        output_toks = response.tokens.output.to_i
+      elsif response.respond_to?(:input_tokens)
+        input_toks = response.input_tokens.to_i
+        output_toks = response.respond_to?(:output_tokens) ? response.output_tokens.to_i : 0
+      end
+
+      @total_input_tokens += input_toks
+      @total_output_tokens += output_toks
+
       RobotResult.new(
         robot_name: @name,
         output: output,
         tool_calls: normalize_tool_calls(tool_calls),
         stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil,
-        raw: response
+        raw: response,
+        input_tokens: input_toks,
+        output_tokens: output_toks
       )
     end
 
@@ -628,6 +713,43 @@ module RobotLab
       return available if allowed_names.empty?
 
       ToolConfig.filter_tools(available, allowed_names: allowed_names)
+    end
+
+
+    # Prepend accumulated learnings to a user message when learnings exist.
+    def inject_learnings(message)
+      return message if @learnings.empty? || message.nil?
+
+      learning_block = "LEARNINGS FROM PREVIOUS RUNS:\n" +
+                       @learnings.map { |l| "- #{l}" }.join("\n") +
+                       "\n\n"
+      "#{learning_block}#{message}"
+    end
+
+
+    # Install a per-run circuit breaker on the chat's on_tool_call hook.
+    # Raises ToolLoopError if tool calls exceed @config.max_tool_rounds.
+    # Stores the previous callback so restore_tool_call_callback can undo it.
+    def install_circuit_breaker
+      @circuit_breaker_call_count = 0
+      max = @config.max_tool_rounds
+      original = @on_tool_call
+
+      @chat.on_tool_call do |tool_call|
+        @circuit_breaker_call_count += 1
+        if @circuit_breaker_call_count > max
+          raise ToolLoopError,
+                "Circuit breaker triggered: #{@circuit_breaker_call_count} tool calls exceeded " \
+                "max_tool_rounds (#{max})"
+        end
+        original&.call(tool_call)
+      end
+    end
+
+
+    # Restore the original on_tool_call callback after a circuit-breaker run.
+    def restore_tool_call_callback
+      @chat.on_tool_call(&@on_tool_call)
     end
   end
 end

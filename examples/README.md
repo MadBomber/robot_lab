@@ -45,6 +45,9 @@ examples/
     scout.rb                  #   Talent scout with analyst spawning
     display.rb                #   Terminal formatting (color, wrapping, file output)
     prompts/                  #   Templates for comic, heckler, and scout
+  19_token_tracking.rb        # Per-robot token & cost tracking
+  20_circuit_breaker.rb       # Tool loop circuit breaker with max_tool_rounds
+  21_learning_loop.rb         # Learning accumulation across runs with robot.learn
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -158,6 +161,24 @@ A comedy club where three robots interact through a shared message bus. A comedi
 Terminal output is color-formatted: comic bits in cyan (left-aligned), heckler reactions in yellow (right-indented), tool annotations dimmed. Scout notes go to `scout_notes.md` instead of STDOUT. The final verdict appears in green on both STDOUT and the scout file.
 
 Demonstrates: Robot subclasses, self-modification via tool side effects, dynamic spawning (`spawn`), shared `:room` channel + personal channels, processing guards for async serialization, `[SILENCE]` opt-out pattern, style reinvention via user-prompt injection.
+
+**Requires:** LLM API key
+
+### 19 — Token & Cost Tracking
+
+Track token usage across runs using `result.input_tokens` / `result.output_tokens` for per-run counts and `robot.total_input_tokens` / `robot.total_output_tokens` for running totals. Demonstrates `reset_token_totals` to start a fresh batch and includes a simple cost estimate using per-provider pricing constants.
+
+**Requires:** LLM API key
+
+### 20 — Tool Loop Circuit Breaker
+
+Guards against runaway tool call loops using `max_tool_rounds:`. A step processor tool is designed to always return "more steps remain", which would loop indefinitely without a guard. The circuit breaker fires after the configured limit and raises `RobotLab::ToolLoopError`. Shows how to rescue the error gracefully and confirms the robot is fully reusable after a breaker trip.
+
+**Requires:** LLM API key
+
+### 21 — Learning Accumulation Loop
+
+Builds up cross-run observations with `robot.learn(text)`. A code reviewer accumulates one key insight after each review. On subsequent runs, learnings are automatically prepended to the user message as a "LEARNINGS FROM PREVIOUS RUNS:" block. Demonstrates bidirectional substring deduplication (broader learnings replace narrower ones), the `robot.learnings` accessor, and how learnings survive a robot rebuild via the shared `Memory` object.
 
 **Requires:** LLM API key
 

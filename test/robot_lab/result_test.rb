@@ -282,4 +282,159 @@ class RobotLab::RobotResultTest < Minitest::Test
 
     assert result.created_at.is_a?(Time)
   end
+
+
+  # --- Token tracking ---
+
+  def test_token_fields_default_to_zero
+    result = RobotLab::RobotResult.new(robot_name: "robot", output: [])
+    assert_equal 0, result.input_tokens
+    assert_equal 0, result.output_tokens
+  end
+
+
+  def test_token_fields_accept_values
+    result = RobotLab::RobotResult.new(
+      robot_name: "robot",
+      output: [],
+      input_tokens: 100,
+      output_tokens: 50
+    )
+    assert_equal 100, result.input_tokens
+    assert_equal 50, result.output_tokens
+  end
+
+
+  def test_token_fields_coerce_to_integer
+    result = RobotLab::RobotResult.new(
+      robot_name: "robot",
+      output: [],
+      input_tokens: "42",
+      output_tokens: "21"
+    )
+    assert_equal 42, result.input_tokens
+    assert_equal 21, result.output_tokens
+  end
+
+
+  def test_export_includes_tokens_when_nonzero
+    result = RobotLab::RobotResult.new(
+      robot_name: "robot",
+      output: [],
+      input_tokens: 100,
+      output_tokens: 50
+    )
+    exported = result.export
+    assert_equal 100, exported[:input_tokens]
+    assert_equal 50, exported[:output_tokens]
+  end
+
+
+  def test_export_omits_tokens_when_zero
+    result = RobotLab::RobotResult.new(robot_name: "robot", output: [])
+    exported = result.export
+    refute exported.key?(:input_tokens)
+    refute exported.key?(:output_tokens)
+  end
+
+
+  def test_from_hash_restores_token_fields
+    hash = {
+      robot_name: "robot",
+      output: [],
+      input_tokens: 200,
+      output_tokens: 80
+    }
+    result = RobotLab::RobotResult.from_hash(hash)
+    assert_equal 200, result.input_tokens
+    assert_equal 80, result.output_tokens
+  end
+
+  def test_normalize_messages_raises_on_invalid_type
+    assert_raises(ArgumentError) do
+      RobotLab::RobotResult.new(robot_name: "r", output: [42])
+    end
+  end
+
+  def test_normalize_messages_raises_on_integer_in_output
+    assert_raises(ArgumentError) do
+      RobotLab::RobotResult.new(robot_name: "r", output: [Object.new])
+    end
+  end
+
+  def test_normalize_tool_results_raises_on_invalid_type
+    assert_raises(ArgumentError) do
+      RobotLab::RobotResult.new(
+        robot_name: "r",
+        output: [],
+        tool_calls: [42]
+      )
+    end
+  end
+
+  def test_checksum_varies_with_created_at
+    output = [RobotLab::TextMessage.new(role: :assistant, content: "Same content")]
+
+    t1 = Time.now
+    t2 = t1 + 1
+
+    result1 = RobotLab::RobotResult.new(robot_name: "robot", output: output, created_at: t1)
+    result2 = RobotLab::RobotResult.new(robot_name: "robot", output: output, created_at: t2)
+
+    refute_equal result1.checksum, result2.checksum
+  end
+
+  def test_reply_alias_for_last_text_content
+    output = [RobotLab::TextMessage.new(role: :assistant, content: "Hello")]
+    result = RobotLab::RobotResult.new(robot_name: "robot", output: output)
+
+    assert_equal result.last_text_content, result.reply
+  end
+
+  def test_normalize_tool_results_handles_tool_result_hash
+    tool = RobotLab::ToolMessage.new(id: "t1", name: "calc", input: {})
+    result = RobotLab::RobotResult.new(
+      robot_name: "robot",
+      output: [],
+      tool_calls: [{ type: "tool_result", tool: { id: "t1", name: "calc", input: {} }, content: "42" }]
+    )
+    assert_equal 1, result.tool_calls.size
+  end
+
+  def test_normalize_tool_results_handles_non_tool_result_hash
+    # A hash with type != "tool_result" goes through Message.from_hash
+    # Use a valid type — ToolResultMessage type is "tool_result"
+    # Using a tool_result type hash with tool key
+    result = RobotLab::RobotResult.new(
+      robot_name: "robot",
+      output: [],
+      tool_calls: [
+        RobotLab::ToolResultMessage.new(
+          tool: { id: "t1", name: "test", input: {} },
+          content: "data"
+        )
+      ]
+    )
+    assert_equal 1, result.tool_calls.size
+    assert_instance_of RobotLab::ToolResultMessage, result.tool_calls.first
+  end
+
+  def test_from_hash_with_prompt_and_history
+    prompt_msg = { type: "text", role: "user", content: "Prompt" }
+    history_msg = { type: "text", role: "assistant", content: "History" }
+
+    hash = {
+      robot_name: "robot",
+      output: [],
+      prompt: [prompt_msg],
+      history: [history_msg]
+    }
+
+    result = RobotLab::RobotResult.from_hash(hash)
+
+    assert_equal 1, result.prompt.size
+    assert_equal "Prompt", result.prompt.first.content
+    assert_equal 1, result.history.size
+    assert_equal "History", result.history.first.content
+  end
 end

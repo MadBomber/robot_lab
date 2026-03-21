@@ -263,4 +263,66 @@ class RobotLab::MessageTest < Minitest::Test
     assert_instance_of RobotLab::ToolMessage, message.tool
     assert_equal "t1", message.tool.id
   end
+
+  def test_invalid_message_type_raises
+    assert_raises(ArgumentError) do
+      RobotLab::Message.new(type: "invalid_xyz", role: :assistant, content: "test")
+    end
+  end
+
+  def test_invalid_role_raises
+    assert_raises(ArgumentError) do
+      RobotLab::Message.new(type: "text", role: :unknown_role, content: "test")
+    end
+  end
+
+  def test_invalid_stop_reason_raises
+    assert_raises(ArgumentError) do
+      RobotLab::TextMessage.new(role: :assistant, content: "test", stop_reason: "invalid_reason")
+    end
+  end
+
+  def test_message_from_hash_with_unknown_type_falls_through
+    # The else branch in from_hash calls new(**hash) which will raise ArgumentError
+    # because "unknown_xyz" is not a valid type
+    assert_raises(ArgumentError) do
+      RobotLab::Message.from_hash({ type: "unknown_xyz", role: :assistant, content: "test" })
+    end
+  end
+
+  def test_tool_call_message_requires_tool_message_or_hash
+    assert_raises(ArgumentError) do
+      RobotLab::ToolCallMessage.new(role: :assistant, tools: ["not_a_tool"])
+    end
+  end
+
+  def test_tool_result_message_requires_tool_message_or_hash
+    assert_raises(ArgumentError) do
+      RobotLab::ToolResultMessage.new(tool: "not_a_tool", content: "result")
+    end
+  end
+
+  def test_tool_result_message_to_json
+    tool = RobotLab::ToolMessage.new(id: "t1", name: "test", input: {})
+    message = RobotLab::ToolResultMessage.new(tool: tool, content: { data: "ok" })
+    json = message.to_json
+
+    assert json.is_a?(String)
+    parsed = JSON.parse(json)
+    assert_equal "tool_result", parsed["type"]
+    assert_equal "tool_result", parsed["role"]
+  end
+
+  def test_text_message_compact_hash_excludes_nil_stop_reason
+    message = RobotLab::TextMessage.new(role: :user, content: "Hello")
+    hash = message.to_h
+    refute hash.key?(:stop_reason)
+  end
+
+  def test_message_from_hash_with_string_keys
+    hash = { "type" => "text", "role" => "user", "content" => "Hello" }
+    message = RobotLab::Message.from_hash(hash)
+    assert_instance_of RobotLab::TextMessage, message
+    assert_equal "Hello", message.content
+  end
 end

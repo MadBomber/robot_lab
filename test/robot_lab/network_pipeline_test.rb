@@ -158,4 +158,197 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     result = network.run(message: "test context")
     assert_equal "done", result.value.reply
   end
+
+  def test_robot_error_does_not_crash_pipeline
+    robot = build_robot(name: "bad_robot", system_prompt: "I will fail")
+
+    # Stub ask to raise
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise RuntimeError, "simulated failure" }
+
+    network = RobotLab::Network.new(name: "fault_test") do
+      task :bad_robot, robot, depends_on: :none
+    end
+
+    result = network.run(message: "test")
+
+    # Result should contain the error result, not raise
+    error_result = result.context[:bad_robot]
+    assert_instance_of RobotLab::RobotResult, error_result
+    assert_match(/RuntimeError/, error_result.reply)
+  end
+
+  def test_token_budget_raises_inference_error_when_exceeded
+    robot = build_robot(name: "budget_bot", system_prompt: "test", token_budget: 100)
+
+    tokens = RubyLLM::Tokens.new(input: 60, output: 60)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "reply", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    network = RobotLab::Network.new(name: "budget_test") do
+      task :budget_bot, robot, depends_on: :none
+    end
+
+    result = network.run(message: "test")
+
+    # Robot catches the InferenceError in call() and returns an error result
+    bot_result = result.context[:budget_bot]
+    assert_instance_of RobotLab::RobotResult, bot_result
+    assert_match(/InferenceError|Token budget exceeded/, bot_result.reply)
+  end
+
+  def test_token_budget_not_exceeded_when_under_budget
+    robot = build_robot(name: "budget_bot2", system_prompt: "test", token_budget: 200)
+
+    tokens = RubyLLM::Tokens.new(input: 60, output: 60)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "all good", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    network = RobotLab::Network.new(name: "budget_ok") do
+      task :budget_bot2, robot, depends_on: :none
+    end
+
+    result = network.run(message: "test")
+
+    assert_equal "all good", result.value.reply
+  end
+
+  def test_circuit_breaker_fires_user_callback_within_limit
+    call_count = 0
+    on_tool_call_cb = ->(_tc) { call_count += 1 }
+
+    robot = build_robot(name: "cb_robot", system_prompt: "test",
+                        max_tool_rounds: 3, on_tool_call: on_tool_call_cb)
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "done", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
+      2.times { @on[:tool_call]&.call(Object.new) }
+      fake_response
+    end
+
+    robot.run("test")
+
+    assert_equal 2, call_count
+  end
+
+  def test_circuit_breaker_resets_counter_between_runs
+    robot = build_robot(name: "counter_bot", system_prompt: "test", max_tool_rounds: 2)
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "done", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
+      2.times { @on[:tool_call]&.call(Object.new) }
+      fake_response
+    end
+
+    # First run fires 2 tool calls (== limit, no raise)
+    result1 = robot.run("first")
+    assert_equal "done", result1.reply
+
+    # Second run also fires 2 tool calls — counter was reset
+    result2 = robot.run("second")
+    assert_equal "done", result2.reply
+  end
+
+  def test_inject_learnings_with_nil_message
+    robot = build_robot(name: "learner", system_prompt: "test")
+    robot.learn("something important")
+
+    result = robot.send(:inject_learnings, nil)
+    assert_nil result
+  end
+
+  def test_inject_learnings_returns_message_unchanged_when_no_learnings
+    robot = build_robot(name: "learner", system_prompt: "test")
+    result = robot.send(:inject_learnings, "my message")
+    assert_equal "my message", result
+  end
+
+  def test_multiple_learnings_all_appear_in_injected_message
+    robot = build_robot(name: "learner", system_prompt: "test")
+    robot.learn("insight one")
+    robot.learn("insight two")
+    robot.learn("insight three")
+
+    received_message = nil
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |msg = nil, **_kw, &_b|
+      received_message = msg
+      fake_response
+    end
+
+    robot.run("do the task")
+
+    assert_includes received_message, "insight one"
+    assert_includes received_message, "insight two"
+    assert_includes received_message, "insight three"
+  end
+
+  def test_learnings_restored_from_memory_manually
+    robot = build_robot(name: "learner", system_prompt: "test")
+    robot.learn("foo")
+    robot.learn("bar")
+
+    # Simulate reloading learnings from persisted memory
+    persisted = robot.memory.get(:learnings)
+    robot.instance_variable_set(:@learnings, [])
+    robot.instance_variable_set(:@learnings, Array(persisted))
+
+    assert_includes robot.learnings, "foo"
+    assert_includes robot.learnings, "bar"
+  end
+
+  def test_build_result_uses_input_tokens_fallback
+    robot = build_robot(name: "token_bot", system_prompt: "test")
+
+    # Fake response that has input_tokens/output_tokens but NOT .tokens
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :input_tokens, :output_tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn",
+      input_tokens: 42, output_tokens: 21
+    )
+
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    result = robot.run("test")
+
+    assert_equal 42, result.input_tokens
+    assert_equal 21, result.output_tokens
+  end
+
+  def test_run_result_includes_duration
+    robot = build_robot(name: "dur_bot", system_prompt: "test")
+
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    # Invoke via call() which sets duration
+    result_obj = ::SimpleFlow::Result.new("hello", context: {})
+    result = robot.call(result_obj)
+
+    robot_result = result.context[:dur_bot]
+    assert robot_result.duration.is_a?(Float)
+    assert robot_result.duration >= 0
+  end
 end

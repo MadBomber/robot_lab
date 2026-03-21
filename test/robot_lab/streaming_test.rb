@@ -182,6 +182,31 @@ class RobotLab::Streaming::ContextTest < Minitest::Test
 
     refute_nil chunk
   end
+
+  def test_create_context_with_shared_sequence
+    parent = RobotLab::Streaming::Context.new(
+      run_id: "parent_run",
+      message_id: "parent_msg",
+      scope: "network",
+      publish: @publish
+    )
+
+    # Publish one event to increment sequence
+    parent.publish_event(event: "parent.event", data: {})
+
+    child = parent.create_context_with_shared_sequence(
+      run_id: "child_run",
+      message_id: "child_msg",
+      scope: "robot"
+    )
+
+    child.publish_event(event: "child.event", data: {})
+
+    # Both share the sequence counter, so child should be sequence 2
+    assert_equal 1, @events[0][:sequence_number]
+    assert_equal 2, @events[1][:sequence_number]
+    assert_equal "child_run", @events[1][:data][:run_id]
+  end
 end
 
 class RobotLab::Streaming::EventsTest < Minitest::Test
