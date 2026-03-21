@@ -29,7 +29,9 @@
 - <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting<br>
 - <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>
 - <strong>Tool Loop Circuit Breaker</strong> - <code>max_tool_rounds:</code> guards against runaway tool call loops<br>
-- <strong>Learning Accumulation</strong> - <code>robot.learn()</code> builds up cross-run observations with deduplication
+- <strong>Learning Accumulation</strong> - <code>robot.learn()</code> builds up cross-run observations with deduplication<br>
+- <strong>Context Window Compression</strong> - <code>robot.compress_history()</code> prunes irrelevant old turns via TF cosine scoring<br>
+- <strong>Convergence Detection</strong> - <code>RobotLab::Convergence</code> detects when independent agents agree, enabling reconciler fast-path
 </td>
 </tr>
 </table>

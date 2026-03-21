@@ -48,6 +48,8 @@ examples/
   19_token_tracking.rb        # Per-robot token & cost tracking
   20_circuit_breaker.rb       # Tool loop circuit breaker with max_tool_rounds
   21_learning_loop.rb         # Learning accumulation across runs with robot.learn
+  22_context_compression.rb   # Context window compression with HistoryCompressor
+  23_convergence.rb           # Debate convergence detection and reconciler fast-path
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -181,6 +183,18 @@ Guards against runaway tool call loops using `max_tool_rounds:`. A step processo
 Builds up cross-run observations with `robot.learn(text)`. A code reviewer accumulates one key insight after each review. On subsequent runs, learnings are automatically prepended to the user message as a "LEARNINGS FROM PREVIOUS RUNS:" block. Demonstrates bidirectional substring deduplication (broader learnings replace narrower ones), the `robot.learnings` accessor, and how learnings survive a robot rebuild via the shared `Memory` object.
 
 **Requires:** LLM API key
+
+### 22 — Context Window Compression
+
+Demonstrates `robot.compress_history()` for reducing token usage in long conversations. Old turns are scored against the recent context using stemmed term-frequency cosine similarity (via the `classifier` gem). High-relevance turns are kept verbatim; irrelevant turns are dropped; medium-relevance turns can optionally be summarized by a second robot. Shows both drop-mode and summarizer-lambda patterns, plus the LLM summarizer integration recipe.
+
+**Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
+
+### 23 — Debate Convergence Detection
+
+Demonstrates `RobotLab::Convergence` for detecting when two independent agents have reached the same conclusion. Scores pairs of texts from identical → semantically similar → partially related → unrelated, showing how the similarity metric varies. Includes the router fast-path pattern: when two verifier robots agree above a threshold, the expensive reconciler LLM call is skipped entirely.
+
+**Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
 
 ### 18 — Rails Integration Demo
 

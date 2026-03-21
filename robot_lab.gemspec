@@ -57,4 +57,9 @@ Gem::Specification.new do |spec|
   # Optional MCP transport dependencies (loaded on demand)
   spec.add_dependency "async-http", "~> 0.60"
   spec.add_dependency "async-websocket", "~> 0.30"
+
+  # Optional text analysis dependencies.
+  # Add to your application's Gemfile to enable compress_history and
+  # RobotLab::Convergence:
+  #   gem "classifier", "~> 2.3"
 end
