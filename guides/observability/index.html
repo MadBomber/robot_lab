@@ -12,13 +12,9 @@
         <meta name="author" content="Dewayne VanHoozer">
       
       
-        <link rel="canonical" href="https://madbomber.github.io/robot_lab/architecture/message-flow/">
+        <link rel="canonical" href="https://madbomber.github.io/robot_lab/guides/observability/">
       
       
-        <link rel="prev" href="../state-management/">
-      
-      
-        <link rel="next" href="../../guides/">
       
       
         
@@ -29,7 +25,7 @@
     
     
       
-        <title>Message Flow - RobotLab</title>
+        <title>Observability & Safety - RobotLab</title>
       
     
     
@@ -84,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#message-flow" class="md-skip">
+        <a href="#observability-safety" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Message Flow
+              Observability &amp; Safety
             
           </span>
         </div>
@@ -274,13 +270,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../architecture/" class="md-tabs__link">
           
   
   
@@ -302,7 +296,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../guides/" class="md-tabs__link">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -679,8 +673,6 @@
       
   
   
-    
-  
   
   
     
@@ -704,21 +696,18 @@
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../architecture/" class="md-nav__link ">
               
   
   
@@ -736,13 +725,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -762,7 +751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core-concepts/" class="md-nav__link">
+      <a href="../../architecture/core-concepts/" class="md-nav__link">
         
   
   
@@ -790,7 +779,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../robot-execution/" class="md-nav__link">
+      <a href="../../architecture/robot-execution/" class="md-nav__link">
         
   
   
@@ -818,7 +807,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../network-orchestration/" class="md-nav__link">
+      <a href="../../architecture/network-orchestration/" class="md-nav__link">
         
   
   
@@ -846,7 +835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../state-management/" class="md-nav__link">
+      <a href="../../architecture/state-management/" class="md-nav__link">
         
   
   
@@ -871,37 +860,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Message Flow
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../architecture/message-flow/" class="md-nav__link">
         
   
   
@@ -917,256 +879,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#message-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Message Types
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Message Types">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#textmessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TextMessage
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#toolmessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ToolMessage
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#toolcallmessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ToolCallMessage
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#toolresultmessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ToolResultMessage
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#message-flow-standalone-robot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Message Flow: Standalone Robot
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Message Flow: Standalone Robot">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-by-step" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step-by-Step
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#message-flow-network-execution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Message Flow: Network Execution
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Message Flow: Network Execution">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#key-points" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Points
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotresult" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotResult
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RobotResult">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#result-serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Result Serialization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#message-predicates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Message Predicates
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creating-messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating Messages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Creating Messages">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-strings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Strings
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-hashes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Hashes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serialization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#template-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Template Resolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1221,7 +933,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../guides/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -1265,7 +977,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/building-robots/" class="md-nav__link">
+      <a href="../building-robots/" class="md-nav__link">
         
   
   
@@ -1293,7 +1005,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/creating-networks/" class="md-nav__link">
+      <a href="../creating-networks/" class="md-nav__link">
         
   
   
@@ -1321,7 +1033,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/using-tools/" class="md-nav__link">
+      <a href="../using-tools/" class="md-nav__link">
         
   
   
@@ -1349,7 +1061,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/mcp-integration/" class="md-nav__link">
+      <a href="../mcp-integration/" class="md-nav__link">
         
   
   
@@ -1377,7 +1089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/streaming/" class="md-nav__link">
+      <a href="../streaming/" class="md-nav__link">
         
   
   
@@ -1405,7 +1117,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/memory/" class="md-nav__link">
+      <a href="../memory/" class="md-nav__link">
         
   
   
@@ -1433,7 +1145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/rails-integration/" class="md-nav__link">
+      <a href="../rails-integration/" class="md-nav__link">
         
   
   
@@ -2504,22 +2216,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#message-types" class="md-nav__link">
+  <a href="#token-cost-tracking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Message Types
+        Token &amp; Cost Tracking
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Message Types">
+    <nav class="md-nav" aria-label="Token &amp; Cost Tracking">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#textmessage" class="md-nav__link">
+  <a href="#per-run-counts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TextMessage
+        Per-Run Counts
       
     </span>
   </a>
@@ -2527,10 +2239,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#toolmessage" class="md-nav__link">
+  <a href="#cumulative-totals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ToolMessage
+        Cumulative Totals
       
     </span>
   </a>
@@ -2538,10 +2250,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#toolcallmessage" class="md-nav__link">
+  <a href="#cost-estimation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ToolCallMessage
+        Cost Estimation
       
     </span>
   </a>
@@ -2549,10 +2261,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#toolresultmessage" class="md-nav__link">
+  <a href="#batch-accounting-with-reset_token_totals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ToolResultMessage
+        Batch Accounting with reset_token_totals
       
     </span>
   </a>
@@ -2565,22 +2277,55 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#message-flow-standalone-robot" class="md-nav__link">
+  <a href="#tool-loop-circuit-breaker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Message Flow: Standalone Robot
+        Tool Loop Circuit Breaker
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Message Flow: Standalone Robot">
+    <nav class="md-nav" aria-label="Tool Loop Circuit Breaker">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-by-step" class="md-nav__link">
+  <a href="#the-problem" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step-by-Step
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#max_tool_rounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        max_tool_rounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovering-after-toollooperror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recovering After ToolLoopError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normal-tool-use-is-unaffected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normal Tool Use Is Unaffected
       
     </span>
   </a>
@@ -2593,22 +2338,77 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#message-flow-network-execution" class="md-nav__link">
+  <a href="#learning-accumulation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Message Flow: Network Execution
+        Learning Accumulation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Message Flow: Network Execution">
+    <nav class="md-nav" aria-label="Learning Accumulation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#key-points" class="md-nav__link">
+  <a href="#the-problem_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Points
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robotlearn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        robot.learn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bidirectional-deduplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bidirectional Deduplication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accumulated-learnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accumulated Learnings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Persistence
       
     </span>
   </a>
@@ -2621,110 +2421,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotresult" class="md-nav__link">
+  <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotResult
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RobotResult">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#result-serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Result Serialization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#message-predicates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Message Predicates
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creating-messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating Messages
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Creating Messages">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-strings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Strings
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-hashes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Hashes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serialization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#template-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Template Resolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
+        See Also
       
     </span>
   </a>
@@ -2754,7 +2454,7 @@
 
 
   
-    <a href="https://github.com/madbomber/robot_lab/edit/main/docs/architecture/message-flow.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/madbomber/robot_lab/edit/main/docs/guides/observability.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -2763,296 +2463,205 @@
     
       
     
-    <a href="https://github.com/madbomber/robot_lab/raw/main/docs/architecture/message-flow.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/madbomber/robot_lab/raw/main/docs/guides/observability.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="message-flow">Message Flow<a class="headerlink" href="#message-flow" title="Permanent link">&para;</a></h1>
-<p>This page explains how messages move through RobotLab, from user input to LLM response.</p>
-<h2 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h2>
-<p>RobotLab uses four primary message types:</p>
-<pre class="mermaid"><code>classDiagram
-    class Message {
-        &lt;&lt;abstract&gt;&gt;
-        +type: String
-        +role: String
-        +content: String
-        +stop_reason: String
-    }
-
-    class TextMessage {
-        +text?() bool
-        +user?() bool
-        +assistant?() bool
-        +system?() bool
-    }
-
-    class ToolMessage {
-        +id: String
-        +name: String
-        +input: Hash
-        +tool_call?() bool
-    }
-
-    class ToolCallMessage {
-        +tools: Array~ToolMessage~
-    }
-
-    class ToolResultMessage {
-        +tool: ToolMessage
-        +content: Hash
-        +tool_result?() bool
-    }
-
-    Message &lt;|-- TextMessage
-    Message &lt;|-- ToolCallMessage
-    Message &lt;|-- ToolResultMessage
-    ToolMessage -- ToolCallMessage
-    ToolMessage -- ToolResultMessage</code></pre>
-<h3 id="textmessage">TextMessage<a class="headerlink" href="#textmessage" title="Permanent link">&para;</a></h3>
-<p>Regular text content from users or assistants:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;What&#39;s the weather in Paris?&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;The weather in Paris is sunny and 22 degrees C.&quot;</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="ss">stop_reason</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stop&quot;</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="toolmessage">ToolMessage<a class="headerlink" href="#toolmessage" title="Permanent link">&para;</a></h3>
-<p>Represents a tool invocation with its parameters:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_123&quot;</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Paris&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="toolcallmessage">ToolCallMessage<a class="headerlink" href="#toolcallmessage" title="Permanent link">&para;</a></h3>
-<p>LLM's request to execute one or more tools:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">ToolCallMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">stop_reason</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool&quot;</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Paris&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="o">]</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="toolresultmessage">ToolResultMessage<a class="headerlink" href="#toolresultmessage" title="Permanent link">&para;</a></h3>
-<p>Result from tool execution:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">ToolResultMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="ss">tool</span><span class="p">:</span><span class="w"> </span><span class="n">tool_message</span><span class="p">,</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">temp</span><span class="p">:</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="ss">condition</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sunny&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="message-flow-standalone-robot">Message Flow: Standalone Robot<a class="headerlink" href="#message-flow-standalone-robot" title="Permanent link">&para;</a></h2>
-<p>The primary execution path is <code>robot.run("message")</code>:</p>
-<pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant Robot
-    participant Memory
-    participant MCP
-    participant Tools
-    participant Agent
-    participant Chat
-    participant LLM
-
-    User-&gt;&gt;Robot: robot.run("message")
-    Robot-&gt;&gt;Memory: resolve_active_memory
-    Memory--&gt;&gt;Robot: active memory
-
-    Robot-&gt;&gt;MCP: resolve_mcp_hierarchy
-    MCP--&gt;&gt;Robot: resolved MCP config
-    Robot-&gt;&gt;Robot: ensure_mcp_clients
-
-    Robot-&gt;&gt;Tools: resolve_tools_hierarchy
-    Tools--&gt;&gt;Robot: filtered tools
-    Robot-&gt;&gt;Chat: @chat.with_tools(...)
-
-    Robot-&gt;&gt;Agent: ask("message")
-    Agent-&gt;&gt;Chat: @chat.ask("message")
-    Chat-&gt;&gt;LLM: Provider API call
-
-    loop Tool Loop (handled by RubyLLM)
-        LLM--&gt;&gt;Chat: Tool call response
-        Chat-&gt;&gt;Tools: Execute tool
-        Tools--&gt;&gt;Chat: Tool result
-        Chat-&gt;&gt;LLM: Send tool result
-    end
-
-    LLM--&gt;&gt;Chat: Final response
-    Chat--&gt;&gt;Agent: RubyLLM::Response
-    Agent--&gt;&gt;Robot: response
-
-    Robot-&gt;&gt;Robot: build_result(response, memory)
-    Robot--&gt;&gt;User: RobotResult</code></pre>
-<h3 id="step-by-step">Step-by-Step<a class="headerlink" href="#step-by-step" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p><strong><code>robot.run("message")</code></strong>: Entry point. Accepts a positional string argument.</p>
-</li>
-<li>
-<p><strong>Resolve Memory</strong>: Determines which memory to use:</p>
-</li>
-<li><code>network_memory</code> if provided (network execution)</li>
-<li><code>network.memory</code> if in a network context</li>
-<li>
-<p><code>robot.memory</code> (standalone, the default)</p>
-</li>
-<li>
-<p><strong>Merge Runtime Memory</strong>: If a <code>memory:</code> keyword argument is passed, it is merged into the active memory.</p>
-</li>
-<li>
-<p><strong>Set Current Writer</strong>: Sets <code>memory.current_writer = robot.name</code> so subscription callbacks know which robot wrote a value.</p>
-</li>
-<li>
-<p><strong>Resolve MCP Hierarchy</strong>: Resolves MCP server configuration through the hierarchy: <code>runtime &gt; robot build &gt; network &gt; global config</code>.</p>
-</li>
-<li>
-<p><strong>Ensure MCP Clients</strong>: Initializes or updates MCP client connections. Discovers tools from connected MCP servers.</p>
-</li>
-<li>
-<p><strong>Resolve Tools Hierarchy</strong>: Resolves which tools are available through the same hierarchy.</p>
-</li>
-<li>
-<p><strong>Filter Tools</strong>: Applies the resolved tool list to <code>@chat.with_tools(...)</code>.</p>
-</li>
-<li>
-<p><strong>Agent#ask</strong>: Delegates to the parent class <code>RubyLLM::Agent#ask</code>, which calls <code>@chat.ask(message)</code>.</p>
-</li>
-<li>
-<p><strong>LLM Interaction</strong>: RubyLLM handles the provider-specific API call, including the tool call/result loop.</p>
-</li>
-<li>
-<p><strong>Build Result</strong>: Wraps the LLM response in a <code>RobotResult</code> containing output messages, tool calls, and metadata.</p>
-</li>
-<li>
-<p><strong>Return</strong>: Returns the <code>RobotResult</code> to the caller.</p>
-</li>
-</ol>
-<h2 id="message-flow-network-execution">Message Flow: Network Execution<a class="headerlink" href="#message-flow-network-execution" title="Permanent link">&para;</a></h2>
-<p>When running through a network, the flow adds pipeline orchestration:</p>
-<pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant Network
-    participant Pipeline
-    participant Task
-    participant Robot
-    participant LLM
-
-    User-&gt;&gt;Network: network.run(message: "...")
-    Network-&gt;&gt;Network: Inject network_memory into run_context
-    Network-&gt;&gt;Pipeline: SimpleFlow::Pipeline.call_parallel(initial_result)
-
-    loop For each ready task
-        Pipeline-&gt;&gt;Task: task.call(result)
-        Task-&gt;&gt;Task: Deep merge task context with run_params
-        Task-&gt;&gt;Robot: robot.call(enhanced_result)
-        Robot-&gt;&gt;Robot: extract_run_context(result)
-        Robot-&gt;&gt;Robot: run(message, network_memory: ...)
-        Robot-&gt;&gt;LLM: Agent#ask -&gt; @chat.ask
-        LLM--&gt;&gt;Robot: Response
-        Robot--&gt;&gt;Task: result.with_context(:name, robot_result).continue(robot_result)
-        Task--&gt;&gt;Pipeline: SimpleFlow::Result
-    end
-
-    Pipeline--&gt;&gt;Network: Final SimpleFlow::Result
-    Network--&gt;&gt;User: result</code></pre>
-<h3 id="key-points">Key Points<a class="headerlink" href="#key-points" title="Permanent link">&para;</a></h3>
+<h1 id="observability-safety">Observability &amp; Safety<a class="headerlink" href="#observability-safety" title="Permanent link">&para;</a></h1>
+<p>Three facilities that help you monitor, control, and improve robot behaviour across runs:</p>
 <ul>
-<li><strong>Network creates initial result</strong>: <code>SimpleFlow::Result.new(run_context, context: { run_params: run_context })</code></li>
-<li><strong>Task wraps robot</strong>: Each <code>Task</code> deep-merges its own context with the run params before delegating to the robot</li>
-<li><strong>Robot extracts context</strong>: <code>extract_run_context(result)</code> pulls the message, MCP, tools, and memory from the SimpleFlow result</li>
-<li><strong>Shared memory</strong>: All robots use <code>network.memory</code> during network execution</li>
-<li><strong>Result accumulation</strong>: Each task stores its <code>RobotResult</code> in <code>result.context[:task_name]</code></li>
+<li><strong>Token &amp; Cost Tracking</strong> — measure LLM usage per run and cumulatively</li>
+<li><strong>Tool Loop Circuit Breaker</strong> — guard against runaway tool call loops</li>
+<li><strong>Learning Accumulation</strong> — build up cross-run observations that guide future runs</li>
 </ul>
-<h2 id="robotresult">RobotResult<a class="headerlink" href="#robotresult" title="Permanent link">&para;</a></h2>
-<p>The return value of <code>robot.run("message")</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is Ruby?&quot;</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1">#=&gt; &quot;Ruby is a dynamic programming language...&quot;</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1">#=&gt; false</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1">#=&gt; &quot;assistant&quot;</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1">#=&gt; [TextMessage(role: &quot;assistant&quot;, content: &quot;...&quot;)]</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1">#=&gt; []</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1">#=&gt; &quot;stop&quot;</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">         </span><span class="c1">#=&gt; Time</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">result</span><span class="o">.</span><span class="n">id</span><span class="w">                 </span><span class="c1">#=&gt; &quot;uuid&quot;</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1">#=&gt; &quot;sha256-hex&quot;</span>
+<hr />
+<h2 id="token-cost-tracking">Token &amp; Cost Tracking<a class="headerlink" href="#token-cost-tracking" title="Permanent link">&para;</a></h2>
+<h3 id="per-run-counts">Per-Run Counts<a class="headerlink" href="#per-run-counts" title="Permanent link">&para;</a></h3>
+<p>Every <code>robot.run()</code> returns a <code>RobotResult</code> that carries the token usage for that call:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a concise technical analyst.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-haiku-4-5-20251001&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is the difference between a stack and a queue?&quot;</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">   </span><span class="c1"># tokens sent to the model this run</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">  </span><span class="c1"># tokens generated this run</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">  </span><span class="c1"># total for this call</span>
 </span></code></pre></div>
-<h3 id="result-serialization">Result Serialization<a class="headerlink" href="#result-serialization" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Export for persistence (excludes debug fields)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">export</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Full hash including debug fields</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nb">hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">to_h</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># JSON</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">to_json</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># Reconstruct from hash</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotResult</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="nb">hash</span><span class="p">)</span>
+<p>Token counts are <code>0</code> for providers that do not report usage data.</p>
+<h3 id="cumulative-totals">Cumulative Totals<a class="headerlink" href="#cumulative-totals" title="Permanent link">&para;</a></h3>
+<p>The robot accumulates totals across all <code>run()</code> calls:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="mi">3</span><span class="o">.</span><span class="n">times</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">i</span><span class="o">|</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Question </span><span class="si">#{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">puts</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">total_input_tokens</span><span class="w">   </span><span class="c1"># sum across all three runs</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">puts</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">total_output_tokens</span>
 </span></code></pre></div>
-<h2 id="message-predicates">Message Predicates<a class="headerlink" href="#message-predicates" title="Permanent link">&para;</a></h2>
-<p>Check message types:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">message</span><span class="o">.</span><span class="n">text?</span><span class="w">         </span><span class="c1"># Is it a TextMessage?</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_call?</span><span class="w">    </span><span class="c1"># Is it a ToolCallMessage?</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_result?</span><span class="w">  </span><span class="c1"># Is it a ToolResultMessage?</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">message</span><span class="o">.</span><span class="n">user?</span><span class="w">         </span><span class="c1"># Is role &quot;user&quot;?</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">message</span><span class="o">.</span><span class="n">assistant?</span><span class="w">    </span><span class="c1"># Is role &quot;assistant&quot;?</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">message</span><span class="o">.</span><span class="n">system?</span><span class="w">       </span><span class="c1"># Is role &quot;system&quot;?</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">message</span><span class="o">.</span><span class="n">stopped?</span><span class="w">      </span><span class="c1"># Is stop_reason &quot;stop&quot;?</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_stop?</span><span class="w">    </span><span class="c1"># Is stop_reason &quot;tool&quot;?</span>
+<h3 id="cost-estimation">Cost Estimation<a class="headerlink" href="#cost-estimation" title="Permanent link">&para;</a></h3>
+<p>Use per-provider pricing constants to estimate cost:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">HAIKU_INPUT_CPM</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">80</span><span class="w">   </span><span class="c1"># $ per 1M input tokens</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="no">HAIKU_OUTPUT_CPM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="o">.</span><span class="mo">00</span><span class="w">   </span><span class="c1"># $ per 1M output tokens</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_cost</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">output</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p">(</span><span class="n">input</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="no">HAIKU_INPUT_CPM</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="no">HAIKU_OUTPUT_CPM</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1_000_000</span><span class="o">.</span><span class="mi">0</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">end</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Explain memoization.&quot;</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;$</span><span class="si">#{</span><span class="s2">&quot;%.5f&quot;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">run_cost</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></code></pre></div>
-<h2 id="creating-messages">Creating Messages<a class="headerlink" href="#creating-messages" title="Permanent link">&para;</a></h2>
-<h3 id="from-strings">From Strings<a class="headerlink" href="#from-strings" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+<h3 id="batch-accounting-with-reset_token_totals">Batch Accounting with reset_token_totals<a class="headerlink" href="#batch-accounting-with-reset_token_totals" title="Permanent link">&para;</a></h3>
+<p><code>reset_token_totals</code> clears the accounting counters without touching the chat history. Use it to isolate the cost of a specific task batch:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Batch 1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">prompts_batch_1</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="nb">p</span><span class="o">|</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">p</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Batch 1 cost: $</span><span class="si">#{</span><span class="s2">&quot;%.4f&quot;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">run_cost</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">total_input_tokens</span><span class="p">,</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">total_output_tokens</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">reset_token_totals</span><span class="w">   </span><span class="c1"># start fresh accounting</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Batch 2 — totals start at zero, but chat history is still intact</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">prompts_batch_2</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="nb">p</span><span class="o">|</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">p</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Batch 2 cost: $</span><span class="si">#{</span><span class="s2">&quot;%.4f&quot;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">run_cost</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">total_input_tokens</span><span class="p">,</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">total_output_tokens</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></code></pre></div>
-<h3 id="from-hashes">From Hashes<a class="headerlink" href="#from-hashes" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">)</span>
+<blockquote>
+<p><strong>Important:</strong> Because the chat history keeps growing after a reset, the next run's <code>input_tokens</code> will be larger than the first batch's runs. This is expected — it is the real cost of sending the full accumulated context to the API. The counter reset tracks <em>accounting</em>, not context size.</p>
+</blockquote>
+<p>For a truly fresh context and fresh counters, build a new robot:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">fresh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a concise technical analyst.&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fresh</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Explain memoization.&quot;</span><span class="p">)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">  </span><span class="c1"># smallest possible — no prior history</span>
 </span></code></pre></div>
-<h2 id="serialization">Serialization<a class="headerlink" href="#serialization" title="Permanent link">&para;</a></h2>
-<p>Messages can be serialized:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># To hash</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">to_h</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1">#=&gt; { type: &quot;text&quot;, role: &quot;user&quot;, content: &quot;Hello&quot; }</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># To JSON</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">to_json</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># From hash</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="nb">hash</span><span class="p">)</span>
+<hr />
+<h2 id="tool-loop-circuit-breaker">Tool Loop Circuit Breaker<a class="headerlink" href="#tool-loop-circuit-breaker" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem">The Problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
+<p>When a tool always instructs the LLM to call it again (e.g., a step-processor returning "more steps remain"), the robot loops indefinitely. Without a guard this consumes tokens, API quota, and time without bound.</p>
+<h3 id="max_tool_rounds">max_tool_rounds<a class="headerlink" href="#max_tool_rounds" title="Permanent link">&para;</a></h3>
+<p>Set <code>max_tool_rounds:</code> on the robot to cap how many tool calls can happen in a single <code>run()</code>. When the limit is exceeded, <code>RobotLab::ToolLoopError</code> is raised.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;runner&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Execute every step sequentially.&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">StepTool</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="ss">max_tool_rounds</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">begin</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Run all steps.&quot;</span><span class="p">)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolLoopError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Circuit breaker fired: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span><span class="c1"># =&gt; &quot;Circuit breaker fired: Tool call limit of 10 exceeded&quot;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="k">end</span>
 </span></code></pre></div>
-<h2 id="template-resolution">Template Resolution<a class="headerlink" href="#template-resolution" title="Permanent link">&para;</a></h2>
-<p>When a robot has a template, it is resolved at build time via prompt_manager:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;helper&quot;</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:helper</span><span class="p">,</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">tone</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;friendly&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">)</span>
+<p><code>max_tool_rounds</code> can also be supplied via <code>RunConfig</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">max_tool_rounds</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;runner&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
-<p>The template resolution process:
-1. <code>PM.parse(:helper)</code> loads the template file from the configured prompts directory
-2. YAML front matter is extracted and applied to the chat (model, temperature, etc.)
-3. The template body is rendered with the provided context
-4. The rendered text is set as system instructions via <code>@chat.with_instructions(rendered)</code></p>
-<p>If both <code>template:</code> and <code>system_prompt:</code> are provided, the template is applied first, then the system prompt is appended via a second <code>@chat.with_instructions</code> call.</p>
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<h3 id="recovering-after-toollooperror">Recovering After ToolLoopError<a class="headerlink" href="#recovering-after-toollooperror" title="Permanent link">&para;</a></h3>
+<p>After a <code>ToolLoopError</code> the chat contains a <strong>dangling <code>tool_use</code> block</strong> with no matching <code>tool_result</code>. Anthropic and most other providers will reject any subsequent request with that broken history:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Error: tool_use ids were found without tool_result blocks immediately after
+</span></code></pre></div>
+<p>Call <code>clear_messages</code> to flush the corrupted history before reusing the robot. The system prompt and all configuration (tools, <code>max_tool_rounds</code>, etc.) are preserved:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolLoopError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Breaker fired: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">end</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">clear_messages</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># Robot is healthy — config unchanged</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_tool_rounds</span><span class="w">  </span><span class="c1"># still 10</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Start fresh with a simple question.&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="normal-tool-use-is-unaffected">Normal Tool Use Is Unaffected<a class="headerlink" href="#normal-tool-use-is-unaffected" title="Permanent link">&para;</a></h3>
+<p><code>max_tool_rounds</code> is a safety net, not a tax. A robot that calls a tool once and terminates works identically with or without the guard:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">unguarded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;calculator&quot;</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use the provided tool to answer questions.&quot;</span><span class="p">,</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">DoubleTool</span><span class="o">]</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unguarded</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Double the number 21 using the tool.&quot;</span><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">  </span><span class="c1"># &quot;The result is 42.&quot;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="learning-accumulation">Learning Accumulation<a class="headerlink" href="#learning-accumulation" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem_1">The Problem<a class="headerlink" href="#the-problem_1" title="Permanent link">&para;</a></h3>
+<p>A robot's inherent memory persists key-value data, but there is no built-in way to tell the LLM "here is what I've learned from previous interactions." Learning accumulation fills that gap.</p>
+<h3 id="robotlearn">robot.learn<a class="headerlink" href="#robotlearn" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Records <code>text</code> as an observation. On every subsequent <code>run()</code>, active learnings are automatically prepended to the user message:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>LEARNINGS FROM PREVIOUS RUNS:
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>- This codebase prefers map/collect over manual array accumulation
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>- Explicit nil comparisons appear frequently here
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>&lt;original user message&gt;
+</span></code></pre></div>
+<p>This gives the LLM access to prior context without requiring a persistent conversation history.</p>
+<h3 id="bidirectional-deduplication">Bidirectional Deduplication<a class="headerlink" href="#bidirectional-deduplication" title="Permanent link">&para;</a></h3>
+<p>Learnings deduplicate bidirectionally:</p>
 <ul>
-<li><a href="../state-management/">Memory Management</a> - How memory stores conversation data</li>
-<li><a href="../network-orchestration/">Network Orchestration</a> - Multi-robot pipeline execution</li>
+<li>If the new text is already contained in an existing learning, it is dropped.</li>
+<li>If an existing learning is contained in the new text (the new one is broader), the narrower one is replaced.</li>
+</ul>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="s2">&quot;avoid using puts&quot;</span><span class="p">)</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="s2">&quot;avoid using puts and p in production code&quot;</span><span class="p">)</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">robot</span><span class="o">.</span><span class="n">learnings</span><span class="o">.</span><span class="n">size</span><span class="w">  </span><span class="c1"># =&gt; 1 — broader learning replaced the narrower one</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">learnings</span><span class="o">.</span><span class="n">first</span><span class="w"> </span><span class="c1"># =&gt; &quot;avoid using puts and p in production code&quot;</span>
+</span></code></pre></div>
+<h3 id="accumulated-learnings">Accumulated Learnings<a class="headerlink" href="#accumulated-learnings" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">learnings</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;String&gt;</span>
+</span></code></pre></div>
+<p>Returns the current list of active learnings in insertion order.</p>
+<h3 id="full-example">Full Example<a class="headerlink" href="#full-example" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">reviewer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="sh">    You are a concise Ruby code reviewer.</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="sh">    Identify the main issue in one sentence and show the fix.</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="dl">  PROMPT</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="p">)</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="n">snippets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="n">snippet_a</span><span class="p">,</span><span class="w"> </span><span class="n">snippet_b</span><span class="p">,</span><span class="w"> </span><span class="n">snippet_c</span><span class="o">]</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">insights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">  </span><span class="s2">&quot;This codebase prefers map/collect over manual accumulation&quot;</span><span class="p">,</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">  </span><span class="s2">&quot;Explicit nil comparisons appear frequently&quot;</span><span class="p">,</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">  </span><span class="s2">&quot;Cart logic tends to have missing edge cases around nil discounts&quot;</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="o">]</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="n">snippets</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="o">|</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reviewer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Review this snippet:</span><span class="se">\n\n</span><span class="si">#{</span><span class="n">code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">reply</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="w">  </span><span class="n">reviewer</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">insights</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Added learning #</span><span class="si">#{</span><span class="n">reviewer</span><span class="o">.</span><span class="n">learnings</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="k">end</span>
+</span></code></pre></div>
+<p>After all three runs, <code>reviewer.learnings</code> contains up to three insights (fewer if any are subsets of others).</p>
+<h3 id="memory-persistence">Memory Persistence<a class="headerlink" href="#memory-persistence" title="Permanent link">&para;</a></h3>
+<p>Learnings are stored in <code>memory[:learnings]</code>. They survive a robot rebuild when the same <code>Memory</code> object is passed to the new robot:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">shared_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">original_robot</span><span class="o">.</span><span class="n">memory</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">rebuilt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You review code.&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="p">)</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">rebuilt</span><span class="o">.</span><span class="n">instance_variable_set</span><span class="p">(</span><span class="ss">:@memory</span><span class="p">,</span><span class="w"> </span><span class="n">shared_memory</span><span class="p">)</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">persisted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">shared_memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:learnings</span><span class="p">)</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">rebuilt</span><span class="o">.</span><span class="n">instance_variable_set</span><span class="p">(</span><span class="ss">:@learnings</span><span class="p">,</span><span class="w"> </span><span class="nb">Array</span><span class="p">(</span><span class="n">persisted</span><span class="p">))</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="nb">puts</span><span class="w"> </span><span class="n">rebuilt</span><span class="o">.</span><span class="n">learnings</span><span class="o">.</span><span class="n">size</span><span class="w">  </span><span class="c1"># same as original_robot.learnings.size</span>
+</span></code></pre></div>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../api/core/robot/#token--cost-tracking">Robot API</a></li>
+<li><a href="../../examples/19_token_tracking.rb">Example 19 — Token &amp; Cost Tracking</a></li>
+<li><a href="../../examples/20_circuit_breaker.rb">Example 20 — Tool Loop Circuit Breaker</a></li>
+<li><a href="../../examples/21_learning_loop.rb">Example 21 — Learning Accumulation Loop</a></li>
 </ul>
 
 
@@ -3138,44 +2747,6 @@
       
         <footer class="md-footer">
   
-    
-      
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
-        
-          
-          <a href="../state-management/" class="md-footer__link md-footer__link--prev" aria-label="Previous: State Management">
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-            </div>
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              <div class="md-ellipsis">
-                State Management
-              </div>
-            </div>
-          </a>
-        
-        
-          
-          <a href="../../guides/" class="md-footer__link md-footer__link--next" aria-label="Next: Guides">
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              <div class="md-ellipsis">
-                Guides
-              </div>
-            </div>
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
     
   
   <div class="md-footer-meta md-typeset">
