@@ -125,4 +125,77 @@ class RobotLab::ConfigTest < Minitest::Test
     config = RobotLab::Config.new
     assert_respond_to config, :apply_ruby_llm_config!
   end
+
+  def test_logger_default_is_a_logger
+    # Create a fresh config with no logger set to test the default_logger path
+    config = RobotLab::Config.new
+    config.instance_variable_set(:@logger, nil)
+    logger = config.logger
+    assert_respond_to logger, :info
+    assert_respond_to logger, :error
+  end
+
+  def test_reload_config_returns_config
+    result = RobotLab.reload_config!
+    assert_instance_of RobotLab::Config, result
+  ensure
+    # Reset so other tests aren't affected
+    RobotLab.instance_variable_set(:@config, nil)
+  end
+
+  def test_configure_method_yields_config
+    yielded = nil
+    RobotLab.configure { |c| yielded = c }
+    assert_equal RobotLab.config, yielded
+  end
+
+  def test_resolved_template_path_with_rails_root
+    # config.rb lines 166-167: Rails.root branch of resolved_template_path
+    skip "Rails not defined in test env" if defined?(Rails)
+
+    fake_root = Pathname.new("/fake/rails/root")
+    fake_rails = Module.new do
+      define_singleton_method(:root) { fake_root }
+    end
+
+    original_env = ENV.delete("ROBOT_LAB_TEMPLATE_PATH")
+    Object.const_set(:Rails, fake_rails)
+    # Build a fresh config with no template_path env var set
+    config = RobotLab::Config.new
+    path = config.send(:resolved_template_path)
+    assert_equal "/fake/rails/root/app/prompts", path
+  ensure
+    ENV["ROBOT_LAB_TEMPLATE_PATH"] = original_env if original_env
+    Object.send(:remove_const, :Rails) if defined?(Rails) rescue nil
+  end
+
+  def test_resolved_template_path_without_rails
+    # config.rb line 169: else branch returns 'prompts'
+    skip "Rails is defined, cannot test else branch" if defined?(Rails)
+    original_env = ENV.delete("ROBOT_LAB_TEMPLATE_PATH")
+    config = RobotLab::Config.new
+    path = config.send(:resolved_template_path)
+    assert_equal "prompts", path
+  ensure
+    ENV["ROBOT_LAB_TEMPLATE_PATH"] = original_env if original_env
+  end
+
+  def test_default_logger_uses_rails_logger_when_available
+    # config.rb line 176: Rails.respond_to?(:logger) branch
+    skip "Rails not defined in test env" if defined?(Rails)
+
+    fake_logger = Logger.new($stderr)
+    fake_rails = Module.new do
+      define_singleton_method(:logger) { fake_logger }
+      define_singleton_method(:respond_to?) { |m, *| m == :logger ? true : super }
+    end
+
+    Object.const_set(:Rails, fake_rails)
+    config = RobotLab::Config.new
+    config.instance_variable_set(:@logger, nil)
+    result = config.logger
+    assert_equal fake_logger, result
+  ensure
+    Object.send(:remove_const, :Rails) if defined?(Rails) rescue nil
+  end
 end

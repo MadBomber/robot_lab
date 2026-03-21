@@ -137,6 +137,34 @@ class RobotLab::RunConfigTest < Minitest::Test
   end
 
 
+  def test_max_tool_rounds_field
+    config = RobotLab::RunConfig.new(max_tool_rounds: 25)
+    assert_equal 25, config.max_tool_rounds
+  end
+
+
+  def test_token_budget_field
+    config = RobotLab::RunConfig.new(token_budget: 10_000)
+    assert_equal 10_000, config.token_budget
+  end
+
+
+  def test_new_infra_fields_are_in_fields_constant
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :max_tool_rounds
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :token_budget
+    assert_includes RobotLab::RunConfig::FIELDS, :max_tool_rounds
+    assert_includes RobotLab::RunConfig::FIELDS, :token_budget
+  end
+
+
+  def test_new_infra_fields_merge_correctly
+    base = RobotLab::RunConfig.new(max_tool_rounds: 10)
+    override = RobotLab::RunConfig.new(max_tool_rounds: 25)
+    merged = base.merge(override)
+    assert_equal 25, merged.max_tool_rounds
+  end
+
+
   # --- to_h ---
 
   def test_to_h_returns_only_set_values

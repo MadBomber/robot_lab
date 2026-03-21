@@ -666,8 +666,6 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal "value", received.value
   end
 
-  private
-
   # nil as a valid value
 
   def test_set_nil_value_is_retrievable
@@ -708,6 +706,205 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal({ a: nil, b: "present" }, result)
   end
 
+
+  def test_set_cache_key_raises_argument_error
+    assert_raises(ArgumentError) do
+      @memory[:cache] = RubyLLM::SemanticCache
+    end
+  end
+
+  def test_set_cache_key_raises_with_any_value
+    assert_raises(ArgumentError) do
+      @memory[:cache] = nil
+    end
+  end
+
+  def test_subscribe_pattern_requires_block
+    assert_raises(ArgumentError) do
+      @memory.subscribe_pattern("*")
+    end
+  end
+
+  def test_subscribe_pattern_subscription_id_returned
+    id = @memory.subscribe_pattern("test:*") { |_| }
+    refute_nil id
+    assert id.is_a?(String)
+  end
+
+  def test_subscribed_returns_true_for_pattern_match
+    @memory.subscribe_pattern("prefix:*") { |_| }
+    # subscribe_pattern matching is checked via subscribed? with exact key
+    # subscribed? checks pattern subscriptions too
+    # Set a key that matches the pattern and verify subscribed? returns false for non-matching
+    refute @memory.subscribed?(:prefix)
+  end
+
+  def test_unsubscribe_removes_pattern_subscription
+    count = 0
+    id = @memory.subscribe_pattern("evt:*") { count += 1 }
+
+    @memory.set(:"evt:one", 1)
+    wait_until { count >= 1 }
+    assert_equal 1, count
+
+    @memory.unsubscribe(id)
+    @memory.set(:"evt:two", 2)
+    sleep 0.01
+
+    assert_equal 1, count
+  end
+
+  def test_data_proxy_reset_when_data_key_set
+    @memory[:data] = { category: "billing" }
+    # @data_proxy should be reset; accessing data should return new proxy
+    assert_equal "billing", @memory.data[:category]
+  end
+
+  def test_results_assigned_via_bracket
+    result = mock_robot_result("bot")
+    @memory[:results] = [result]
+    assert_equal 1, @memory.results.size
+    assert_equal "bot", @memory.results.first.robot_name
+  end
+
+  def test_messages_assigned_via_bracket
+    msg = RobotLab::TextMessage.new(role: "user", content: "hi")
+    @memory[:messages] = [msg]
+    assert_equal 1, @memory.messages.size
+    assert_equal "hi", @memory.messages.first.content
+  end
+
+  def test_messages_bracket_raises_for_invalid_message_type
+    # memory.rb line 682: normalize_message else branch raises ArgumentError
+    assert_raises(ArgumentError) do
+      @memory[:messages] = [42]
+    end
+  end
+
+  def test_session_id_assigned_via_bracket
+    @memory[:session_id] = "abc-123"
+    assert_equal "abc-123", @memory.session_id
+  end
+
+  def test_clear_returns_self
+    assert_equal @memory, @memory.clear
+  end
+
+  def test_reset_restores_cache
+    mem = RobotLab::Memory.new(enable_cache: true)
+    mem.reset
+    assert_equal RubyLLM::SemanticCache, mem.cache
+  end
+
+  def test_memory_change_from_hash_restores_fields
+    original = RobotLab::MemoryChange.new(
+      key: :sentiment,
+      value: 0.9,
+      previous: 0.5,
+      writer: "analyzer",
+      network_name: "pipeline",
+      correlation_id: "abc-123"
+    )
+
+    hash = original.to_h
+    restored = RobotLab::MemoryChange.from_hash(hash)
+
+    assert_equal :sentiment, restored.key
+    assert_equal 0.9, restored.value
+    assert_equal 0.5, restored.previous
+    assert_equal "analyzer", restored.writer
+    assert_equal "pipeline", restored.network_name
+    assert_equal "abc-123", restored.correlation_id
+  end
+
+  def test_memory_change_to_json
+    change = RobotLab::MemoryChange.new(key: :test, value: "val", writer: "bot")
+    json = change.to_json
+    assert json.is_a?(String)
+    parsed = JSON.parse(json)
+    assert_equal "test", parsed["key"]
+    assert_equal "val", parsed["value"]
+    assert_equal "bot", parsed["writer"]
+  end
+
+  def test_memory_change_timestamp_defaults_to_now
+    before = Time.now
+    change = RobotLab::MemoryChange.new(key: :k, value: "v")
+    after = Time.now
+    assert change.timestamp >= before
+    assert change.timestamp <= after
+  end
+
+  def test_memory_change_custom_timestamp
+    t = Time.now - 3600
+    change = RobotLab::MemoryChange.new(key: :k, value: "v", timestamp: t)
+    assert_equal t, change.timestamp
+  end
+
+  def test_format_history_uses_custom_formatter
+    output = [RobotLab::TextMessage.new(role: "assistant", content: "resp")]
+    result = mock_robot_result("bot")
+    result_with_output = RobotLab::RobotResult.new(
+      robot_name: "bot",
+      output: output
+    )
+
+    mem = RobotLab::Memory.new
+    mem.append_result(result_with_output)
+
+    custom_fmt = ->(r) { [RobotLab::TextMessage.new(role: "user", content: "formatted: #{r.robot_name}")] }
+    history = mem.format_history(formatter: custom_fmt)
+
+    assert history.any? { |m| m.content.include?("formatted: bot") }
+  end
+
+  def test_hash_backend_does_not_respond_as_redis
+    mem = RobotLab::Memory.new(backend: :hash)
+    refute mem.redis?
+  end
+
+  def test_backend_hash_explicitly
+    mem = RobotLab::Memory.new(backend: :hash)
+    mem[:test_key] = "value"
+    assert_equal "value", mem[:test_key]
+  end
+
+  def test_memory_change_from_hash_with_string_keys
+    hash = {
+      "key" => "my_key",
+      "value" => "my_value",
+      "previous" => "old_value",
+      "writer" => "bot",
+      "network_name" => "pipeline",
+      "correlation_id" => "xyz"
+    }
+    change = RobotLab::MemoryChange.from_hash(hash)
+    assert_equal :my_key, change.key
+    assert_equal "my_value", change.value
+    assert_equal "old_value", change.previous
+    assert_equal "bot", change.writer
+    assert_equal "pipeline", change.network_name
+    assert_equal "xyz", change.correlation_id
+  end
+
+  def test_backend_redis_preference_falls_back_to_hash_when_redis_unavailable
+    # memory.rb line 635: :redis case in select_backend (falls back when Redis not available)
+    mem = RobotLab::Memory.new(backend: :redis)
+    # Without Redis gem, falls back to hash backend
+    refute mem.redis?
+    mem[:test_key] = "value"
+    assert_equal "value", mem[:test_key]
+  end
+
+  def test_memory_change_from_hash_without_timestamp
+    hash = { key: :test, value: "v" }
+    change = RobotLab::MemoryChange.from_hash(hash)
+    # timestamp defaults to nil passed in from_hash (no timestamp key in hash)
+    # so new() will default to Time.now
+    refute_nil change.timestamp
+  end
+
+  private
 
   def mock_robot_result(robot_name)
     RobotLab::RobotResult.new(

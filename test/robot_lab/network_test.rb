@@ -253,4 +253,124 @@ class RobotLab::NetworkTest < Minitest::Test
 
     assert_kind_of String, result
   end
+
+  def test_to_dot_returns_dot_format
+    robot1 = @robot1
+    network = RobotLab::Network.new(name: "test") do
+      task :robot1, robot1, depends_on: :none
+    end
+
+    result = network.to_dot
+    assert_kind_of String, result
+  end
+
+  def test_reset_memory_clears_memory
+    network = RobotLab::Network.new(name: "test")
+    network.memory.set(:custom_key, "value")
+
+    assert_equal "value", network.memory.get(:custom_key)
+
+    network.reset_memory
+
+    assert_nil network.memory.get(:custom_key)
+  end
+
+  def test_reset_memory_returns_self
+    network = RobotLab::Network.new(name: "test")
+    result = network.reset_memory
+    assert_equal network, result
+  end
+
+  def test_broadcast_sets_memory_key
+    network = RobotLab::Network.new(name: "test")
+    network.broadcast(event: :pause, reason: "test")
+
+    msg = network.memory.get(RobotLab::Network::BROADCAST_KEY)
+    refute_nil msg
+    assert_equal({ event: :pause, reason: "test" }, msg[:payload])
+    assert_equal "test", msg[:network]
+  end
+
+  def test_broadcast_calls_registered_handlers
+    network = RobotLab::Network.new(name: "test")
+    received = []
+
+    network.on_broadcast do |message|
+      received << message[:payload]
+    end
+
+    network.broadcast(event: :start)
+
+    wait_until(timeout: 1) { received.size >= 1 }
+
+    assert_equal 1, received.size
+    assert_equal({ event: :start }, received.first)
+  end
+
+  def test_broadcast_calls_multiple_handlers
+    network = RobotLab::Network.new(name: "test")
+    received1 = []
+    received2 = []
+
+    network.on_broadcast { |msg| received1 << msg[:payload] }
+    network.on_broadcast { |msg| received2 << msg[:payload] }
+
+    network.broadcast(event: :test)
+
+    wait_until(timeout: 1) { received1.size >= 1 && received2.size >= 1 }
+
+    assert_equal 1, received1.size
+    assert_equal 1, received2.size
+  end
+
+  def test_on_broadcast_requires_block
+    network = RobotLab::Network.new(name: "test")
+    assert_raises(ArgumentError) do
+      network.on_broadcast
+    end
+  end
+
+  def test_on_broadcast_returns_self
+    network = RobotLab::Network.new(name: "test")
+    result = network.on_broadcast { |_| }
+    assert_equal network, result
+  end
+
+  def test_broadcast_returns_self
+    network = RobotLab::Network.new(name: "test")
+    result = network.broadcast(event: :test)
+    assert_equal network, result
+  end
+
+  def test_initialization_with_custom_memory
+    custom_memory = RobotLab::Memory.new(session_id: "sess-001")
+    network = RobotLab::Network.new(name: "test", memory: custom_memory)
+
+    assert_equal custom_memory, network.memory
+    assert_equal "sess-001", network.memory.session_id
+  end
+
+  def test_to_h_excludes_config_when_empty
+    network = RobotLab::Network.new(name: "test")
+    hash = network.to_h
+    refute hash.key?(:config)
+  end
+
+  def test_to_h_includes_config_when_not_empty
+    config = RobotLab::RunConfig.new(temperature: 0.5)
+    network = RobotLab::Network.new(name: "test", config: config)
+    hash = network.to_h
+    assert hash.key?(:config)
+  end
+
+  def test_network_memory_has_network_name
+    network = RobotLab::Network.new(name: "my_pipeline")
+    assert_equal "my_pipeline", network.memory.network_name
+  end
+
+  def test_parallel_returns_self
+    network = RobotLab::Network.new(name: "test")
+    result = network.parallel(:group1, depends_on: :none) {}
+    assert_equal network, result
+  end
 end

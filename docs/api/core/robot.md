@@ -33,6 +33,8 @@ Robot.new(
   enable_cache: true,
   bus: nil,
   skills: nil,
+  max_tool_rounds: nil,
+  token_budget: nil,
   temperature: nil,
   top_p: nil,
   top_k: nil,
@@ -65,6 +67,8 @@ Robot.new(
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
+| `max_tool_rounds` | `Integer`, `nil` | `nil` | Circuit breaker: raise `ToolLoopError` after this many tool calls in one `run()` (see [Tool Loop Circuit Breaker](#tool-loop-circuit-breaker)) |
+| `token_budget` | `Integer`, `nil` | `nil` | Raise `InferenceError` if cumulative input tokens exceed this limit |
 | `config` | `RunConfig`, `nil` | `nil` | Shared config merged with explicit kwargs (see [RunConfig](#runconfig)) |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness (0.0-1.0) |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold |
@@ -113,6 +117,9 @@ If `name` is omitted, it defaults to `"robot"`.
 | `config` | `RunConfig` | Effective RunConfig (merged from constructor kwargs and passed-in config) |
 | `mcp_config` | `Symbol`, `Array` | Build-time MCP configuration (raw, unresolved) |
 | `tools_config` | `Symbol`, `Array` | Build-time tools configuration (raw, unresolved) |
+| `total_input_tokens` | `Integer` | Cumulative input tokens sent across all `run()` calls |
+| `total_output_tokens` | `Integer` | Cumulative output tokens received across all `run()` calls |
+| `learnings` | `Array<String>` | Accumulated cross-run observations (see [Learning Accumulation](#learning-accumulation)) |
 
 ## Attributes (Read-Write)
 
@@ -900,6 +907,181 @@ bot.with_bus(bus)
 
 # Now bot can send/receive messages
 bot.send_message(to: :someone, content: "Hello!")
+```
+
+## Token & Cost Tracking
+
+Every `robot.run()` returns a `RobotResult` with token counts for that call. The robot accumulates running totals across all runs.
+
+### RobotResult Token Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `input_tokens` | `Integer` | Input tokens sent to the LLM in this run (0 if provider doesn't report usage) |
+| `output_tokens` | `Integer` | Output tokens received from the LLM in this run (0 if not reported) |
+
+### Robot Cumulative Totals
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `total_input_tokens` | `Integer` | Cumulative input tokens across all `run()` calls |
+| `total_output_tokens` | `Integer` | Cumulative output tokens across all `run()` calls |
+
+### reset_token_totals
+
+```ruby
+robot.reset_token_totals
+# => nil
+```
+
+Reset the cumulative accounting counters to zero. Useful when you want to measure cost for a specific task batch while keeping the robot alive for the next batch.
+
+> **Note:** This resets the *accounting counter only* — the underlying chat history keeps growing. The next run's `input_tokens` will reflect the full accumulated chat context sent to the API.
+
+**Example:**
+
+```ruby
+robot = RobotLab.build(name: "analyst", system_prompt: "You are helpful.")
+
+result = robot.run("What is a stack?")
+puts result.input_tokens    # e.g. 120
+puts result.output_tokens   # e.g. 45
+
+result2 = robot.run("And a queue?")
+puts result2.input_tokens   # larger — full chat history sent
+
+puts robot.total_input_tokens   # 120 + result2.input_tokens
+puts robot.total_output_tokens
+
+# Start a fresh accounting batch
+robot.reset_token_totals
+puts robot.total_input_tokens   # => 0
+```
+
+## Tool Loop Circuit Breaker
+
+Set `max_tool_rounds:` to guard against a robot looping indefinitely through tool calls. After the limit is reached, `RobotLab::ToolLoopError` is raised.
+
+### max_tool_rounds Parameter
+
+```ruby
+robot = RobotLab.build(
+  name: "runner",
+  system_prompt: "Execute every step.",
+  local_tools: [StepTool],
+  max_tool_rounds: 10
+)
+```
+
+`max_tool_rounds` can also be set via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(max_tool_rounds: 10)
+robot = RobotLab.build(name: "runner", system_prompt: "...", config: config)
+```
+
+### ToolLoopError
+
+`RobotLab::ToolLoopError < RobotLab::InferenceError`
+
+Raised when the number of tool calls in a single `run()` exceeds `max_tool_rounds`. The error message includes the limit that was exceeded.
+
+### Recovery after ToolLoopError
+
+After a `ToolLoopError`, the chat contains a dangling `tool_use` block with no matching `tool_result`. Anthropic and most providers will reject any subsequent request with that broken history.
+
+**You must call `clear_messages` before reusing the robot:**
+
+```ruby
+begin
+  robot.run("Execute all steps.")
+rescue RobotLab::ToolLoopError => e
+  puts "Circuit breaker fired: #{e.message}"
+end
+
+# Flush the corrupted chat (system prompt is kept)
+robot.clear_messages
+puts robot.config.max_tool_rounds  # still set — config unchanged
+
+# Robot is healthy again
+result = robot.run("Something new.")
+```
+
+## Learning Accumulation
+
+`robot.learn(text)` records a cross-run observation. On each subsequent `run()`, active learnings are automatically prepended to the user message as a `LEARNINGS FROM PREVIOUS RUNS:` block.
+
+### learn
+
+```ruby
+robot.learn(text)
+# => self
+```
+
+Add a learning to the robot's accumulated observations. Learnings are automatically deduplicated:
+
+- If the new text is a substring of an existing learning, it is dropped (the existing broader learning already covers it).
+- If an existing learning is a substring of the new text, the narrower one is replaced.
+
+Learnings are persisted to `memory[:learnings]` and survive a robot rebuild when the same `Memory` object is reused.
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `text` | `String` | The observation or insight to record |
+
+**Returns:** `self`
+
+### learnings
+
+```ruby
+robot.learnings
+# => Array<String>
+```
+
+Returns the list of accumulated learning strings in insertion order.
+
+### How Learnings Are Injected
+
+When learnings are present, each `run(message)` prepends them to the message before sending to the LLM:
+
+```
+LEARNINGS FROM PREVIOUS RUNS:
+- This codebase prefers map/collect over manual array accumulation
+- Explicit nil comparisons appear frequently here
+
+<original user message>
+```
+
+**Example:**
+
+```ruby
+reviewer = RobotLab.build(
+  name: "reviewer",
+  system_prompt: "You are a Ruby code reviewer."
+)
+
+# Run 1 — no learnings yet
+reviewer.run("Review snippet A")
+reviewer.learn("Prefer map/collect over manual accumulation")
+
+# Run 2 — learning injected automatically
+reviewer.run("Review snippet B")
+reviewer.learn("Avoid explicit nil comparisons")
+
+# Run 3 — both learnings injected
+reviewer.run("Review snippet C")
+
+puts reviewer.learnings.size  # => 2
+```
+
+### Deduplication Example
+
+```ruby
+robot.learn("avoid using puts")
+robot.learn("avoid using puts and p in production code")
+# => broader learning replaces narrower; robot.learnings.size == 1
 ```
 
 ## See Also
