@@ -2421,6 +2421,161 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#context-window-compression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Window Compression
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context Window Compression">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robotcompress_history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        robot.compress_history
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thresholds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#without-a-summarizer-drop-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without a Summarizer (Drop Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with-an-llm-summarizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        With an LLM Summarizer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Dependency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convergence-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convergence Detection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Convergence Detection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robotlabconvergence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Convergence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Scores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#router-fast-path-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Router Fast-Path Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-dependency_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Dependency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2471,11 +2626,13 @@
 
 
 <h1 id="observability-safety">Observability &amp; Safety<a class="headerlink" href="#observability-safety" title="Permanent link">&para;</a></h1>
-<p>Three facilities that help you monitor, control, and improve robot behaviour across runs:</p>
+<p>Facilities that help you monitor, control, improve, and scale robot behaviour:</p>
 <ul>
 <li><strong>Token &amp; Cost Tracking</strong> — measure LLM usage per run and cumulatively</li>
 <li><strong>Tool Loop Circuit Breaker</strong> — guard against runaway tool call loops</li>
 <li><strong>Learning Accumulation</strong> — build up cross-run observations that guide future runs</li>
+<li><strong>Context Window Compression</strong> — prune irrelevant history to stay within token budgets</li>
+<li><strong>Convergence Detection</strong> — detect when independent agents reach the same conclusion</li>
 </ul>
 <hr />
 <h2 id="token-cost-tracking">Token &amp; Cost Tracking<a class="headerlink" href="#token-cost-tracking" title="Permanent link">&para;</a></h2>
@@ -2656,12 +2813,124 @@
 </span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="nb">puts</span><span class="w"> </span><span class="n">rebuilt</span><span class="o">.</span><span class="n">learnings</span><span class="o">.</span><span class="n">size</span><span class="w">  </span><span class="c1"># same as original_robot.learnings.size</span>
 </span></code></pre></div>
 <hr />
+<h2 id="context-window-compression">Context Window Compression<a class="headerlink" href="#context-window-compression" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem_2">The Problem<a class="headerlink" href="#the-problem_2" title="Permanent link">&para;</a></h3>
+<p>Long conversations accumulate turns that are no longer relevant to the current topic. Sending all of them to the LLM on every <code>run()</code> wastes tokens and money, and risks exceeding the model's context window.</p>
+<h3 id="robotcompress_history">robot.compress_history<a class="headerlink" href="#robotcompress_history" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span><span class="p">(</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="ss">recent_turns</span><span class="p">:</span><span class="w">    </span><span class="mi">3</span><span class="p">,</span><span class="w">      </span><span class="c1"># last N user+assistant pairs — always protected</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="ss">keep_threshold</span><span class="p">:</span><span class="w">  </span><span class="mi">0</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span><span class="w">    </span><span class="c1"># score &gt;= this → keep verbatim</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="ss">drop_threshold</span><span class="p">:</span><span class="w">  </span><span class="mi">0</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span><span class="w">    </span><span class="c1"># score &lt; this  → drop</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span><span class="ss">summarizer</span><span class="p">:</span><span class="w">      </span><span class="kp">nil</span><span class="w">     </span><span class="c1"># optional lambda(text) -&gt; String for medium tier</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Internally, each old turn is scored against the mean of the recent turns using stemmed term-frequency cosine similarity (via the <code>classifier</code> gem). Turns that score high are kept; turns that score low are dropped; turns in the middle band are either summarized or dropped depending on whether a <code>summarizer</code> is provided.</p>
+<p><strong>Always preserved regardless of score:</strong></p>
+<ul>
+<li>System messages</li>
+<li>Tool call/result message pairs</li>
+<li>All messages within the <code>recent_turns</code> window</li>
+</ul>
+<h3 id="thresholds">Thresholds<a class="headerlink" href="#thresholds" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>score &gt;= keep_threshold   →  keep verbatim
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>score &lt;  drop_threshold   →  drop
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>otherwise                 →  summarize (if summarizer given) or drop
+</span></code></pre></div>
+<p>A good starting point: <code>keep_threshold: 0.6, drop_threshold: 0.2</code>. Widen the drop band (raise <code>drop_threshold</code>) to compress more aggressively; raise <code>keep_threshold</code> to summarize more.</p>
+<h3 id="without-a-summarizer-drop-mode">Without a Summarizer (Drop Mode)<a class="headerlink" href="#without-a-summarizer-drop-mode" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span><span class="p">(</span><span class="ss">recent_turns</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">keep_threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="ss">drop_threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">2</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Medium-relevance turns are dropped along with low-relevance ones. This is the simplest form — no extra LLM calls, no added latency.</p>
+<h3 id="with-an-llm-summarizer">With an LLM Summarizer<a class="headerlink" href="#with-an-llm-summarizer" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">summarizer_bot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w">          </span><span class="s2">&quot;summarizer&quot;</span><span class="p">,</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize the following text in one sentence.&quot;</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="p">)</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span><span class="p">(</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span><span class="ss">recent_turns</span><span class="p">:</span><span class="w">    </span><span class="mi">3</span><span class="p">,</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">  </span><span class="ss">keep_threshold</span><span class="p">:</span><span class="w">  </span><span class="mi">0</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">  </span><span class="ss">drop_threshold</span><span class="p">:</span><span class="w">  </span><span class="mi">0</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">  </span><span class="ss">summarizer</span><span class="p">:</span><span class="w">      </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">summarizer_bot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Summarize: </span><span class="si">#{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reply</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>The summarizer replaces each medium-relevance turn with a one-sentence digest, preserving some context while reducing token count. The summary inherits the <strong>original message's role</strong> so the user/assistant alternation required by LLM APIs is maintained.</p>
+<h3 id="optional-dependency">Optional Dependency<a class="headerlink" href="#optional-dependency" title="Permanent link">&para;</a></h3>
+<p><code>compress_history</code> requires the <code>classifier</code> gem. Add it to your Gemfile:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span>
+</span></code></pre></div>
+<p>Without it, calling <code>compress_history</code> raises <code>RobotLab::DependencyError</code> with an install hint.</p>
+<hr />
+<h2 id="convergence-detection">Convergence Detection<a class="headerlink" href="#convergence-detection" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem_3">The Problem<a class="headerlink" href="#the-problem_3" title="Permanent link">&para;</a></h3>
+<p>Multi-robot verification patterns (two independent reviewers, a debate network, a fact-checker) typically ask a reconciler robot to resolve any differences. But when both verifiers already agree, paying for that reconciler call is pure waste.</p>
+<h3 id="robotlabconvergence">RobotLab::Convergence<a class="headerlink" href="#robotlabconvergence" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">similarity</span><span class="p">(</span><span class="n">text_a</span><span class="p">,</span><span class="w"> </span><span class="n">text_b</span><span class="p">)</span><span class="w">  </span><span class="c1"># Float 0.0..1.0</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">agreed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">text_a</span><span class="p">,</span><span class="w"> </span><span class="n">text_b</span><span class="p">)</span><span class="w">  </span><span class="c1"># Boolean (threshold: 0.85)</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="n">agreed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">text_a</span><span class="p">,</span><span class="w"> </span><span class="n">text_b</span><span class="p">,</span><span class="w"> </span><span class="ss">threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">6</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Similarity is computed via L2-normalized stemmed term-frequency cosine similarity. Term frequencies (not TF-IDF) are used because fitting TF-IDF on a 2-document corpus suppresses shared terms to near-zero IDF, giving counter-intuitively low scores for texts that agree on the same topic.</p>
+<p>Texts shorter than 30 characters always return <code>0.0</code>.</p>
+<h3 id="typical-scores">Typical Scores<a class="headerlink" href="#typical-scores" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Relationship</th>
+<th>Typical Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identical</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>Same conclusion, different phrasing</td>
+<td>0.60 – 0.75</td>
+</tr>
+<tr>
+<td>Same topic, different emphasis</td>
+<td>0.45 – 0.60</td>
+</tr>
+<tr>
+<td>Unrelated</td>
+<td>&lt; 0.15</td>
+</tr>
+</tbody>
+</table>
+<h3 id="router-fast-path-pattern">Router Fast-Path Pattern<a class="headerlink" href="#router-fast-path-pattern" title="Permanent link">&para;</a></h3>
+<p>Skip the reconciler when verifiers agree:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">router</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:verifier_a</span><span class="o">]&amp;.</span><span class="n">reply</span><span class="o">.</span><span class="n">to_s</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:verifier_b</span><span class="o">]&amp;.</span><span class="n">reply</span><span class="o">.</span><span class="n">to_s</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="w">    </span><span class="kp">nil</span><span class="w">                  </span><span class="c1"># both agree — network halts, no reconciler call</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="w">    </span><span class="o">[</span><span class="s2">&quot;reconciler&quot;</span><span class="o">]</span><span class="w">       </span><span class="c1"># diverged — send to reconciler</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="k">end</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w">   </span><span class="s2">&quot;fact_check&quot;</span><span class="p">,</span>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="w">  </span><span class="ss">robots</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="n">verifier_a</span><span class="p">,</span><span class="w"> </span><span class="n">verifier_b</span><span class="p">,</span><span class="w"> </span><span class="n">reconciler</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">  </span><span class="ss">router</span><span class="p">:</span><span class="w"> </span><span class="n">router</span>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Tune <code>threshold:</code> to control how strictly "agreement" is defined. A lower threshold (e.g., <code>0.6</code>) accepts more variation between verifiers; a higher threshold (e.g., <code>0.9</code>) only fast-paths near-identical responses.</p>
+<h3 id="optional-dependency_1">Optional Dependency<a class="headerlink" href="#optional-dependency_1" title="Permanent link">&para;</a></h3>
+<p><code>RobotLab::Convergence</code> requires the <code>classifier</code> gem (same as <code>compress_history</code>):</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span>
+</span></code></pre></div>
+<hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../api/core/robot/#token--cost-tracking">Robot API</a></li>
 <li><a href="../../examples/19_token_tracking.rb">Example 19 — Token &amp; Cost Tracking</a></li>
 <li><a href="../../examples/20_circuit_breaker.rb">Example 20 — Tool Loop Circuit Breaker</a></li>
 <li><a href="../../examples/21_learning_loop.rb">Example 21 — Learning Accumulation Loop</a></li>
+<li><a href="../../examples/22_context_compression.rb">Example 22 — Context Window Compression</a></li>
+<li><a href="../../examples/23_convergence.rb">Example 23 — Convergence Detection</a></li>
 </ul>
 
 
