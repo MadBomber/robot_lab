@@ -112,6 +112,12 @@ module RobotLab
       @waiters = Hash.new { |h, k| h[k] = [] }
       @subscription_mutex = Mutex.new
       @waiter_mutex = Mutex.new
+
+      # Notification coalescing — batches multiple key changes into a single
+      # drainer fiber rather than spawning one Async task per callback per change.
+      @notification_queue       = []
+      @notification_queue_mutex = Mutex.new
+      @drainer_scheduled        = false
     end
 
     # Get value by key
@@ -758,10 +764,8 @@ module RobotLab
       callbacks = []
 
       @subscription_mutex.synchronize do
-        # Exact key matches
         callbacks.concat(@subscriptions[key].map { |s| s[:callback] })
 
-        # Pattern matches
         key_str = key.to_s
         @pattern_subscriptions.each do |sub|
           callbacks << sub[:callback] if sub[:pattern].match?(key_str)
@@ -770,7 +774,6 @@ module RobotLab
 
       return if callbacks.empty?
 
-      # Build the change object
       change = MemoryChange.new(
         key: key,
         value: value,
@@ -780,10 +783,44 @@ module RobotLab
         timestamp: Time.now
       )
 
-      # Dispatch callbacks asynchronously
-      callbacks.each do |callback|
-        dispatch_async { callback.call(change) }
+      # Coalesce: push onto the batch queue and spawn at most one drainer fiber.
+      # Under rapid writes (e.g. many network robots writing simultaneously) this
+      # reduces Async fiber churn from O(subscribers × key_changes) to O(1).
+      schedule_drain = false
+      @notification_queue_mutex.synchronize do
+        @notification_queue << { change: change, callbacks: callbacks }
+        unless @drainer_scheduled
+          @drainer_scheduled = true
+          schedule_drain = true
+        end
       end
+
+      dispatch_async { drain_notification_queue } if schedule_drain
+    end
+
+    # Drain all pending notification batches in a single fiber.
+    # Loops until the queue is empty, then resets the drainer flag.
+    # If new items arrive just before the flag resets, reschedules itself.
+    def drain_notification_queue
+      loop do
+        batch = @notification_queue_mutex.synchronize do
+          items = @notification_queue.dup
+          @notification_queue.clear
+          items
+        end
+
+        break if batch.empty?
+
+        batch.each do |item|
+          item[:callbacks].each { |cb| cb.call(item[:change]) }
+        end
+      end
+    ensure
+      reschedule = @notification_queue_mutex.synchronize do
+        @drainer_scheduled = false
+        !@notification_queue.empty?
+      end
+      dispatch_async { drain_notification_queue } if reschedule
     end
 
     def generate_subscription_id

@@ -37,13 +37,15 @@ module RobotLab
 
     # @!attribute [rw] duration
     #   @return [Float, nil] elapsed seconds for this run
+    # @!attribute [rw] delegated_by
+    #   @return [String, nil] name of the robot that delegated this task
     # @!attribute [rw] prompt
     #   @return [Array<Message>, nil] the prompt messages used (debug)
     # @!attribute [rw] history
     #   @return [Array<Message>, nil] the history used (debug)
     # @!attribute [rw] raw
     #   @return [Object, nil] the raw LLM response (debug)
-    attr_accessor :duration, :prompt, :history, :raw
+    attr_accessor :duration, :delegated_by, :prompt, :history, :raw
 
     # Creates a new RobotResult instance.
     #
@@ -109,12 +111,14 @@ module RobotLab
     def export
       {
         robot_name: robot_name,
+        delegated_by: delegated_by,
         output: output.map(&:to_h),
         tool_calls: tool_calls.map(&:to_h),
         created_at: created_at.iso8601,
         id: id,
         checksum: checksum,
         stop_reason: stop_reason,
+        duration: duration,
         input_tokens: input_tokens.positive? ? input_tokens : nil,
         output_tokens: output_tokens.positive? ? output_tokens : nil
       }.compact

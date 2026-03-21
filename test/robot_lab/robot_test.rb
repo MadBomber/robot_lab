@@ -2339,4 +2339,211 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, replies.size
     assert_equal "LLM reply from bob", replies.first.content
   end
+
+  # =========================================================================
+  # Structured Delegation
+  # =========================================================================
+
+  def fake_response_for(robot, content)
+    resp = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: content, tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| resp }
+    resp
+  end
+
+  def test_delegate_returns_robot_result
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "task done")
+
+    result = delegator.delegate(to: worker, task: "do the thing")
+
+    assert_kind_of RobotLab::RobotResult, result
+    assert_equal "task done", result.reply
+  end
+
+  def test_delegate_sets_delegated_by
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "done")
+
+    result = delegator.delegate(to: worker, task: "summarize")
+
+    assert_equal "manager", result.delegated_by
+  end
+
+  def test_delegate_sets_robot_name_to_delegatee
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "specialist", template: :assistant)
+    fake_response_for(worker, "analysis complete")
+
+    result = delegator.delegate(to: worker, task: "analyze")
+
+    assert_equal "specialist", result.robot_name
+  end
+
+  def test_delegate_records_duration
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "done")
+
+    result = delegator.delegate(to: worker, task: "work")
+
+    assert_kind_of Float, result.duration
+    assert_operator result.duration, :>=, 0.0
+  end
+
+  def test_delegate_forwards_kwargs_to_run
+    delegator = build_robot(name: "manager",  template: :assistant)
+    worker    = build_robot(name: "templated", template: :parameterized_main_test)
+
+    received = nil
+    resp = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
+    )
+    worker_chat = worker.instance_variable_get(:@chat)
+    worker_chat.define_singleton_method(:ask) { |msg = nil, **_kw, &_b| received = msg; resp }
+
+    delegator.delegate(to: worker, task: "hello", company_name: "Acme")
+
+    refute_nil received
+  end
+
+  def test_delegated_by_nil_on_direct_run
+    robot = build_robot(name: "solo", template: :assistant)
+    fake_response_for(robot, "direct")
+
+    result = robot.run("question")
+
+    assert_nil result.delegated_by
+  end
+
+  # -----------------------------------------------------------------------
+  # Async delegation
+  # -----------------------------------------------------------------------
+
+  def test_async_delegate_returns_delegation_future
+    delegator = build_robot(name: "manager",  template: :assistant)
+    worker    = build_robot(name: "worker",   template: :assistant)
+    fake_response_for(worker, "async done")
+
+    future = delegator.delegate(to: worker, task: "work", async: true)
+
+    assert_kind_of RobotLab::DelegationFuture, future
+  end
+
+  def test_async_delegate_future_resolves_with_result
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "async answer")
+
+    future = delegator.delegate(to: worker, task: "async task", async: true)
+    result = future.value(timeout: 5)
+
+    assert_kind_of RobotLab::RobotResult, result
+    assert_equal "async answer", result.reply
+  end
+
+  def test_async_delegate_sets_delegated_by
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "done")
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+    result = future.value(timeout: 5)
+
+    assert_equal "manager", result.delegated_by
+  end
+
+  def test_async_delegate_sets_robot_name
+    delegator = build_robot(name: "manager",    template: :assistant)
+    worker    = build_robot(name: "specialist", template: :assistant)
+    fake_response_for(worker, "done")
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+    result = future.value(timeout: 5)
+
+    assert_equal "specialist", result.robot_name
+  end
+
+  def test_async_delegate_records_duration
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "done")
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+    result = future.value(timeout: 5)
+
+    assert_kind_of Float, result.duration
+    assert_operator result.duration, :>=, 0.0
+  end
+
+  def test_async_delegate_future_resolved_predicate
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+    fake_response_for(worker, "done")
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+
+    refute future.resolved?  # likely not done yet
+    future.value(timeout: 5)
+    assert future.resolved?
+  end
+
+  def test_async_delegate_future_carries_robot_name_before_resolution
+    delegator = build_robot(name: "manager",    template: :assistant)
+    worker    = build_robot(name: "specialist", template: :assistant)
+
+    # Don't stub — future is checked before it resolves
+    future = delegator.delegate(to: worker, task: "task", async: true)
+
+    assert_equal "specialist", future.robot_name
+    assert_equal "manager",    future.delegated_by
+  end
+
+  def test_async_delegate_fan_out_two_specialists
+    delegator   = build_robot(name: "manager",    template: :assistant)
+    summarizer  = build_robot(name: "summarizer", template: :assistant)
+    analyst     = build_robot(name: "analyst",    template: :assistant)
+
+    fake_response_for(summarizer, "brief summary")
+    fake_response_for(analyst,    "key metric")
+
+    f1 = delegator.delegate(to: summarizer, task: "summarize", async: true)
+    f2 = delegator.delegate(to: analyst,    task: "analyze",   async: true)
+
+    r1 = f1.value(timeout: 5)
+    r2 = f2.value(timeout: 5)
+
+    assert_equal "brief summary", r1.reply
+    assert_equal "key metric",    r2.reply
+    assert_equal "manager", r1.delegated_by
+    assert_equal "manager", r2.delegated_by
+  end
+
+  def test_async_delegate_future_rejects_on_error
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+
+    worker_chat = worker.instance_variable_get(:@chat)
+    worker_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise RuntimeError, "boom" }
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+
+    assert_raises(RuntimeError) { future.value(timeout: 5) }
+  end
+
+  def test_async_delegate_future_timeout_raises_delegation_timeout
+    delegator = build_robot(name: "manager", template: :assistant)
+    worker    = build_robot(name: "worker",  template: :assistant)
+
+    worker_chat = worker.instance_variable_get(:@chat)
+    worker_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| sleep 10 }
+
+    future = delegator.delegate(to: worker, task: "task", async: true)
+
+    assert_raises(RobotLab::DelegationFuture::DelegationTimeout) { future.value(timeout: 0.05) }
+  end
 end

@@ -50,6 +50,7 @@ examples/
   21_learning_loop.rb         # Learning accumulation across runs with robot.learn
   22_context_compression.rb   # Context window compression with HistoryCompressor
   23_convergence.rb           # Debate convergence detection and reconciler fast-path
+  24_structured_delegation.rb # Structured delegation with duration and token tracking
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -189,6 +190,12 @@ Builds up cross-run observations with `robot.learn(text)`. A code reviewer accum
 Demonstrates `robot.compress_history()` for reducing token usage in long conversations. Old turns are scored against the recent context using stemmed term-frequency cosine similarity (via the `classifier` gem). High-relevance turns are kept verbatim; irrelevant turns are dropped; medium-relevance turns can optionally be summarized by a second robot. Shows both drop-mode and summarizer-lambda patterns, plus the LLM summarizer integration recipe.
 
 **Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
+
+### 24 — Structured Delegation
+
+A manager robot delegates sub-tasks to a summarizer and an analyst. Each `delegate()` call returns a `RobotResult` annotated with `delegated_by`, `duration`, and token counts. Includes a comparison table of when to use delegation vs. bus messaging vs. pipelines.
+
+**Requires:** LLM API key
 
 ### 23 — Debate Convergence Detection
 
