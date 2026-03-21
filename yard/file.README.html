@@ -102,7 +102,9 @@
 </li><li>
 <p>&lt;strong&gt;Context Window Compression&lt;/strong&gt; - <code>robot.compress_history()</code> prunes irrelevant old turns via TF cosine scoring<br></p>
 </li><li>
-<p>&lt;strong&gt;Convergence Detection&lt;/strong&gt; - <code>RobotLab::Convergence</code> detects when independent agents agree, enabling reconciler fast-path &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
+<p>&lt;strong&gt;Convergence Detection&lt;/strong&gt; - <code>RobotLab::Convergence</code> detects when independent agents agree, enabling reconciler fast-path<br></p>
+</li><li>
+<p>&lt;strong&gt;Structured Delegation&lt;/strong&gt; - <code>robot.delegate(to:, task:)</code> sync or async inter-robot calls with duration and token metadata; async fan-out via <code>DelegationFuture</code> &lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;</p>
 </li></ul>
 <p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) snd explore the [many examples](examples/README.md) available as working demo applications.</p>
 <h2 id="label-Installation">Installation</h2>
@@ -772,7 +774,7 @@ You are a support agent for &lt;%= company %&gt;.
 </div></div>
 
       <div id="footer">
-  Generated on Sat Mar 21 21:18:57 2026 by
+  Generated on Sat Mar 21 23:29:10 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

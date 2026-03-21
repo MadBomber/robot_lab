@@ -164,6 +164,33 @@
       <li class="public ">
   <span class="summary_signature">
     
+      <a href="#delegated_by-instance_method" title="#delegated_by (instance method)">#<strong>delegated_by</strong>  &#x21d2; String<sup>?</sup> </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Name of the robot that delegated this task.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#duration-instance_method" title="#duration (instance method)">#<strong>duration</strong>  &#x21d2; Float<sup>?</sup> </a>
     
 
@@ -944,8 +971,6 @@
       <pre class="lines">
 
 
-61
-62
 63
 64
 65
@@ -968,10 +993,12 @@
 82
 83
 84
-85</pre>
+85
+86
+87</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 61</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 63</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span>
   <span class='label'>robot_name:</span><span class='comma'>,</span>
@@ -1068,6 +1095,63 @@
 </div>
     
       
+      <span id="delegated_by=-instance_method"></span>
+      <div class="method_details ">
+  <h3 class="signature " id="delegated_by-instance_method">
+  
+    #<strong>delegated_by</strong>  &#x21d2; <tt>String</tt><sup>?</sup> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns name of the robot that delegated this task.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>name of the robot that delegated this task</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+48</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 48</span>
+
+<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:delegated_by</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
       <span id="duration=-instance_method"></span>
       <div class="method_details ">
   <h3 class="signature " id="duration-instance_method">
@@ -1113,12 +1197,12 @@
       <pre class="lines">
 
 
-46
-47
-48</pre>
+48
+49
+50</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 46</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 48</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_duration'>duration</span>
   <span class='ivar'>@duration</span>
@@ -1174,12 +1258,12 @@
       <pre class="lines">
 
 
-46</pre>
+48</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 46</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 48</span>
 
-<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
+<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:delegated_by</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
     </td>
   </tr>
 </table>
@@ -1449,12 +1533,12 @@
       <pre class="lines">
 
 
-46</pre>
+48</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 46</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 48</span>
 
-<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
+<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:delegated_by</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
     </td>
   </tr>
 </table>
@@ -1506,12 +1590,12 @@
       <pre class="lines">
 
 
-46</pre>
+48</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 46</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 48</span>
 
-<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
+<span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:duration</span><span class='comma'>,</span> <span class='symbol'>:delegated_by</span><span class='comma'>,</span> <span class='symbol'>:prompt</span><span class='comma'>,</span> <span class='symbol'>:history</span><span class='comma'>,</span> <span class='symbol'>:raw</span></pre>
     </td>
   </tr>
 </table>
@@ -1762,10 +1846,6 @@
       <pre class="lines">
 
 
-177
-178
-179
-180
 181
 182
 183
@@ -1778,10 +1858,14 @@
 190
 191
 192
-193</pre>
+193
+194
+195
+196
+197</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 177</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 181</span>
 
 <span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_from_hash'>from_hash</span><span class='lparen'>(</span><span class='id identifier rubyid_hash'>hash</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_hash'>hash</span> <span class='op'>=</span> <span class='id identifier rubyid_hash'>hash</span><span class='period'>.</span><span class='id identifier rubyid_transform_keys'>transform_keys</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_sym</span><span class='rparen'>)</span>
@@ -1857,17 +1941,17 @@
       <pre class="lines">
 
 
-94
-95
 96
 97
 98
 99
 100
-101</pre>
+101
+102
+103</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 94</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 96</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_checksum'>checksum</span>
   <span class='id identifier rubyid_content'>content</span> <span class='op'>=</span> <span class='lbrace'>{</span>
@@ -1928,8 +2012,6 @@
       <pre class="lines">
 
 
-109
-110
 111
 112
 113
@@ -1940,20 +2022,26 @@
 118
 119
 120
-121</pre>
+121
+122
+123
+124
+125</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 109</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 111</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_export'>export</span>
   <span class='lbrace'>{</span>
     <span class='label'>robot_name:</span> <span class='id identifier rubyid_robot_name'>robot_name</span><span class='comma'>,</span>
+    <span class='label'>delegated_by:</span> <span class='id identifier rubyid_delegated_by'>delegated_by</span><span class='comma'>,</span>
     <span class='label'>output:</span> <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_map'>map</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_h</span><span class='rparen'>)</span><span class='comma'>,</span>
     <span class='label'>tool_calls:</span> <span class='id identifier rubyid_tool_calls'>tool_calls</span><span class='period'>.</span><span class='id identifier rubyid_map'>map</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:to_h</span><span class='rparen'>)</span><span class='comma'>,</span>
     <span class='label'>created_at:</span> <span class='id identifier rubyid_created_at'>created_at</span><span class='period'>.</span><span class='id identifier rubyid_iso8601'>iso8601</span><span class='comma'>,</span>
     <span class='label'>id:</span> <span class='id identifier rubyid_id'>id</span><span class='comma'>,</span>
     <span class='label'>checksum:</span> <span class='id identifier rubyid_checksum'>checksum</span><span class='comma'>,</span>
     <span class='label'>stop_reason:</span> <span class='id identifier rubyid_stop_reason'>stop_reason</span><span class='comma'>,</span>
+    <span class='label'>duration:</span> <span class='id identifier rubyid_duration'>duration</span><span class='comma'>,</span>
     <span class='label'>input_tokens:</span> <span class='id identifier rubyid_input_tokens'>input_tokens</span><span class='period'>.</span><span class='id identifier rubyid_positive?'>positive?</span> <span class='op'>?</span> <span class='id identifier rubyid_input_tokens'>input_tokens</span> <span class='op'>:</span> <span class='kw'>nil</span><span class='comma'>,</span>
     <span class='label'>output_tokens:</span> <span class='id identifier rubyid_output_tokens'>output_tokens</span><span class='period'>.</span><span class='id identifier rubyid_positive?'>positive?</span> <span class='op'>?</span> <span class='id identifier rubyid_output_tokens'>output_tokens</span> <span class='op'>:</span> <span class='kw'>nil</span>
   <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_compact'>compact</span>
@@ -2002,12 +2090,12 @@
       <pre class="lines">
 
 
-159
-160
-161</pre>
+163
+164
+165</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 159</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 163</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_has_tool_calls?'>has_tool_calls?</span>
   <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:tool_call?</span><span class='rparen'>)</span> <span class='op'>||</span> <span class='id identifier rubyid_tool_calls'>tool_calls</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span>
@@ -2065,12 +2153,12 @@
       <pre class="lines">
 
 
-150
-151
-152</pre>
+154
+155
+156</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 150</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 154</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_last_text_content'>last_text_content</span>
   <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_reverse'>reverse</span><span class='period'>.</span><span class='id identifier rubyid_find'>find</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:text?</span><span class='rparen'>)</span><span class='op'>&amp;.</span><span class='id identifier rubyid_content'>content</span>
@@ -2119,13 +2207,13 @@
       <pre class="lines">
 
 
-167
-168
-169
-170</pre>
+171
+172
+173
+174</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 167</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 171</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_stopped?'>stopped?</span>
   <span class='id identifier rubyid_last_output'>last_output</span> <span class='op'>=</span> <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_last'>last</span>
@@ -2182,16 +2270,16 @@
       <pre class="lines">
 
 
-128
-129
-130
-131
 132
 133
-134</pre>
+134
+135
+136
+137
+138</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 128</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 132</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='id identifier rubyid_export'>export</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span>
@@ -2271,12 +2359,12 @@
       <pre class="lines">
 
 
-142
-143
-144</pre>
+146
+147
+148</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 142</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot_result.rb', line 146</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_json'>to_json</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_export'>export</span><span class='period'>.</span><span class='id identifier rubyid_to_json'>to_json</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
@@ -2291,7 +2379,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sat Mar 21 21:18:59 2026 by
+  Generated on Sat Mar 21 23:29:11 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>

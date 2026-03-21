@@ -933,6 +933,30 @@
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#delegate-instance_method" title="#delegate (instance method)">#<strong>delegate</strong>(to:, task:, async: false, **kwargs)  &#x21d2; RobotResult, DelegationFuture </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Delegate a task to another robot, synchronously or asynchronously.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#disconnect-instance_method" title="#disconnect (instance method)">#<strong>disconnect</strong>  &#x21d2; self </a>
     
 
@@ -3336,15 +3360,15 @@
       <pre class="lines">
 
 
-551
-552
-553
-554
-555
-556</pre>
+604
+605
+606
+607
+608
+609</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 551</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 604</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_chat_provider'>chat_provider</span>
   <span class='id identifier rubyid_m'>m</span> <span class='op'>=</span> <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_model'>model</span>
@@ -3663,6 +3687,220 @@
 </div>
     
       <div class="method_details ">
+  <h3 class="signature " id="delegate-instance_method">
+  
+    #<strong>delegate</strong>(to:, task:, async: false, **kwargs)  &#x21d2; <tt><span class='object_link'><a href="RobotResult.html" title="RobotLab::RobotResult (class)">RobotResult</a></span></tt>, <tt><span class='object_link'><a href="DelegationFuture.html" title="RobotLab::DelegationFuture (class)">DelegationFuture</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Delegate a task to another robot, synchronously or asynchronously.</p>
+
+<p><strong>Synchronous</strong> (default, <tt>async: false</tt>): blocks until the delegatee finishes and returns a <code>RobotResult</code> annotated with <code>delegated_by</code>, <code>duration</code>, and token counts.</p>
+
+<p><strong>Asynchronous</strong> (+async: true+): starts the delegatee in a background thread and returns a <code>DelegationFuture</code> immediately. Call <code>future.value</code> to block for the result, or <code>future.resolved?</code> to poll.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <h4 class="tag_title">Examples:</h4>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Synchronous</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_manager'>manager</span><span class='period'>.</span><span class='id identifier rubyid_delegate'>delegate</span><span class='lparen'>(</span><span class='label'>to:</span> <span class='id identifier rubyid_analyst'>analyst</span><span class='comma'>,</span> <span class='label'>task:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>What are the risks?</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+<span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_reply'>reply</span>          <span class='comment'># analyst&#39;s answer
+</span><span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_delegated_by'>delegated_by</span>   <span class='comment'># =&gt; &quot;manager&quot;
+</span><span class='id identifier rubyid_puts'>puts</span> <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_duration'>duration</span>       <span class='comment'># =&gt; 1.43 (seconds)</span></code></pre>
+    
+      
+        <h5 class="example_title"><div class='inline'>
+<p>Async fan-out</p>
+</div></h5>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_f1'>f1</span> <span class='op'>=</span> <span class='id identifier rubyid_manager'>manager</span><span class='period'>.</span><span class='id identifier rubyid_delegate'>delegate</span><span class='lparen'>(</span><span class='label'>to:</span> <span class='id identifier rubyid_summarizer'>summarizer</span><span class='comma'>,</span> <span class='label'>task:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>summarize ...</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='label'>async:</span> <span class='kw'>true</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_f2'>f2</span> <span class='op'>=</span> <span class='id identifier rubyid_manager'>manager</span><span class='period'>.</span><span class='id identifier rubyid_delegate'>delegate</span><span class='lparen'>(</span><span class='label'>to:</span> <span class='id identifier rubyid_analyst'>analyst</span><span class='comma'>,</span>    <span class='label'>task:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>analyze ...</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>   <span class='label'>async:</span> <span class='kw'>true</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_summary'>summary</span>  <span class='op'>=</span> <span class='id identifier rubyid_f1'>f1</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span>          <span class='comment'># blocks if not yet done
+</span><span class='id identifier rubyid_analysis'>analysis</span> <span class='op'>=</span> <span class='id identifier rubyid_f2'>f2</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span><span class='lparen'>(</span><span class='label'>timeout:</span> <span class='int'>30</span><span class='rparen'>)</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>to</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="" title="RobotLab::Robot (class)">Robot</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the robot to delegate to</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>task</span>
+      
+      
+        <span class='type'>(<tt>String</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>the message to send</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>async</span>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>false</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>when true, returns a DelegationFuture immediately</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>kwargs</span>
+      
+      
+        <span class='type'>(<tt>Hash</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>additional keyword args forwarded to Robot#run</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="RobotResult.html" title="RobotLab::RobotResult (class)">RobotResult</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>when async: false</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="DelegationFuture.html" title="RobotLab::DelegationFuture (class)">DelegationFuture</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>when async: true</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 574</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_delegate'>delegate</span><span class='lparen'>(</span><span class='label'>to:</span><span class='comma'>,</span> <span class='label'>task:</span><span class='comma'>,</span> <span class='label'>async:</span> <span class='kw'>false</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_async'>async</span>
+    <span class='id identifier rubyid_future'>future</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="DelegationFuture.html" title="RobotLab::DelegationFuture (class)">DelegationFuture</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="DelegationFuture.html#initialize-instance_method" title="RobotLab::DelegationFuture#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='label'>robot_name:</span> <span class='id identifier rubyid_to'>to</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='label'>delegated_by:</span> <span class='ivar'>@name</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_delegator_name'>delegator_name</span> <span class='op'>=</span> <span class='ivar'>@name</span>
+
+    <span class='const'>Thread</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span> <span class='kw'>do</span>
+      <span class='id identifier rubyid_started_at'>started_at</span> <span class='op'>=</span> <span class='const'>Process</span><span class='period'>.</span><span class='id identifier rubyid_clock_gettime'>clock_gettime</span><span class='lparen'>(</span><span class='const'>Process</span><span class='op'>::</span><span class='const'>CLOCK_MONOTONIC</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_to'>to</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='id identifier rubyid_task'>task</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_duration'>duration</span>     <span class='op'>=</span> <span class='const'>Process</span><span class='period'>.</span><span class='id identifier rubyid_clock_gettime'>clock_gettime</span><span class='lparen'>(</span><span class='const'>Process</span><span class='op'>::</span><span class='const'>CLOCK_MONOTONIC</span><span class='rparen'>)</span> <span class='op'>-</span> <span class='id identifier rubyid_started_at'>started_at</span>
+      <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_delegated_by'>delegated_by</span> <span class='op'>=</span> <span class='id identifier rubyid_delegator_name'>delegator_name</span>
+      <span class='id identifier rubyid_future'>future</span><span class='period'>.</span><span class='id identifier rubyid_resolve!'>resolve!</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
+    <span class='kw'>rescue</span> <span class='op'>=&gt;</span> <span class='id identifier rubyid_e'>e</span>
+      <span class='id identifier rubyid_future'>future</span><span class='period'>.</span><span class='id identifier rubyid_reject!'>reject!</span><span class='lparen'>(</span><span class='id identifier rubyid_e'>e</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_future'>future</span>
+  <span class='kw'>else</span>
+    <span class='id identifier rubyid_started_at'>started_at</span> <span class='op'>=</span> <span class='const'>Process</span><span class='period'>.</span><span class='id identifier rubyid_clock_gettime'>clock_gettime</span><span class='lparen'>(</span><span class='const'>Process</span><span class='op'>::</span><span class='const'>CLOCK_MONOTONIC</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_to'>to</span><span class='period'>.</span><span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='id identifier rubyid_task'>task</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_duration'>duration</span>     <span class='op'>=</span> <span class='const'>Process</span><span class='period'>.</span><span class='id identifier rubyid_clock_gettime'>clock_gettime</span><span class='lparen'>(</span><span class='const'>Process</span><span class='op'>::</span><span class='const'>CLOCK_MONOTONIC</span><span class='rparen'>)</span> <span class='op'>-</span> <span class='id identifier rubyid_started_at'>started_at</span>
+    <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_delegated_by'>delegated_by</span> <span class='op'>=</span> <span class='ivar'>@name</span>
+    <span class='id identifier rubyid_result'>result</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
   <h3 class="signature " id="disconnect-instance_method">
   
     #<strong>disconnect</strong>  &#x21d2; <tt>self</tt> 
@@ -3937,24 +4175,24 @@
       <pre class="lines">
 
 
-578
-579
-580
-581
-582
-583
-584
-585
-586
-587
-588
-589
-590
-591
-592</pre>
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 578</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 631</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_learn'>learn</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_text'>text</span> <span class='op'>=</span> <span class='id identifier rubyid_text'>text</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
@@ -4035,12 +4273,12 @@
       <pre class="lines">
 
 
-562
-563
-564</pre>
+615
+616
+617</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 562</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 615</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_mcp_client'>mcp_client</span><span class='lparen'>(</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rparen'>)</span>
   <span class='ivar'>@mcp_clients</span><span class='lbracket'>[</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rbracket'>]</span>
@@ -4340,14 +4578,14 @@
       <pre class="lines">
 
 
-598
-599
-600
-601
-602</pre>
+651
+652
+653
+654
+655</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 598</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 651</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_token_totals'>reset_token_totals</span>
   <span class='ivar'>@total_input_tokens</span> <span class='op'>=</span> <span class='int'>0</span>
@@ -4698,26 +4936,26 @@
       <pre class="lines">
 
 
-608
-609
-610
-611
-612
-613
-614
-615
-616
-617
-618
-619
-620
-621
-622
-623
-624</pre>
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 608</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 661</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -4924,7 +5162,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sat Mar 21 21:18:58 2026 by
+  Generated on Sat Mar 21 23:29:10 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
