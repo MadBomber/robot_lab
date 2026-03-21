@@ -2576,6 +2576,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#structured-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Delegation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structured Delegation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronous delegation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-delegation-parallel-fan-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asynchronous delegation — parallel fan-out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-each-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Each Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-example_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2633,6 +2705,7 @@
 <li><strong>Learning Accumulation</strong> — build up cross-run observations that guide future runs</li>
 <li><strong>Context Window Compression</strong> — prune irrelevant history to stay within token budgets</li>
 <li><strong>Convergence Detection</strong> — detect when independent agents reach the same conclusion</li>
+<li><strong>Structured Delegation</strong> — synchronous inter-robot calls with duration and token metadata</li>
 </ul>
 <hr />
 <h2 id="token-cost-tracking">Token &amp; Cost Tracking<a class="headerlink" href="#token-cost-tracking" title="Permanent link">&para;</a></h2>
@@ -2923,6 +2996,96 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span>
 </span></code></pre></div>
 <hr />
+<hr />
+<h2 id="structured-delegation">Structured Delegation<a class="headerlink" href="#structured-delegation" title="Permanent link">&para;</a></h2>
+<h3 id="the-problem_4">The Problem<a class="headerlink" href="#the-problem_4" title="Permanent link">&para;</a></h3>
+<p>RobotLab has two existing patterns for one robot to involve another:</p>
+<ul>
+<li><strong>Pipelines</strong> — predefined sequences where robots share memory and run in order</li>
+<li><strong>Bus messaging</strong> — fire-and-forget pub/sub with no return value</li>
+</ul>
+<p>Neither gives you a synchronous call that returns a result with provenance and cost metadata. <code>delegate</code> fills that gap.</p>
+<h3 id="synchronous-delegation">Synchronous delegation<a class="headerlink" href="#synchronous-delegation" title="Permanent link">&para;</a></h3>
+<p>Blocks until the delegatee finishes and returns a <code>RobotResult</code> annotated with provenance and timing:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">specialist</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Analyze this data: ...&quot;</span><span class="p">)</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">          </span><span class="c1"># specialist&#39;s answer</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">     </span><span class="c1"># =&gt; &quot;specialist&quot;   (who did the work)</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">delegated_by</span><span class="w">   </span><span class="c1"># =&gt; &quot;manager&quot;      (who asked)</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="w">       </span><span class="c1"># =&gt; 1.43           (wall-clock seconds)</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">   </span><span class="c1"># =&gt; 812</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">  </span><span class="c1"># =&gt; 94</span>
+</span></code></pre></div>
+<p>All keyword arguments are forwarded to the delegatee's <code>run()</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">company_name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Acme&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="asynchronous-delegation-parallel-fan-out">Asynchronous delegation — parallel fan-out<a class="headerlink" href="#asynchronous-delegation-parallel-fan-out" title="Permanent link">&para;</a></h3>
+<p>Pass <code>async: true</code> to get a <code>DelegationFuture</code> back immediately. The delegatee runs in a background thread. Call <code>future.value</code> to block for the result, or <code>future.resolved?</code> to poll without blocking.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Fire both delegations simultaneously</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">summarizer</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize: </span><span class="si">#{</span><span class="n">doc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="n">f2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w">    </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Key metric: </span><span class="si">#{</span><span class="n">doc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="c1"># Both are running in parallel here</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="nb">puts</span><span class="w"> </span><span class="n">f1</span><span class="o">.</span><span class="n">resolved?</span><span class="w">   </span><span class="c1"># false (probably)</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="c1"># Collect when ready (optional timeout in seconds)</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="n">summary</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">f1</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="n">analysis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f2</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
+</span></code></pre></div>
+<p>If the delegatee raises an error, <code>future.value</code> re-raises it. If <code>timeout:</code> expires before the result arrives, <code>DelegationFuture::DelegationTimeout</code> is raised.</p>
+<h3 id="when-to-use-each-pattern">When to Use Each Pattern<a class="headerlink" href="#when-to-use-each-pattern" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Return value</th>
+<th>Concurrent</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pipeline</code></td>
+<td>shared memory</td>
+<td>yes (parallel groups)</td>
+<td>fixed workflow graph</td>
+</tr>
+<tr>
+<td><code>bus</code> messaging</td>
+<td>none (fire-and-forget)</td>
+<td>yes</td>
+<td>notify without waiting for a reply</td>
+</tr>
+<tr>
+<td><code>delegate</code></td>
+<td><code>RobotResult</code> with metadata</td>
+<td>no</td>
+<td>need the result back, one at a time</td>
+</tr>
+<tr>
+<td><code>delegate(async: true)</code></td>
+<td><code>DelegationFuture</code></td>
+<td>yes</td>
+<td>parallel fan-out, collect results later</td>
+</tr>
+</tbody>
+</table>
+<h3 id="full-example_1">Full Example<a class="headerlink" href="#full-example_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">manager</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;manager&quot;</span><span class="p">,</span><span class="w">    </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a project manager.&quot;</span><span class="p">)</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">summarizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;summarizer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize in 1-2 sentences.&quot;</span><span class="p">)</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="n">analyst</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span><span class="w">    </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Identify the key metric.&quot;</span><span class="p">)</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="c1"># Parallel fan-out</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">summarizer</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize: </span><span class="si">#{</span><span class="n">document</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="n">f2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w">    </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Key metric: </span><span class="si">#{</span><span class="n">document</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="n">summary</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">f1</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="n">analysis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f2</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">summary</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">#{</span><span class="n">summary</span><span class="o">.</span><span class="n">duration</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">s): </span><span class="si">#{</span><span class="n">summary</span><span class="o">.</span><span class="n">reply</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">analysis</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">#{</span><span class="n">analysis</span><span class="o">.</span><span class="n">duration</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">s): </span><span class="si">#{</span><span class="n">analysis</span><span class="o">.</span><span class="n">reply</span><span class="si">}</span><span class="s2">&quot;</span>
+</span></code></pre></div>
+<hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../api/core/robot/#token--cost-tracking">Robot API</a></li>
@@ -2931,6 +3094,7 @@
 <li><a href="../../examples/21_learning_loop.rb">Example 21 — Learning Accumulation Loop</a></li>
 <li><a href="../../examples/22_context_compression.rb">Example 22 — Context Window Compression</a></li>
 <li><a href="../../examples/23_convergence.rb">Example 23 — Convergence Detection</a></li>
+<li><a href="../../examples/24_structured_delegation.rb">Example 24 — Structured Delegation</a></li>
 </ul>
 
 
