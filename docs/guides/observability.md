@@ -1,10 +1,12 @@
 # Observability & Safety
 
-Three facilities that help you monitor, control, and improve robot behaviour across runs:
+Facilities that help you monitor, control, improve, and scale robot behaviour:
 
 - **Token & Cost Tracking** — measure LLM usage per run and cumulatively
 - **Tool Loop Circuit Breaker** — guard against runaway tool call loops
 - **Learning Accumulation** — build up cross-run observations that guide future runs
+- **Context Window Compression** — prune irrelevant history to stay within token budgets
+- **Convergence Detection** — detect when independent agents reach the same conclusion
 
 ---
 
@@ -255,9 +257,146 @@ puts rebuilt.learnings.size  # same as original_robot.learnings.size
 
 ---
 
+## Context Window Compression
+
+### The Problem
+
+Long conversations accumulate turns that are no longer relevant to the current topic. Sending all of them to the LLM on every `run()` wastes tokens and money, and risks exceeding the model's context window.
+
+### robot.compress_history
+
+```ruby
+robot.compress_history(
+  recent_turns:    3,      # last N user+assistant pairs — always protected
+  keep_threshold:  0.6,    # score >= this → keep verbatim
+  drop_threshold:  0.2,    # score < this  → drop
+  summarizer:      nil     # optional lambda(text) -> String for medium tier
+)
+```
+
+Internally, each old turn is scored against the mean of the recent turns using stemmed term-frequency cosine similarity (via the `classifier` gem). Turns that score high are kept; turns that score low are dropped; turns in the middle band are either summarized or dropped depending on whether a `summarizer` is provided.
+
+**Always preserved regardless of score:**
+
+- System messages
+- Tool call/result message pairs
+- All messages within the `recent_turns` window
+
+### Thresholds
+
+```
+score >= keep_threshold   →  keep verbatim
+score <  drop_threshold   →  drop
+otherwise                 →  summarize (if summarizer given) or drop
+```
+
+A good starting point: `keep_threshold: 0.6, drop_threshold: 0.2`. Widen the drop band (raise `drop_threshold`) to compress more aggressively; raise `keep_threshold` to summarize more.
+
+### Without a Summarizer (Drop Mode)
+
+```ruby
+robot.compress_history(recent_turns: 3, keep_threshold: 0.6, drop_threshold: 0.2)
+```
+
+Medium-relevance turns are dropped along with low-relevance ones. This is the simplest form — no extra LLM calls, no added latency.
+
+### With an LLM Summarizer
+
+```ruby
+summarizer_bot = RobotLab.build(
+  name:          "summarizer",
+  system_prompt: "Summarize the following text in one sentence."
+)
+
+robot.compress_history(
+  recent_turns:    3,
+  keep_threshold:  0.6,
+  drop_threshold:  0.2,
+  summarizer:      ->(text) { summarizer_bot.run("Summarize: #{text}").reply }
+)
+```
+
+The summarizer replaces each medium-relevance turn with a one-sentence digest, preserving some context while reducing token count. The summary inherits the **original message's role** so the user/assistant alternation required by LLM APIs is maintained.
+
+### Optional Dependency
+
+`compress_history` requires the `classifier` gem. Add it to your Gemfile:
+
+```ruby
+gem "classifier", "~> 2.3"
+```
+
+Without it, calling `compress_history` raises `RobotLab::DependencyError` with an install hint.
+
+---
+
+## Convergence Detection
+
+### The Problem
+
+Multi-robot verification patterns (two independent reviewers, a debate network, a fact-checker) typically ask a reconciler robot to resolve any differences. But when both verifiers already agree, paying for that reconciler call is pure waste.
+
+### RobotLab::Convergence
+
+```ruby
+score = RobotLab::Convergence.similarity(text_a, text_b)  # Float 0.0..1.0
+agreed = RobotLab::Convergence.detected?(text_a, text_b)  # Boolean (threshold: 0.85)
+agreed = RobotLab::Convergence.detected?(text_a, text_b, threshold: 0.6)
+```
+
+Similarity is computed via L2-normalized stemmed term-frequency cosine similarity. Term frequencies (not TF-IDF) are used because fitting TF-IDF on a 2-document corpus suppresses shared terms to near-zero IDF, giving counter-intuitively low scores for texts that agree on the same topic.
+
+Texts shorter than 30 characters always return `0.0`.
+
+### Typical Scores
+
+| Relationship | Typical Score |
+|---|---|
+| Identical | 1.000 |
+| Same conclusion, different phrasing | 0.60 – 0.75 |
+| Same topic, different emphasis | 0.45 – 0.60 |
+| Unrelated | < 0.15 |
+
+### Router Fast-Path Pattern
+
+Skip the reconciler when verifiers agree:
+
+```ruby
+router = ->(args) do
+  a = args.context[:verifier_a]&.reply.to_s
+  b = args.context[:verifier_b]&.reply.to_s
+
+  if RobotLab::Convergence.detected?(a, b)
+    nil                  # both agree — network halts, no reconciler call
+  else
+    ["reconciler"]       # diverged — send to reconciler
+  end
+end
+
+network = RobotLab.create_network(
+  name:   "fact_check",
+  robots: [verifier_a, verifier_b, reconciler],
+  router: router
+)
+```
+
+Tune `threshold:` to control how strictly "agreement" is defined. A lower threshold (e.g., `0.6`) accepts more variation between verifiers; a higher threshold (e.g., `0.9`) only fast-paths near-identical responses.
+
+### Optional Dependency
+
+`RobotLab::Convergence` requires the `classifier` gem (same as `compress_history`):
+
+```ruby
+gem "classifier", "~> 2.3"
+```
+
+---
+
 ## See Also
 
 - [Robot API](../api/core/robot.md#token--cost-tracking)
 - [Example 19 — Token & Cost Tracking](../../examples/19_token_tracking.rb)
 - [Example 20 — Tool Loop Circuit Breaker](../../examples/20_circuit_breaker.rb)
 - [Example 21 — Learning Accumulation Loop](../../examples/21_learning_loop.rb)
+- [Example 22 — Context Window Compression](../../examples/22_context_compression.rb)
+- [Example 23 — Convergence Detection](../../examples/23_convergence.rb)

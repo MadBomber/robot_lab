@@ -21,6 +21,7 @@ $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.expand_path('../examples/prompts', __dir__)
 
 require 'robot_lab'
+require 'simple_flow'   # ensure SimpleFlow is loaded regardless of test order
 require 'minitest/autorun'
 
 # Set dummy API key so RubyLLM model resolution doesn't fail in unit tests

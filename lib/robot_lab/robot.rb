@@ -513,6 +513,36 @@ module RobotLab
       self
     end
 
+    # Compress conversation history using TF-IDF relevance scoring.
+    #
+    # Old turns are tiered against the most recent context:
+    # - High relevance (score >= keep_threshold)          → kept verbatim
+    # - Medium relevance (drop_threshold..keep_threshold) → summarized or dropped
+    # - Low relevance (score < drop_threshold)            → dropped
+    #
+    # System messages and tool call/result messages are always preserved.
+    # The most recent +recent_turns+ pairs are also always kept verbatim.
+    #
+    # Requires the optional 'classifier' gem (~> 2.3).
+    # Raises +DependencyError+ if not installed.
+    #
+    # @param recent_turns [Integer] turn pairs to protect at the end (default 3)
+    # @param keep_threshold [Float] cosine score >= this → keep verbatim (default 0.6)
+    # @param drop_threshold [Float] cosine score < this → drop (default 0.2)
+    # @param summarizer [#call, nil] callable(text) -> String for medium-tier;
+    #                                nil drops medium-tier instead of summarizing
+    # @return [self]
+    def compress_history(recent_turns: 3, keep_threshold: 0.6, drop_threshold: 0.2, summarizer: nil)
+      compressed = HistoryCompressor.new(
+        messages:       @chat.messages,
+        recent_turns:   recent_turns,
+        keep_threshold: keep_threshold,
+        drop_threshold: drop_threshold,
+        summarizer:     summarizer
+      ).call
+      replace_messages(compressed)
+    end
+
     # Return the provider for this robot's chat.
     # Useful for displaying model/provider info without reaching
     # into chat internals.

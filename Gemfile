@@ -8,6 +8,7 @@ gemspec
 group :development, :test do
   gem 'aigcm'
   gem 'amazing_print'
+  gem 'classifier', '~> 2.3'
   gem 'debug_me'
   gem 'hashdiff'
   gem "rake"

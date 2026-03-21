@@ -41,4 +41,10 @@ module RobotLab
   # @example
   #   raise ToolLoopError, "Circuit breaker: 26 tool calls exceeded max_tool_rounds (25)"
   class ToolLoopError < InferenceError; end
+
+  # Raised when a required optional gem dependency is not installed.
+  #
+  # @example
+  #   raise DependencyError, "Add gem 'classifier', '~> 2.3' to your Gemfile"
+  class DependencyError < ConfigurationError; end
 end
