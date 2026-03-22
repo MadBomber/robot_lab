@@ -345,6 +345,77 @@ Without a shared poller each client uses its own blocking `Timeout.timeout` call
 !!! note
     Only stdio clients are registered with the poller. SSE, WebSocket, and StreamableHTTP clients passed a `poller:` argument ignore it silently.
 
+## Server Discovery
+
+When a robot has many MCP servers configured, connecting to all of them upfront is wasteful — most servers will be irrelevant for any given user message. **Server Discovery** uses TF cosine similarity to select only the semantically relevant servers before the first `ensure_mcp_clients` call.
+
+### Enabling Discovery
+
+Add `description:` to each server config and set `mcp_discovery: true` on the robot:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are a helpful assistant.",
+  mcp_discovery: true,
+  mcp: [
+    {
+      name: "filesystem",
+      description: "Read, write, and search local files and directories",
+      transport: { type: "stdio", command: "mcp-server-filesystem" }
+    },
+    {
+      name: "github",
+      description: "GitHub repos, issues, pull requests, code search",
+      transport: { type: "stdio", command: "mcp-server-github" }
+    },
+    {
+      name: "brew",
+      description: "Install, update, and manage macOS packages via Homebrew",
+      transport: { type: "stdio", command: "mcp-server-brew" }
+    }
+  ]
+)
+
+# Discovery connects only :brew for this message — filesystem and github are skipped
+robot.run("install imagemagick")
+```
+
+### How It Works
+
+`MCP::ServerDiscovery.select(query, from:, threshold:)` computes TF cosine similarity between the user's query and each server's topic text (`name + description`). Servers scoring at or above `DEFAULT_THRESHOLD` (0.05) are returned; the rest are excluded.
+
+The threshold is intentionally low — server descriptions are short, so raw cosine scores are naturally small even for on-topic queries.
+
+Discovery only applies on the **first** `run()` call (before `@mcp_initialized`). Once a set of servers is connected they remain connected for the robot's lifetime, preserving tool continuity across a conversation.
+
+### Fallback Behaviour
+
+All servers are returned unchanged when any of the following apply:
+
+| Condition | Reason |
+|-----------|--------|
+| No server has a `description` field | Nothing to score against |
+| `classifier` gem unavailable | Raises `DependencyError`, caught internally |
+| Query is blank or nil | Nothing to compare |
+| No server scores ≥ threshold | Rather fall back than leave the robot with no tools |
+
+### Using the API Directly
+
+```ruby
+servers = [
+  { name: "filesystem", description: "Read and write files", transport: { ... } },
+  { name: "github",     description: "GitHub repos and PRs",  transport: { ... } }
+]
+
+relevant = RobotLab::MCP::ServerDiscovery.select(
+  "list open pull requests",
+  from: servers,
+  threshold: 0.05   # optional, default
+)
+# => only the :github entry
+```
+
 ## Connection Resilience
 
 ### Eager Connection

@@ -33,17 +33,21 @@ module RobotLab
       #   @return [Hash] the transport configuration
       # @!attribute [r] timeout
       #   @return [Numeric] request timeout in seconds
-      attr_reader :name, :transport, :timeout
+      # @!attribute [r] description
+      #   @return [String] human-readable description used by ServerDiscovery
+      attr_reader :name, :transport, :timeout, :description
 
       # Creates a new Server configuration.
       #
       # @param name [String] the server name
       # @param transport [Hash] the transport configuration
       # @param timeout [Numeric, nil] request timeout in seconds (default: 15)
+      # @param description [String, nil] human-readable description for server discovery
       # @param _extra [Hash] additional keys are silently ignored for forward compatibility
       # @raise [ArgumentError] if transport type is invalid or required fields are missing
-      def initialize(name:, transport:, timeout: nil, **_extra)
+      def initialize(name:, transport:, timeout: nil, description: nil, **_extra)
         @name = name.to_s
+        @description = description.to_s
         @transport = normalize_transport(transport)
         @timeout = normalize_timeout(timeout)
         validate!
@@ -62,6 +66,7 @@ module RobotLab
       def to_h
         {
           name: name,
+          description: description,
           transport: transport,
           timeout: timeout
         }

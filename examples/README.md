@@ -247,6 +247,14 @@ bundle exec rake examples:run[27]
 
 **Requires:** LLM API key
 
+### 28 — MCP Server Discovery
+
+When a robot has many MCP servers configured, connecting to all of them upfront is wasteful. `mcp_discovery: true` enables semantic server selection: before the first connection, `MCP::ServerDiscovery` scores each server's `name + description` against the user query using TF cosine similarity and connects only the relevant subset.
+
+Demonstrates: `MCP::ServerDiscovery.select(query, from:, threshold:)`, the `description:` field on MCP server configs, `mcp_discovery: true` on Robot, and all four fallback cases (no descriptions, blank query, classifier unavailable, no match above threshold).
+
+**Requires:** None (no LLM calls — exercises the discovery module directly)
+
 ### 18 — Rails Integration Demo
 
 A minimal, hand-built Rails 8 app that exercises every piece of RobotLab's Rails integration end-to-end. No `rails new` — every file is hand-crafted for minimum size.
