@@ -190,6 +190,8 @@ results = memory.get(:sentiment, :entities, :keywords, wait: 60)
 # => { sentiment: {...}, entities: [...], keywords: [...] }
 ```
 
+Each blocking wait is backed by an `IO.pipe` pair (`Waiter` class). Calling `signal` writes one byte per waiting caller, so all threads blocked on `IO.select` wake immediately. This design works cleanly with Ruby's Async fiber scheduler — no mutex contention or spurious wakeups.
+
 ### Subscriptions
 
 Subscribe to key changes with asynchronous callbacks:

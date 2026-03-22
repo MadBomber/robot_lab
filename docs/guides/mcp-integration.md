@@ -310,6 +310,41 @@ client.list_resources       # => Array of resource definitions
 client.disconnect
 ```
 
+## Connection Multiplexing
+
+When a robot connects to several local (stdio) MCP servers, each client normally blocks independently while waiting for a response. `MCP::ConnectionPoller` replaces this with a single `IO.select` call across all registered stdout file descriptors, dispatching each response to the pending request for that client.
+
+This is primarily useful in networks where many robots each have multiple stdio MCP servers. Async-based transports (SSE, WebSocket, StreamableHTTP) are unaffected — they already use the Async fiber scheduler.
+
+```ruby
+# Create a shared poller
+poller = RobotLab::MCP::ConnectionPoller.new.start
+
+# Pass the poller when building clients
+client1 = RobotLab::MCP::Client.new(
+  { name: "filesystem", transport: { type: "stdio", command: "mcp-server-fs" } },
+  poller: poller
+)
+client2 = RobotLab::MCP::Client.new(
+  { name: "github", transport: { type: "stdio", command: "mcp-server-github" } },
+  poller: poller
+)
+
+client1.connect   # registers with poller
+client2.connect   # registers with poller
+
+# Both clients share the IO.select loop
+client1.list_tools
+client2.list_tools
+
+poller.stop
+```
+
+Without a shared poller each client uses its own blocking `Timeout.timeout` call. With a poller, responses from any registered server wake the poller's select loop, which dispatches to the right waiting thread via a `Thread::Queue`.
+
+!!! note
+    Only stdio clients are registered with the poller. SSE, WebSocket, and StreamableHTTP clients passed a `poller:` argument ignore it silently.
+
 ## Connection Resilience
 
 ### Eager Connection

@@ -25,6 +25,8 @@ bundle exec ruby examples/01_simple_robot.rb
 
 ```
 examples/
+  27_incident_response/       # Phase 5 infra — BusPoller, reactive memory, poller groups
+    incident_response.rb      #   Main entrypoint — wires up the war room
   01_simple_robot.rb          # Basic robot with template
   02_tools.rb                 # Robot with custom tools
   03_network.rb               # Multi-robot network with routing
@@ -222,6 +224,28 @@ Demonstrates `robot.search_history(query, limit:)` — semantic search over accu
 Demonstrates `memory.store_document(key, text)` and `memory.search_documents(query, limit:)` — a lightweight RAG store using `fastembed` (BAAI/bge-small-en-v1.5). Documents are embedded once; queries are compared by cosine similarity at search time. Includes the `RobotLab::DocumentStore` standalone API and a RAG pattern sketch showing how to pass retrieved context to a robot.
 
 **Requires:** `fastembed` gem (already a core dependency); downloads the ~23 MB ONNX model on first run (cached in `~/.cache/fastembed/`)
+
+### 27 — Production Incident War Room
+
+Three SRE scout robots investigate a payment-service outage in parallel — database layer, network layer, and application layer. Each scout stores its findings in shared reactive memory and broadcasts a status update to a war-room coordinator via TypedBus.
+
+Demonstrates all four Phase 5 infrastructure improvements together:
+
+| Feature | How it shows up |
+|---------|----------------|
+| **IO.pipe Waiter** (#13) | Commander blocks on `memory.get(:db_finding, :net_finding, :app_finding, wait: 60)`; wakes the instant the last scout writes its key |
+| **BusPoller** (#14) | All three scouts send bus messages to the war room; BusPoller serializes delivery so war_room processes them one at a time, in arrival order, with no dropped messages |
+| **Poller Groups** (#15) | Scout tasks labeled `poller_group: :investigation`; commander task labeled `poller_group: :command`; group list printed before the run |
+| **Reactive Memory** | `memory.subscribe` callbacks fire in real-time as each scout writes, while the blocking waiter runs independently |
+
+**Run:**
+```bash
+bundle exec ruby examples/27_incident_response/incident_response.rb
+# or
+bundle exec rake examples:run[27]
+```
+
+**Requires:** LLM API key
 
 ### 18 — Rails Integration Demo
 
