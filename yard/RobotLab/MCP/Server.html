@@ -192,6 +192,35 @@
       <li class="public ">
   <span class="summary_signature">
     
+      <a href="#description-instance_method" title="#description (instance method)">#<strong>description</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+    
+      <span class="note title readonly">readonly</span>
+    
+    
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns the value of attribute description.</p>
+</div></span>
+  
+</li>
+
+    
+      <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#name-instance_method" title="#name (instance method)">#<strong>name</strong>  &#x21d2; String </a>
     
 
@@ -221,7 +250,7 @@
       <li class="public ">
   <span class="summary_signature">
     
-      <a href="#timeout-instance_method" title="#timeout (instance method)">#<strong>timeout</strong>  &#x21d2; Object </a>
+      <a href="#timeout-instance_method" title="#timeout (instance method)">#<strong>timeout</strong>  &#x21d2; Numeric </a>
     
 
     
@@ -241,7 +270,7 @@
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Returns the value of attribute timeout.</p>
+<p>Request timeout in seconds.</p>
 </div></span>
   
 </li>
@@ -292,7 +321,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, transport:, timeout: nil, **_extra)  &#x21d2; Server </a>
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>(name:, transport:, timeout: nil, description: nil, **_extra)  &#x21d2; Server </a>
     
 
     
@@ -372,7 +401,7 @@
     <div class="method_details first">
   <h3 class="signature first" id="initialize-instance_method">
   
-    #<strong>initialize</strong>(name:, transport:, timeout: nil, **_extra)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::MCP::Server (class)">Server</a></span></tt> 
+    #<strong>initialize</strong>(name:, transport:, timeout: nil, description: nil, **_extra)  &#x21d2; <tt><span class='object_link'><a href="" title="RobotLab::MCP::Server (class)">Server</a></span></tt> 
   
 
   
@@ -442,6 +471,24 @@
   
     <li>
       
+        <span class='name'>description</span>
+      
+      
+        <span class='type'>(<tt>String</tt>, <tt>nil</tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>human-readable description for server discovery</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
         <span class='name'>_extra</span>
       
       
@@ -483,18 +530,20 @@
       <pre class="lines">
 
 
-45
-46
-47
 48
 49
-50</pre>
+50
+51
+52
+53
+54</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 45</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 48</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>transport:</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid__extra'>_extra</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='label'>name:</span><span class='comma'>,</span> <span class='label'>transport:</span><span class='comma'>,</span> <span class='label'>timeout:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>description:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid__extra'>_extra</span><span class='rparen'>)</span>
   <span class='ivar'>@name</span> <span class='op'>=</span> <span class='id identifier rubyid_name'>name</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
+  <span class='ivar'>@description</span> <span class='op'>=</span> <span class='id identifier rubyid_description'>description</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span>
   <span class='ivar'>@transport</span> <span class='op'>=</span> <span class='id identifier rubyid_normalize_transport'>normalize_transport</span><span class='lparen'>(</span><span class='id identifier rubyid_transport'>transport</span><span class='rparen'>)</span>
   <span class='ivar'>@timeout</span> <span class='op'>=</span> <span class='id identifier rubyid_normalize_timeout'>normalize_timeout</span><span class='lparen'>(</span><span class='id identifier rubyid_timeout'>timeout</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_validate!'>validate!</span>
@@ -512,7 +561,46 @@
       
       <span id=""></span>
       <div class="method_details first">
-  <h3 class="signature first" id="name-instance_method">
+  <h3 class="signature first" id="description-instance_method">
+  
+    #<strong>description</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns the value of attribute description.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+38</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 38</span>
+
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span><span class='comma'>,</span> <span class='symbol'>:description</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      
+      <span id=""></span>
+      <div class="method_details ">
+  <h3 class="signature " id="name-instance_method">
   
     #<strong>name</strong>  &#x21d2; <tt>String</tt>  <span class="extras">(readonly)</span>
   
@@ -555,12 +643,12 @@
       <pre class="lines">
 
 
-36
-37
-38</pre>
+38
+39
+40</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 38</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_name'>name</span>
   <span class='ivar'>@name</span>
@@ -575,7 +663,7 @@
       <div class="method_details ">
   <h3 class="signature " id="timeout-instance_method">
   
-    #<strong>timeout</strong>  &#x21d2; <tt>Object</tt>  <span class="extras">(readonly)</span>
+    #<strong>timeout</strong>  &#x21d2; <tt>Numeric</tt>  <span class="extras">(readonly)</span>
   
 
   
@@ -584,13 +672,31 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Returns the value of attribute timeout.</p>
+<p>Returns request timeout in seconds.</p>
 
 
   </div>
 </div>
 <div class="tags">
   
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Numeric</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>request timeout in seconds</p>
+</div>
+      
+    </li>
+  
+</ul>
 
 </div><table class="source_code">
   <tr>
@@ -598,12 +704,12 @@
       <pre class="lines">
 
 
-36</pre>
+38</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 38</span>
 
-<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span></pre>
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span><span class='comma'>,</span> <span class='symbol'>:description</span></pre>
     </td>
   </tr>
 </table>
@@ -655,12 +761,12 @@
       <pre class="lines">
 
 
-36</pre>
+38</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 36</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 38</span>
 
-<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span></pre>
+<span class='id identifier rubyid_attr_reader'>attr_reader</span> <span class='symbol'>:name</span><span class='comma'>,</span> <span class='symbol'>:transport</span><span class='comma'>,</span> <span class='symbol'>:timeout</span><span class='comma'>,</span> <span class='symbol'>:description</span></pre>
     </td>
   </tr>
 </table>
@@ -712,20 +818,22 @@
       <pre class="lines">
 
 
-62
-63
-64
-65
 66
 67
-68</pre>
+68
+69
+70
+71
+72
+73</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 62</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 66</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
     <span class='label'>name:</span> <span class='id identifier rubyid_name'>name</span><span class='comma'>,</span>
+    <span class='label'>description:</span> <span class='id identifier rubyid_description'>description</span><span class='comma'>,</span>
     <span class='label'>transport:</span> <span class='id identifier rubyid_transport'>transport</span><span class='comma'>,</span>
     <span class='label'>timeout:</span> <span class='id identifier rubyid_timeout'>timeout</span>
   <span class='rbrace'>}</span>
@@ -779,12 +887,12 @@
       <pre class="lines">
 
 
-55
-56
-57</pre>
+59
+60
+61</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 55</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/mcp/server.rb', line 59</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_transport_type'>transport_type</span>
   <span class='ivar'>@transport</span><span class='lbracket'>[</span><span class='symbol'>:type</span><span class='rbracket'>]</span>
@@ -799,7 +907,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Mar 22 04:24:15 2026 by
+  Generated on Sun Mar 22 04:35:15 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
