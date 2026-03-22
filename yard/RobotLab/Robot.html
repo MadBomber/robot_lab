@@ -1322,7 +1322,7 @@
   
   
   <h3 class="inherited">Methods included from <span class='object_link'><a href="Robot/BusMessaging.html" title="RobotLab::Robot::BusMessaging (module)">BusMessaging</a></span></h3>
-  <p class="inherited"><span class='object_link'><a href="Robot/BusMessaging.html#on_message-instance_method" title="RobotLab::Robot::BusMessaging#on_message (method)">#on_message</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#send_message-instance_method" title="RobotLab::Robot::BusMessaging#send_message (method)">#send_message</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#send_reply-instance_method" title="RobotLab::Robot::BusMessaging#send_reply (method)">#send_reply</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#spawn-instance_method" title="RobotLab::Robot::BusMessaging#spawn (method)">#spawn</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#with_bus-instance_method" title="RobotLab::Robot::BusMessaging#with_bus (method)">#with_bus</a></span></p>
+  <p class="inherited"><span class='object_link'><a href="Robot/BusMessaging.html#assign_bus_poller-instance_method" title="RobotLab::Robot::BusMessaging#assign_bus_poller (method)">#assign_bus_poller</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#on_message-instance_method" title="RobotLab::Robot::BusMessaging#on_message (method)">#on_message</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#send_message-instance_method" title="RobotLab::Robot::BusMessaging#send_message (method)">#send_message</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#send_reply-instance_method" title="RobotLab::Robot::BusMessaging#send_reply (method)">#send_reply</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#spawn-instance_method" title="RobotLab::Robot::BusMessaging#spawn (method)">#spawn</a></span>, <span class='object_link'><a href="Robot/BusMessaging.html#with_bus-instance_method" title="RobotLab::Robot::BusMessaging#with_bus (method)">#with_bus</a></span></p>
 
   
   
@@ -1960,7 +1960,8 @@
 259
 260
 261
-262</pre>
+262
+263</pre>
     </td>
     <td>
       <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 106</span>
@@ -2038,12 +2039,13 @@
   <span class='ivar'>@mcp_initialized</span> <span class='op'>=</span> <span class='kw'>false</span>
 
   <span class='comment'># Bus state (optional inter-robot communication)
-</span>  <span class='ivar'>@bus</span> <span class='op'>=</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_bus'>bus</span>
-  <span class='ivar'>@message_counter</span> <span class='op'>=</span> <span class='int'>0</span>
-  <span class='ivar'>@outbox</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
-  <span class='ivar'>@message_handler</span> <span class='op'>=</span> <span class='kw'>nil</span>
-  <span class='ivar'>@bus_processing</span> <span class='op'>=</span> <span class='kw'>false</span>
-  <span class='ivar'>@bus_queue</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+</span>  <span class='ivar'>@bus</span>               <span class='op'>=</span> <span class='ivar'>@config</span><span class='period'>.</span><span class='id identifier rubyid_bus'>bus</span>
+  <span class='ivar'>@message_counter</span>   <span class='op'>=</span> <span class='int'>0</span>
+  <span class='ivar'>@outbox</span>            <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='ivar'>@message_handler</span>   <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='ivar'>@bus_poller</span>        <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='ivar'>@private_bus_poller</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='ivar'>@bus_poller_group</span>  <span class='op'>=</span> <span class='symbol'>:default</span>
 
   <span class='comment'># Token tracking
 </span>  <span class='ivar'>@total_input_tokens</span> <span class='op'>=</span> <span class='int'>0</span>
@@ -3221,7 +3223,6 @@
       <pre class="lines">
 
 
-394
 395
 396
 397
@@ -3247,10 +3248,11 @@
 417
 418
 419
-420</pre>
+420
+421</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 394</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 395</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_run_context'>run_context</span> <span class='op'>=</span> <span class='id identifier rubyid_extract_run_context'>extract_run_context</span><span class='lparen'>(</span><span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
@@ -3323,12 +3325,12 @@
       <pre class="lines">
 
 
-483
 484
-485</pre>
+485
+486</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 483</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 484</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_chat'>chat</span>
   <span class='ivar'>@chat</span>
@@ -3377,15 +3379,15 @@
       <pre class="lines">
 
 
-606
 607
 608
 609
 610
-611</pre>
+611
+612</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 606</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 607</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_chat_provider'>chat_provider</span>
   <span class='id identifier rubyid_m'>m</span> <span class='op'>=</span> <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_model'>model</span>
@@ -3459,7 +3461,6 @@
       <pre class="lines">
 
 
-498
 499
 500
 501
@@ -3468,10 +3469,11 @@
 504
 505
 506
-507</pre>
+507
+508</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 498</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 499</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_clear_messages'>clear_messages</span><span class='lparen'>(</span><span class='label'>keep_system:</span> <span class='kw'>true</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_keep_system'>keep_system</span>
@@ -3616,7 +3618,6 @@
       <pre class="lines">
 
 
-537
 538
 539
 540
@@ -3625,10 +3626,11 @@
 543
 544
 545
-546</pre>
+546
+547</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 537</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 538</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_compress_history'>compress_history</span><span class='lparen'>(</span><span class='label'>recent_turns:</span> <span class='int'>3</span><span class='comma'>,</span> <span class='label'>keep_threshold:</span> <span class='float'>0.6</span><span class='comma'>,</span> <span class='label'>drop_threshold:</span> <span class='float'>0.2</span><span class='comma'>,</span> <span class='label'>summarizer:</span> <span class='kw'>nil</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_compressed'>compressed</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="HistoryCompressor.html" title="RobotLab::HistoryCompressor (class)">HistoryCompressor</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="HistoryCompressor.html#initialize-instance_method" title="RobotLab::HistoryCompressor#initialize (method)">new</a></span></span><span class='lparen'>(</span>
@@ -3684,14 +3686,14 @@
       <pre class="lines">
 
 
-437
 438
 439
 440
-441</pre>
+441
+442</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 437</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 438</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_connect_mcp!'>connect_mcp!</span>
   <span class='id identifier rubyid_resolved_mcp'>resolved_mcp</span> <span class='op'>=</span> <span class='id identifier rubyid_resolve_mcp_hierarchy'>resolve_mcp_hierarchy</span><span class='lparen'>(</span><span class='ivar'>@mcp_config</span><span class='rparen'>)</span>
@@ -3860,7 +3862,6 @@
       <pre class="lines">
 
 
-576
 577
 578
 579
@@ -3883,10 +3884,11 @@
 596
 597
 598
-599</pre>
+599
+600</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 576</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 577</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_delegate'>delegate</span><span class='lparen'>(</span><span class='label'>to:</span><span class='comma'>,</span> <span class='label'>task:</span><span class='comma'>,</span> <span class='label'>async:</span> <span class='kw'>false</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_async'>async</span>
@@ -3956,14 +3958,14 @@
       <pre class="lines">
 
 
-455
 456
 457
 458
-459</pre>
+459
+460</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 455</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 456</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_disconnect'>disconnect</span>
   <span class='ivar'>@mcp_clients</span><span class='period'>.</span><span class='id identifier rubyid_each_value'>each_value</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='symbol'>:disconnect</span><span class='rparen'>)</span>
@@ -4014,14 +4016,14 @@
       <pre class="lines">
 
 
-446
 447
 448
 449
-450</pre>
+450
+451</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 446</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 447</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_failed_mcp_server_names'>failed_mcp_server_names</span>
   <span class='kw'>return</span> <span class='lbracket'>[</span><span class='rbracket'>]</span> <span class='kw'>unless</span> <span class='ivar'>@failed_mcp_configs</span>
@@ -4108,15 +4110,15 @@
       <pre class="lines">
 
 
-471
 472
 473
 474
 475
-476</pre>
+476
+477</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 471</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 472</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_inject_mcp!'>inject_mcp!</span><span class='lparen'>(</span><span class='label'>clients:</span><span class='comma'>,</span> <span class='label'>tools:</span><span class='rparen'>)</span>
   <span class='ivar'>@mcp_clients</span> <span class='op'>=</span> <span class='id identifier rubyid_clients'>clients</span>
@@ -4192,7 +4194,6 @@
       <pre class="lines">
 
 
-633
 634
 635
 636
@@ -4206,10 +4207,11 @@
 644
 645
 646
-647</pre>
+647
+648</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 633</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 634</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_learn'>learn</span><span class='lparen'>(</span><span class='id identifier rubyid_text'>text</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_text'>text</span> <span class='op'>=</span> <span class='id identifier rubyid_text'>text</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
@@ -4290,12 +4292,12 @@
       <pre class="lines">
 
 
-617
 618
-619</pre>
+619
+620</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 617</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 618</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_mcp_client'>mcp_client</span><span class='lparen'>(</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rparen'>)</span>
   <span class='ivar'>@mcp_clients</span><span class='lbracket'>[</span><span class='id identifier rubyid_server_name'>server_name</span><span class='rbracket'>]</span>
@@ -4344,12 +4346,12 @@
       <pre class="lines">
 
 
-490
 491
-492</pre>
+492
+493</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 490</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 491</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_messages'>messages</span>
   <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_messages'>messages</span>
@@ -4403,15 +4405,15 @@
       <pre class="lines">
 
 
-268
 269
 270
 271
 272
-273</pre>
+273
+274</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 268</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 269</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_model'>model</span>
   <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>unless</span> <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_respond_to?'>respond_to?</span><span class='lparen'>(</span><span class='symbol'>:model</span><span class='rparen'>)</span>
@@ -4483,13 +4485,13 @@
       <pre class="lines">
 
 
-513
 514
 515
-516</pre>
+516
+517</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 513</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 514</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_replace_messages'>replace_messages</span><span class='lparen'>(</span><span class='id identifier rubyid_messages'>messages</span><span class='rparen'>)</span>
   <span class='ivar'>@chat</span><span class='period'>.</span><span class='id identifier rubyid_instance_variable_set'>instance_variable_set</span><span class='lparen'>(</span><span class='symbol'>:@messages</span><span class='comma'>,</span> <span class='id identifier rubyid_messages'>messages</span><span class='rparen'>)</span>
@@ -4539,13 +4541,13 @@
       <pre class="lines">
 
 
-426
 427
 428
-429</pre>
+429
+430</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 426</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 427</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_memory'>reset_memory</span>
   <span class='ivar'>@memory</span><span class='period'>.</span><span class='id identifier rubyid_reset'>reset</span>
@@ -4595,14 +4597,14 @@
       <pre class="lines">
 
 
-653
 654
 655
 656
-657</pre>
+657
+658</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 653</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 654</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset_token_totals'>reset_token_totals</span>
   <span class='ivar'>@total_input_tokens</span> <span class='op'>=</span> <span class='int'>0</span>
@@ -4783,7 +4785,6 @@
       <pre class="lines">
 
 
-299
 300
 301
 302
@@ -4843,10 +4844,11 @@
 356
 357
 358
-359</pre>
+359
+360</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 299</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 300</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_run'>run</span><span class='lparen'>(</span><span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network_memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>network_config:</span> <span class='kw'>nil</span><span class='comma'>,</span>
         <span class='label'>memory:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>mcp:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='label'>tools:</span> <span class='symbol'>:none</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
@@ -4953,7 +4955,6 @@
       <pre class="lines">
 
 
-663
 664
 665
 666
@@ -4969,10 +4970,11 @@
 676
 677
 678
-679</pre>
+679
+680</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 663</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 664</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_h'>to_h</span>
   <span class='lbrace'>{</span>
@@ -5129,7 +5131,6 @@
       <pre class="lines">
 
 
-370
 371
 372
 373
@@ -5146,10 +5147,11 @@
 384
 385
 386
-387</pre>
+387
+388</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 370</span>
+      <pre class="code"><span class="info file"># File 'lib/robot_lab/robot.rb', line 371</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_update'>update</span><span class='lparen'>(</span><span class='label'>template:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>context:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>system_prompt:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>model:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='label'>temperature:</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_kwargs'>kwargs</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_template'>template</span>
@@ -5179,7 +5181,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Mar 22 03:00:16 2026 by
+  Generated on Sun Mar 22 03:49:23 2026 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.38 (ruby-3.3.10).
 </div>
