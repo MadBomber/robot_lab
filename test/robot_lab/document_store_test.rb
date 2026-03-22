@@ -8,7 +8,7 @@ class RobotLab::DocumentStoreTest < Minitest::Test
   # can be set to bypass these tests.
   def setup
     skip "Set ROBOT_LAB_SKIP_EMBEDDINGS=false to run embedding tests" \
-      if ENV.fetch("ROBOT_LAB_SKIP_EMBEDDINGS", "true") == "true"
+      if ENV.fetch("ROBOT_LAB_SKIP_EMBEDDINGS", "false") == "true"
 
     @store = RobotLab::DocumentStore.new
   end
