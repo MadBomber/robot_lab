@@ -51,6 +51,8 @@ examples/
   22_context_compression.rb   # Context window compression with HistoryCompressor
   23_convergence.rb           # Debate convergence detection and reconciler fast-path
   24_structured_delegation.rb # Structured delegation with duration and token tracking
+  25_history_search.rb        # Semantic search over a robot's conversation history
+  26_document_store.rb        # Embedding-based document store (RAG) via fastembed
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -202,6 +204,24 @@ A manager robot delegates sub-tasks to a summarizer and an analyst. Each `delega
 Demonstrates `RobotLab::Convergence` for detecting when two independent agents have reached the same conclusion. Scores pairs of texts from identical → semantically similar → partially related → unrelated, showing how the similarity metric varies. Includes the router fast-path pattern: when two verifier robots agree above a threshold, the expensive reconciler LLM call is skipped entirely.
 
 **Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
+
+### 24 — Structured Delegation
+
+Demonstrates `robot.delegate(to:, task:)` for synchronous and asynchronous inter-robot delegation. The manager robot delegates document analysis to a summarizer and an analyst. Shows synchronous (sequential, blocking) and asynchronous (parallel fan-out, `DelegationFuture`) modes with wall-time comparison.
+
+**Requires:** LLM API key
+
+### 25 — Chat History Search
+
+Demonstrates `robot.search_history(query, limit:)` — semantic search over accumulated conversation turns using stemmed TF cosine similarity. No LLM calls: messages are injected directly. Shows relevance ranking, role preservation, short-message filtering, and the `DependencyError` guard.
+
+**Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls)
+
+### 26 — Embedding-Based Document Store
+
+Demonstrates `memory.store_document(key, text)` and `memory.search_documents(query, limit:)` — a lightweight RAG store using `fastembed` (BAAI/bge-small-en-v1.5). Documents are embedded once; queries are compared by cosine similarity at search time. Includes the `RobotLab::DocumentStore` standalone API and a RAG pattern sketch showing how to pass retrieved context to a robot.
+
+**Requires:** `fastembed` gem (already a core dependency); downloads the ~23 MB ONNX model on first run (cached in `~/.cache/fastembed/`)
 
 ### 18 — Rails Integration Demo
 

@@ -416,6 +416,61 @@ module RobotLab
       end
     end
 
+    # =========================================================================
+    # Document Store — embedding-based semantic search
+    # =========================================================================
+
+    # Embed +text+ and store it under +key+ for later semantic search.
+    #
+    # The embedding model (BAAI/bge-small-en-v1.5 via fastembed) is initialised
+    # lazily on the first call.  The model file is downloaded once and cached.
+    #
+    # @param key [Symbol, String] identifier for the document
+    # @param text [String] text to embed and store
+    # @return [self]
+    #
+    # @example
+    #   memory.store_document(:readme,    File.read("README.md"))
+    #   memory.store_document(:changelog, File.read("CHANGELOG.md"))
+    #
+    def store_document(key, text)
+      document_store.store(key, text)
+      self
+    end
+
+    # Search stored documents for the ones most semantically similar to +query+.
+    #
+    # @param query [String] natural-language query
+    # @param limit [Integer] maximum number of results to return (default 5)
+    # @return [Array<Hash>] results sorted by score descending;
+    #   each hash has +:key+, +:text+, and +:score+ (Float 0.0..1.0)
+    #
+    # @example
+    #   hits = memory.search_documents("how to configure redis", limit: 3)
+    #   hits.each { |h| puts "#{h[:key]} (#{h[:score].round(3)}): #{h[:text][0..80]}" }
+    #
+    def search_documents(query, limit: 5)
+      return [] unless @document_store
+
+      @document_store.search(query, limit: limit)
+    end
+
+    # Keys of all documents stored in the embedded document store.
+    #
+    # @return [Array<Symbol>]
+    def document_keys
+      @document_store&.keys || []
+    end
+
+    # Remove a document from the store.
+    #
+    # @param key [Symbol, String]
+    # @return [self]
+    def delete_document(key)
+      @document_store&.delete(key)
+      self
+    end
+
     # Append a robot result to history
     #
     # @param result [RobotResult]
@@ -630,6 +685,10 @@ module RobotLab
     end
 
     private
+
+    def document_store
+      @document_store ||= DocumentStore.new
+    end
 
     def create_semantic_cache
       RubyLLM::SemanticCache
