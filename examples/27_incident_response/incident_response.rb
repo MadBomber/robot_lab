@@ -228,12 +228,12 @@ result = network.run(message: "Payment service is degraded: elevated HTTP 500 " 
 puts
 puts "-" * 65
 puts "War-room updates received (BusPoller order):"
-war_room.updates.each.with_index(1) { |u, i| puts "  #{i}. #{u[0..90]}" }
+war_room.updates.each.with_index(1) { |u, i| puts "  #{i}. #{u.gsub(/\s+/, " ")[0..90]}" }
 puts
 puts "Reactive memory keys written by scouts:"
 %i[db_finding net_finding app_finding].each do |key|
   val = network.memory[key]
-  puts "  :#{key.to_s.ljust(14)} #{val&.slice(0, 80)}..."
+  puts "  :#{key.to_s.ljust(14)} #{val&.gsub(/\s+/, " ")&.slice(0, 80)}..."
 end
 puts
 puts "Incident action plan (from #{OUTPUT_DIR}/incident_report.md):"
