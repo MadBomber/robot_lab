@@ -3,6 +3,7 @@
 require_relative 'robot/template_rendering'
 require_relative 'robot/mcp_management'
 require_relative 'robot/bus_messaging'
+require_relative 'robot/history_search'
 
 module RobotLab
   # LLM-powered robot built on RubyLLM::Agent
@@ -41,6 +42,7 @@ module RobotLab
     include Robot::TemplateRendering
     include Robot::MCPManagement
     include Robot::BusMessaging
+    include Robot::HistorySearch
 
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
