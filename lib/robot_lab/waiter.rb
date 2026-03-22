@@ -1,28 +1,26 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # Thread-safe waiter for blocking get operations on Memory
+  # Thread-safe waiter for blocking get operations on Memory.
   #
-  # Waiter provides a condition variable wrapper that allows one thread
-  # to wait for a value that will be provided by another thread.
+  # Uses an IO.pipe pair instead of ConditionVariable so that
+  # IO.select integrates with the Async fiber scheduler hook.
+  # ConditionVariable#wait can block the event loop in Async
+  # contexts; IO.select yields to the scheduler correctly.
   #
-  # @example Basic usage
-  #   waiter = Waiter.new
-  #
-  #   # In thread A (waiting)
-  #   value = waiter.wait(timeout: 30)
-  #
-  #   # In thread B (signaling)
-  #   waiter.signal("the value")
+  # Multiple threads may wait on the same Waiter instance.
+  # signal() writes one byte per waiting thread so every
+  # blocked IO.select wakes exactly once.
   #
   # @api private
   class Waiter
     # Creates a new Waiter instance.
     def initialize
-      @mutex = Mutex.new
-      @condition = ConditionVariable.new
-      @value = nil
-      @signaled = false
+      @read_io, @write_io = IO.pipe
+      @mutex        = Mutex.new
+      @value        = nil
+      @signaled     = false
+      @waiter_count = 0
     end
 
     # Wait for a value to be signaled.
@@ -34,32 +32,44 @@ module RobotLab
       @mutex.synchronize do
         return @value if @signaled
 
-        if timeout
-          deadline = Time.now + timeout
-          until @signaled
-            remaining = deadline - Time.now
-            return :timeout if remaining <= 0
-            @condition.wait(@mutex, remaining)
-          end
-          @value
-        else
-          @condition.wait(@mutex) until @signaled
+        @waiter_count += 1
+      end
+
+      begin
+        ready = IO.select([@read_io], nil, nil, timeout)
+
+        @mutex.synchronize do
+          @waiter_count -= 1
+          return :timeout unless ready
+
+          @read_io.read_nonblock(1) rescue nil  # drain one wake byte
           @value
         end
+      rescue IOError
+        @mutex.synchronize { @waiter_count -= 1 }
+        :timeout
       end
     end
 
-    # Signal a value to waiting threads.
+    # Signal a value to all waiting threads.
     #
     # @param value [Object] the value to signal
     # @return [void]
     #
     def signal(value)
-      @mutex.synchronize do
-        @value = value
+      count = @mutex.synchronize do
+        @value    = value
         @signaled = true
-        @condition.broadcast
+        @waiter_count
       end
+
+      # Write one byte per waiting thread (min 1 to handle the race
+      # where a thread passed the @signaled check but hasn't entered
+      # IO.select yet — its IO.select will return immediately).
+      bytes = [count, 1].max
+      @write_io.write_nonblock("." * bytes) rescue nil
+    rescue IOError
+      # pipe already closed — signal is a no-op
     end
 
     # Check if this waiter has been signaled.
@@ -68,6 +78,16 @@ module RobotLab
     #
     def signaled?
       @mutex.synchronize { @signaled }
+    end
+
+    # Release the pipe file descriptors.
+    # Should be called after wait returns.
+    #
+    # @return [void]
+    #
+    def close
+      @read_io.close  rescue nil
+      @write_io.close rescue nil
     end
   end
 end

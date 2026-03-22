@@ -176,12 +176,13 @@ module RobotLab
       @mcp_initialized = false
 
       # Bus state (optional inter-robot communication)
-      @bus = @config.bus
-      @message_counter = 0
-      @outbox = {}
-      @message_handler = nil
-      @bus_processing = false
-      @bus_queue = []
+      @bus               = @config.bus
+      @message_counter   = 0
+      @outbox            = {}
+      @message_handler   = nil
+      @bus_poller        = nil
+      @private_bus_poller = nil
+      @bus_poller_group  = :default
 
       # Token tracking
       @total_input_tokens = 0

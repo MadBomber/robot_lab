@@ -18,13 +18,15 @@ module RobotLab
       #   @return [Server] the MCP server configuration
       # @!attribute [r] connected
       #   @return [Boolean] whether currently connected
-      attr_reader :server, :connected
+      attr_reader :server, :connected, :transport
 
       # Creates a new MCP Client instance.
       #
       # @param server_or_config [Server, Hash] the server or configuration hash
+      # @param poller [MCP::ConnectionPoller, nil] optional shared IO.select poller
+      #   for multiplexing multiple stdio transports (opt-in, default nil = per-client blocking)
       # @raise [ArgumentError] if config is invalid
-      def initialize(server_or_config)
+      def initialize(server_or_config, poller: nil)
         @server = case server_or_config
                   when Server
                     server_or_config
@@ -33,9 +35,10 @@ module RobotLab
                   else
                     raise ArgumentError, "Invalid server config"
                   end
-        @connected = false
-        @transport = nil
+        @connected  = false
+        @transport  = nil
         @request_id = 0
+        @poller     = poller
       end
 
       # Connect to the MCP server
@@ -48,6 +51,9 @@ module RobotLab
         @transport = create_transport
         @transport.connect if @transport.respond_to?(:connect)
         @connected = true
+
+        # Register with shared poller after the transport is connected
+        @poller.register(self) if @poller
 
         self
       rescue StandardError => e
@@ -63,6 +69,7 @@ module RobotLab
       def disconnect
         return self unless @connected
 
+        @poller.unregister(self) if @poller
         @transport.close if @transport.respond_to?(:close)
         @connected = false
         @transport = nil
@@ -188,7 +195,12 @@ module RobotLab
         }
         message[:params] = params if params
 
-        response = @transport.send_request(message)
+        response = if @poller && @transport.is_a?(Transports::Stdio)
+                     @poller.send_request(self, message, timeout: @server.timeout)
+                   else
+                     @transport.send_request(message)
+                   end
+
         parse_response(response)
       end
 
