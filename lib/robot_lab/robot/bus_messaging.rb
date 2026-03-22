@@ -5,21 +5,16 @@ module RobotLab
     # Inter-robot communication via TypedBus.
     #
     # Expects the including class to provide:
-    #   @bus, @message_counter, @outbox, @message_handler,
-    #   @bus_subscriber_id, @bus_processing, @bus_queue, @name
-    #   and the `run` instance method
+    #   @bus, @bus_poller, @bus_poller_group, @message_counter,
+    #   @outbox, @message_handler, @bus_subscriber_id, @name
+    #   and the `run` instance method.
     #
-    # == Processing Guard
+    # == Delivery Serialization
     #
-    # TypedBus delivers messages in concurrent Async fibers. When a robot's
-    # +run()+ yields during HTTP I/O, the Async scheduler can switch to
-    # another fiber delivering a new bus message to the same robot. This
-    # would interleave user messages between +tool_use+ / +tool_result+
-    # pairs in +@chat+, corrupting Anthropic API message ordering.
-    #
-    # The processing guard serializes delivery handling: deliveries that
-    # arrive while the robot is already processing are queued and drained
-    # sequentially after the current one completes.
+    # TypedBus delivers messages in concurrent Async fibers. Robots
+    # enqueue deliveries into a BusPoller rather than handling them
+    # inline. The BusPoller drains each group's queue sequentially on
+    # a dedicated OS thread, so robot.run() calls never interleave.
     #
     module BusMessaging
       # Send a message to another robot via the bus.
@@ -84,19 +79,6 @@ module RobotLab
       # @param options [Hash] additional options passed to RobotLab.build
       # @return [Robot] the newly created robot
       #
-      # @example Spawn from a bus-less robot (bus and name created automatically)
-      #   bot  = RobotLab.build
-      #   bot2 = bot.spawn(system_prompt: "You are helpful.")
-      #
-      # @example Spawn a specialist from a message handler
-      #   on_message do |message|
-      #     specialist = spawn(
-      #       name: "fact_checker",
-      #       system_prompt: "You verify factual claims. Be concise."
-      #     )
-      #     specialist.send_message(to: name.to_sym, content: specialist.run(message.content).last_text_content)
-      #   end
-      #
       def spawn(name: "robot", system_prompt: nil, template: nil, local_tools: [], **options)
         ensure_bus
 
@@ -120,12 +102,6 @@ module RobotLab
       # @param bus [TypedBus::MessageBus, nil] bus to join (creates one if nil)
       # @return [self]
       #
-      # @example Join an existing bus
-      #   bot = RobotLab.build.with_bus(some_bus)
-      #
-      # @example Create a bus on demand
-      #   bot = RobotLab.build.with_bus
-      #
       def with_bus(bus = nil)
         return self if bus && @bus == bus
 
@@ -133,6 +109,22 @@ module RobotLab
         @bus = bus || @bus || TypedBus::MessageBus.new
         setup_bus_channel
         self
+      end
+
+      # Assign a shared BusPoller from a Network.
+      #
+      # Stops any private poller this robot auto-created, then adopts
+      # the network's shared poller for the given group.
+      #
+      # @param poller [BusPoller] the network's shared poller
+      # @param group  [Symbol]    poller group for this robot (default: :default)
+      # @return [void]
+      #
+      def assign_bus_poller(poller, group: :default)
+        @private_bus_poller&.stop
+        @private_bus_poller = nil
+        @bus_poller       = poller
+        @bus_poller_group = group
       end
 
       private
@@ -143,46 +135,42 @@ module RobotLab
       end
 
 
-      # Create a typed channel on the bus and subscribe to it
+      # Create a typed channel on the bus and subscribe to it.
+      # Auto-creates a private BusPoller if none has been assigned.
       def setup_bus_channel
+        unless @bus_poller
+          @private_bus_poller = BusPoller.new.start
+          @bus_poller         = @private_bus_poller
+          @bus_poller_group   = :default
+        end
+
         channel_name = @name.to_sym
         @bus.add_channel(channel_name, type: RobotMessage) unless @bus.channel?(channel_name)
-        @bus_subscriber_id = @bus.subscribe(channel_name) { |delivery| handle_incoming_delivery(delivery) }
+        @bus_subscriber_id = @bus.subscribe(channel_name) { |delivery| enqueue_delivery(delivery) }
       end
 
 
-      # Unsubscribe from the bus channel
+      # Unsubscribe from the bus channel and stop the private poller if any.
       def teardown_bus_channel
         channel_name = @name.to_sym
         @bus.unsubscribe(channel_name, @bus_subscriber_id) if @bus_subscriber_id
         @bus_subscriber_id = nil
+
+        @private_bus_poller&.stop
+        @private_bus_poller = nil
+        @bus_poller         = nil
+        @bus_poller_group   = :default
       end
 
 
-      # Dispatch incoming bus delivery to handler.
-      #
-      # Uses a processing guard to serialize delivery handling. When
-      # the robot is already processing a delivery (e.g., inside a
-      # run() call that yields during HTTP I/O), new deliveries are
-      # queued and drained sequentially after the current one completes.
-      #
-      # Auto-ack when the handler takes 1 arg (message only);
-      # manual ack/nack when the handler takes 2 args (delivery, message).
-      def handle_incoming_delivery(delivery)
-        if @bus_processing
-          @bus_queue << delivery
-          return
-        end
-
-        process_delivery(delivery)
-        drain_bus_queue
+      # Enqueue a delivery to the robot's assigned poller.
+      def enqueue_delivery(delivery)
+        @bus_poller.enqueue(robot: self, delivery: delivery, group: @bus_poller_group)
       end
 
 
-      # Process a single delivery (called under the processing guard)
+      # Process a single delivery (called by BusPoller drain thread).
       def process_delivery(delivery)
-        @bus_processing = true
-
         message = delivery.message
 
         # Correlate replies with outbox entries
@@ -205,16 +193,6 @@ module RobotLab
       rescue => e
         delivery.nack! if delivery.pending?
         raise BusError, "Error handling bus message on robot '#{@name}': #{e.message}"
-      ensure
-        @bus_processing = false
-      end
-
-
-      # Drain queued deliveries sequentially
-      def drain_bus_queue
-        while (queued = @bus_queue.shift)
-          process_delivery(queued)
-        end
       end
 
 

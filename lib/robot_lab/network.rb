@@ -94,6 +94,7 @@ module RobotLab
       @memory = memory || Memory.new(network_name: @name)
       @config = config || RunConfig.new
       @broadcast_handlers = []
+      @bus_poller = BusPoller.new.start
 
       instance_eval(&block) if block_given?
     end
@@ -121,7 +122,7 @@ module RobotLab
     # @example Task with dependencies
     #   task :writer, writer_robot, depends_on: [:analyst]
     #
-    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none)
+    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none, poller_group: :default)
       task_wrapper = Task.new(
         name: name,
         robot: robot,
@@ -131,6 +132,10 @@ module RobotLab
         memory: memory,
         config: config
       )
+
+      # Register the group and assign the shared poller to the robot
+      @bus_poller.add_group(poller_group)
+      robot.assign_bus_poller(@bus_poller, group: poller_group) if robot.respond_to?(:assign_bus_poller, true)
 
       @robots[name.to_s] = robot
       @tasks[name.to_s] = task_wrapper

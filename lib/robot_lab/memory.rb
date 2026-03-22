@@ -803,6 +803,7 @@ module RobotLab
       end
 
       result = waiter.wait(timeout: timeout)
+      waiter.close
 
       if result == :timeout
         # Clean up the waiter

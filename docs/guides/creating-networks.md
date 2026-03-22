@@ -124,6 +124,7 @@ end
 | `memory` | Task-specific memory |
 | `config` | Per-task `RunConfig` (merged on top of network's config) |
 | `depends_on` | `:none`, `[:task1]`, or `:optional` |
+| `poller_group` | Bus delivery group label (`:default`, `:slow`, etc.) |
 
 ## Conditional Routing
 
@@ -163,6 +164,26 @@ network = RobotLab.create_network(name: "support") do
   task :general, general_robot, depends_on: :optional
 end
 ```
+
+## Poller Groups
+
+Each network maintains a shared `BusPoller` that serializes TypedBus deliveries on a per-robot basis: if a robot is already processing a message, new deliveries are queued and drained after the current one completes. This prevents re-entrancy without blocking other robots.
+
+Named **poller groups** let you label tasks so slow robots are identifiable in logs and monitoring without needing separate infrastructure:
+
+```ruby
+network = RobotLab.create_network(name: "mixed_speed") do
+  # Fast robots on the default group
+  task :fetcher,   fetcher_robot,   depends_on: :none
+  task :summarize, summarizer,      depends_on: [:fetcher]
+
+  # Slow robots with expensive LLM calls — label them :slow
+  task :analyst,   analyst_robot,   depends_on: [:fetcher],  poller_group: :slow
+  task :writer,    writer_robot,    depends_on: [:analyst],  poller_group: :slow
+end
+```
+
+Group labels are informational — there is no separate queue per group. In Async execution, robots naturally yield during LLM HTTP calls, so fast and slow robots interleave without explicit isolation.
 
 ## Running Networks
 

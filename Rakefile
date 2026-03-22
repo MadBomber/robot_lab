@@ -49,7 +49,8 @@ namespace :examples do
   SUBDIR_ENTRY_POINTS = {
     "14_rusty_circuit" => "open_mic.rb",
     "15_memory_network_and_bus" => "editorial_pipeline.rb",
-    "16_writers_room" => "writers_room.rb"
+    "16_writers_room" => "writers_room.rb",
+    "27_incident_response" => "incident_response.rb"
   }.freeze
 
   # Subdirectory demos that are standalone apps (not run via `ruby`)

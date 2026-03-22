@@ -942,17 +942,18 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
 
-  # Processing guard tests
+  # BusPoller serialization tests
 
-  def test_bus_processing_guard_initialized
+  def test_bus_poller_initialized
     robot = RobotLab::Robot.new(name: 'bot', template: :assistant)
 
-    refute robot.instance_variable_get(:@bus_processing)
-    assert_equal [], robot.instance_variable_get(:@bus_queue)
+    # No bus poller created until a bus is assigned
+    assert_nil robot.instance_variable_get(:@bus_poller)
+    assert_equal :default, robot.instance_variable_get(:@bus_poller_group)
   end
 
 
-  def test_bus_processing_guard_queues_concurrent_deliveries
+  def test_bus_poller_queues_concurrent_deliveries
     bus = TypedBus::MessageBus.new
     order = []
 
@@ -960,11 +961,10 @@ class RobotLab::RobotTest < Minitest::Test
     bot.on_message do |message|
       order << "start:#{message.content}"
       # Simulate a second message arriving while processing the first.
-      # Because we're inside the handler, @bus_processing is true,
-      # so the second delivery will be queued instead of interleaved.
+      # BusPoller sees robot is busy and queues the second delivery.
       if message.content == "first"
         second = RobotLab::RobotMessage.build(id: 99, from: "sender", content: "second")
-        bot.send(:handle_incoming_delivery,
+        bot.send(:enqueue_delivery,
           TypedBus::Delivery.new(second, channel_name: :bot, subscriber_id: 0))
       end
       order << "end:#{message.content}"
@@ -973,12 +973,12 @@ class RobotLab::RobotTest < Minitest::Test
     sender = RobotLab::Robot.new(name: 'sender', template: :assistant, bus: bus)
     Async { sender.send_message(to: :bot, content: "first") }
 
-    # The guard ensures sequential processing: first completes, then second
+    # BusPoller ensures sequential processing: first completes, then second
     assert_equal ["start:first", "end:first", "start:second", "end:second"], order
   end
 
 
-  def test_bus_processing_guard_drains_multiple_queued
+  def test_bus_poller_drains_multiple_queued
     bus = TypedBus::MessageBus.new
     order = []
 
@@ -989,7 +989,7 @@ class RobotLab::RobotTest < Minitest::Test
       if message.content == "first"
         %w[second third].each_with_index do |content, i|
           msg = RobotLab::RobotMessage.build(id: 90 + i, from: "sender", content: content)
-          bot.send(:handle_incoming_delivery,
+          bot.send(:enqueue_delivery,
             TypedBus::Delivery.new(msg, channel_name: :bot, subscriber_id: 0))
         end
       end
@@ -1002,7 +1002,7 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
 
-  def test_bus_processing_guard_resets_on_error
+  def test_bus_poller_resets_on_error
     bus = TypedBus::MessageBus.new
     bot = RobotLab::Robot.new(name: 'bot', template: :assistant, bus: bus)
     bot.on_message do |message|
@@ -1011,16 +1011,18 @@ class RobotLab::RobotTest < Minitest::Test
 
     sender = RobotLab::Robot.new(name: 'sender', template: :assistant, bus: bus)
 
-    # The error propagates as BusError, but @bus_processing resets
+    # The error propagates as BusError, but the poller resets the busy flag
     begin
       Async { sender.send_message(to: :bot, content: "explode") }
     rescue RobotLab::BusError
       # expected
     end
 
-    # Guard is reset so subsequent messages can still be processed
-    refute bot.instance_variable_get(:@bus_processing)
-    assert_equal [], bot.instance_variable_get(:@bus_queue)
+    # Poller is reset — subsequent messages can still be processed
+    received = []
+    bot.on_message { |msg| received << msg.content }
+    Async { sender.send_message(to: :bot, content: "after") }
+    assert_equal ["after"], received
   end
 
 

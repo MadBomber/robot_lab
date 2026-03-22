@@ -120,6 +120,12 @@ module RobotLab
           @connected && @wait_thread&.alive?
         end
 
+        # Expose the underlying IO objects so ConnectionPoller can
+        # register them in its IO.select loop.
+        #
+        # @api private
+        attr_reader :stdin, :stdout
+
         private
 
         def send_initialize
