@@ -64,32 +64,10 @@ Documented as a router pattern in `examples/23_convergence.rb`: when verifier A 
 
 `memory.store_document(key, text)` embeds text via `Fastembed::TextEmbedding` (BGE passage embedding) and stores it. `memory.search_documents(query, limit: 5)` embeds the query and returns top-N by cosine similarity. `RobotLab::DocumentStore` is the standalone backing class. Lazy model init — ONNX model downloaded on first use. No optional dependency: `fastembed` is already a core dep. Demo: `examples/26_document_store.rb`.
 
-### 9. MCP Server Discovery Fallback (Semantic)
+### ~~9. MCP Server Discovery Fallback (Semantic)~~ ✅ DONE (Phase 6)
 **Source**: AIA (Technique 5)
 
-Build an LSI index from MCP server names + topic descriptions at startup. Use as a fallback when keyword-based server selection finds no match ("install imagemagick" semantically maps to the `brew` server).
-
-- Fallback only — no conflict with existing routing
-- Requires the `classifier` gem and a description field per MCP server config
-- Most valuable in environments with many MCP servers
-
-### 10. Chat History Search
-**Source**: AIA (Technique 3)
-
-Build an LSI index from accumulated conversation turns. Enable semantic search across history for context recall.
-
-- Training-free via `classifier` gem
-- Could be a `Memory` extension: `memory.search_history(query, limit: 5)`
-- Useful for long-running robot sessions
-
-### 11. Embedding-Based Memory Search
-**Source**: Hivemind AI
-
-Extend Memory from key-value into RAG territory. `memory.store_document(key, text)` embeds and stores; `memory.search(query, limit: 5)` does similarity search.
-
-- RobotLab already depends on `fastembed` and `ruby_llm-semantic_cache`
-- Backend: in-memory for small datasets, pgvector for production
-- Biggest capability extension but also largest implementation
+`MCP::ServerDiscovery.select(query, from:, threshold:)` uses TF cosine similarity (`String#word_hash`) to pick only the semantically relevant MCP servers for a given user query. `mcp_discovery: true` on `Robot` enables discovery automatically before the first `ensure_mcp_clients` call. `MCP::Server` gained a `:description` field. Falls back to all servers when: no descriptions, classifier unavailable, blank query, or nothing scores above `DEFAULT_THRESHOLD = 0.05`. Demo: `examples/28_mcp_discovery.rb`.
 
 ### ~~12. MCP Client Connection Multiplexing~~ ✅ DONE (Phase 5)
 **Source**: WaterDrop
@@ -137,7 +115,8 @@ Phase 3 (Inter-robot patterns)  ✅ COMPLETE
 Phase 4 (Knowledge & retrieval)  ✅ COMPLETE
   #10 Chat history search          ✅
   #11 Embedding memory search      ✅
-  #9 MCP discovery fallback        (deferred — needs multi-MCP-server environments)
+Phase 6 (MCP ergonomics)  ✅ COMPLETE
+  #9 MCP discovery fallback  ✅
 
 Phase 5 (Infrastructure)  ✅ COMPLETE
   #12 MCP multiplexing     ✅

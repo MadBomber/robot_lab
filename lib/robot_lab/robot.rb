@@ -130,6 +130,7 @@ module RobotLab
       stop: nil,
       max_tool_rounds: nil,
       token_budget: nil,
+      mcp_discovery: false,
       config: nil
     )
       @name = name.to_s
@@ -141,6 +142,7 @@ module RobotLab
       @local_tools = Array(local_tools)
       @skills = skills ? Array(skills).map(&:to_sym) : nil
       @expanded_skills = nil
+      @mcp_discovery = mcp_discovery
 
       # Build RunConfig from explicit kwargs, merged on top of passed-in config.
       # Explicit constructor kwargs always override the shared config.
@@ -318,6 +320,13 @@ module RobotLab
         # Resolve hierarchical MCP and tools configuration
         resolved_mcp = resolve_mcp_hierarchy(mcp, network: network, network_config: network_config)
         resolved_tools = resolve_tools_hierarchy(tools, network: network, network_config: network_config)
+
+        # Filter MCP servers by semantic relevance when discovery is enabled.
+        # Only applies on the first run (before @mcp_initialized) so connections
+        # are not torn down mid-conversation.
+        if @mcp_discovery && !@mcp_initialized && resolved_mcp.is_a?(Array)
+          resolved_mcp = MCP::ServerDiscovery.select(message.to_s, from: resolved_mcp)
+        end
 
         # Initialize or update MCP clients based on resolved config
         ensure_mcp_clients(resolved_mcp)
