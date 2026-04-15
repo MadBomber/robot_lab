@@ -83,13 +83,25 @@ module RobotLab
       @robot = robot
     end
 
-    # Wraps RubyLLM::Tool#call with error handling so the LLM receives
-    # a plain-text error message instead of crashing the run.
+    # Invokes the tool, routing through the Ractor worker pool if ractor_safe.
+    #
+    # For Ractor-safe tools with a resolvable class name: submits to
+    # RobotLab.ractor_pool and blocks for the frozen result. Anonymous
+    # classes (name.nil?) fall through to the inline path.
+    #
+    # For non-Ractor-safe tools: runs execute directly in the calling thread.
     #
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     def call(args)
-      super
+      if self.class.ractor_safe? && !self.class.name.nil?
+        RobotLab.ractor_pool.submit(self.class.name, args)
+      else
+        super
+      end
+    rescue RobotLab::ToolError => e
+      raise if self.class.raise_on_error?
+      "Error (#{name}): #{e.message}"
     rescue StandardError => e
       raise if self.class.raise_on_error?
 
