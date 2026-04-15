@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    robot_lab (0.0.10)
+    robot_lab (0.0.11)
       async (~> 2.0)
       async-http (~> 0.60)
       async-websocket (~> 0.30)
@@ -472,7 +472,7 @@ CHECKSUMS
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rice (4.11.5) sha256=8eddb1b297e90a221a65e56fc07f27065457b21db0f508dd0561ad86a048f620
-  robot_lab (0.0.10)
+  robot_lab (0.0.11)
   rubocop (1.86.1) sha256=44415f3f01d01a21e01132248d2fd0867572475b566ca188a0a42133a08d4531
   rubocop-ast (1.49.1) sha256=4412f3ee70f6fe4546cc489548e0f6fcf76cafcfa80fa03af67098ffed755035
   ruby-next-core (1.2.0) sha256=f6a7d00bb5186cecbb02f7f1845a0f3a2c9788d35b6ccff5c9be3f0d46799b86

@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-04-14
+
+### Added
+
+- **Ractor parallelism — Track 1: CPU-bound tools** (`RactorWorkerPool`)
+  - `ractor_safe true` class macro on `Tool` — opts a tool class into Ractor execution; subclasses inherit automatically
+  - `RobotLab.ractor_pool` — global `RactorWorkerPool` singleton, one Ractor worker per CPU core by default
+  - `ractor_pool_size` field on `RunConfig` for configuring pool capacity
+  - `RactorWorkerPool#submit(tool_name, args)` — submits a job and blocks for the frozen result; raises `ToolError` on failure
+  - Tool dispatch routes `ractor_safe` tools through the pool automatically, bypassing the GVL for CPU-intensive work
+  - `RactorBoundary.freeze_deep(obj)` — deep-freezes nested hashes/arrays/strings to make them Ractor-shareable; raises `RactorBoundaryError` for non-shareable objects (Procs, IOs, etc.)
+- **Ractor parallelism — Track 2: parallel robot pipelines** (`RactorNetworkScheduler`)
+  - `parallel_mode: :ractor` on `Network.new` — routes `network.run` through `RactorNetworkScheduler` instead of `SimpleFlow::Pipeline`
+  - `RactorNetworkScheduler` dispatches dependency waves: independent tasks run concurrently (one Thread per task); dependent tasks wait for their wave to complete
+  - `RobotSpec` — frozen `Data.define` descriptor carrying robot name, template, system prompt, and config; safely crosses Ractor boundaries
+  - `RactorNetworkScheduler#run_pipeline` returns `Hash { robot_name => result_string }` for the full pipeline
+  - `RactorNetworkScheduler#run_spec` for single-spec dispatch
+  - `RactorNetworkScheduler#shutdown` for graceful poison-pill cleanup
+  - `network.parallel_mode` reader exposes the configured mode (default `:async`)
+- **Ractor memory proxy** — `RactorMemoryProxy` wraps `Memory` via `ractor-wrapper` for safe cross-Ractor memory access
+- **Infrastructure data classes** — `RactorJob`, `RactorJobError` (`Data.define` structs) for job submission and error propagation across Ractor boundaries
+- **`RactorBoundaryError`** — raised by `freeze_deep` when a non-shareable value (Proc, IO, etc.) would cross a Ractor boundary
+- **`ToolError`** — raised by `RactorWorkerPool#submit` when a tool raises inside a Ractor; propagates message and frozen backtrace
+- **Dependencies** — `ractor_queue` (~> 0.1) and `ractor-wrapper` (~> 0.4) added to gemspec
+- **Ractor Parallelism guide** (`docs/guides/ractor-parallelism.md`) — covers architecture, two-track design, configuration, error handling, constraints, and best practices
+- **Example 29: Ractor-Safe CPU Tools** (`examples/29_ractor_tools.rb`) — demonstrates `ractor_safe` flag, inheritance, `freeze_deep`, pool submissions, `ToolError` propagation, and parallel batch timing; no API key required
+- **Example 30: Ractor Network Scheduler** (`examples/30_ractor_network.rb`) — demonstrates `RactorNetworkScheduler` wave ordering with simulated latencies, `Network.new(parallel_mode: :ractor)` API, and dependency graph inspection; no API key required for Parts 1 & 2
+
+### Fixed
+
+- `ToolConfig::NONE_VALUES` constant was not Ractor-shareable because its inner empty array `[]` was mutable; fixed by replacing `[]` with `[].freeze` so the entire constant is deeply frozen and safe to read from any Ractor
+
 ## [0.0.9] - 2026-03-02
 
 ### Added
