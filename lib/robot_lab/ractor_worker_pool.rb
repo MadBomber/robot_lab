@@ -84,7 +84,7 @@ module RobotLab
       @closed = true
       # Push one nil poison pill per worker
       @size.times { @work_q.push(nil) }
-      @workers.each { |w| w.take rescue nil }
+      @workers.each { |w| w.join rescue nil }
     end
 
     private
