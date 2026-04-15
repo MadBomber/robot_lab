@@ -47,4 +47,17 @@ module RobotLab
   # @example
   #   raise DependencyError, "Add gem 'classifier', '~> 2.3' to your Gemfile"
   class DependencyError < ConfigurationError; end
+
+  # Raised when a value cannot be made Ractor-shareable before crossing
+  # a Ractor boundary (e.g., a live IO, Proc, or object with mutable state).
+  #
+  # @example
+  #   raise RactorBoundaryError, "Cannot freeze IO object"
+  class RactorBoundaryError < Error; end
+
+  # Raised when a tool fails during execution, including inside a Ractor worker.
+  #
+  # @example
+  #   raise ToolError, "Tool 'MyTool' failed: division by zero"
+  class ToolError < Error; end
 end

@@ -71,6 +71,7 @@ loader.setup
 require_relative 'robot_lab/error'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
+require_relative 'robot_lab/ractor_job'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
