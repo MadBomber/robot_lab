@@ -46,6 +46,33 @@ module RobotLab
       def raise_on_error?
         defined?(@raise_on_error) ? @raise_on_error : false
       end
+
+      # Declare that this tool class is safe to run inside a Ractor.
+      #
+      # Ractor-safe tools must be stateless — no captured mutable closures
+      # and no non-shareable class-level state. The tool is instantiated
+      # fresh inside the Ractor worker for each call.
+      #
+      # With no argument, acts as a getter (walks the inheritance chain).
+      # With a Boolean argument, sets the value.
+      #
+      # @param value [Boolean, nil]
+      # @return [Boolean]
+      def ractor_safe(value = nil)
+        if value.nil?
+          if instance_variable_defined?(:@ractor_safe)
+            @ractor_safe
+          elsif superclass.respond_to?(:ractor_safe)
+            superclass.ractor_safe
+          else
+            false
+          end
+        else
+          @ractor_safe = value
+        end
+      end
+
+      alias ractor_safe? ractor_safe
     end
 
     # Creates a new Tool instance.

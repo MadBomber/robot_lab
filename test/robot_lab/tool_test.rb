@@ -473,4 +473,33 @@ class RobotLab::ToolTest < Minitest::Test
     assert tool.is_a?(RubyLLM::Tool)
     assert tool.is_a?(RobotLab::Tool)
   end
+
+  # ── ractor_safe macro ───────────────────────────────────────────
+
+  def test_ractor_safe_defaults_to_false
+    klass = Class.new(RobotLab::Tool) do
+      description "Test"
+      def execute(**); end
+    end
+    refute klass.ractor_safe?
+  end
+
+  def test_ractor_safe_can_be_enabled
+    klass = Class.new(RobotLab::Tool) do
+      description "Safe tool"
+      ractor_safe true
+      def execute(**); end
+    end
+    assert klass.ractor_safe?
+  end
+
+  def test_ractor_safe_is_inherited
+    parent = Class.new(RobotLab::Tool) do
+      description "Parent"
+      ractor_safe true
+      def execute(**); end
+    end
+    child = Class.new(parent)
+    assert child.ractor_safe?
+  end
 end
