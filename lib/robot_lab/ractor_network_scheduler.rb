@@ -64,11 +64,13 @@ module RobotLab
 
         raise RobotLab::Error, "Circular dependency or unresolvable deps in RactorNetworkScheduler" if ready.empty?
 
-        # Submit all ready tasks concurrently via threads
+        # Submit all ready tasks concurrently via threads.
+        # report_on_exception is disabled because exceptions are propagated
+        # to the caller via t.value — the default reporting is redundant noise.
         threads = ready.map do |entry|
           spec = entry[:spec]
           msg  = completed.values.last || message
-          Thread.new { [spec.name, execute_spec(spec, msg)] }
+          Thread.new { [spec.name, execute_spec(spec, msg)] }.tap { |t| t.report_on_exception = false }
         end
 
         threads.each do |t|

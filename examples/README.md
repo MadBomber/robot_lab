@@ -55,6 +55,8 @@ examples/
   24_structured_delegation.rb # Structured delegation with duration and token tracking
   25_history_search.rb        # Semantic search over a robot's conversation history
   26_document_store.rb        # Embedding-based document store (RAG) via fastembed
+  29_ractor_tools.rb          # Ractor-safe tools: worker pool, freeze_deep, parallel batch
+  30_ractor_network.rb        # Ractor network scheduler: dependency waves, parallel_mode
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -254,6 +256,46 @@ When a robot has many MCP servers configured, connecting to all of them upfront 
 Demonstrates: `MCP::ServerDiscovery.select(query, from:, threshold:)`, the `description:` field on MCP server configs, `mcp_discovery: true` on Robot, and all four fallback cases (no descriptions, blank query, classifier unavailable, no match above threshold).
 
 **Requires:** None (no LLM calls — exercises the discovery module directly)
+
+### 29 — Ractor-Safe CPU Tools
+
+Demonstrates Track 1 of RobotLab's Ractor parallelism: CPU-bound tool classes that
+bypass the GVL by routing through a pool of Ractor workers.
+
+| Section | What it shows |
+|---------|--------------|
+| `ractor_safe?` flags | `WordStatsTool`, `ReadabilityTool`, `HeavyDigestTool` inherit `ractor_safe true` from `TextTool`; `RequestCounterTool` (mutable class variable) does not |
+| `RactorBoundary.freeze_deep` | Deep-freezes nested hashes/arrays; raises `RactorBoundaryError` on `StringIO` |
+| Single pool submit | Direct `RobotLab.ractor_pool.submit(class_name, args)` calls |
+| `ToolError` propagation | `nil.scan(...)` inside a Ractor worker → `NoMethodError` → `RobotLab::ToolError` |
+| Parallel batch | 6 threads each submitting a `HeavyDigestTool` job (5 000 SHA-256 rounds) simultaneously vs sequentially; speedup visible on multi-core hardware |
+
+**Requires:** None (no LLM calls)
+
+### 30 — Ractor Network Scheduler
+
+Demonstrates Track 2 of RobotLab's Ractor parallelism: running a multi-robot
+pipeline under `parallel_mode: :ractor`, which dispatches independent tasks in
+true parallel waves and respects `depends_on` ordering.
+
+Pipeline topology (4 robots):
+```
+headline_finder  ──┐
+background_brief ──┼──► report_writer
+fact_checker     ──┘
+```
+Wave 1 (headline_finder + background_brief + fact_checker) runs in parallel;
+Wave 2 (report_writer) runs after all three complete.
+
+**Part 1** — `SimulatedScheduler` (overrides `execute_spec` with `sleep`) shows
+wave ordering and timing without any API calls.  Expected: ~1.3 s parallel vs 2.2 s sequential.
+
+**Part 2** — Walks through `Network.new(parallel_mode: :ractor)` configuration
+and the `pipeline.step_dependencies` dependency graph inspection.
+
+**Part 3** — Live LLM run (enabled automatically when `ANTHROPIC_API_KEY` is set).
+
+**Requires:** None for Parts 1 & 2.  LLM API key for Part 3.
 
 ### 18 — Rails Integration Demo
 
