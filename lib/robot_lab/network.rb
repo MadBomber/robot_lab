@@ -71,7 +71,7 @@ module RobotLab
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
     # @!attribute [r] memory
     #   @return [Memory] shared memory for all robots in the network
-    attr_reader :name, :pipeline, :robots, :memory, :config
+    attr_reader :name, :pipeline, :robots, :memory, :config, :parallel_mode
 
     # Creates a new Network instance.
     #
@@ -86,13 +86,14 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
-    def initialize(name:, concurrency: :auto, memory: nil, config: nil, &block)
+    def initialize(name:, concurrency: :auto, memory: nil, config: nil, parallel_mode: :async, &block)
       @name = name.to_s
       @robots = {}
       @tasks = {}
       @pipeline = SimpleFlow::Pipeline.new(concurrency: concurrency)
       @memory = memory || Memory.new(network_name: @name)
       @config = config || RunConfig.new
+      @parallel_mode = parallel_mode
       @broadcast_handlers = []
       @bus_poller = BusPoller.new.start
 
@@ -182,12 +183,15 @@ module RobotLab
       # Pass network's config so robots can inherit it
       run_context[:network_config] = @config unless @config.empty?
 
-      initial_result = SimpleFlow::Result.new(
-        run_context,
-        context: { run_params: run_context }
-      )
-
-      @pipeline.call_parallel(initial_result)
+      if @parallel_mode == :ractor
+        run_with_ractor_scheduler(run_context)
+      else
+        initial_result = SimpleFlow::Result.new(
+          run_context,
+          context: { run_params: run_context }
+        )
+        @pipeline.call_parallel(initial_result)
+      end
     end
 
     # Broadcast a message to all robots in the network.
@@ -342,6 +346,32 @@ module RobotLab
         optional_tasks: @pipeline.optional_steps.to_a,
         config: (@config.empty? ? nil : @config.to_json_hash)
       }.compact
+    end
+
+    private
+
+    def run_with_ractor_scheduler(run_context)
+      message   = run_context[:message].to_s
+      dep_graph = @pipeline.step_dependencies  # { task_sym => [dep_sym, ...] }
+
+      specs_with_deps = @tasks.map do |task_name, task_wrapper|
+        deps = dep_graph[task_name.to_sym] || []
+        deps = deps.empty? ? :none : deps.map(&:to_s)
+
+        spec = RobotSpec.new(
+          name:          task_wrapper.robot.name.freeze,
+          template:      task_wrapper.robot.template&.to_s&.freeze,
+          system_prompt: task_wrapper.robot.system_prompt&.freeze,
+          config_hash:   RactorBoundary.freeze_deep(task_wrapper.robot.config.to_json_hash)
+        )
+
+        { spec: spec, depends_on: deps }
+      end
+
+      scheduler = RactorNetworkScheduler.new(memory: @memory)
+      results   = scheduler.run_pipeline(specs_with_deps, message: message)
+      scheduler.shutdown
+      results
     end
 
   end

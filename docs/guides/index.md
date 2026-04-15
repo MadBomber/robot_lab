@@ -42,6 +42,10 @@ If you're new to RobotLab, start here:
 
     Token tracking, circuit breakers, and learning accumulation
 
+-   [:material-cpu-64-bit: **Ractor Parallelism**](ractor-parallelism.md)
+
+    True CPU parallelism for tools and robot pipelines via Ruby Ractors
+
 </div>
 
 ## Framework Integration
@@ -66,3 +70,4 @@ If you're new to RobotLab, start here:
 | [Memory](memory.md) | Shared data store | 5 min |
 | [Rails Integration](rails-integration.md) | Rails application setup | 15 min |
 | [Observability & Safety](observability.md) | Token tracking, circuit breaker, learning loop | 10 min |
+| [Ractor Parallelism](ractor-parallelism.md) | CPU-parallel tools and robot pipelines | 15 min |

@@ -111,6 +111,15 @@ class RobotLab::BusPollerTest < Minitest::Test
     assert_equal [:x], processed
   end
 
+  def test_robot_queues_are_ractor_queue_instances
+    robot = stub_robot("ractor_q_bot") { |_d| }
+
+    @poller.enqueue(robot: robot, delivery: "msg1")
+
+    queues = @poller.instance_variable_get(:@robot_queues)
+    assert_instance_of RactorQueue, queues["ractor_q_bot"]
+  end
+
   private
 
   # Builds a minimal robot-like object whose #process_delivery calls &block.

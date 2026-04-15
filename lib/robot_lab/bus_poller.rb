@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ractor_queue"
+
 module RobotLab
   # Centralizes bus delivery serialization for robots.
   #
@@ -27,11 +29,14 @@ module RobotLab
   #
   # @api private
   class BusPoller
+    # Capacity of per-robot RactorQueue delivery queues.
+    QUEUE_CAPACITY = 512
+
     # Creates a new BusPoller.
     def initialize
       @mutex        = Mutex.new
       @robot_busy   = {}   # robot_name => Boolean
-      @robot_queues = {}   # robot_name => Array<delivery>
+      @robot_queues = {}   # robot_name => RactorQueue<delivery>
       @groups       = [:default]
     end
 
@@ -65,11 +70,11 @@ module RobotLab
     def enqueue(robot:, delivery:, group: :default)
       should_process = @mutex.synchronize do
         name = robot.name
-        @robot_queues[name] ||= []
+        @robot_queues[name] ||= RactorQueue.new(capacity: QUEUE_CAPACITY)
         @robot_busy[name]   ||= false
 
         if @robot_busy[name]
-          @robot_queues[name] << delivery
+          @robot_queues[name].push(delivery)
           false
         else
           @robot_busy[name] = true
@@ -113,11 +118,12 @@ module RobotLab
 
       loop do
         next_delivery = @mutex.synchronize do
-          name = robot.name
-          queue = @robot_queues[name] || []
+          name  = robot.name
+          queue = @robot_queues[name]
 
-          if queue.any?
-            queue.shift
+          if queue && !queue.empty?
+            entry = queue.try_pop
+            entry.equal?(RactorQueue::EMPTY) ? nil : entry
           else
             @robot_busy[name] = false
             nil

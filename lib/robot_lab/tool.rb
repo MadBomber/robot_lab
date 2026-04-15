@@ -46,6 +46,33 @@ module RobotLab
       def raise_on_error?
         defined?(@raise_on_error) ? @raise_on_error : false
       end
+
+      # Declare that this tool class is safe to run inside a Ractor.
+      #
+      # Ractor-safe tools must be stateless — no captured mutable closures
+      # and no non-shareable class-level state. The tool is instantiated
+      # fresh inside the Ractor worker for each call.
+      #
+      # With no argument, acts as a getter (walks the inheritance chain).
+      # With a Boolean argument, sets the value.
+      #
+      # @param value [Boolean, nil]
+      # @return [Boolean]
+      def ractor_safe(value = nil)
+        if value.nil?
+          if instance_variable_defined?(:@ractor_safe)
+            @ractor_safe
+          elsif superclass.respond_to?(:ractor_safe)
+            superclass.ractor_safe
+          else
+            false
+          end
+        else
+          @ractor_safe = value
+        end
+      end
+
+      alias ractor_safe? ractor_safe
     end
 
     # Creates a new Tool instance.
@@ -56,13 +83,25 @@ module RobotLab
       @robot = robot
     end
 
-    # Wraps RubyLLM::Tool#call with error handling so the LLM receives
-    # a plain-text error message instead of crashing the run.
+    # Invokes the tool, routing through the Ractor worker pool if ractor_safe.
+    #
+    # For Ractor-safe tools with a resolvable class name: submits to
+    # RobotLab.ractor_pool and blocks for the frozen result. Anonymous
+    # classes (name.nil?) fall through to the inline path.
+    #
+    # For non-Ractor-safe tools: runs execute directly in the calling thread.
     #
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     def call(args)
-      super
+      if self.class.ractor_safe? && !self.class.name.nil?
+        RobotLab.ractor_pool.submit(self.class.name, args)
+      else
+        super
+      end
+    rescue RobotLab::ToolError => e
+      raise if self.class.raise_on_error?
+      "Error (#{name}): #{e.message}"
     rescue StandardError => e
       raise if self.class.raise_on_error?
 

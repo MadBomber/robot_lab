@@ -71,6 +71,7 @@ loader.setup
 require_relative 'robot_lab/error'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
+require_relative 'robot_lab/ractor_job'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
@@ -217,6 +218,30 @@ module RobotLab
     #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
     def create_memory(data: {}, enable_cache: true, **options)
       Memory.new(data: data, enable_cache: enable_cache, **options)
+    end
+
+
+    # Returns the shared RactorWorkerPool, lazily initialized.
+    #
+    # Pool size is determined by RobotLab.config.ractor_pool_size or
+    # defaults to Etc.nprocessors (:auto). The pool lives for the lifetime
+    # of the process. Call RobotLab.shutdown_ractor_pool to drain and
+    # close it explicitly.
+    #
+    # @return [RactorWorkerPool]
+    def ractor_pool
+      @ractor_pool ||= begin
+        size = config.respond_to?(:ractor_pool_size) ? (config.ractor_pool_size || :auto) : :auto
+        RactorWorkerPool.new(size: size)
+      end
+    end
+
+    # Shut down the shared Ractor worker pool, draining in-flight jobs.
+    #
+    # @return [void]
+    def shutdown_ractor_pool
+      @ractor_pool&.shutdown
+      @ractor_pool = nil
     end
   end
 end

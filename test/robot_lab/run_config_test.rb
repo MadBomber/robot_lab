@@ -405,4 +405,21 @@ class RobotLab::RunConfigTest < Minitest::Test
 
     assert_equal all, RobotLab::RunConfig::FIELDS
   end
+
+  def test_ractor_pool_size_defaults_to_nil
+    config = RobotLab::RunConfig.new
+    assert_nil config.ractor_pool_size
+  end
+
+  def test_ractor_pool_size_can_be_set
+    config = RobotLab::RunConfig.new(ractor_pool_size: 4)
+    assert_equal 4, config.ractor_pool_size
+  end
+
+  def test_ractor_pool_size_merges
+    base   = RobotLab::RunConfig.new(ractor_pool_size: 2)
+    other  = RobotLab::RunConfig.new(ractor_pool_size: 8)
+    merged = base.merge(other)
+    assert_equal 8, merged.ractor_pool_size
+  end
 end

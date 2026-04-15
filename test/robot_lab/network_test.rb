@@ -373,4 +373,14 @@ class RobotLab::NetworkTest < Minitest::Test
     result = network.parallel(:group1, depends_on: :none) {}
     assert_equal network, result
   end
+
+  def test_parallel_mode_ractor_accepted
+    network = RobotLab::Network.new(name: "ractor_net", parallel_mode: :ractor) {}
+    assert_equal :ractor, network.parallel_mode
+  end
+
+  def test_parallel_mode_async_is_default
+    network = RobotLab::Network.new(name: "async_net") {}
+    assert_equal :async, network.parallel_mode
+  end
 end

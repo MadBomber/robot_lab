@@ -1,6 +1,15 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ractor_queue"
+
+# Must be top-level so Ractors can resolve it via Object.const_get
+class PoolRoutingTestTool < RobotLab::Tool
+  description "Multiplies by 3"
+  param :n, type: "number", desc: "Input"
+  ractor_safe true
+  def execute(n:); n * 3; end
+end
 
 class RobotLab::ToolTest < Minitest::Test
   # ── Subclass pattern ──────────────────────────────────────────
@@ -472,5 +481,53 @@ class RobotLab::ToolTest < Minitest::Test
 
     assert tool.is_a?(RubyLLM::Tool)
     assert tool.is_a?(RobotLab::Tool)
+  end
+
+  # ── ractor_safe macro ───────────────────────────────────────────
+
+  def test_ractor_safe_defaults_to_false
+    klass = Class.new(RobotLab::Tool) do
+      description "Test"
+      def execute(**); end
+    end
+    refute klass.ractor_safe?
+  end
+
+  def test_ractor_safe_can_be_enabled
+    klass = Class.new(RobotLab::Tool) do
+      description "Safe tool"
+      ractor_safe true
+      def execute(**); end
+    end
+    assert klass.ractor_safe?
+  end
+
+  def test_ractor_safe_is_inherited
+    parent = Class.new(RobotLab::Tool) do
+      description "Parent"
+      ractor_safe true
+      def execute(**); end
+    end
+    child = Class.new(parent)
+    assert child.ractor_safe?
+  end
+
+  # ── Ractor pool routing ─────────────────────────────────────────
+
+  def test_ractor_safe_tool_call_routes_through_pool
+    result = PoolRoutingTestTool.new.call({ "n" => 7 })
+    assert_equal 21, result
+  ensure
+    RobotLab.shutdown_ractor_pool
+  end
+
+  def test_non_ractor_safe_tool_call_runs_inline
+    klass = Class.new(RobotLab::Tool) do
+      description "Inline tool"
+      param :x, type: "string", desc: "Input"
+      def execute(x:); "inline:#{x}"; end
+    end
+    tool = klass.new
+    assert_equal "inline:hello", tool.call({ "x" => "hello" })
   end
 end

@@ -27,7 +27,7 @@ module RobotLab
   #   # => ["tool3"]
   #
   module ToolConfig
-    NONE_VALUES = [nil, [], :none].freeze
+    NONE_VALUES = [nil, [].freeze, :none].freeze
 
     class << self
       # Resolve a configuration value against its parent
