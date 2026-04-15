@@ -6,6 +6,8 @@ source "https://rubygems.org"
 gemspec
 
 group :development, :test do
+  gem 'ractor_queue'
+  gem 'ractor-wrapper'
   gem 'aigcm'
   gem 'amazing_print'
   gem 'classifier', '~> 2.3'

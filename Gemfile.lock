@@ -8,6 +8,8 @@ PATH
       fastembed
       myway_config (~> 0.1)
       prompt_manager (~> 1.0)
+      ractor-wrapper
+      ractor_queue
       ruby_llm (~> 1.12)
       ruby_llm-mcp
       ruby_llm-schema
@@ -230,6 +232,9 @@ GEM
       rack (>= 1.3)
     rackup (2.3.1)
       rack (>= 3)
+    ractor-wrapper (0.4.0)
+    ractor_queue (0.1.0)
+      rice (~> 4.0)
     rails-dom-testing (2.3.0)
       activesupport (>= 5.0.0)
       minitest
@@ -256,6 +261,7 @@ GEM
     reline (0.6.3)
       io-console (~> 0.5)
     rexml (3.4.4)
+    rice (4.11.5)
     rubocop (1.85.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -348,6 +354,8 @@ DEPENDENCIES
   hashdiff
   minitest
   minitest-reporters
+  ractor-wrapper
+  ractor_queue
   railties (>= 7.0)
   rake
   robot_lab!
@@ -456,6 +464,8 @@ CHECKSUMS
   rack-session (2.1.1) sha256=0b6dc07dea7e4b583f58a48e8b806d4c9f1c6c9214ebc202ec94562cbea2e4e9
   rack-test (2.2.0) sha256=005a36692c306ac0b4a9350355ee080fd09ddef1148a5f8b2ac636c720f5c463
   rackup (2.3.1) sha256=6c79c26753778e90983761d677a48937ee3192b3ffef6bc963c0950f94688868
+  ractor-wrapper (0.4.0) sha256=f3f5745be3884067e7703c00f052baebc4cd761be05fc341c26dbf2b34d86fd4
+  ractor_queue (0.1.0) sha256=bf01f2078068724cf56f87077a79acb218e648a1caa8ab9cc145354711718b90
   rails-dom-testing (2.3.0) sha256=8acc7953a7b911ca44588bf08737bc16719f431a1cc3091a292bca7317925c1d
   rails-html-sanitizer (1.7.0) sha256=28b145cceaf9cc214a9874feaa183c3acba036c9592b19886e0e45efc62b1e89
   railties (8.1.2) sha256=1289ece76b4f7668fc46d07e55cc992b5b8751f2ad85548b7da351b8c59f8055
@@ -465,6 +475,7 @@ CHECKSUMS
   regexp_parser (2.11.3) sha256=ca13f381a173b7a93450e53459075c9b76a10433caadcb2f1180f2c741fc55a4
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
+  rice (4.11.5) sha256=8eddb1b297e90a221a65e56fc07f27065457b21db0f508dd0561ad86a048f620
   robot_lab (0.0.10)
   rubocop (1.85.1) sha256=3dbcf9e961baa4c376eeeb2a03913dca5e3987033b04d38fa538aa1e7406cc77
   rubocop-ast (1.49.1) sha256=4412f3ee70f6fe4546cc489548e0f6fcf76cafcfa80fa03af67098ffed755035
