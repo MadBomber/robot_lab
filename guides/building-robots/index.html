@@ -1517,6 +1517,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#context-window-compression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Window Compression
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convergence-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convergence Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structured-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Delegation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structured Delegation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronous Delegation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-delegation-fan-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asynchronous Delegation (Fan-out)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3319,6 +3380,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#context-window-compression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Window Compression
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convergence-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convergence Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structured-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Delegation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structured Delegation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-delegation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronous Delegation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-delegation-fan-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asynchronous Delegation (Fan-out)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4110,10 +4232,127 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="n">bot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;latecomer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello.&quot;</span><span class="p">)</span>
 </span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a><span class="n">bot</span><span class="o">.</span><span class="n">with_bus</span><span class="p">(</span><span class="n">existing_bus</span><span class="p">)</span><span class="w">  </span><span class="c1"># now connected and can send/receive messages</span>
 </span></code></pre></div>
+<h2 id="context-window-compression">Context Window Compression<a class="headerlink" href="#context-window-compression" title="Permanent link">&para;</a></h2>
+<p>Long-running robots accumulate conversation history that can grow to fill the context window. <code>compress_history</code> prunes old turns using TF-IDF cosine similarity against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="c1"># Default settings: protect 3 most-recent turn pairs, drop anything below 0.2</span>
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span>
+</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>
+</span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="c1"># Tune all thresholds</span>
+</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span><span class="p">(</span>
+</span><span id="__span-45-6"><a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a><span class="w">  </span><span class="ss">recent_turns</span><span class="p">:</span><span class="w">   </span><span class="mi">5</span><span class="p">,</span><span class="w">    </span><span class="c1"># number of recent user+assistant pairs to always keep</span>
+</span><span id="__span-45-7"><a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a><span class="w">  </span><span class="ss">keep_threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span><span class="w">  </span><span class="c1"># turns with score &gt;= this are kept verbatim (default 0.6)</span>
+</span><span id="__span-45-8"><a id="__codelineno-45-8" name="__codelineno-45-8" href="#__codelineno-45-8"></a><span class="w">  </span><span class="ss">drop_threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">2</span><span class="w">   </span><span class="c1"># turns with score &lt; this are dropped (default 0.2)</span>
+</span><span id="__span-45-9"><a id="__codelineno-45-9" name="__codelineno-45-9" href="#__codelineno-45-9"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Medium-relevance turns (between thresholds) are dropped by default. Pass a <code>summarizer:</code> callable to replace them with a one-sentence summary instead:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="n">summarizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;summarizer&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize concisely in one sentence.&quot;</span><span class="p">)</span>
+</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>
+</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span><span class="p">(</span>
+</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="w">  </span><span class="ss">summarizer</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">summarizer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Summarize: </span><span class="si">#{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reply</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>What is always preserved regardless of score:</strong>
+- System messages
+- Tool call/result message pairs (dropping half would corrupt the conversation)
+- The most recent <code>recent_turns</code> user+assistant pairs</p>
+<p>Requires the <code>classifier</code> gem (<code>~&gt; 2.3</code>):</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span>
+</span></code></pre></div>
+<h2 id="convergence-detection">Convergence Detection<a class="headerlink" href="#convergence-detection" title="Permanent link">&para;</a></h2>
+<p><code>RobotLab::Convergence</code> uses TF-IDF cosine similarity to detect when two independent agents have reached the same conclusion. The primary use case is a network router that skips an expensive reconciler robot when two verifiers already agree.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="c1"># Check the similarity score directly (returns Float 0.0..1.0)</span>
+</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">similarity</span><span class="p">(</span><span class="n">result_a</span><span class="o">.</span><span class="n">reply</span><span class="p">,</span><span class="w"> </span><span class="n">result_b</span><span class="o">.</span><span class="n">reply</span><span class="p">)</span>
+</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>
+</span><span id="__span-48-4"><a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="c1"># Boolean convergence check (default threshold: 0.85)</span>
+</span><span id="__span-48-5"><a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">result_a</span><span class="o">.</span><span class="n">reply</span><span class="p">,</span><span class="w"> </span><span class="n">result_b</span><span class="o">.</span><span class="n">reply</span><span class="p">)</span>
+</span><span id="__span-48-6"><a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a>
+</span><span id="__span-48-7"><a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a><span class="c1"># Custom threshold</span>
+</span><span id="__span-48-8"><a id="__codelineno-48-8" name="__codelineno-48-8" href="#__codelineno-48-8"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">text_a</span><span class="p">,</span><span class="w"> </span><span class="n">text_b</span><span class="p">,</span><span class="w"> </span><span class="ss">threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">75</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Wire it into a network router for the reconciler fast-path:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="n">verifier_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;verifier_a&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Verify the answer.&quot;</span><span class="p">)</span>
+</span><span id="__span-49-2"><a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a><span class="n">verifier_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;verifier_b&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Independently verify the answer.&quot;</span><span class="p">)</span>
+</span><span id="__span-49-3"><a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a><span class="n">reconciler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reconciler&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Reconcile conflicting answers.&quot;</span><span class="p">)</span>
+</span><span id="__span-49-4"><a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a>
+</span><span id="__span-49-5"><a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a><span class="n">router</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">lambda</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">args</span><span class="o">|</span>
+</span><span id="__span-49-6"><a id="__codelineno-49-6" name="__codelineno-49-6" href="#__codelineno-49-6"></a><span class="w">  </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:verifier_a</span><span class="o">]&amp;.</span><span class="n">reply</span><span class="o">.</span><span class="n">to_s</span>
+</span><span id="__span-49-7"><a id="__codelineno-49-7" name="__codelineno-49-7" href="#__codelineno-49-7"></a><span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:verifier_b</span><span class="o">]&amp;.</span><span class="n">reply</span><span class="o">.</span><span class="n">to_s</span>
+</span><span id="__span-49-8"><a id="__codelineno-49-8" name="__codelineno-49-8" href="#__codelineno-49-8"></a>
+</span><span id="__span-49-9"><a id="__codelineno-49-9" name="__codelineno-49-9" href="#__codelineno-49-9"></a><span class="w">  </span><span class="c1"># Skip reconciler when verifiers agree</span>
+</span><span id="__span-49-10"><a id="__codelineno-49-10" name="__codelineno-49-10" href="#__codelineno-49-10"></a><span class="w">  </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Convergence</span><span class="o">.</span><span class="n">detected?</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="kp">nil</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;reconciler&quot;</span><span class="o">]</span>
+</span><span id="__span-49-11"><a id="__codelineno-49-11" name="__codelineno-49-11" href="#__codelineno-49-11"></a><span class="k">end</span>
+</span><span id="__span-49-12"><a id="__codelineno-49-12" name="__codelineno-49-12" href="#__codelineno-49-12"></a>
+</span><span id="__span-49-13"><a id="__codelineno-49-13" name="__codelineno-49-13" href="#__codelineno-49-13"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;verify&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">router</span><span class="p">:</span><span class="w"> </span><span class="n">router</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-49-14"><a id="__codelineno-49-14" name="__codelineno-49-14" href="#__codelineno-49-14"></a><span class="w">  </span><span class="c1"># ...</span>
+</span><span id="__span-49-15"><a id="__codelineno-49-15" name="__codelineno-49-15" href="#__codelineno-49-15"></a><span class="k">end</span>
+</span></code></pre></div>
+<p>Requires the <code>classifier</code> gem (<code>~&gt; 2.3</code>).</p>
+<h2 id="structured-delegation">Structured Delegation<a class="headerlink" href="#structured-delegation" title="Permanent link">&para;</a></h2>
+<p>A robot can delegate a task to another robot using <code>delegate(to:, task:)</code>. The result is a <code>RobotResult</code> annotated with <code>delegated_by</code>, <code>duration</code>, and token counts.</p>
+<h3 id="synchronous-delegation">Synchronous Delegation<a class="headerlink" href="#synchronous-delegation" title="Permanent link">&para;</a></h3>
+<p>The default: blocks the calling robot until the delegatee finishes.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a><span class="n">analyst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Analyze data.&quot;</span><span class="p">)</span>
+</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinate work.&quot;</span><span class="p">)</span>
+</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>
+</span><span id="__span-50-4"><a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Summarize the Q3 report.&quot;</span><span class="p">)</span>
+</span><span id="__span-50-5"><a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">reply</span>
+</span><span id="__span-50-6"><a id="__codelineno-50-6" name="__codelineno-50-6" href="#__codelineno-50-6"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Completed in %.2fs using %d tokens&quot;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="o">[</span><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="o">]</span>
+</span><span id="__span-50-7"><a id="__codelineno-50-7" name="__codelineno-50-7" href="#__codelineno-50-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">delegated_by</span><span class="w">  </span><span class="c1"># =&gt; &quot;manager&quot;</span>
+</span></code></pre></div>
+<h3 id="asynchronous-delegation-fan-out">Asynchronous Delegation (Fan-out)<a class="headerlink" href="#asynchronous-delegation-fan-out" title="Permanent link">&para;</a></h3>
+<p>Pass <code>async: true</code> to get a <code>DelegationFuture</code> back immediately. Call <code>.value</code> to block for the result when you need it.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="n">writer</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;writer&quot;</span><span class="p">,</span><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Write clearly.&quot;</span><span class="p">)</span>
+</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a><span class="n">analyst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Analyze data.&quot;</span><span class="p">)</span>
+</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinate.&quot;</span><span class="p">)</span>
+</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>
+</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a><span class="c1"># Fan out — both start immediately</span>
+</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Analyze Q3 numbers&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a><span class="n">f2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">writer</span><span class="p">,</span><span class="w">  </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Draft the intro paragraph&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-51-8"><a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a>
+</span><span id="__span-51-9"><a id="__codelineno-51-9" name="__codelineno-51-9" href="#__codelineno-51-9"></a><span class="c1"># ... do other work here ...</span>
+</span><span id="__span-51-10"><a id="__codelineno-51-10" name="__codelineno-51-10" href="#__codelineno-51-10"></a>
+</span><span id="__span-51-11"><a id="__codelineno-51-11" name="__codelineno-51-11" href="#__codelineno-51-11"></a><span class="c1"># Collect results (blocks if not yet done)</span>
+</span><span id="__span-51-12"><a id="__codelineno-51-12" name="__codelineno-51-12" href="#__codelineno-51-12"></a><span class="n">analysis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f1</span><span class="o">.</span><span class="n">value</span>
+</span><span id="__span-51-13"><a id="__codelineno-51-13" name="__codelineno-51-13" href="#__codelineno-51-13"></a><span class="n">draft</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">f2</span><span class="o">.</span><span class="n">value</span>
+</span><span id="__span-51-14"><a id="__codelineno-51-14" name="__codelineno-51-14" href="#__codelineno-51-14"></a>
+</span><span id="__span-51-15"><a id="__codelineno-51-15" name="__codelineno-51-15" href="#__codelineno-51-15"></a><span class="c1"># With a timeout (raises DelegationFuture::DelegationTimeout)</span>
+</span><span id="__span-51-16"><a id="__codelineno-51-16" name="__codelineno-51-16" href="#__codelineno-51-16"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f1</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>DelegationFuture</code> API:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resolved?</code></td>
+<td>Non-blocking poll — true if completed or errored</td>
+</tr>
+<tr>
+<td><code>value(timeout: nil)</code></td>
+<td>Block until done; re-raises any error from the delegatee</td>
+</tr>
+<tr>
+<td><code>wait</code></td>
+<td>Alias for <code>value</code></td>
+</tr>
+<tr>
+<td><code>robot_name</code></td>
+<td>Name of the robot that was delegated to</td>
+</tr>
+<tr>
+<td><code>delegated_by</code></td>
+<td>Name of the robot that created this future</td>
+</tr>
+</tbody>
+</table>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>RobotLab uses <code>MywayConfig</code> for configuration. Access the config object directly -- there is no <code>RobotLab.configure</code> block:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">           </span><span class="c1"># =&gt; &quot;claude-sonnet-4&quot;</span>
-</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">request_timeout</span><span class="w">  </span><span class="c1"># =&gt; 120</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">           </span><span class="c1"># =&gt; &quot;claude-sonnet-4&quot;</span>
+</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">request_timeout</span><span class="w">  </span><span class="c1"># =&gt; 120</span>
 </span></code></pre></div>
 <p>Configuration is loaded from:</p>
 <ul>
@@ -4125,40 +4364,40 @@
 </ul>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-clear-focused-prompts">1. Clear, Focused Prompts<a class="headerlink" href="#1-clear-focused-prompts" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="c1"># Good: Specific and focused</span>
-</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
-</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
-</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="sh">    You are a code reviewer. Review code for:</span>
-</span><span id="__span-46-6"><a id="__codelineno-46-6" name="__codelineno-46-6" href="#__codelineno-46-6"></a><span class="sh">    - Security vulnerabilities</span>
-</span><span id="__span-46-7"><a id="__codelineno-46-7" name="__codelineno-46-7" href="#__codelineno-46-7"></a><span class="sh">    - Performance issues</span>
-</span><span id="__span-46-8"><a id="__codelineno-46-8" name="__codelineno-46-8" href="#__codelineno-46-8"></a><span class="sh">    - Best practice violations</span>
-</span><span id="__span-46-9"><a id="__codelineno-46-9" name="__codelineno-46-9" href="#__codelineno-46-9"></a>
-</span><span id="__span-46-10"><a id="__codelineno-46-10" name="__codelineno-46-10" href="#__codelineno-46-10"></a><span class="sh">    Provide specific line numbers and suggestions.</span>
-</span><span id="__span-46-11"><a id="__codelineno-46-11" name="__codelineno-46-11" href="#__codelineno-46-11"></a><span class="dl">  PROMPT</span>
-</span><span id="__span-46-12"><a id="__codelineno-46-12" name="__codelineno-46-12" href="#__codelineno-46-12"></a><span class="p">)</span>
-</span><span id="__span-46-13"><a id="__codelineno-46-13" name="__codelineno-46-13" href="#__codelineno-46-13"></a>
-</span><span id="__span-46-14"><a id="__codelineno-46-14" name="__codelineno-46-14" href="#__codelineno-46-14"></a><span class="c1"># Bad: Vague and unfocused</span>
-</span><span id="__span-46-15"><a id="__codelineno-46-15" name="__codelineno-46-15" href="#__codelineno-46-15"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-46-16"><a id="__codelineno-46-16" name="__codelineno-46-16" href="#__codelineno-46-16"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
-</span><span id="__span-46-17"><a id="__codelineno-46-17" name="__codelineno-46-17" href="#__codelineno-46-17"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You help with code stuff.&quot;</span>
-</span><span id="__span-46-18"><a id="__codelineno-46-18" name="__codelineno-46-18" href="#__codelineno-46-18"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="c1"># Good: Specific and focused</span>
+</span><span id="__span-53-2"><a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-53-3"><a id="__codelineno-53-3" name="__codelineno-53-3" href="#__codelineno-53-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-53-4"><a id="__codelineno-53-4" name="__codelineno-53-4" href="#__codelineno-53-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
+</span><span id="__span-53-5"><a id="__codelineno-53-5" name="__codelineno-53-5" href="#__codelineno-53-5"></a><span class="sh">    You are a code reviewer. Review code for:</span>
+</span><span id="__span-53-6"><a id="__codelineno-53-6" name="__codelineno-53-6" href="#__codelineno-53-6"></a><span class="sh">    - Security vulnerabilities</span>
+</span><span id="__span-53-7"><a id="__codelineno-53-7" name="__codelineno-53-7" href="#__codelineno-53-7"></a><span class="sh">    - Performance issues</span>
+</span><span id="__span-53-8"><a id="__codelineno-53-8" name="__codelineno-53-8" href="#__codelineno-53-8"></a><span class="sh">    - Best practice violations</span>
+</span><span id="__span-53-9"><a id="__codelineno-53-9" name="__codelineno-53-9" href="#__codelineno-53-9"></a>
+</span><span id="__span-53-10"><a id="__codelineno-53-10" name="__codelineno-53-10" href="#__codelineno-53-10"></a><span class="sh">    Provide specific line numbers and suggestions.</span>
+</span><span id="__span-53-11"><a id="__codelineno-53-11" name="__codelineno-53-11" href="#__codelineno-53-11"></a><span class="dl">  PROMPT</span>
+</span><span id="__span-53-12"><a id="__codelineno-53-12" name="__codelineno-53-12" href="#__codelineno-53-12"></a><span class="p">)</span>
+</span><span id="__span-53-13"><a id="__codelineno-53-13" name="__codelineno-53-13" href="#__codelineno-53-13"></a>
+</span><span id="__span-53-14"><a id="__codelineno-53-14" name="__codelineno-53-14" href="#__codelineno-53-14"></a><span class="c1"># Bad: Vague and unfocused</span>
+</span><span id="__span-53-15"><a id="__codelineno-53-15" name="__codelineno-53-15" href="#__codelineno-53-15"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-53-16"><a id="__codelineno-53-16" name="__codelineno-53-16" href="#__codelineno-53-16"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+</span><span id="__span-53-17"><a id="__codelineno-53-17" name="__codelineno-53-17" href="#__codelineno-53-17"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You help with code stuff.&quot;</span>
+</span><span id="__span-53-18"><a id="__codelineno-53-18" name="__codelineno-53-18" href="#__codelineno-53-18"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="2-compose-behaviors-with-skills">2. Compose Behaviors with Skills<a class="headerlink" href="#2-compose-behaviors-with-skills" title="Permanent link">&para;</a></h3>
 <p>Instead of creating monolithic templates, break behaviors into composable skills:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
-</span><span id="__span-47-3"><a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
-</span><span id="__span-47-4"><a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a><span class="w">  </span><span class="ss">skills</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:clarifier</span><span class="p">,</span><span class="w"> </span><span class="ss">:safety</span><span class="p">,</span><span class="w"> </span><span class="ss">:json_responder</span><span class="o">]</span>
-</span><span id="__span-47-5"><a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-54-2"><a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
+</span><span id="__span-54-3"><a id="__codelineno-54-3" name="__codelineno-54-3" href="#__codelineno-54-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
+</span><span id="__span-54-4"><a id="__codelineno-54-4" name="__codelineno-54-4" href="#__codelineno-54-4"></a><span class="w">  </span><span class="ss">skills</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:clarifier</span><span class="p">,</span><span class="w"> </span><span class="ss">:safety</span><span class="p">,</span><span class="w"> </span><span class="ss">:json_responder</span><span class="o">]</span>
+</span><span id="__span-54-5"><a id="__codelineno-54-5" name="__codelineno-54-5" href="#__codelineno-54-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="3-use-templates-for-reusable-prompts">3. Use Templates for Reusable Prompts<a class="headerlink" href="#3-use-templates-for-reusable-prompts" title="Permanent link">&para;</a></h3>
 <p>Templates keep prompts in version-controlled files and allow parameterization:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
-</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
-</span><span id="__span-48-4"><a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">company</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TechCo&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;English&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-48-5"><a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;support&quot;</span><span class="p">,</span>
+</span><span id="__span-55-3"><a id="__codelineno-55-3" name="__codelineno-55-3" href="#__codelineno-55-3"></a><span class="w">  </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:support</span><span class="p">,</span>
+</span><span id="__span-55-4"><a id="__codelineno-55-4" name="__codelineno-55-4" href="#__codelineno-55-4"></a><span class="w">  </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">company</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TechCo&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;English&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-55-5"><a id="__codelineno-55-5" name="__codelineno-55-5" href="#__codelineno-55-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="4-handle-tool-errors-gracefully">4. Handle Tool Errors Gracefully<a class="headerlink" href="#4-handle-tool-errors-gracefully" title="Permanent link">&para;</a></h3>
 <p><code>RobotLab::Tool</code> automatically catches exceptions and returns plain-text errors to the LLM. For domain-specific error handling, catch known exceptions in <code>execute</code> and return structured data. See <a href="../using-tools/#error-handling">Using Tools: Error Handling</a> for details.</p>
