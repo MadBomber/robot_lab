@@ -736,6 +736,131 @@ bot = RobotLab.build(name: "latecomer", system_prompt: "Hello.")
 bot.with_bus(existing_bus)  # now connected and can send/receive messages
 ```
 
+## Context Window Compression
+
+Long-running robots accumulate conversation history that can grow to fill the context window. `compress_history` prunes old turns using TF-IDF cosine similarity against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.
+
+```ruby
+# Default settings: protect 3 most-recent turn pairs, drop anything below 0.2
+robot.compress_history
+
+# Tune all thresholds
+robot.compress_history(
+  recent_turns:   5,    # number of recent user+assistant pairs to always keep
+  keep_threshold: 0.6,  # turns with score >= this are kept verbatim (default 0.6)
+  drop_threshold: 0.2   # turns with score < this are dropped (default 0.2)
+)
+```
+
+Medium-relevance turns (between thresholds) are dropped by default. Pass a `summarizer:` callable to replace them with a one-sentence summary instead:
+
+```ruby
+summarizer = RobotLab.build(name: "summarizer", system_prompt: "Summarize concisely in one sentence.")
+
+robot.compress_history(
+  summarizer: ->(text) { summarizer.run("Summarize: #{text}").reply }
+)
+```
+
+**What is always preserved regardless of score:**
+- System messages
+- Tool call/result message pairs (dropping half would corrupt the conversation)
+- The most recent `recent_turns` user+assistant pairs
+
+Requires the `classifier` gem (`~> 2.3`):
+
+```ruby
+gem "classifier", "~> 2.3"
+```
+
+## Convergence Detection
+
+`RobotLab::Convergence` uses TF-IDF cosine similarity to detect when two independent agents have reached the same conclusion. The primary use case is a network router that skips an expensive reconciler robot when two verifiers already agree.
+
+```ruby
+# Check the similarity score directly (returns Float 0.0..1.0)
+score = RobotLab::Convergence.similarity(result_a.reply, result_b.reply)
+
+# Boolean convergence check (default threshold: 0.85)
+RobotLab::Convergence.detected?(result_a.reply, result_b.reply)
+
+# Custom threshold
+RobotLab::Convergence.detected?(text_a, text_b, threshold: 0.75)
+```
+
+Wire it into a network router for the reconciler fast-path:
+
+```ruby
+verifier_a = RobotLab.build(name: "verifier_a", system_prompt: "Verify the answer.")
+verifier_b = RobotLab.build(name: "verifier_b", system_prompt: "Independently verify the answer.")
+reconciler = RobotLab.build(name: "reconciler", system_prompt: "Reconcile conflicting answers.")
+
+router = lambda do |args|
+  a = args.context[:verifier_a]&.reply.to_s
+  b = args.context[:verifier_b]&.reply.to_s
+
+  # Skip reconciler when verifiers agree
+  RobotLab::Convergence.detected?(a, b) ? nil : ["reconciler"]
+end
+
+network = RobotLab.create_network(name: "verify", router: router) do
+  # ...
+end
+```
+
+Requires the `classifier` gem (`~> 2.3`).
+
+## Structured Delegation
+
+A robot can delegate a task to another robot using `delegate(to:, task:)`. The result is a `RobotResult` annotated with `delegated_by`, `duration`, and token counts.
+
+### Synchronous Delegation
+
+The default: blocks the calling robot until the delegatee finishes.
+
+```ruby
+analyst = RobotLab.build(name: "analyst", system_prompt: "Analyze data.")
+manager = RobotLab.build(name: "manager", system_prompt: "Coordinate work.")
+
+result = manager.delegate(to: analyst, task: "Summarize the Q3 report.")
+puts result.reply
+puts "Completed in %.2fs using %d tokens" % [result.duration, result.output_tokens]
+puts result.delegated_by  # => "manager"
+```
+
+### Asynchronous Delegation (Fan-out)
+
+Pass `async: true` to get a `DelegationFuture` back immediately. Call `.value` to block for the result when you need it.
+
+```ruby
+writer  = RobotLab.build(name: "writer",  system_prompt: "Write clearly.")
+analyst = RobotLab.build(name: "analyst", system_prompt: "Analyze data.")
+manager = RobotLab.build(name: "manager", system_prompt: "Coordinate.")
+
+# Fan out — both start immediately
+f1 = manager.delegate(to: analyst, task: "Analyze Q3 numbers", async: true)
+f2 = manager.delegate(to: writer,  task: "Draft the intro paragraph", async: true)
+
+# ... do other work here ...
+
+# Collect results (blocks if not yet done)
+analysis = f1.value
+draft    = f2.value
+
+# With a timeout (raises DelegationFuture::DelegationTimeout)
+result = f1.value(timeout: 30)
+```
+
+`DelegationFuture` API:
+
+| Method | Description |
+|--------|-------------|
+| `resolved?` | Non-blocking poll — true if completed or errored |
+| `value(timeout: nil)` | Block until done; re-raises any error from the delegatee |
+| `wait` | Alias for `value` |
+| `robot_name` | Name of the robot that was delegated to |
+| `delegated_by` | Name of the robot that created this future |
+
 ## Configuration
 
 RobotLab uses `MywayConfig` for configuration. Access the config object directly -- there is no `RobotLab.configure` block:
