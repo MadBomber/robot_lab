@@ -700,6 +700,136 @@ reviewer.learnings          # => ["This codebase prefers map/collect..."]
 reviewer.learn("new fact")  # deduplicates before storing
 ```
 
+## Context Window Compression
+
+`robot.compress_history` prunes old conversation turns using TF-IDF cosine similarity, keeping only turns that are relevant to the most recent context. System messages and tool call/result pairs are always preserved.
+
+```ruby
+# Basic compression: protect the 3 most recent turns, drop unrelated old turns
+robot.compress_history
+
+# Tune the thresholds
+robot.compress_history(
+  recent_turns:   5,    # protect this many recent user+assistant pairs
+  keep_threshold: 0.6,  # turns scoring >= this are kept verbatim
+  drop_threshold: 0.2   # turns scoring < this are dropped
+)
+
+# Summarize medium-relevance turns instead of dropping them
+summarizer_bot = RobotLab.build(name: "summarizer", system_prompt: "Summarize concisely.")
+robot.compress_history(
+  summarizer: ->(text) { summarizer_bot.run("One sentence: #{text}").reply }
+)
+```
+
+Requires the optional `classifier` gem (`~> 2.3`). Add it to your Gemfile:
+
+```ruby
+gem "classifier", "~> 2.3"
+```
+
+## Convergence Detection
+
+`RobotLab::Convergence` detects when two independent agents have reached the same conclusion using TF-IDF cosine similarity. Use it as a router fast-path to skip an expensive reconciler LLM call when verifiers already agree.
+
+```ruby
+# Check similarity directly
+score = RobotLab::Convergence.similarity(result_a.reply, result_b.reply)
+# => 0.92
+
+# Boolean check against a threshold (default: 0.85)
+RobotLab::Convergence.detected?(result_a.reply, result_b.reply)
+# => true
+
+# Use a custom threshold
+RobotLab::Convergence.detected?(text_a, text_b, threshold: 0.75)
+```
+
+A common pattern is wiring convergence into a network router to skip reconciliation:
+
+```ruby
+router = ->(args) do
+  a = args.context[:verifier_a]&.reply.to_s
+  b = args.context[:verifier_b]&.reply.to_s
+  RobotLab::Convergence.detected?(a, b) ? nil : ["reconciler"]
+end
+
+network = RobotLab.create_network(name: "verify", router: router) do
+  # ...
+end
+```
+
+Requires the `classifier` gem (`~> 2.3`).
+
+## Structured Delegation
+
+`robot.delegate(to:, task:)` dispatches work to another robot and returns the result, with duration and token metadata attached. Pass `async: true` for non-blocking fan-out.
+
+```ruby
+analyst  = RobotLab.build(name: "analyst",  system_prompt: "Analyze data.")
+writer   = RobotLab.build(name: "writer",   system_prompt: "Write reports.")
+manager  = RobotLab.build(name: "manager",  system_prompt: "Coordinate work.")
+
+# Synchronous delegation — blocks until done
+result = manager.delegate(to: analyst, task: "Analyze Q3 sales data")
+puts result.reply
+puts "%.2fs, %d tokens" % [result.duration, result.output_tokens]
+
+# Asynchronous fan-out — returns immediately
+f1 = manager.delegate(to: analyst, task: "Analyze Q3 sales", async: true)
+f2 = manager.delegate(to: writer,  task: "Draft Q3 summary", async: true)
+
+# Do other work here while both run in parallel...
+
+analysis = f1.value           # blocks until resolved
+summary  = f2.value           # blocks until resolved
+
+# With a timeout
+result = f1.value(timeout: 30)  # raises DelegationFuture::DelegationTimeout if too slow
+```
+
+`DelegationFuture` attributes:
+
+```ruby
+future.resolved?      # => true/false (non-blocking poll)
+future.robot_name     # => "analyst"
+future.delegated_by   # => "manager"
+```
+
+## Ractor Parallelism
+
+RobotLab supports true CPU parallelism via Ruby Ractors — isolated execution contexts that bypass the GVL. Two modes are available:
+
+**CPU-bound tools** — mark a tool `ractor_safe true` and RobotLab automatically routes its calls through a global `RactorWorkerPool` instead of running inline:
+
+```ruby
+class TranscribeAudio < RubyLLM::Tool
+  ractor_safe true
+  description "Transcribe an audio file"
+  param :path, type: :string, desc: "Path to audio file"
+
+  def execute(path:)
+    AudioTranscriber.run(path)  # pure computation, no shared mutable state
+  end
+end
+```
+
+**Parallel robot networks** — pass `parallel_mode: :ractor` when creating a network to dispatch independent robots across hardware threads simultaneously:
+
+```ruby
+network = RobotLab.create_network(name: "analysis", parallel_mode: :ractor) do
+  task :fetch,     fetcher_robot,    depends_on: :none
+  task :sentiment, sentiment_robot,  depends_on: [:fetch]
+  task :entities,  entity_robot,     depends_on: [:fetch]   # runs in parallel with sentiment
+  task :summarize, summary_robot,    depends_on: [:sentiment, :entities]
+end
+
+results = network.run(message: "Analyze customer feedback")
+# => { "fetch" => "...", "sentiment" => "positive", "entities" => "...", "summarize" => "..." }
+```
+
+See the [Ractor Parallelism guide](https://madbomber.github.io/robot_lab/guides/ractor-parallelism) for constraints, the frozen-data contract, and `RactorMemoryProxy` for shared state.
+
 ## Rails Integration
 
 ```bash

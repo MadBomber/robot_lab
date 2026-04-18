@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2026-04-18
+
+### Added
+
+- **README: Context Window Compression section** — documents `robot.compress_history` with threshold tuning (`recent_turns`, `keep_threshold`, `drop_threshold`) and summarizer lambda pattern
+- **README: Convergence Detection section** — documents `RobotLab::Convergence.detected?` / `.similarity` with network router fast-path example
+- **README: Structured Delegation section** — documents `robot.delegate(to:, task:)` sync and async modes, `DelegationFuture` fan-out pattern, and timeout handling
+- **README: Ractor Parallelism section** — documents `ractor_safe true` tool macro and `parallel_mode: :ractor` network mode with link to full guide
+- **`docs/guides/building-robots.md`** — added matching sections for all four features above with expanded API detail, `DelegationFuture` method table, and convergence router example
+- **`docs/api/core/result.md`** — new API reference for `RobotResult`: attributes, token tracking, delegation metadata, persistence (`export`, `from_hash`, `checksum`), and debug fields
+- **`docs/api/errors.md`** — new error hierarchy reference covering all `RobotLab::Error` subclasses (`ConfigurationError`, `DependencyError`, `InferenceError`, `ToolLoopError`, `ToolNotFoundError`, `MCPError`, `BusError`, `RactorBoundaryError`, `ToolError`, `DelegationFuture::DelegationTimeout`) with rescue examples
+
+### Changed
+
+- Bumped version to 0.0.12
+- Updated `bigdecimal` to 4.1.2
+- Updated `protocol-http` to 0.62.2
+- Updated `protocol-websocket` to 0.21.0
+- Updated `rake` to 13.4.2
+- Updated `sqlite3` to 2.9.3
+
 ## [0.0.11] - 2026-04-14
 
 ### Added
