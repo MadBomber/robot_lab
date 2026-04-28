@@ -57,6 +57,7 @@ examples/
   26_document_store.rb        # Embedding-based document store (RAG) via fastembed
   29_ractor_tools.rb          # Ractor-safe tools: worker pool, freeze_deep, parallel batch
   30_ractor_network.rb        # Ractor network scheduler: dependency waves, parallel_mode
+  31_launch_assessment.rb     # 6 parallel analysts, max_concurrent_robots: 4 semaphore cap
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -296,6 +297,14 @@ and the `pipeline.step_dependencies` dependency graph inspection.
 **Part 3** — Live LLM run (enabled automatically when `ANTHROPIC_API_KEY` is set).
 
 **Requires:** None for Parts 1 & 2.  LLM API key for Part 3.
+
+### 31 — Product Launch Assessment (Concurrency Cap)
+
+Six specialist robots evaluate a product launch simultaneously: market, competitive, technical, risk, financial, and legal analysts. `RunConfig.new(max_concurrent_robots: 4)` caps the `Async::Semaphore` at 4 in-flight LLM calls — robots 5 and 6 queue until a slot opens. A `LaunchDirector` reads all six findings from shared reactive memory and issues a GO / NO-GO recommendation. Start timestamps in the output make the semaphore behavior visible.
+
+Demonstrates: `max_concurrent_robots:` on `RunConfig`, `Async::Semaphore` back-pressure via `simple_flow`, six parallel `depends_on: :none` tasks, shared memory writes and blocking reads.
+
+**Requires:** LLM API key
 
 ### 18 — Rails Integration Demo
 

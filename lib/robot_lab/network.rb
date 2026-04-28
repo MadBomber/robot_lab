@@ -190,7 +190,7 @@ module RobotLab
           run_context,
           context: { run_params: run_context }
         )
-        @pipeline.call_parallel(initial_result)
+        @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
       end
     end
 

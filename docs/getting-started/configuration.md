@@ -361,7 +361,7 @@ effective.temperature  #=> 0.9 (overridden)
 | **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | **Tools** | `mcp`, `tools` |
 | **Callbacks** | `on_tool_call`, `on_tool_result` |
-| **Infrastructure** | `bus`, `enable_cache` |
+| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots` |
 
 ### RunConfig vs RobotLab.config
 

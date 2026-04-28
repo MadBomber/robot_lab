@@ -53,7 +53,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "fastembed"
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus"
-  spec.add_dependency "simple_flow", "~> 0.3.0"
+  spec.add_dependency "simple_flow", "~> 0.4.0"
   spec.add_dependency "ractor_queue"
   spec.add_dependency "ractor-wrapper"
   # Optional MCP transport dependencies (loaded on demand)

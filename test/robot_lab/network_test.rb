@@ -383,4 +383,33 @@ class RobotLab::NetworkTest < Minitest::Test
     network = RobotLab::Network.new(name: "async_net") {}
     assert_equal :async, network.parallel_mode
   end
+
+  def test_run_passes_max_concurrent_robots_to_pipeline
+    config = RobotLab::RunConfig.new(max_concurrent_robots: 5)
+    network = RobotLab::Network.new(name: "test", config: config)
+    network.task(:robot1, @robot1, depends_on: :none)
+
+    captured_max_concurrent = nil
+    network.pipeline.define_singleton_method(:call_parallel) do |result, **kwargs|
+      captured_max_concurrent = kwargs[:max_concurrent]
+      SimpleFlow::Result.new(nil)
+    end
+
+    network.run(message: "hello")
+    assert_equal 5, captured_max_concurrent
+  end
+
+  def test_run_passes_nil_max_concurrent_when_unconfigured
+    network = RobotLab::Network.new(name: "test")
+    network.task(:robot1, @robot1, depends_on: :none)
+
+    captured_max_concurrent = :not_set
+    network.pipeline.define_singleton_method(:call_parallel) do |result, **kwargs|
+      captured_max_concurrent = kwargs[:max_concurrent]
+      SimpleFlow::Result.new(nil)
+    end
+
+    network.run(message: "hello")
+    assert_nil captured_max_concurrent
+  end
 end

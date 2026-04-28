@@ -84,6 +84,29 @@ network = RobotLab.create_network(name: "parallel_analysis") do
 end
 ```
 
+### Concurrency Cap
+
+When a network fans out to many parallel robots, each makes a simultaneous LLM API call. With no limit this can exhaust API rate-limit quotas or database connection pools under load. Set `max_concurrent_robots:` on a `RunConfig` to cap how many robot tasks run at once — the rest queue behind an `Async::Semaphore` and start as slots open:
+
+```ruby
+config = RobotLab::RunConfig.new(max_concurrent_robots: 4)
+
+network = RobotLab.create_network(name: "launch_assessment", config: config) do
+  # All six declared parallel, but at most 4 LLM calls in-flight simultaneously
+  task :market,     market_robot,     depends_on: :none
+  task :competitive, comp_robot,      depends_on: :none
+  task :tech,       tech_robot,       depends_on: :none
+  task :risk,       risk_robot,       depends_on: :none
+  task :financial,  financial_robot,  depends_on: :none  # queues until a slot opens
+  task :legal,      legal_robot,      depends_on: :none  # queues until a slot opens
+
+  task :director, director_robot, depends_on: [:market, :competitive, :tech,
+                                               :risk, :financial, :legal]
+end
+```
+
+`nil` (the default) means unlimited — identical to pre-existing behavior. For Rails deployments, size the cap to match your database connection pool and API rate tier. See [Example 31](../../examples/31_launch_assessment.rb) for a working demo.
+
 ### Optional Tasks
 
 Optional tasks only run when explicitly activated by a preceding robot:

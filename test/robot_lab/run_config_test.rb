@@ -422,4 +422,26 @@ class RobotLab::RunConfigTest < Minitest::Test
     merged = base.merge(other)
     assert_equal 8, merged.ractor_pool_size
   end
+
+  def test_max_concurrent_robots_defaults_to_nil
+    config = RobotLab::RunConfig.new
+    assert_nil config.max_concurrent_robots
+  end
+
+  def test_max_concurrent_robots_can_be_set
+    config = RobotLab::RunConfig.new(max_concurrent_robots: 10)
+    assert_equal 10, config.max_concurrent_robots
+  end
+
+  def test_max_concurrent_robots_merges
+    base   = RobotLab::RunConfig.new(max_concurrent_robots: 4)
+    other  = RobotLab::RunConfig.new(max_concurrent_robots: 10)
+    merged = base.merge(other)
+    assert_equal 10, merged.max_concurrent_robots
+  end
+
+  def test_max_concurrent_robots_is_in_infra_fields
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :max_concurrent_robots
+    assert_includes RobotLab::RunConfig::FIELDS, :max_concurrent_robots
+  end
 end
