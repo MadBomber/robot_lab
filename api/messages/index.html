@@ -2314,6 +2314,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deserializing-from-hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deserializing from Hash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2482,6 +2493,19 @@
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Format for LLM</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
 </span></code></pre></div>
+<h2 id="deserializing-from-hash">Deserializing from Hash<a class="headerlink" href="#deserializing-from-hash" title="Permanent link">&para;</a></h2>
+<p><code>Message.from_hash</code> reconstructs the correct subclass from a stored hash:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_call&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[...]</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># =&gt; #&lt;RobotLab::ToolCallMessage ...&gt;</span>
+</span></code></pre></div>
+<p>When the <code>type</code> key is absent or <code>nil</code> (e.g. records persisted before the field was introduced), <code>from_hash</code> defaults to <code>TextMessage</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;legacy row&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
+</span></code></pre></div>
+<p>String keys are normalised automatically via <code>transform_keys(&amp;:to_sym)</code>.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../core/memory/">Memory</a></li>
