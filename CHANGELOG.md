@@ -8,6 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-04-29
+
+### Added
+
+- **`RobotLab::Job` base class** (`lib/robot_lab/rails_integration/job.rb`) — `ActiveJob::Base` subclass encapsulating the full robot-run lifecycle for Rails background jobs
+  - `robot_class` DSL — bind a job subclass to a specific robot class at the class level; per-subclass, not inherited
+  - `perform(message:, robot_class: nil, thread_id: nil, **context)` — resolves robot class, wires Turbo Stream callbacks, runs robot, persists `RobotResult`, broadcasts completion/error
+  - `thread_id` omitted → fire-and-forget mode (no persistence, no broadcasting)
+  - Turbo Stream wiring is a graceful no-op when `turbo-rails` is absent
+  - `retry_on StandardError, wait: 5.seconds, attempts: 3` and `discard_on ActiveJob::DeserializationError` configured by default
+  - `RobotLab::Job` top-level alias registered in `robot_lab.rb` when Rails is present so job subclasses can write `< RobotLab::Job`
+- **`rails generate robot_lab:job NAME`** (`lib/generators/robot_lab/job_generator.rb`) — generates a dedicated job subclass pre-wired to `<NAME>Robot` via `robot_class` DSL
+  - `--queue` option (default `"default"`)
+  - Template: `lib/generators/robot_lab/templates/robot_job.rb.tt`
+- **`max_concurrent_robots` field on `RunConfig`** — caps the number of fiber-concurrent robots in a parallel network execution; passed to `SimpleFlow::Pipeline#call_parallel` as `max_concurrent:`
+- **Example 31: Launch Assessment** (`examples/31_launch_assessment.rb`) — six `AnalystRobot` instances run in parallel (market, competitive, tech, risk, financial, legal) with a cap of 4 concurrent robots; a `LaunchDirector` synthesizes findings into a GO/NO-GO decision
+- **20 unit tests for `RobotLab::RailsIntegration::Job`** (`test/robot_lab/rails_integration/job_test.rb`) covering `robot_class` DSL, `resolve_robot_class`, `setup_thread`, `build_robot`, `broadcast_completion`, `broadcast_error`, and `turbo_available?`
+
+### Changed
+
+- Bumped version to 0.1.0
+- **`RobotRunJob` (generated job)** is now a thin two-line subclass of `RobotLab::Job` — all lifecycle logic lives in the base class
+- **`job.rb.tt` install generator template** updated to the thin-subclass pattern
+- **`examples/18_rails` `RobotRunJob`** updated to thin subclass
+- **`Network#call_parallel`** now forwards `max_concurrent: @config.max_concurrent_robots` to `SimpleFlow::Pipeline`, enabling the concurrency cap introduced in `RunConfig`
+
+### Fixed
+
+- **`Message.from_hash`** — records persisted without a `type` key (e.g. legacy user-message rows) previously raised `ArgumentError: missing keyword: :type`; `from_hash` now defaults a nil or absent `type` to `"text"` so old rows deserialize as `TextMessage` without error
+
+### Documentation
+
+- **`docs/guides/rails-integration.md`** — rewrote Background Jobs section to document `RobotLab::Job` base class, lifecycle steps, `robot_class` DSL, dedicated job generator, fire-and-forget mode, and when to use a custom `ApplicationJob` instead
+- **`docs/api/messages/index.md`** — added "Deserializing from Hash" section documenting `Message.from_hash` dispatch logic and the missing-type fallback
+- **README.md** — expanded Rails Integration section with full Background Jobs documentation including both generic and dedicated job patterns
+
 ## [0.0.12] - 2026-04-18
 
 ### Added
