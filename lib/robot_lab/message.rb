@@ -92,7 +92,7 @@ module RobotLab
     def self.from_hash(hash)
       hash = hash.transform_keys(&:to_sym)
 
-      case hash[:type]&.to_s
+      case (hash[:type] || "text").to_s
       when "text"
         TextMessage.new(**hash.slice(:role, :content, :stop_reason))
       when "tool_call"

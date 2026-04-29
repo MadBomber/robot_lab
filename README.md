@@ -842,6 +842,56 @@ This creates:
 - `app/robots/` - Directory for your robots
 - Database tables for conversation history
 
+### Background Jobs
+
+RobotLab ships with `RobotLab::Job`, an `ActiveJob::Base` subclass that handles the full robot-run lifecycle: robot class resolution, Turbo Stream wiring, thread-record persistence, and completion/error broadcasting.
+
+**Generic job** (robot class supplied at enqueue time):
+
+```bash
+rails generate robot_lab:install   # creates app/jobs/robot_run_job.rb
+```
+
+```ruby
+# app/jobs/robot_run_job.rb  (generated)
+class RobotRunJob < RobotLab::Job
+  queue_as :default
+end
+
+# Enqueue from a controller:
+RobotRunJob.perform_later(
+  robot_class: "SupportRobot",
+  message:     params[:message],
+  thread_id:   session_id
+)
+```
+
+**Dedicated job** (robot class bound at the class level via DSL):
+
+```bash
+rails generate robot_lab:job Support            # binds to SupportRobot, queue: default
+rails generate robot_lab:job Support --queue ai # custom queue
+```
+
+```ruby
+# app/jobs/support_job.rb  (generated)
+class SupportJob < RobotLab::Job
+  queue_as :default
+  robot_class SupportRobot
+end
+
+# Enqueue (no robot_class: needed):
+SupportJob.perform_later(message: params[:message], thread_id: session_id)
+```
+
+When `thread_id` is provided and [turbo-rails](https://github.com/hotwired/turbo-rails) is installed, `RobotLab::Job` automatically:
+
+- Wires `on_content` / `on_tool_call` Turbo Stream callbacks so the UI updates in real time
+- Broadcasts a **completion** event to `"robot_lab_thread_#{thread_id}"` when the run finishes
+- Broadcasts an **error** event (HTML-escaped) if the job raises
+
+Omitting `thread_id` runs the robot in fire-and-forget mode — no persistence, no broadcasting.
+
 ## Documentation
 
 Full documentation is available at **[https://madbomber.github.io/robot_lab](https://madbomber.github.io/robot_lab)**

@@ -33,9 +33,18 @@ module RobotLab
         Dir.glob("#{path}/**/*.rake").each { |f| load f }
       end
 
+      # TODO: Add fiber isolation warning once Solid Queue fiber mode lands in a
+      # mainline release. PR rails/solid_queue#728 (branch crmne/solid_queue
+      # async-worker-execution-mode) introduces the `fibers:` worker key but has
+      # not yet been merged or released. When a released version is detectable,
+      # add an initializer here that warns when:
+      #   defined?(SolidQueue) &&
+      #   app.config.active_support.isolation_level != :fiber
+
       generators do
         require "generators/robot_lab/install_generator"
         require "generators/robot_lab/robot_generator"
+        require "generators/robot_lab/job_generator"
       end
     end
   end

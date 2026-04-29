@@ -283,11 +283,24 @@ class RobotLab::MessageTest < Minitest::Test
   end
 
   def test_message_from_hash_with_unknown_type_falls_through
-    # The else branch in from_hash calls new(**hash) which will raise ArgumentError
-    # because "unknown_xyz" is not a valid type
     assert_raises(ArgumentError) do
       RobotLab::Message.from_hash({ type: "unknown_xyz", role: :assistant, content: "test" })
     end
+  end
+
+  def test_message_from_hash_with_missing_type_defaults_to_text
+    # Records persisted before the type field was introduced have no :type key.
+    # from_hash defaults nil type to "text" so old rows can still be deserialized.
+    message = RobotLab::Message.from_hash({ role: "user", content: "Hello" })
+    assert_instance_of RobotLab::TextMessage, message
+    assert_equal "user",  message.role
+    assert_equal "Hello", message.content
+  end
+
+  def test_message_from_hash_with_nil_type_defaults_to_text
+    message = RobotLab::Message.from_hash({ type: nil, role: "assistant", content: "Hi" })
+    assert_instance_of RobotLab::TextMessage, message
+    assert_equal "assistant", message.role
   end
 
   def test_tool_call_message_requires_tool_message_or_hash

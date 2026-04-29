@@ -76,6 +76,27 @@ memory.messages  # => Array<Message>
 memory.format_history  # => Array<Message>
 ```
 
+## Deserializing from Hash
+
+`Message.from_hash` reconstructs the correct subclass from a stored hash:
+
+```ruby
+RobotLab::Message.from_hash({ type: "text", role: "user", content: "Hello" })
+# => #<RobotLab::TextMessage ...>
+
+RobotLab::Message.from_hash({ type: "tool_call", role: "assistant", tools: [...] })
+# => #<RobotLab::ToolCallMessage ...>
+```
+
+When the `type` key is absent or `nil` (e.g. records persisted before the field was introduced), `from_hash` defaults to `TextMessage`:
+
+```ruby
+RobotLab::Message.from_hash({ role: "user", content: "legacy row" })
+# => #<RobotLab::TextMessage ...>
+```
+
+String keys are normalised automatically via `transform_keys(&:to_sym)`.
+
 ## See Also
 
 - [Memory](../core/memory.md)

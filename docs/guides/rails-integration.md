@@ -362,34 +362,73 @@ channel.send({ message: "Hello!", session_id: sessionId });
 
 ## Background Jobs
 
+### RobotLab::Job Base Class
+
+All RobotLab background jobs inherit from `RobotLab::Job` (`RobotLab::RailsIntegration::Job`), which handles the full robot-run lifecycle automatically:
+
+1. Resolves the robot class (from the `robot_class` DSL or a `robot_class:` kwarg at enqueue time)
+2. Finds or creates a `RobotLabThread` record and stamps the incoming message
+3. Wires Turbo Stream callbacks when `turbo-rails` is available (graceful no-op otherwise)
+4. Runs the robot and persists the `RobotResult` to `RobotLabResult`
+5. Broadcasts a completion or error event via Turbo Streams
+
+`retry_on StandardError` (3 attempts, 5 s wait) and `discard_on ActiveJob::DeserializationError` are configured by default.
+
 ### RobotRunJob (Generated)
 
-The install generator creates `app/jobs/robot_run_job.rb` — an ActiveJob class that wraps robot execution with result persistence and optional Turbo Stream broadcasting.
+The install generator creates a thin subclass you can enqueue with any robot class at runtime:
+
+```ruby title="app/jobs/robot_run_job.rb"
+class RobotRunJob < RobotLab::Job
+  queue_as :default
+end
+```
 
 ```ruby
-# Enqueue from a controller
+# Enqueue from a controller — pass robot_class: as a string
 RobotRunJob.perform_later(
   robot_class: "SupportRobot",
-  message: params[:message],
-  thread_id: session_id
+  message:     params[:message],
+  thread_id:   session_id
 )
 
 render json: { status: "processing" }
 ```
 
-The job:
+### Dedicated Job (robot_class DSL)
 
-1. Finds or creates a `RobotLabThread` by `thread_id`
-2. Resolves the robot class via `constantize.build`
-3. Wires Turbo Stream callbacks when `turbo-rails` is available (graceful no-op otherwise)
-4. Runs the robot and persists the result to `RobotLabResult`
-5. Broadcasts completion or error events via Turbo Streams
+Generate a job pre-bound to a specific robot class so callers never need to pass `robot_class:`:
 
-Customize the generated job to change queue name, retry policy, or error handling.
+```bash
+rails generate robot_lab:job Support            # binds to SupportRobot, queue: default
+rails generate robot_lab:job Support --queue ai # custom queue name
+```
+
+```ruby title="app/jobs/support_job.rb"
+class SupportJob < RobotLab::Job
+  queue_as :default
+  robot_class SupportRobot
+end
+```
+
+```ruby
+# No robot_class: needed at enqueue time
+SupportJob.perform_later(message: params[:message], thread_id: session_id)
+```
+
+The `robot_class` DSL is per-subclass and does not affect sibling job classes.
+
+### Omitting thread_id (fire-and-forget)
+
+When `thread_id` is omitted the job runs the robot and returns the result without any persistence or broadcasting:
+
+```ruby
+RobotRunJob.perform_later(robot_class: "ChatRobot", message: "ping")
+```
 
 ### Turbo Stream Token Streaming
 
-When `turbo-rails` is installed, `RobotRunJob` automatically streams content tokens and tool call badges to the browser in real time.
+When `turbo-rails` is installed, `RobotLab::Job` automatically streams content tokens and tool call badges to the browser in real time.
 
 #### View Setup
 
@@ -435,7 +474,7 @@ The stream name convention is `"robot_lab_thread_#{thread_id}"`, matching the `R
 
 ### Custom Background Job
 
-For full control, write your own job instead of using the generated one:
+For full control outside of the `RobotLab::Job` lifecycle (e.g. custom persistence or a different broadcasting strategy), inherit from `ApplicationJob` directly:
 
 ```ruby title="app/jobs/process_message_job.rb"
 class ProcessMessageJob < ApplicationJob

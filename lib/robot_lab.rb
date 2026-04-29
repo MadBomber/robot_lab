@@ -251,4 +251,8 @@ if defined?(Rails::Engine)
   require 'robot_lab/rails_integration/engine'
   require 'robot_lab/rails_integration/railtie'
   require 'robot_lab/rails_integration/turbo_stream_callbacks'
+  require 'robot_lab/rails_integration/job'
+
+  # Convenience alias so job subclasses can inherit from RobotLab::Job
+  RobotLab::Job = RobotLab::RailsIntegration::Job
 end
