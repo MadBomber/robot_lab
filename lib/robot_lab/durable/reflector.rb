@@ -13,12 +13,13 @@ module RobotLab
       #
       # @param learnings [Array<String>] robot.learnings from the completed session
       def reflect(learnings)
-        learnings.each do |text|
+        Array(learnings).each do |text|
           next if text.nil? || text.strip.empty?
 
           text = text.strip
           next if already_stored?(text)
 
+          now = Time.now.iso8601
           @store.record(
             Entry.new(
               content:    text,
@@ -27,8 +28,8 @@ module RobotLab
               domain:     @domain,
               confidence: 0.1,
               use_count:  0,
-              created_at: Time.now.iso8601,
-              updated_at: Time.now.iso8601
+              created_at: now,
+              updated_at: now
             )
           )
         end

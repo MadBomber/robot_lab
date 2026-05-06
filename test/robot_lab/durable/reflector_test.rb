@@ -48,7 +48,7 @@ class RobotLab::Durable::ReflectorTest < Minitest::Test
   end
 
   def test_skips_nil_and_empty_learnings
-    @reflector.reflect(["", "  ", nil].compact)
+    @reflector.reflect([nil, "", "  "])
     results = @store.recall(query: "newsletter curation", domain: "newsletter curation")
     assert_empty results
   end
