@@ -105,4 +105,9 @@ class RobotLab::Durable::StoreTest < Minitest::Test
     @store.record(build_entry(domain: "newsletter curation"))
     assert File.exist?(File.join(@tmpdir, "newsletter_curation.yaml"))
   end
+
+  def test_confirm_raises_when_entry_not_in_store
+    entry = build_entry(content: "Not stored anywhere")
+    assert_raises(RobotLab::Error) { @store.confirm(entry) }
+  end
 end

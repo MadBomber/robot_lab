@@ -8,6 +8,8 @@ module RobotLab
     class Store
       DEFAULT_PATH = File.join(Dir.home, ".robot_lab", "durable")
 
+      MIN_WORD_LENGTH = 3
+
       def initialize(path: DEFAULT_PATH)
         @path = path
         FileUtils.mkdir_p(@path)
@@ -35,17 +37,19 @@ module RobotLab
       # @param entry [Entry]
       # @return [Entry] the stored entry (may differ if an existing one was updated)
       def record(entry)
-        entries = load_domain(entry.domain)
-        idx     = entries.find_index { |e| e.content.downcase == entry.content.downcase }
+        with_domain_lock(entry.domain) do
+          entries = load_domain(entry.domain)
+          idx     = entries.find_index { |e| e.content.downcase == entry.content.downcase }
 
-        if idx
-          entries[idx] = entries[idx].confirm
-        else
-          entries << entry
+          if idx
+            entries[idx] = entries[idx].confirm
+          else
+            entries << entry
+          end
+
+          save_domain(entry.domain, entries)
+          entries[idx || -1]
         end
-
-        save_domain(entry.domain, entries)
-        entries[idx || -1]
       end
 
       # Increment confidence and use_count on a stored entry.
@@ -66,20 +70,20 @@ module RobotLab
       end
 
       def tokenize(str)
-        str.downcase.split(/\s+/).reject { |w| w.length < 3 }
+        str.downcase.split(/\s+/).reject { |w| w.length < MIN_WORD_LENGTH }
       end
 
       def load_domain(domain)
         file = domain_file(domain)
         return [] unless File.exist?(file)
 
-        raw = YAML.safe_load(File.read(file)) || []
+        raw = Array(YAML.safe_load(File.read(file)) || [])
         raw.map { |h| Entry.from_h(h) }
       end
 
       def load_all
         Dir.glob(File.join(@path, "*.yaml")).flat_map do |file|
-          raw = YAML.safe_load(File.read(file)) || []
+          raw = Array(YAML.safe_load(File.read(file)) || [])
           raw.map { |h| Entry.from_h(h) }
         end
       end
@@ -90,15 +94,26 @@ module RobotLab
 
       # Replace a specific entry by exact content match (used by confirm).
       def record_exact(entry)
-        entries = load_domain(entry.domain)
-        idx     = entries.find_index { |e| e.content.downcase == entry.content.downcase }
-        entries[idx] = entry if idx
-        save_domain(entry.domain, entries)
+        with_domain_lock(entry.domain) do
+          entries = load_domain(entry.domain)
+          idx     = entries.find_index { |e| e.content.downcase == entry.content.downcase }
+          raise RobotLab::Error, "Cannot confirm: entry not found in domain '#{entry.domain}'" unless idx
+          entries[idx] = entry
+          save_domain(entry.domain, entries)
+        end
       end
 
       def domain_file(domain)
-        filename = domain.to_s.downcase.gsub(/\s+/, "_") + ".yaml"
-        File.join(@path, filename)
+        safe = domain.to_s.downcase.gsub(/[^a-z0-9]+/, "_").delete_prefix("_").delete_suffix("_")
+        File.join(@path, "#{safe}.yaml")
+      end
+
+      def with_domain_lock(domain, &block)
+        lock_path = domain_file(domain) + ".lock"
+        File.open(lock_path, File::RDWR | File::CREAT, 0o644) do |f|
+          f.flock(File::LOCK_EX)
+          block.call
+        end
       end
     end
   end
