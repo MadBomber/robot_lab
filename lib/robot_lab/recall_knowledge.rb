@@ -19,8 +19,6 @@ module RobotLab
       if entries.empty?
         "No relevant past knowledge found for: #{query}. When in doubt, skip."
       else
-        entries.each { |e| store.confirm(e) }
-
         lines = entries.map do |e|
           "[#{e.category}/conf:#{format("%.1f", e.confidence)}] #{e.content} — #{e.reasoning}"
         end

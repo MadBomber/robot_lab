@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `Durable::Learning` — cross-session and within-session learning capability for robots. Robots accept `learn: true` and `learn_domain:` constructor params to persist knowledge across sessions via `~/.robot_lab/durable/` YAML files.
+- `Durable::Store` — YAML-backed knowledge store with file locking, keyword recall, and confidence tracking.
+- `Durable::Entry` — immutable value object for knowledge records with confidence progression.
+- `Durable::Reflector` — promotes session learnings to durable storage at end of each run.
+- `RecallKnowledge` tool — robots query past knowledge before uncertain decisions.
+- `RecordKnowledge` tool — robots persist new knowledge learned during a session.
+
 ## [0.1.0] - 2026-04-29
 
 ### Added

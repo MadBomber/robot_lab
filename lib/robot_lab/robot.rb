@@ -206,8 +206,12 @@ module RobotLab
       persisted = @memory.get(:learnings)
       @learnings = Array(persisted) if persisted
 
-      if learn && learn_domain
-        setup_durable_learning(domain: learn_domain, store_path: store_path)
+      if learn
+        if learn_domain
+          setup_durable_learning(domain: learn_domain, store_path: store_path)
+        else
+          warn "[RobotLab] Robot '#{@name}': learn: true requires learn_domain: to be set. Durable learning disabled."
+        end
       end
 
       # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)

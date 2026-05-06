@@ -48,11 +48,11 @@ class RobotLab::RecallKnowledgeTest < Minitest::Test
     assert_match(/skip/, result.downcase)
   end
 
-  def test_increments_confidence_on_recall
+  def test_does_not_change_confidence_on_recall
     seed_entry(content: "Skip LangChain tutorials", confidence: 0.3)
     @tool.execute(query: "LangChain", domain: "newsletter curation")
     results = @store.recall(query: "LangChain", domain: "newsletter curation")
-    assert_in_delta 0.4, results.first.confidence, 0.001
+    assert_in_delta 0.3, results.first.confidence, 0.001
   end
 
   def test_returns_error_when_no_store_configured
