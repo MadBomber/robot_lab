@@ -81,4 +81,42 @@ class RobotLab::Durable::EntryTest < Minitest::Test
     assert_in_delta original.confidence, roundtripped.confidence, 0.001
     assert_equal original.use_count,  roundtripped.use_count
   end
+
+  def test_from_h_with_symbol_keys
+    h = {
+      content:    "Skip LangChain content",
+      reasoning:  "User is Ruby-only",
+      category:   "preference",
+      domain:     "newsletter curation",
+      confidence: 0.3,
+      use_count:  1,
+      created_at: "2026-05-06T12:00:00Z",
+      updated_at: "2026-05-06T12:00:00Z"
+    }
+    entry = RobotLab::Durable::Entry.from_h(h)
+    assert_equal "Skip LangChain content", entry.content
+    assert_equal :preference,              entry.category
+  end
+
+  def test_confirm_refreshes_updated_at
+    entry = build_entry(updated_at: "2020-01-01T00:00:00Z")
+    confirmed = entry.confirm
+    refute_equal "2020-01-01T00:00:00Z", confirmed.updated_at
+  end
+
+  def test_from_h_deserializes_use_count_as_integer
+    h = {
+      "content"    => "fact",
+      "reasoning"  => "reason",
+      "category"   => "fact",
+      "domain"     => "test",
+      "confidence" => 0.1,
+      "use_count"  => "3",
+      "created_at" => "2026-05-06T12:00:00Z",
+      "updated_at" => "2026-05-06T12:00:00Z"
+    }
+    entry = RobotLab::Durable::Entry.from_h(h)
+    assert_kind_of Integer, entry.use_count
+    assert_equal 3, entry.use_count
+  end
 end
