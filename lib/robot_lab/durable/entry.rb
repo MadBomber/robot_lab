@@ -32,15 +32,16 @@ module RobotLab
 
       # Deserialize from a Hash (string or symbol keys).
       def self.from_h(hash)
+        h = hash.transform_keys(&:to_s)
         new(
-          content:    hash["content"]    || hash[:content],
-          reasoning:  hash["reasoning"]  || hash[:reasoning],
-          category:   (hash["category"] || hash[:category]).to_sym,
-          domain:     hash["domain"]     || hash[:domain],
-          confidence: (hash["confidence"] || hash[:confidence]).to_f,
-          use_count:  (hash["use_count"]  || hash[:use_count]).to_i,
-          created_at: hash["created_at"] || hash[:created_at],
-          updated_at: hash["updated_at"] || hash[:updated_at]
+          content:    h["content"],
+          reasoning:  h["reasoning"],
+          category:   h["category"]&.to_sym,
+          domain:     h["domain"],
+          confidence: h["confidence"].to_f,
+          use_count:  h["use_count"].to_i,
+          created_at: h["created_at"],
+          updated_at: h["updated_at"]
         )
       end
     end

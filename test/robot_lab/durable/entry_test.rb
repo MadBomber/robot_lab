@@ -119,4 +119,13 @@ class RobotLab::Durable::EntryTest < Minitest::Test
     assert_kind_of Integer, entry.use_count
     assert_equal 3, entry.use_count
   end
+
+  def test_from_h_with_mixed_key_types_normalizes_correctly
+    h = { "content" => "fact", reasoning: "why", "category" => "fact",
+          domain: "test", "confidence" => 0.5, use_count: 1,
+          "created_at" => "2026-05-06T12:00:00Z", "updated_at" => "2026-05-06T12:00:00Z" }
+    entry = RobotLab::Durable::Entry.from_h(h)
+    assert_equal "fact", entry.content
+    assert_equal "why",  entry.reasoning
+  end
 end
