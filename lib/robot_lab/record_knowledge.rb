@@ -27,9 +27,10 @@ module RobotLab
     param :domain,    type: "string", desc: "Topic area this applies to (e.g. 'newsletter curation', 'ruby tooling')"
 
     def execute(content:, reasoning:, category:, domain:)
-      store = robot&.instance_variable_get(:@durable_store)
+      store = robot&.durable_store
       return "No durable store configured on this robot." unless store
 
+      now = Time.now.iso8601
       entry = Durable::Entry.new(
         content:,
         reasoning:,
@@ -37,8 +38,8 @@ module RobotLab
         domain:,
         confidence: 0.1,
         use_count:  0,
-        created_at: Time.now.iso8601,
-        updated_at: Time.now.iso8601
+        created_at: now,
+        updated_at: now
       )
 
       store.record(entry)

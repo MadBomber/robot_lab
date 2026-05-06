@@ -69,7 +69,8 @@ module RobotLab
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
                 :bus, :outbox, :config, :skills, :provider,
-                :total_input_tokens, :total_output_tokens, :learnings
+                :total_input_tokens, :total_output_tokens, :learnings,
+                :durable_store, :learn_domain
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)

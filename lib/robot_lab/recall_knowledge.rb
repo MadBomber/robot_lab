@@ -11,7 +11,7 @@ module RobotLab
     param :domain, type: "string", desc: "Topic area to search (e.g. 'newsletter curation')", required: false
 
     def execute(query:, domain: nil)
-      store = robot&.instance_variable_get(:@durable_store)
+      store = robot&.durable_store
       return "No durable store configured on this robot." unless store
 
       entries = store.recall(query: query, domain: domain, min_confidence: 0.0)
