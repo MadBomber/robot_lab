@@ -43,6 +43,7 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
+    include Durable::Learning
 
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
@@ -132,7 +133,10 @@ module RobotLab
       max_tool_rounds: nil,
       token_budget: nil,
       mcp_discovery: false,
-      config: nil
+      config: nil,
+      learn: false,
+      learn_domain: nil,
+      store_path: nil
     )
       @name = name.to_s
       @name_from_constructor = (name.to_s != "robot")
@@ -201,6 +205,10 @@ module RobotLab
       # Restore persisted learnings from inherent memory if present
       persisted = @memory.get(:learnings)
       @learnings = Array(persisted) if persisted
+
+      if learn && learn_domain
+        setup_durable_learning(domain: learn_domain, store_path: store_path)
+      end
 
       # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)
       config = RobotLab.config
@@ -365,6 +373,7 @@ module RobotLab
         result
       ensure
         restore_tool_call_callback if @config.max_tool_rounds
+        run_reflector if @durable_store
         run_memory.current_writer = previous_writer
       end
     end
