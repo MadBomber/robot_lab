@@ -2569,33 +2569,30 @@ class RobotLab::RobotTest < Minitest::Test
 
   # Integration tests for AgentSkills support
   def test_skills_param_handles_mixed_pm_and_agentskill_formats
-    # Test that a robot can hold both PM skills (in @expanded_skills)
-    # and AgentSkills (in @pending_agent_skills)
+    # Exercises the skills: constructor param with both a PM template (skill_leaf_test)
+    # and an AgentSkill (test_skill). Temporarily swap the catalog singleton to point
+    # at test fixtures so the test doesn't depend on ~/.prompts/skills/.
     fixtures = File.expand_path("../fixtures/skills", __dir__)
+    catalog  = RobotLab::AgentSkillCatalog.new(fixtures)
+    RobotLab::AgentSkillCatalog.instance_variable_set(:@instance, catalog)
 
-    # Create a robot without template, just system_prompt
-    # Then manually set up the mixed scenario
-    robot = build_robot(name: "bot", system_prompt: "You are helpful.")
+    begin
+      robot = build_robot(name: "bot", skills: [:skill_leaf_test, :test_skill])
 
-    # Initialize the internal structures for skills
-    robot.instance_variable_set(:@expanded_skills, [:assistant])
-    skill = RobotLab::AgentSkill.new(File.join(fixtures, "test_skill", "SKILL.md"))
-    robot.instance_variable_set(:@pending_agent_skills, [skill])
-    store = RobotLab::DocumentStore.new
-    store.store(skill.name.to_sym, skill.description)
-    robot.instance_variable_set(:@agent_skill_store, store)
+      expanded = robot.instance_variable_get(:@expanded_skills)
+      pending  = robot.instance_variable_get(:@pending_agent_skills)
 
-    # PM skills are in @expanded_skills; AgentSkills are in @pending_agent_skills
-    expanded = robot.instance_variable_get(:@expanded_skills)
-    pending  = robot.instance_variable_get(:@pending_agent_skills)
-
-    assert_includes expanded, :assistant
-    assert_equal 1, pending.length
-    assert_equal "test_skill", pending.first.name
+      refute_nil expanded, "Expected @expanded_skills to be populated"
+      assert_includes expanded, :skill_leaf_test
+      assert_equal 1, pending.length
+      assert_equal "test_skill", pending.first.name
+    ensure
+      RobotLab::AgentSkillCatalog.reset!
+    end
   end
 
 
-  def test_agentskill_script_tools_not_present_after_run_without_match
+  def test_restore_after_agent_skills_leaves_tool_count_unchanged
     fixtures = File.expand_path("../fixtures/skills", __dir__)
     skill    = RobotLab::AgentSkill.new(File.join(fixtures, "scripted_skill", "SKILL.md"))
 
@@ -2607,7 +2604,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     initial_tool_count = robot.local_tools.length
 
-    # Test inject/restore directly without calling run() (which requires an API key)
+    # Inject empty list then restore; tool count must be unchanged
     robot.send(:inject_agent_skills, [])
     robot.send(:restore_after_agent_skills)
 
@@ -2616,9 +2613,13 @@ class RobotLab::RobotTest < Minitest::Test
 
 
   def test_expand_skills_uses_pm_template_when_not_in_catalog
+    # Use a fixture catalog that does not contain :skill_leaf_test to guarantee
+    # the PM fallback path is exercised regardless of ~/.prompts/skills/ contents.
+    fixtures = File.expand_path("../fixtures/skills", __dir__)
+    catalog  = RobotLab::AgentSkillCatalog.new(fixtures)
+
     robot  = build_robot(name: "bot")
-    # Use a test-specific PM template that is not present in the AgentSkills catalog
-    result = robot.send(:expand_skills, [:skill_leaf_test], Set.new)
+    result = robot.send(:expand_skills_with_catalog, [:skill_leaf_test], Set.new, catalog)
     assert_includes result, :skill_leaf_test
   end
 end
