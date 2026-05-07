@@ -16,6 +16,7 @@
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
+require "robot_lab/document_store"
 
 puts "=" * 60
 puts "Example 26: Embedding-Based Document Store"

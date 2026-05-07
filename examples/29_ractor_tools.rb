@@ -29,6 +29,7 @@
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
+require "robot_lab/ractor"
 require "digest"
 
 # Always shut down the pool when the process exits.

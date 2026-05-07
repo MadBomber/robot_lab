@@ -33,6 +33,7 @@
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
+require "robot_lab/ractor"
 
 puts "=" * 62
 puts "Example 30: Ractor Network Scheduler"

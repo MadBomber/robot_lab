@@ -10,6 +10,9 @@ group :development, :test do
   gem 'ractor-wrapper'
   gem 'aigcm'
   gem "robot_lab-document_store", path: "../robot_lab-document_store"
+  gem "robot_lab-ractor", path: "../robot_lab-ractor"
+  gem "robot_lab-durable", path: "../robot_lab-durable"
+  gem "robot_lab-rails", path: "../robot_lab-rails"
   gem 'amazing_print'
   gem 'classifier', '~> 2.3'
   gem 'debug_me'
