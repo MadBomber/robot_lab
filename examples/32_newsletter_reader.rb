@@ -3,10 +3,10 @@
 
 # Example 32: Newsletter Issue Retriever
 #
-# Fetches all unprocessed issues of the RoboRuby (Ruby AI News) newsletter
-# via RSS and saves each as a Markdown file in the Obsidian Clippings folder.
+# Fetches all unprocessed issues from multiple Ruby newsletters via RSS
+# and saves each as a Markdown file in the Obsidian Clippings folder.
 #
-# - Processes oldest unprocessed issue first
+# - Processes oldest unprocessed issue first (across all feeds)
 # - Filename: <newsletter-name>_YYYYMMDD.md
 # - Includes YAML frontmatter with source URL (compatible with Clippings workflow)
 # - Tracks processed issue URLs in ~/.robot_lab/newsletter_processed.yaml
@@ -23,7 +23,11 @@ require "fileutils"
 require "rexml/document"
 require "rexml/xpath"
 
-NEWSLETTER_RSS_URL   = "https://rss.beehiiv.com/feeds/MTJunJRFxo.xml"
+NEWSLETTER_RSS_URLS = [
+  "https://rss.beehiiv.com/feeds/MTJunJRFxo.xml",       # Ruby AI News
+  "https://cprss.s3.amazonaws.com/rubyweekly.com.xml"   # Ruby Weekly
+].freeze
+
 CLIPPINGS_DIR        = File.expand_path("/Users/dewayne/Documents/obsidian_order_intelligence/PKM/Clippings")
 PROCESSED_STATE_FILE = File.join(Dir.home, ".robot_lab", "newsletter_processed.yaml")
 
@@ -54,44 +58,52 @@ class ProcessedIssues
   end
 end
 
-# Fetches the RSS feed and returns all items sorted oldest-first.
-# Each item: { title:, url:, pub_date:, published_at:, html: }
-def fetch_rss_items
-  uri      = URI(NEWSLETTER_RSS_URL)
-  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.get(uri.request_uri) }
+# Fetches a single RSS feed URL and returns its items (unsorted).
+# Each item: { title:, url:, pub_date:, published_at:, html:, channel_name: }
+def fetch_rss_items(url)
+  uri      = URI(url)
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") { |h| h.get(uri.request_uri) }
   raise "HTTP #{response.code}: #{response.message}" unless response.is_a?(Net::HTTPSuccess)
 
   doc  = REXML::Document.new(response.body)
   ns   = { "content" => "http://purl.org/rss/1.0/modules/content/" }
 
-  # Derive a safe newsletter name from the channel title once
   channel_title = REXML::XPath.first(doc, "//channel/title")&.text&.strip || "newsletter"
 
-  items = REXML::XPath.match(doc, "//channel/item")
-  items.filter_map do |item|
-    url      = REXML::XPath.first(item, "link")&.text&.strip
+  REXML::XPath.match(doc, "//channel/item").filter_map do |item|
+    item_url = REXML::XPath.first(item, "link")&.text&.strip
     title    = REXML::XPath.first(item, "title")&.text&.strip
     pub_date = REXML::XPath.first(item, "pubDate")&.text&.strip
     html     = REXML::XPath.first(item, "content:encoded", ns)&.text ||
                REXML::XPath.first(item, "description")&.text || ""
 
-    next unless url && title && pub_date
+    next unless item_url && title && pub_date
 
     {
       title:        title,
-      url:          url,
+      url:          item_url,
       pub_date:     pub_date,
       published_at: Time.parse(pub_date),
       html:         html,
       channel_name: channel_title
     }
+  end
+end
+
+# Fetches all configured RSS feeds and returns items sorted oldest-first.
+def fetch_all_rss_items
+  NEWSLETTER_RSS_URLS.flat_map do |feed_url|
+    print "  #{feed_url}... "
+    items = fetch_rss_items(feed_url)
+    puts "#{items.size} issues"
+    items
   end.sort_by { |item| item[:published_at] }
 end
 
 # Converts HTML to Markdown via html2markdown CLI, stripping UTM params.
 def html_to_markdown(html)
   md, = Open3.capture3(
-    "html2markdown --domain=https://rubyai.beehiiv.com",
+    "html2markdown",
     stdin_data: html
   )
   md.gsub(/\]\(([^)]+)\)/) do
@@ -139,10 +151,10 @@ puts
 FileUtils.mkdir_p(CLIPPINGS_DIR)
 state = ProcessedIssues.new
 
-print "Fetching RSS feed... "
-all_items = fetch_rss_items
+puts "Fetching #{NEWSLETTER_RSS_URLS.size} RSS feeds..."
+all_items = fetch_all_rss_items
 pending   = all_items.reject { |item| state.processed?(item[:url]) }
-puts "#{all_items.size} total issues found."
+puts "#{all_items.size} total issues found across all feeds."
 
 if pending.empty?
   puts "All issues already saved. Nothing to do."
