@@ -515,10 +515,11 @@ class RobotLab::ToolTest < Minitest::Test
   # ── Ractor pool routing ─────────────────────────────────────────
 
   def test_ractor_safe_tool_call_routes_through_pool
+    skip "robot_lab-ractor not loaded" unless RobotLab.respond_to?(:ractor_pool)
     result = PoolRoutingTestTool.new.call({ "n" => 7 })
     assert_equal 21, result
   ensure
-    RobotLab.shutdown_ractor_pool
+    RobotLab.shutdown_ractor_pool if RobotLab.respond_to?(:shutdown_ractor_pool)
   end
 
   def test_non_ractor_safe_tool_call_runs_inline

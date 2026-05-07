@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "robot_lab/document_store" if defined?(RobotLab::DocumentStore)
 
 module RobotLab
   class Robot

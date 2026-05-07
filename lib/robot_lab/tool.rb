@@ -94,7 +94,7 @@ module RobotLab
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     def call(args)
-      if self.class.ractor_safe? && !self.class.name.nil?
+      if self.class.ractor_safe? && !self.class.name.nil? && RobotLab.respond_to?(:ractor_pool)
         RobotLab.ractor_pool.submit(self.class.name, args)
       else
         super

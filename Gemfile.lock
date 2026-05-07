@@ -1,15 +1,18 @@
 PATH
+  remote: ../robot_lab-document_store
+  specs:
+    robot_lab-document_store (0.1.0)
+      fastembed
+
+PATH
   remote: .
   specs:
     robot_lab (0.2.0)
       async (~> 2.0)
       async-http (~> 0.60)
       async-websocket (~> 0.30)
-      fastembed
       myway_config (~> 0.1)
       prompt_manager (~> 1.0)
-      ractor-wrapper
-      ractor_queue
       ruby_llm (~> 1.12)
       ruby_llm-mcp
       ruby_llm-schema
@@ -356,6 +359,7 @@ DEPENDENCIES
   railties (>= 7.0)
   rake
   robot_lab!
+  robot_lab-document_store!
   rubocop
   simplecov
   sqlite3
@@ -473,6 +477,7 @@ CHECKSUMS
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rice (4.12.0) sha256=672c369ca706ff5be46695537f51e1a3db262c1b789af5b967ef477f25111dfd
   robot_lab (0.2.0)
+  robot_lab-document_store (0.1.0)
   rubocop (1.86.1) sha256=44415f3f01d01a21e01132248d2fd0867572475b566ca188a0a42133a08d4531
   rubocop-ast (1.49.1) sha256=4412f3ee70f6fe4546cc489548e0f6fcf76cafcfa80fa03af67098ffed755035
   ruby-next-core (1.2.0) sha256=f6a7d00bb5186cecbb02f7f1845a0f3a2c9788d35b6ccff5c9be3f0d46799b86

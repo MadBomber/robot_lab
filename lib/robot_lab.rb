@@ -49,8 +49,6 @@ module RobotLab
 end
 
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
-loader.ignore("#{__dir__}/generators")
-loader.ignore("#{__dir__}/robot_lab/rails_integration")
 loader.ignore("#{__dir__}/robot_lab/robot")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
@@ -71,7 +69,6 @@ loader.setup
 require_relative 'robot_lab/error'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
-require_relative 'robot_lab/ractor_job'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
@@ -221,38 +218,5 @@ module RobotLab
     end
 
 
-    # Returns the shared RactorWorkerPool, lazily initialized.
-    #
-    # Pool size is determined by RobotLab.config.ractor_pool_size or
-    # defaults to Etc.nprocessors (:auto). The pool lives for the lifetime
-    # of the process. Call RobotLab.shutdown_ractor_pool to drain and
-    # close it explicitly.
-    #
-    # @return [RactorWorkerPool]
-    def ractor_pool
-      @ractor_pool ||= begin
-        size = config.respond_to?(:ractor_pool_size) ? (config.ractor_pool_size || :auto) : :auto
-        RactorWorkerPool.new(size: size)
-      end
-    end
-
-    # Shut down the shared Ractor worker pool, draining in-flight jobs.
-    #
-    # @return [void]
-    def shutdown_ractor_pool
-      @ractor_pool&.shutdown
-      @ractor_pool = nil
-    end
   end
-end
-
-# Load Rails integration if Rails is defined
-if defined?(Rails::Engine)
-  require 'robot_lab/rails_integration/engine'
-  require 'robot_lab/rails_integration/railtie'
-  require 'robot_lab/rails_integration/turbo_stream_callbacks'
-  require 'robot_lab/rails_integration/job'
-
-  # Convenience alias so job subclasses can inherit from RobotLab::Job
-  RobotLab::Job = RobotLab::RailsIntegration::Job
 end

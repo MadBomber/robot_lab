@@ -44,7 +44,7 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
-    include Durable::Learning
+    include Durable::Learning if defined?(Durable::Learning)
     prepend Robot::AgentSkillMatching
 
     # @!attribute [r] name
@@ -210,7 +210,7 @@ module RobotLab
       persisted = @memory.get(:learnings)
       @learnings = Array(persisted) if persisted
 
-      if learn
+      if learn && defined?(Durable::Learning)
         if learn_domain
           setup_durable_learning(domain: learn_domain, store_path: store_path)
         else
