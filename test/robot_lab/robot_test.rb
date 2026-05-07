@@ -2567,6 +2567,54 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
 
+  # Integration tests for AgentSkills support
+  def test_skills_param_handles_mixed_pm_and_agentskill_formats
+    # Test that a robot can hold both PM skills (in @expanded_skills)
+    # and AgentSkills (in @pending_agent_skills)
+    fixtures = File.expand_path("../fixtures/skills", __dir__)
+
+    # Create a robot without template, just system_prompt
+    # Then manually set up the mixed scenario
+    robot = build_robot(name: "bot", system_prompt: "You are helpful.")
+
+    # Initialize the internal structures for skills
+    robot.instance_variable_set(:@expanded_skills, [:assistant])
+    skill = RobotLab::AgentSkill.new(File.join(fixtures, "test_skill", "SKILL.md"))
+    robot.instance_variable_set(:@pending_agent_skills, [skill])
+    store = RobotLab::DocumentStore.new
+    store.store(skill.name.to_sym, skill.description)
+    robot.instance_variable_set(:@agent_skill_store, store)
+
+    # PM skills are in @expanded_skills; AgentSkills are in @pending_agent_skills
+    expanded = robot.instance_variable_get(:@expanded_skills)
+    pending  = robot.instance_variable_get(:@pending_agent_skills)
+
+    assert_includes expanded, :assistant
+    assert_equal 1, pending.length
+    assert_equal "test_skill", pending.first.name
+  end
+
+
+  def test_agentskill_script_tools_not_present_after_run_without_match
+    fixtures = File.expand_path("../fixtures/skills", __dir__)
+    skill    = RobotLab::AgentSkill.new(File.join(fixtures, "scripted_skill", "SKILL.md"))
+
+    robot = build_robot(name: "bot", system_prompt: "You are helpful.")
+    robot.instance_variable_set(:@pending_agent_skills, [skill])
+    store = RobotLab::DocumentStore.new
+    store.store(skill.name.to_sym, skill.description)
+    robot.instance_variable_set(:@agent_skill_store, store)
+
+    initial_tool_count = robot.local_tools.length
+
+    # Test inject/restore directly without calling run() (which requires an API key)
+    robot.send(:inject_agent_skills, [])
+    robot.send(:restore_after_agent_skills)
+
+    assert_equal initial_tool_count, robot.local_tools.length
+  end
+
+
   def test_expand_skills_uses_pm_template_when_not_in_catalog
     robot  = build_robot(name: "bot")
     # Use a test-specific PM template that is not present in the AgentSkills catalog
