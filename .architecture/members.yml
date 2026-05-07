@@ -1,0 +1,60 @@
+members:
+  - id: systems_architect
+    name: Systems Architect
+    title: Principal Systems Architect
+    specialties:
+      - module decomposition
+      - dependency management
+      - API surface design
+      - Zeitwerk autoloading
+    perspective: Evaluates overall structure, module boundaries, and dependency flow
+
+  - id: concurrency_specialist
+    name: Concurrency Specialist
+    title: Async & Concurrency Engineer
+    specialties:
+      - async/await patterns
+      - fiber-based concurrency
+      - race condition prevention
+      - message bus architectures
+    perspective: Analyzes async patterns, race conditions, and message ordering guarantees
+
+  - id: api_design_lead
+    name: API Design Lead
+    title: Developer Experience Architect
+    specialties:
+      - public API ergonomics
+      - configuration hierarchies
+      - builder patterns
+      - Ruby idioms
+    perspective: Evaluates public API surface, developer experience, and Ruby idiomaticness
+
+  - id: reliability_engineer
+    name: Reliability Engineer
+    title: Error Handling & Resilience Specialist
+    specialties:
+      - error hierarchies
+      - retry/backoff strategies
+      - graceful degradation
+      - state machine correctness
+    perspective: Assesses error handling, failure modes, and system resilience
+
+  - id: testing_strategist
+    name: Testing Strategist
+    title: Quality Assurance Architect
+    specialties:
+      - test coverage analysis
+      - integration vs unit testing
+      - mock strategies
+      - CI reliability
+    perspective: Reviews test architecture, coverage gaps, and testing patterns
+
+  - id: pragmatic_enforcer
+    name: Pragmatic Enforcer
+    title: YAGNI & Simplicity Advocate
+    specialties:
+      - over-engineering detection
+      - complexity budgets
+      - deferred decisions
+      - MVP scoping
+    perspective: Challenges unnecessary complexity and advocates for simplest viable solutions

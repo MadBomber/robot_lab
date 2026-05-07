@@ -4,6 +4,7 @@ require_relative 'robot/template_rendering'
 require_relative 'robot/mcp_management'
 require_relative 'robot/bus_messaging'
 require_relative 'robot/history_search'
+require_relative 'robot/agent_skill_matching'
 
 module RobotLab
   # LLM-powered robot built on RubyLLM::Agent
@@ -44,6 +45,7 @@ module RobotLab
     include Robot::BusMessaging
     include Robot::HistorySearch
     include Durable::Learning
+    prepend Robot::AgentSkillMatching
 
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
@@ -147,6 +149,8 @@ module RobotLab
       @local_tools = Array(local_tools)
       @skills = skills ? Array(skills).map(&:to_sym) : nil
       @expanded_skills = nil
+      @pending_agent_skills = []
+      @agent_skill_store    = nil
       @mcp_discovery = mcp_discovery
 
       # Build RunConfig from explicit kwargs, merged on top of passed-in config.

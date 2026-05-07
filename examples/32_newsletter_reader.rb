@@ -1,128 +1,176 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example 32: Newsletter Reader
+# Example 32: Newsletter Issue Retriever
 #
-# Downloads the latest RoboRuby (Ruby AI News) newsletter via RSS and uses
-# a robot to extract key stories, gems, and highlights from the issue.
+# Fetches all unprocessed issues of the RoboRuby (Ruby AI News) newsletter
+# via RSS and saves each as a Markdown file in the Obsidian Clippings folder.
 #
-# Demonstrates:
-#   - Custom tool that fetches live data from the web
-#   - Robot reasoning over real-world structured content
+# - Processes oldest unprocessed issue first
+# - Filename: <newsletter-name>_YYYYMMDD.md
+# - Includes YAML frontmatter with source URL (compatible with Clippings workflow)
+# - Tracks processed issue URLs in ~/.robot_lab/newsletter_processed.yaml
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/32_newsletter_reader.rb
+#   ruby examples/32_newsletter_reader.rb
 
 require "net/http"
 require "open3"
+require "time"
 require "uri"
+require "yaml"
+require "fileutils"
 require "rexml/document"
 require "rexml/xpath"
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
+NEWSLETTER_RSS_URL   = "https://rss.beehiiv.com/feeds/MTJunJRFxo.xml"
+CLIPPINGS_DIR        = File.expand_path("/Users/dewayne/Documents/obsidian_order_intelligence/PKM/Clippings")
+PROCESSED_STATE_FILE = File.join(Dir.home, ".robot_lab", "newsletter_processed.yaml")
 
-require_relative "../lib/robot_lab"
-require "logger"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
-
-NEWSLETTER_RSS_URL = "https://rss.beehiiv.com/feeds/MTJunJRFxo.xml"
-
-class FetchLatestNewsletter < RubyLLM::Tool
-  description "Fetches the latest issue of the RoboRuby Ruby AI newsletter via RSS. " \
-              "Returns the issue title, publication date, web URL, and full article text."
-
-  def execute
-    uri      = URI(NEWSLETTER_RSS_URL)
-    response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.get(uri.request_uri) }
-
-    raise "HTTP #{response.code}: #{response.message}" unless response.is_a?(Net::HTTPSuccess)
-
-    doc  = REXML::Document.new(response.body)
-    item = REXML::XPath.first(doc, "//channel/item")
-    return "No issues found in the newsletter RSS feed." unless item
-
-    ns = { "content" => "http://purl.org/rss/1.0/modules/content/" }
-
-    title    = text_of(item, "title")
-    pub_date = text_of(item, "pubDate")
-    url      = text_of(item, "link")
-    html     = REXML::XPath.first(item, "content:encoded", ns)&.text ||
-               text_of(item, "description") || ""
-
-    plain = html_to_markdown(html)
-
-    <<~TEXT
-      Issue: #{title}
-      Published: #{pub_date}
-      URL: #{url}
-
-      #{plain[0, 20_000]}
-    TEXT
+# Tracks which newsletter issue URLs have been saved.
+class ProcessedIssues
+  def initialize(path: PROCESSED_STATE_FILE)
+    @path = path
+    @urls = load_urls
   end
+
+  def processed?(url)
+    @urls.include?(url)
+  end
+
+  def mark_processed(url)
+    @urls << url
+    FileUtils.mkdir_p(File.dirname(@path))
+    File.write(@path, YAML.dump(@urls.uniq))
+  end
+
+  def count = @urls.size
 
   private
 
-  def text_of(node, xpath)
-    REXML::XPath.first(node, xpath)&.text&.strip
-  end
-
-  def html_to_markdown(html)
-    md, = Open3.capture3(
-      "html2markdown --domain=https://rubyai.beehiiv.com",
-      stdin_data: html
-    )
-    md.gsub(/\]\(([^)]+)\)/) { "](#{strip_utm($1)})" }
-  end
-
-  def strip_utm(url)
-    return url unless url.include?("?")
-    base, query = url.split("?", 2)
-    kept = query.split("&").reject { |p| p.start_with?("utm_") }
-    kept.empty? ? base : "#{base}?#{kept.join("&")}"
+  def load_urls
+    return [] unless File.exist?(@path)
+    Array(YAML.safe_load(File.read(@path)) || [])
   end
 end
 
+# Fetches the RSS feed and returns all items sorted oldest-first.
+# Each item: { title:, url:, pub_date:, published_at:, html: }
+def fetch_rss_items
+  uri      = URI(NEWSLETTER_RSS_URL)
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.get(uri.request_uri) }
+  raise "HTTP #{response.code}: #{response.message}" unless response.is_a?(Net::HTTPSuccess)
+
+  doc  = REXML::Document.new(response.body)
+  ns   = { "content" => "http://purl.org/rss/1.0/modules/content/" }
+
+  # Derive a safe newsletter name from the channel title once
+  channel_title = REXML::XPath.first(doc, "//channel/title")&.text&.strip || "newsletter"
+
+  items = REXML::XPath.match(doc, "//channel/item")
+  items.filter_map do |item|
+    url      = REXML::XPath.first(item, "link")&.text&.strip
+    title    = REXML::XPath.first(item, "title")&.text&.strip
+    pub_date = REXML::XPath.first(item, "pubDate")&.text&.strip
+    html     = REXML::XPath.first(item, "content:encoded", ns)&.text ||
+               REXML::XPath.first(item, "description")&.text || ""
+
+    next unless url && title && pub_date
+
+    {
+      title:        title,
+      url:          url,
+      pub_date:     pub_date,
+      published_at: Time.parse(pub_date),
+      html:         html,
+      channel_name: channel_title
+    }
+  end.sort_by { |item| item[:published_at] }
+end
+
+# Converts HTML to Markdown via html2markdown CLI, stripping UTM params.
+def html_to_markdown(html)
+  md, = Open3.capture3(
+    "html2markdown --domain=https://rubyai.beehiiv.com",
+    stdin_data: html
+  )
+  md.gsub(/\]\(([^)]+)\)/) do
+    url = $1
+    if url.include?("?")
+      base, query = url.split("?", 2)
+      kept = query.split("&").reject { |p| p.start_with?("utm_") }
+      "](#{kept.empty? ? base : "#{base}?#{kept.join("&")}"})"
+    else
+      "](#{url})"
+    end
+  end
+end
+
+# Builds the output filename: <newsletter-name>_YYYYMMDD.md
+def output_filename(channel_name, published_at)
+  safe_name = channel_name.downcase.gsub(/[^a-z0-9]+/, "_").delete_suffix("_")
+  date_str  = published_at.strftime("%Y%m%d")
+  "#{safe_name}_#{date_str}.md"
+end
+
+# Wraps markdown content in YAML frontmatter compatible with the Clippings workflow.
+def wrap_with_frontmatter(title:, url:, pub_date:, body:)
+  date = Time.parse(pub_date).strftime("%Y-%m-%d")
+  <<~MD
+    ---
+    source: #{url}
+    title: "#{title.gsub('"', '\\"')}"
+    date: #{date}
+    ---
+
+    # #{title}
+
+    #{body.strip}
+  MD
+end
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
 puts "=" * 60
-puts "Example 32: Newsletter Reader"
+puts "Example 32: Newsletter Issue Retriever"
 puts "=" * 60
 puts
 
-robot = RobotLab.build(
-  name: "newsletter_analyst",
-  system_prompt: <<~PROMPT,
-    You are a sharp technical editor summarizing the RoboRuby Ruby AI newsletter
-    for busy developers. When given newsletter content, extract and present:
+FileUtils.mkdir_p(CLIPPINGS_DIR)
+state = ProcessedIssues.new
 
-    1. **Headline story** — the biggest news in Ruby/AI this issue.
-    2. **Notable gems or tools** — new or updated libraries worth knowing about.
-    3. **Key articles or tutorials** — important reads linked in the issue.
-    4. **Quick takes** — 3-5 bullets on other interesting items.
+print "Fetching RSS feed... "
+all_items = fetch_rss_items
+pending   = all_items.reject { |item| state.processed?(item[:url]) }
+puts "#{all_items.size} total issues found."
 
-    The content includes Markdown links in [text](url) format. You MUST preserve
-    these links in your output — every article title, gem name, and tool mentioned
-    should be a clickable Markdown link using the URL from the source content.
+if pending.empty?
+  puts "All issues already saved. Nothing to do."
+  exit
+end
 
-    Use the FetchLatestNewsletter tool to get the content, then give your summary.
-    Be concise and opinionated — developers are busy.
-
-    Before deciding what to include, use the recall_knowledge tool to check past preferences.
-    After a discussion or decision reveals something worth remembering, use the record_knowledge tool.
-    When uncertain whether to include something and no past knowledge applies, skip it.
-  PROMPT
-  local_tools: [FetchLatestNewsletter],
-  model: "claude-haiku-4-5-20251001",
-  learn: true,
-  learn_domain: "newsletter curation"
-)
-
-puts "Fetching and summarizing the latest RoboRuby newsletter..."
-puts "-" * 60
+puts "#{pending.size} unprocessed (#{state.count} already done). Saving oldest-first."
 puts
 
-result = robot.run("Fetch the latest newsletter and give me your summary.")
+pending.each_with_index do |item, idx|
+  filename = output_filename(item[:channel_name], item[:published_at])
+  filepath = File.join(CLIPPINGS_DIR, filename)
 
-puts result.reply
+  print "[#{idx + 1}/#{pending.size}] #{item[:title]} (#{item[:published_at].strftime("%Y-%m-%d")})... "
+
+  body     = html_to_markdown(item[:html])
+  content  = wrap_with_frontmatter(
+    title:    item[:title],
+    url:      item[:url],
+    pub_date: item[:pub_date],
+    body:     body
+  )
+
+  File.write(filepath, content)
+  state.mark_processed(item[:url])
+
+  puts "saved → #{filename}"
+end
+
 puts
-puts "-" * 60
-puts "Done."
+puts "Done. #{pending.size} issue(s) saved to #{CLIPPINGS_DIR}"

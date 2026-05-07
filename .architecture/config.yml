@@ -1,0 +1,8 @@
+project_name: RobotLab
+version: 0.0.5
+review_schedule: quarterly
+pragmatic_mode:
+  enabled: true
+  applies_to:
+    - reviews
+    - adrs
