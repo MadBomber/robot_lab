@@ -2557,7 +2557,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     robot = build_robot(name: "bot")
     robot.instance_variable_set(:@pending_agent_skills, [])
-    robot.instance_variable_set(:@agent_skill_store, RobotLab::DocumentStore.new)
+    robot.instance_variable_set(:@agent_skill_store, FakeSkillStore.new)
 
     robot.send(:expand_skills_with_catalog, [:test_skill], Set.new, catalog)
 
@@ -2598,7 +2598,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     robot = build_robot(name: "bot", system_prompt: "You are helpful.")
     robot.instance_variable_set(:@pending_agent_skills, [skill])
-    store = RobotLab::DocumentStore.new
+    store = FakeSkillStore.new
     store.store(skill.name.to_sym, skill.description)
     robot.instance_variable_set(:@agent_skill_store, store)
 

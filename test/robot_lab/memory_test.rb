@@ -959,6 +959,131 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal %w[first second], received
   end
 
+  # =========================================================================
+  # Notification drainer concurrency — regression tests for the
+  # double-schedule race in drain_notification_queue's ensure block.
+  #
+  # The bug: ensure sets @drainer_scheduled = false BEFORE dispatching the
+  # reschedule.  A concurrent writer can see the false flag and dispatch its
+  # own drainer, while the rescheduled drainer is also dispatched — two
+  # drainers run simultaneously.
+  # =========================================================================
+
+  # Subclass that counts concurrent drainer invocations.
+  # max_concurrent_drainers > 1 means the double-schedule race fired.
+  class InstrumentedMemory < RobotLab::Memory
+    attr_reader :max_concurrent_drainers, :total_drainer_invocations
+
+    def initialize(...)
+      super
+      @active_drainers        = 0
+      @max_concurrent_drainers = 0
+      @total_drainer_invocations = 0
+      @track_mutex            = Mutex.new
+    end
+
+    private
+
+    def drain_notification_queue
+      @track_mutex.synchronize do
+        @active_drainers        += 1
+        @total_drainer_invocations += 1
+        if @active_drainers > @max_concurrent_drainers
+          @max_concurrent_drainers = @active_drainers
+        end
+      end
+      # Yield the GVL while the drainer is active so other threads have a
+      # real opportunity to enter drain_notification_queue concurrently.
+      Thread.pass
+      super
+    ensure
+      @track_mutex.synchronize { @active_drainers -= 1 }
+    end
+  end
+
+  def test_drainer_never_runs_concurrently_with_itself
+    # NOTE: dispatch_async runs synchronously outside an Async reactor, so
+    # this test cannot trigger the double-schedule race directly.  It validates
+    # the scheduling invariant (max 1 drainer at a time) and serves as a
+    # regression anchor that will catch regressions visible in the sync path.
+    # The race is fixed in the ensure block: @drainer_scheduled stays true
+    # when rescheduling so concurrent writers don't also spawn a drainer.
+    memory = InstrumentedMemory.new
+    count  = 0
+    mu     = Mutex.new
+
+    memory.subscribe(:k) do |_|
+      Thread.pass  # yield GVL mid-callback, widening the race window
+      mu.synchronize { count += 1 }
+    end
+
+    threads = 30.times.map { |i| Thread.new { memory.set(:k, i) } }
+    threads.each(&:join)
+
+    wait_until(timeout: 3) { mu.synchronize { count } == 30 }
+
+    assert_equal 30, mu.synchronize { count },
+      "Expected 30 notifications but received #{mu.synchronize { count }}"
+
+    assert_equal 1, memory.max_concurrent_drainers,
+      "Double-schedule race detected: #{memory.max_concurrent_drainers} " \
+      "drainers ran concurrently (total invocations: #{memory.total_drainer_invocations})"
+  end
+
+  def test_concurrent_writes_from_many_threads_all_notifications_delivered
+    count = 0
+    mu    = Mutex.new
+    n     = 40
+
+    @memory.subscribe(:concurrent) { |_| mu.synchronize { count += 1 } }
+
+    threads = n.times.map { |i| Thread.new { @memory.set(:concurrent, i) } }
+    threads.each(&:join)
+
+    wait_until(timeout: 3) { mu.synchronize { count } == n }
+    assert_equal n, mu.synchronize { count },
+      "Expected #{n} notifications, got #{mu.synchronize { count }}"
+  end
+
+  def test_writes_interleaved_with_drainer_reset_none_lost
+    # Stresses the specific race window: a write arrives just as the drainer
+    # is completing (its ensure block runs).  The new write must still be
+    # delivered even if @drainer_scheduled briefly appears false.
+    received = []
+    mu       = Mutex.new
+    total    = 0
+
+    @memory.subscribe(:interleave) { |change| mu.synchronize { received << change.value } }
+
+    10.times do |batch|
+      3.times { |i| @memory.set(:interleave, batch * 3 + i) }
+      total += 3
+      sleep 0.002  # small gap — lets the drainer finish between batches
+    end
+
+    wait_until(timeout: 3) { mu.synchronize { received.size } == total }
+    assert_equal total, mu.synchronize { received.size },
+      "Expected #{total} notifications, got #{mu.synchronize { received.size }}"
+  end
+
+  def test_no_notification_lost_after_long_idle_then_burst
+    # After the memory has been idle long enough for the drainer flag to
+    # fully reset, a burst of writes must all be delivered.
+    received = []
+    mu       = Mutex.new
+    n        = 20
+
+    @memory.subscribe(:burst) { |change| mu.synchronize { received << change.value } }
+
+    # Idle period — let any in-flight async fiber finish
+    sleep 0.05
+
+    n.times { |i| @memory.set(:burst, i) }
+
+    wait_until(timeout: 3) { mu.synchronize { received.size } == n }
+    assert_equal n, mu.synchronize { received.size }
+  end
+
   private
 
   def mock_robot_result(robot_name)

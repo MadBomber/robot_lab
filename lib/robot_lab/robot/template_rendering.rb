@@ -183,7 +183,12 @@ module RobotLab
           # Check catalog first: AgentSkills folder format takes priority
           if (agent_skill = catalog.find(skill_id))
             @pending_agent_skills ||= []
-            @agent_skill_store    ||= DocumentStore.new
+            unless defined?(RobotLab::DocumentStore)
+              raise LoadError,
+                    "robot_lab-document_store is required to use AgentSkill catalogs. " \
+                    "Add `gem 'robot_lab-document_store'` to your Gemfile."
+            end
+            @agent_skill_store ||= RobotLab::DocumentStore.new
             @pending_agent_skills << agent_skill
             @agent_skill_store.store(agent_skill.name.to_sym, agent_skill.description)
             next

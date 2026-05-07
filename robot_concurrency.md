@@ -12,9 +12,9 @@ RobotLab uses `async (~> 2.0)`, which is exactly the fiber-based scheduler the a
 
 The article is clear: Ractors in Ruby 4.0 are still experimental and practically incompatible with gems that use global state. RobotLab's dependencies (`ruby_llm`, `prompt_manager`, `zeitwerk`) almost certainly use global state. Worth auditing whether the new Ractor code hits `Ractor::IsolationError` under realistic load. The article's recommendation: **use Processes** for CPU parallelism if Rails-style gems are involved.
 
-### 3. The `Waiter` Class May Be Misfit in Fiber Context
+### 3. ~~The `Waiter` Class May Be Misfit in Fiber Context~~ — RESOLVED
 
-`lib/robot_lab/waiter.rb` uses a condition variable (thread primitive) for blocking gets on `Memory`. Inside an `Async` reactor, blocking a fiber with a condition variable stalls the entire reactor thread. The fiber-native equivalent is `Async::Condition` or `Async::Semaphore`. If `Memory#get(wait:)` is ever called from within an `Async` block, this is a latent deadlock risk.
+`lib/robot_lab/waiter.rb` was updated to use `IO.pipe` + `IO.select` instead of `ConditionVariable`. `IO.select` is hooked by the Ruby 3.1+ fiber scheduler protocol, so it correctly yields to the Async scheduler when called from within an Async task, and correctly blocks the calling thread when used outside one. `Async::Condition` was considered but rejected: it only works inside an Async block, whereas `Memory` is intentionally usable from both plain threads and Async fibers.
 
 ### 4. Parallel Network Execution — Check the Primitive
 

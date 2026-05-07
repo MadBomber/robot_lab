@@ -22,6 +22,21 @@ ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.expand_path('../examples/prompts', __dir
 
 require 'robot_lab'
 require 'simple_flow'   # ensure SimpleFlow is loaded regardless of test order
+require 'robot_lab/document_store' rescue LoadError  # optional extension gem
+
+# Minimal in-memory store that satisfies the DocumentStore interface used by
+# AgentSkillMatching without requiring the extension gem or fastembed.
+# Use this in core tests that exercise inject/restore/expand logic but don't
+# need real semantic scores — semantic scoring tests belong in robot_lab-document_store.
+class FakeSkillStore
+  def initialize = (@docs = {})
+  def store(key, text) = @docs[key.to_sym] = text and self
+  def search(query, limit: 5)
+    @docs.first(limit).map { |key, text| { key: key, text: text, score: 0.9 } }
+  end
+  def size = @docs.size
+  def empty? = @docs.empty?
+end
 require 'minitest/autorun'
 
 # Set dummy API key so RubyLLM model resolution doesn't fail in unit tests

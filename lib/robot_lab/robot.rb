@@ -134,6 +134,7 @@ module RobotLab
       stop: nil,
       max_tool_rounds: nil,
       token_budget: nil,
+      doom_loop_threshold: nil,
       mcp_discovery: false,
       config: nil,
       learn: false,
@@ -161,7 +162,8 @@ module RobotLab
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
-        max_tool_rounds: max_tool_rounds, token_budget: token_budget
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        doom_loop_threshold: doom_loop_threshold
       }.compact
 
       # Only include mcp/tools if explicitly set (not the default :none sentinel)
@@ -363,6 +365,7 @@ module RobotLab
 
         # Install circuit breaker for this run if max_tool_rounds is configured
         install_circuit_breaker if @config.max_tool_rounds
+        install_doom_loop_detection
 
         # Delegate to Agent's ask (which calls @chat.ask)
         ask_kwargs = kwargs.slice(:with)
@@ -380,6 +383,7 @@ module RobotLab
 
         result
       ensure
+        remove_doom_loop_detection
         restore_tool_call_callback if @config.max_tool_rounds
         run_reflector if @durable_store
         run_memory.current_writer = previous_writer
@@ -526,10 +530,10 @@ module RobotLab
     def clear_messages(keep_system: true)
       if keep_system
         system_msg = @chat.messages.find { |m| m.role == :system }
-        @chat.instance_variable_set(:@messages, [])
+        @chat.reset_messages!
         @chat.add_message(system_msg) if system_msg
       else
-        @chat.instance_variable_set(:@messages, [])
+        @chat.reset_messages!
       end
       self
     end
@@ -539,7 +543,8 @@ module RobotLab
     # @param messages [Array<RubyLLM::Message>] the messages to restore
     # @return [self]
     def replace_messages(messages)
-      @chat.instance_variable_set(:@messages, messages)
+      @chat.reset_messages!
+      messages.each { |m| @chat.add_message(m) }
       self
     end
 
@@ -839,6 +844,39 @@ module RobotLab
       "#{learning_block}#{message}"
     end
 
+
+    # Install per-run doom loop detection on @chat's execute_tool.
+    # Tracks tool call names; when a consecutive or cyclic repetition exceeds
+    # the threshold, embeds a self-correction warning in the tool result so the
+    # LLM can change strategy without requiring an external circuit breaker.
+    def install_doom_loop_detection
+      threshold = @config.doom_loop_threshold || DoomLoopDetector::DEFAULT_THRESHOLD
+      detector = DoomLoopDetector.new(threshold: threshold)
+
+      @chat.define_singleton_method(:execute_tool) do |tool_call|
+        result = super(tool_call)
+        detector.track(tool_call.name)
+
+        if detector.doom_loop?
+          warning = detector.warning_message
+          detector.reset
+          case result
+          when RubyLLM::Tool::Halt then result
+          when Hash                then result.merge(_doom_loop_warning: warning)
+          when String              then "#{result}\n\n⚠️ #{warning}"
+          else                          result
+          end
+        else
+          result
+        end
+      end
+    end
+
+    # Remove the doom loop detection singleton method from @chat.
+    def remove_doom_loop_detection
+      sc = @chat.singleton_class
+      sc.remove_method(:execute_tool) if sc.method_defined?(:execute_tool)
+    end
 
     # Install a per-run circuit breaker on the chat's on_tool_call hook.
     # Raises ToolLoopError if tool calls exceed @config.max_tool_rounds.

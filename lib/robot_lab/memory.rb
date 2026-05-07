@@ -877,8 +877,15 @@ module RobotLab
       end
     ensure
       reschedule = @notification_queue_mutex.synchronize do
-        @drainer_scheduled = false
-        !@notification_queue.empty?
+        if !@notification_queue.empty?
+          # Keep the flag set so concurrent writers don't also spawn a drainer.
+          # Only we will reschedule — no double-schedule race.
+          @drainer_scheduled = true
+          true
+        else
+          @drainer_scheduled = false
+          false
+        end
       end
       dispatch_async { drain_notification_queue } if reschedule
     end
