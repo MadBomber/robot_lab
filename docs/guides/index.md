@@ -42,20 +42,6 @@ If you're new to RobotLab, start here:
 
     Token tracking, circuit breakers, and learning accumulation
 
--   [:material-cpu-64-bit: **Ractor Parallelism**](ractor-parallelism.md)
-
-    True CPU parallelism for tools and robot pipelines via Ruby Ractors
-
-</div>
-
-## Framework Integration
-
-<div class="grid cards" markdown>
-
--   [:material-language-ruby:{ .lg } **Rails Integration**](rails-integration.md)
-
-    Use RobotLab in Ruby on Rails applications
-
 </div>
 
 ## Guide Index
@@ -68,6 +54,15 @@ If you're new to RobotLab, start here:
 | [MCP Integration](mcp-integration.md) | External tool servers | 10 min |
 | [Streaming](streaming.md) | Real-time responses | 5 min |
 | [Memory](memory.md) | Shared data store | 5 min |
-| [Rails Integration](rails-integration.md) | Rails application setup | 15 min |
 | [Observability & Safety](observability.md) | Token tracking, circuit breaker, learning loop | 10 min |
-| [Ractor Parallelism](ractor-parallelism.md) | CPU-parallel tools and robot pipelines | 15 min |
+
+## Extension Gems
+
+Additional capabilities are available as separate gems:
+
+| Gem | Description | Docs |
+|-----|-------------|------|
+| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails generators, background jobs, Turbo Stream broadcasting | [Rails Integration guide](https://github.com/MadBomber/robot_lab-rails/blob/main/docs/guides/rails-integration.md) |
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | True CPU parallelism for tools and robot pipelines via Ruby Ractors | [Ractor Parallelism guide](https://github.com/MadBomber/robot_lab-ractor/blob/main/docs/guides/ractor-parallelism.md) |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence with YAML-backed storage | [robot_lab-durable README](https://github.com/MadBomber/robot_lab-durable) |
+| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | Embedding-based semantic document search via fastembed | [robot_lab-document_store README](https://github.com/MadBomber/robot_lab-document_store) |

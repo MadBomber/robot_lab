@@ -116,15 +116,18 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: Configuration](getting-started/configuration.md)
 
--   :material-train-car-container:{ .lg .middle } **Rails Integration**
-
-    ---
-
-    Generators, background jobs, and Turbo Stream token broadcasting for real-time streaming to the browser.
-
-    [:octicons-arrow-right-24: Rails Guide](guides/rails-integration.md)
-
 </div>
+
+## Extension Gems
+
+These optional gems extend RobotLab with additional capabilities:
+
+| Gem | What it adds |
+|-----|-------------|
+| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` base class, Turbo Stream broadcasting |
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism for `ractor_safe` tools and robot networks via Ruby Ractors |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence — robots accumulate and recall learned facts |
+| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | Embedding-based semantic document search powered by fastembed |
 
 ## Quick Example
 

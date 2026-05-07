@@ -14,9 +14,10 @@ These examples show how to use RobotLab for common scenarios, from simple chatbo
 | [Multi-Robot Network](multi-robot-network.md) | Customer service with routing |
 | [Tool Usage](tool-usage.md) | External API integration |
 | [MCP Server](mcp-server.md) | Creating an MCP tool server |
-| [Rails Application](rails-application.md) | Full Rails integration |
 | [Message Bus](#message-bus) | Bidirectional robot communication with convergence |
 | [Spawning Robots](#spawning-robots) | Dynamic specialist creation at runtime |
+
+> **Rails example** — see [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails/blob/main/docs/examples/rails-application.md) for a full Rails integration example.
 
 ## Quick Links
 
