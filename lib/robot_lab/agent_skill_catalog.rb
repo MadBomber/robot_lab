@@ -67,7 +67,7 @@ module RobotLab
         begin
           skill = AgentSkill.new(skill_file)
           @skills[skill.name.to_sym] = skill
-        rescue ConfigurationError => e
+        rescue ConfigurationError, Psych::SyntaxError => e
           RobotLab.config.logger.warn("AgentSkillCatalog: #{e.message}, skipping #{dir.basename}")
         end
       end

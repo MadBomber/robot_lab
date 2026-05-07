@@ -2548,4 +2548,29 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_raises(RobotLab::DelegationFuture::DelegationTimeout) { future.value(timeout: 0.05) }
   end
+
+
+  # Private method: expand_skills_with_catalog
+  def test_expand_skills_stores_agent_skill_in_pending_when_catalog_hit
+    fixtures = File.expand_path("../fixtures/skills", __dir__)
+    catalog  = RobotLab::AgentSkillCatalog.new(fixtures)
+
+    robot = build_robot(name: "bot")
+    robot.instance_variable_set(:@pending_agent_skills, [])
+    robot.instance_variable_set(:@agent_skill_store, RobotLab::DocumentStore.new)
+
+    robot.send(:expand_skills_with_catalog, [:test_skill], Set.new, catalog)
+
+    pending = robot.instance_variable_get(:@pending_agent_skills)
+    assert_equal 1, pending.length
+    assert_equal "test_skill", pending.first.name
+  end
+
+
+  def test_expand_skills_uses_pm_template_when_not_in_catalog
+    robot  = build_robot(name: "bot")
+    # Use a test-specific PM template that is not present in the AgentSkills catalog
+    result = robot.send(:expand_skills, [:skill_leaf_test], Set.new)
+    assert_includes result, :skill_leaf_test
+  end
 end

@@ -145,12 +145,27 @@ module RobotLab
 
 
       # Recursively expand skill IDs depth-first.
+      # Checks AgentSkillCatalog first; falls back to PM template lookup.
       # Returns a flat Array<Symbol> in processing order (deepest first).
       #
       # @param skill_ids [Array<Symbol>] skill IDs to expand
       # @param visited [Set<Symbol>] already-visited IDs for cycle detection
       # @return [Array<Symbol>] flat ordered list of skill IDs
       def expand_skills(skill_ids, visited = Set.new)
+        expand_skills_with_catalog(skill_ids, visited, AgentSkillCatalog.instance)
+      end
+
+
+      # Recursively expand skill IDs depth-first, using the given catalog.
+      # AgentSkills folder format takes priority over PM template lookup.
+      # Catalog hits are stored in @pending_agent_skills / @agent_skill_store
+      # and are NOT included in the returned Array (they are handled separately).
+      #
+      # @param skill_ids [Array<Symbol>] skill IDs to expand
+      # @param visited [Set<Symbol>] already-visited IDs for cycle detection
+      # @param catalog [AgentSkillCatalog] catalog to check first
+      # @return [Array<Symbol>] flat ordered list of PM-based skill IDs
+      def expand_skills_with_catalog(skill_ids, visited, catalog)
         result = []
 
         skill_ids.each do |skill_id|
@@ -165,14 +180,21 @@ module RobotLab
 
           visited.add(skill_id)
 
-          # Parse the skill template and check for nested skills
+          # Check catalog first: AgentSkills folder format takes priority
+          if (agent_skill = catalog.find(skill_id))
+            @pending_agent_skills ||= []
+            @agent_skill_store    ||= DocumentStore.new
+            @pending_agent_skills << agent_skill
+            @agent_skill_store.store(agent_skill.name.to_sym, agent_skill.description)
+            next
+          end
+
+          # Fall back to PM template (existing behavior)
           parsed = PM.parse(skill_id)
           nested = extract_skills_from_metadata(parsed.metadata)
 
-          # Recurse on nested skills first (depth-first)
-          result.concat(expand_skills(nested, visited)) if nested.any?
+          result.concat(expand_skills_with_catalog(nested, visited, catalog)) if nested.any?
 
-          # Then append this skill
           result << skill_id
         end
 
