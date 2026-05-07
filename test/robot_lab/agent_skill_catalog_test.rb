@@ -9,6 +9,10 @@ class RobotLab::AgentSkillCatalogTest < Minitest::Test
     @catalog = RobotLab::AgentSkillCatalog.new(FIXTURES)
   end
 
+  def teardown
+    RobotLab::AgentSkillCatalog.reset!
+  end
+
   def test_find_returns_agent_skill_by_symbol
     skill = @catalog.find(:test_skill)
     refute_nil skill

@@ -27,6 +27,12 @@ class RobotLab::AgentSkillTest < Minitest::Test
     end
   end
 
+  def test_raises_configuration_error_when_name_missing
+    assert_raises(RobotLab::ConfigurationError) do
+      RobotLab::AgentSkill.new(FIXTURES.join("no_name_skill", "SKILL.md"))
+    end
+  end
+
   def test_scripts_returns_empty_when_no_scripts_directory
     skill = RobotLab::AgentSkill.new(FIXTURES.join("test_skill", "SKILL.md"))
     assert_equal [], skill.scripts

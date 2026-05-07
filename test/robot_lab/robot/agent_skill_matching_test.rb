@@ -86,6 +86,20 @@ module RobotLab
         assert_equal "You are helpful.", system_instructions(robot)
       end
 
+      def test_rerender_template_preserves_injected_skill_instructions
+        robot = robot_with_pending_skills(:test_skill)
+        skill = skill_for(:test_skill)
+
+        robot.send(:inject_agent_skills, [skill])
+
+        # Simulate rerender_template being called during a run() with runtime kwargs
+        robot.send(:rerender_template, {})
+
+        instructions = system_instructions(robot)
+        assert_includes instructions, skill.instructions,
+          "Expected skill instructions to survive rerender_template"
+      end
+
       def test_match_degrades_gracefully_on_embedding_failure
         robot = build_robot(name: "bot")
         broken_store = Object.new

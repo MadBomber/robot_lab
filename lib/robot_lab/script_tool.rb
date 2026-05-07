@@ -2,6 +2,7 @@
 
 require 'open3'
 require 'pathname'
+require 'shellwords'
 
 module RobotLab
   # Factory module for wrapping AgentSkills scripts as RobotLab::Tool instances.
@@ -40,7 +41,7 @@ module RobotLab
         }
       ) do |tool_args|
         cli_args = tool_args[:args].to_s.strip
-        cmd      = cli_args.empty? ? ['bash', script] : ['bash', script, *cli_args.split]
+        cmd      = cli_args.empty? ? ['bash', script] : ['bash', script, *Shellwords.split(cli_args)]
         output, status = Open3.capture2e(*cmd)
         status.success? ? output : "Error (exit #{status.exitstatus}):\n#{output}"
       end

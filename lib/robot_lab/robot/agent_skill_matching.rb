@@ -12,24 +12,11 @@ module RobotLab
       SIMILARITY_THRESHOLD = 0.70
 
       def run(message = nil, **kwargs, &block)
-        @_active_agent_skills = match_agent_skills(message.to_s)
-
-        if @_active_agent_skills.any?
-          @_agent_skill_original_instructions = current_agent_skill_instructions
-          prepend_skill_instructions(@_active_agent_skills)
-          @_agent_skill_injected_tools = @_active_agent_skills.flat_map(&:script_tools).compact
-          @local_tools = @local_tools + @_agent_skill_injected_tools
-        end
-
+        matched = match_agent_skills(message.to_s)
+        inject_agent_skills(matched) if matched.any?
         super(message, **kwargs, &block)
       ensure
-        if @_active_agent_skills&.any?
-          @local_tools = @local_tools - (@_agent_skill_injected_tools || [])
-          @chat.with_instructions(@_agent_skill_original_instructions.to_s)
-        end
-        @_active_agent_skills               = nil
-        @_agent_skill_original_instructions = nil
-        @_agent_skill_injected_tools        = nil
+        restore_after_agent_skills if @_active_agent_skills&.any?
       end
 
       # Override to re-inject skill instructions after template re-render replaces
@@ -77,6 +64,8 @@ module RobotLab
       #
       # @param skills [Array<AgentSkill>]
       def inject_agent_skills(skills)
+        return if skills.empty?
+
         @_active_agent_skills               = skills
         @_agent_skill_original_instructions = current_agent_skill_instructions
         prepend_skill_instructions(skills)
