@@ -44,7 +44,6 @@ class RobotLab::AgentSkillTest < Minitest::Test
   end
 
   def test_script_tools_wraps_executable_scripts
-    skip "ScriptTool not yet implemented" unless defined?(RobotLab::ScriptTool)
     skill = RobotLab::AgentSkill.new(FIXTURES.join("scripted_skill", "SKILL.md"))
     tools = skill.script_tools
     assert_equal 1, tools.length
