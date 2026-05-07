@@ -1156,14 +1156,14 @@
   
   
     <li class="md-nav__item">
-      <a href="guides/rails-integration/" class="md-nav__link">
+      <a href="guides/observability/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Rails Integration
+    Observability & Safety
   
 
     
@@ -1184,14 +1184,14 @@
   
   
     <li class="md-nav__item">
-      <a href="guides/ractor-parallelism/" class="md-nav__link">
+      <a href="guides/knowledge/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ractor Parallelism
+    Knowledge Search
   
 
     
@@ -2025,8 +2025,6 @@
       
         
       
-        
-      
     
     
     
@@ -2191,34 +2189,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="examples/rails-application/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rails Application
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2259,6 +2229,17 @@
     <span class="md-ellipsis">
       
         Key Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-gems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension Gems
       
     </span>
   </a>
@@ -2452,14 +2433,36 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 <p>Cascading config from YAML files, environment variables, and <code>RunConfig</code> objects that flow through the network-robot hierarchy.</p>
 <p><a href="getting-started/configuration/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Configuration</a></p>
 </li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M1 6v11h1a2 2 0 1 0 4 0h12a2 2 0 1 0 4 0h1V6zm20 9h-2V9h-2v6h-2V9h-2v6h-2V9H9v6H7V9H5v6H3V8h18z"/></svg></span> <strong>Rails Integration</strong></p>
-<hr />
-<p>Generators, background jobs, and Turbo Stream token broadcasting for real-time streaming to the browser.</p>
-<p><a href="guides/rails-integration/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Rails Guide</a></p>
-</li>
 </ul>
 </div>
+<h2 id="extension-gems">Extension Gems<a class="headerlink" href="#extension-gems" title="Permanent link">&para;</a></h2>
+<p>These optional gems extend RobotLab with additional capabilities:</p>
+<table>
+<thead>
+<tr>
+<th>Gem</th>
+<th>What it adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/MadBomber/robot_lab-rails">robot_lab-rails</a></td>
+<td>Rails Engine, generators, <code>RobotLab::Job</code> base class, Turbo Stream broadcasting</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MadBomber/robot_lab-ractor">robot_lab-ractor</a></td>
+<td>CPU parallelism for <code>ractor_safe</code> tools and robot networks via Ruby Ractors</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MadBomber/robot_lab-durable">robot_lab-durable</a></td>
+<td>Cross-session knowledge persistence — robots accumulate and recall learned facts</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MadBomber/robot_lab-document_store">robot_lab-document_store</a></td>
+<td>Embedding-based semantic document search powered by fastembed</td>
+</tr>
+</tbody>
+</table>
 <h2 id="quick-example">Quick Example<a class="headerlink" href="#quick-example" title="Permanent link">&para;</a></h2>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>

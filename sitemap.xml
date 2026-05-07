@@ -133,10 +133,6 @@
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/robot_lab/examples/rails-application/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
          <loc>https://madbomber.github.io/robot_lab/examples/tool-usage/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
@@ -185,14 +181,6 @@
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/robot_lab/guides/ractor-parallelism/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
-         <loc>https://madbomber.github.io/robot_lab/guides/rails-integration/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
          <loc>https://madbomber.github.io/robot_lab/guides/streaming/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
@@ -201,27 +189,11 @@
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/robot_lab/superpowers/plans/2026-04-14-ractor-integration/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
          <loc>https://madbomber.github.io/robot_lab/superpowers/plans/2026-05-06-agentskills/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/robot_lab/superpowers/plans/2026-05-06-durable-learning/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
-         <loc>https://madbomber.github.io/robot_lab/superpowers/specs/2026-04-14-ractor-integration-design/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
          <loc>https://madbomber.github.io/robot_lab/superpowers/specs/2026-05-06-agentskills-design/</loc>
-         <lastmod>2026-05-07</lastmod>
-    </url>
-    <url>
-         <loc>https://madbomber.github.io/robot_lab/superpowers/specs/2026-05-06-durable-learning-design/</loc>
          <lastmod>2026-05-07</lastmod>
     </url>
 </urlset>
