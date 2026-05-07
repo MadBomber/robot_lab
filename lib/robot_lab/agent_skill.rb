@@ -21,13 +21,13 @@ module RobotLab
       @name        = front_matter["name"]
       @description = front_matter["description"]
 
-      raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'name'"        unless @name
-      raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'description'" unless @description
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'name'"        if @name.to_s.strip.empty?
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'description'" if @description.to_s.strip.empty?
     end
 
     # Full instruction text from the SKILL.md body (below the front matter).
     def instructions
-      @_body.strip
+      @instructions ||= @_body.strip
     end
 
     # Pathnames of all files inside the scripts/ subdirectory, sorted.
@@ -53,7 +53,8 @@ module RobotLab
       if content.start_with?("---\n")
         parts = content.split(/^---\s*$/, 3)
         if parts.length >= 3
-          front_matter = YAML.safe_load(parts[1]) || {}
+          fm = YAML.safe_load(parts[1])
+          front_matter = fm.is_a?(Hash) ? fm : {}
           return [front_matter, parts[2]]
         end
       end
