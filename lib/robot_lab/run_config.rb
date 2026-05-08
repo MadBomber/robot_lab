@@ -41,13 +41,14 @@ module RobotLab
     CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content].freeze
 
     # Infrastructure fields
-    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots doom_loop_threshold].freeze
+    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots doom_loop_threshold auto_compact compact_threshold].freeze
 
     # All recognized fields
     FIELDS = (LLM_FIELDS + TOOL_FIELDS + CALLBACK_FIELDS + INFRA_FIELDS).freeze
 
     # Fields that cannot be serialized to JSON (Procs, IO objects, etc.)
-    NON_SERIALIZABLE_FIELDS = (CALLBACK_FIELDS + %i[bus]).freeze
+    # auto_compact is excluded because it may be a Proc.
+    NON_SERIALIZABLE_FIELDS = (CALLBACK_FIELDS + %i[bus auto_compact]).freeze
 
     # Creates a new RunConfig.
     #

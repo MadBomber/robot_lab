@@ -2622,4 +2622,98 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.send(:expand_skills_with_catalog, [:skill_leaf_test], Set.new, catalog)
     assert_includes result, :skill_leaf_test
   end
+
+
+  # ── auto_compact ─────────────────────────────────────────────
+
+  def test_maybe_compact_skips_when_none
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: :none))
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+
+  def test_maybe_compact_skips_when_nil
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi")
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+
+  def test_maybe_compact_skips_when_no_messages
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: :context_window))
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+
+  def test_maybe_compact_calls_proc_with_robot
+    received = nil
+    my_proc  = ->(r) { received = r }
+    robot    = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: my_proc))
+    fake_msg = Struct.new(:content).new("hello world")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:maybe_compact)
+    assert_same robot, received
+  end
+
+
+  def test_maybe_compact_proc_owns_compaction_decision
+    call_count = 0
+    my_proc    = ->(_r) { call_count += 1 }
+    robot      = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: my_proc))
+    fake_msg   = Struct.new(:content).new("hello world")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:maybe_compact)
+    robot.send(:maybe_compact)
+    assert_equal 2, call_count
+  end
+
+
+  def test_compact_if_over_context_window_triggers_compress_when_over_threshold
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi",
+                         config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
+    robot.define_singleton_method(:compress_history) { called = true }
+    # threshold=0.0 means any non-negative token count triggers compaction
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:compact_if_over_context_window)
+    assert called
+  end
+
+
+  def test_compact_if_over_context_window_skips_when_under_threshold
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi",
+                         config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.99))
+    robot.define_singleton_method(:compress_history) { called = true }
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:compact_if_over_context_window)
+    refute called
+  end
+
+
+  def test_compact_if_over_context_window_logs_and_skips_on_dependency_error
+    log_output = StringIO.new
+    RobotLab.config.logger = Logger.new(log_output)
+
+    robot = build_robot(name: "dep-bot", system_prompt: "hi",
+                        config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
+    robot.define_singleton_method(:compress_history) { raise RobotLab::DependencyError, "classifier gem missing" }
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+
+    robot.send(:compact_if_over_context_window)
+
+    RobotLab.config.logger = Logger.new(nil)
+    assert_match(/auto_compact/, log_output.string)
+  end
 end

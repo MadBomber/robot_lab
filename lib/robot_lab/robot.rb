@@ -363,6 +363,9 @@ module RobotLab
         # Prepend accumulated learnings to the user message
         effective_message = inject_learnings(message)
 
+        # Compact conversation history if configured
+        maybe_compact
+
         # Install circuit breaker for this run if max_tool_rounds is configured
         install_circuit_breaker if @config.max_tool_rounds
         install_doom_loop_detection
@@ -876,6 +879,45 @@ module RobotLab
     def remove_doom_loop_detection
       sc = @chat.singleton_class
       sc.remove_method(:execute_tool) if sc.method_defined?(:execute_tool)
+    end
+
+    # Compact conversation history before an ask() call if auto_compact is set.
+    #
+    # :none (default) — no-op
+    # :context_window — compress when estimated tokens exceed compact_threshold
+    #                   fraction of the model's context window (default 80%)
+    # Proc            — called with self; application owns the decision and strategy
+    def maybe_compact
+      return if @chat.messages.empty?
+
+      compact = @config.auto_compact
+      return if compact.nil? || compact == :none
+
+      case compact
+      when :context_window
+        compact_if_over_context_window
+      when Proc
+        compact.call(self)
+      end
+    end
+
+    def compact_if_over_context_window
+      threshold     = (@config.compact_threshold || 0.80).to_f
+      estimated_tok = @chat.messages.sum { |m| m.content.to_s.length } / 4
+
+      window = begin
+        RubyLLM.models.find(model)&.context_window || 200_000
+      rescue StandardError
+        200_000
+      end
+
+      return if estimated_tok < window * threshold
+
+      begin
+        compress_history
+      rescue DependencyError => e
+        RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
+      end
     end
 
     # Install a per-run circuit breaker on the chat's on_tool_call hook.

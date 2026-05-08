@@ -444,4 +444,54 @@ class RobotLab::RunConfigTest < Minitest::Test
     assert_includes RobotLab::RunConfig::INFRA_FIELDS, :max_concurrent_robots
     assert_includes RobotLab::RunConfig::FIELDS, :max_concurrent_robots
   end
+
+  def test_auto_compact_none_by_default
+    config = RobotLab::RunConfig.new
+    assert_nil config.auto_compact
+  end
+
+  def test_auto_compact_symbol
+    config = RobotLab::RunConfig.new(auto_compact: :context_window)
+    assert_equal :context_window, config.auto_compact
+  end
+
+  def test_auto_compact_proc
+    my_proc = ->(robot) { robot.clear_messages }
+    config = RobotLab::RunConfig.new(auto_compact: my_proc)
+    assert_equal my_proc, config.auto_compact
+  end
+
+  def test_compact_threshold_field
+    config = RobotLab::RunConfig.new(compact_threshold: 0.75)
+    assert_in_delta 0.75, config.compact_threshold
+  end
+
+  def test_auto_compact_in_infra_fields
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :auto_compact
+    assert_includes RobotLab::RunConfig::FIELDS, :auto_compact
+  end
+
+  def test_compact_threshold_in_infra_fields
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :compact_threshold
+    assert_includes RobotLab::RunConfig::FIELDS, :compact_threshold
+  end
+
+  def test_auto_compact_excluded_from_json_hash
+    my_proc = ->(robot) {}
+    config = RobotLab::RunConfig.new(auto_compact: my_proc)
+    refute config.to_json_hash.key?(:auto_compact)
+  end
+
+  def test_auto_compact_included_in_to_h
+    my_proc = ->(robot) {}
+    config = RobotLab::RunConfig.new(auto_compact: my_proc)
+    assert config.to_h.key?(:auto_compact)
+  end
+
+  def test_auto_compact_merges_correctly
+    base     = RobotLab::RunConfig.new(auto_compact: :none)
+    override = RobotLab::RunConfig.new(auto_compact: :context_window)
+    merged   = base.merge(override)
+    assert_equal :context_window, merged.auto_compact
+  end
 end
