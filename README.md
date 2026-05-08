@@ -677,6 +677,67 @@ robot.clear_messages   # flushes broken history; system prompt is kept
 result = robot.run("Something new.")  # robot is healthy again
 ```
 
+## Doom Loop Detection
+
+Doom loop detection catches the subtler failure mode where a robot repeats the same tool call pattern indefinitely — not hitting `max_tool_rounds`, but cycling through the same sequence over and over. Set `doom_loop_threshold:` to enable it:
+
+```ruby
+robot = RobotLab.build(
+  name: "runner",
+  system_prompt: "Execute steps.",
+  local_tools: [StepTool],
+  doom_loop_threshold: 3   # alert after 3 identical consecutive or cyclic sequences
+)
+```
+
+When a doom loop is detected, a warning is embedded directly into the tool result, prompting the LLM to try a different approach. Detection covers both consecutive repetition (`A,A,A`) and cyclic patterns (`A,B,C,A,B,C`). Via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(doom_loop_threshold: 3)
+robot  = RobotLab.build(name: "runner", system_prompt: "...", config: config)
+```
+
+## Automatic Context Compaction
+
+`auto_compact` triggers context window compression automatically before each `run()`, preventing context overflow without manual intervention.
+
+```ruby
+# Built-in trigger: compact when estimated token usage exceeds 80% of context window
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: :context_window
+)
+
+# Tune the threshold (here: compact at 70%)
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact:      :context_window,
+  compact_threshold: 0.70
+)
+
+# Application-owned compaction: full control over when and how
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: ->(r) { r.compress_history(recent_turns: 5) if r.chat.messages.size > 40 }
+)
+```
+
+| Value | Behaviour |
+|-------|-----------|
+| `nil` / `:none` | No automatic compaction (default) |
+| `:context_window` | Compact when estimated token usage exceeds `compact_threshold` fraction of model's context window |
+| `Proc` | Called with the robot before each `run()`; application decides when and how to compact |
+
+`compact_threshold` defaults to `0.80` (80%). Requires the `classifier` gem when using the built-in `:context_window` strategy. Via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.75)
+robot  = RobotLab.build(name: "analyst", system_prompt: "...", config: config)
+```
+
 ## Learning Accumulation
 
 `robot.learn(text)` records a cross-run observation. On each subsequent `run()`, active learnings are automatically prepended to the user message as a `LEARNINGS FROM PREVIOUS RUNS:` block so the LLM can incorporate prior context without needing a persistent chat:
@@ -691,6 +752,17 @@ reviewer.run("Review snippet A")
 reviewer.learn("This codebase prefers map/collect over manual array accumulation")
 
 reviewer.run("Review snippet B")  # learning is injected automatically
+```
+
+Pass `learn: true` in the constructor to enable automatic end-of-session learning promotion via the `robot_lab-durable` gem:
+
+```ruby
+reviewer = RobotLab.build(
+  name: "reviewer",
+  system_prompt: "You are a Ruby code reviewer.",
+  learn: true,
+  learn_domain: "ruby_review"
+)
 ```
 
 Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot's `Memory` and survive a robot rebuild when the same `Memory` object is reused.
@@ -806,6 +878,7 @@ RobotLab's optional capabilities are packaged as separate gems:
 | [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` ActiveJob base with Turbo Stream broadcasting |
 | [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence via YAML-backed durable store |
 | [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | In-memory vector store with fastembed embeddings for semantic search / RAG |
+| [robot_lab-acp](https://github.com/MadBomber/robot_lab-acp) | Expose robots and networks as ACP (Agent Communication Protocol) HTTP+SSE services |
 
 ## Documentation
 

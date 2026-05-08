@@ -51,7 +51,7 @@ bundle exec rake examples:run[1]
 
 ### RunConfig
 
-- **`RunConfig`** (`lib/robot_lab/run_config.rb`): Shared configuration object for LLM, tools, callbacks, and infrastructure settings. Flows through the hierarchy: `RobotLab.config -> Network -> Robot -> Template front matter -> Task -> Runtime`. Supports keyword construction, block DSL, merge semantics (more-specific wins), and `apply_to(chat)` for LLM field application. Both Robot and Network accept `config:` parameter.
+- **`RunConfig`** (`lib/robot_lab/run_config.rb`): Shared configuration object for LLM, tools, callbacks, and infrastructure settings. Flows through the hierarchy: `RobotLab.config -> Network -> Robot -> Template front matter -> Task -> Runtime`. Supports keyword construction, block DSL, merge semantics (more-specific wins), and `apply_to(chat)` for LLM field application. Both Robot and Network accept `config:` parameter. Infrastructure fields include: `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`.
 
 ### Memory System
 

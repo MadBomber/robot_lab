@@ -4,6 +4,8 @@ Facilities that help you monitor, control, improve, and scale robot behaviour:
 
 - **Token & Cost Tracking** — measure LLM usage per run and cumulatively
 - **Tool Loop Circuit Breaker** — guard against runaway tool call loops
+- **Doom Loop Detection** — catch cyclic or repetitive tool-call patterns before they spiral
+- **Automatic Context Compaction** — prevent context overflow with configurable auto-compression
 - **Learning Accumulation** — build up cross-run observations that guide future runs
 - **Context Window Compression** — prune irrelevant history to stay within token budgets
 - **Convergence Detection** — detect when independent agents reach the same conclusion
@@ -162,6 +164,120 @@ puts result.reply  # "The result is 42."
 
 ---
 
+## Doom Loop Detection
+
+### The Problem
+
+`max_tool_rounds` stops a robot that loops forever, but it fires on quantity alone. A subtler failure is when a robot cycles through the same tool call sequence repeatedly — calling tool A, then B, then C, then A again — without hitting the round limit. This is a doom loop: the robot is working but not making progress.
+
+### doom_loop_threshold
+
+```ruby
+robot = RobotLab.build(
+  name: "runner",
+  system_prompt: "Execute all steps.",
+  local_tools: [StepTool],
+  doom_loop_threshold: 3
+)
+```
+
+Set `doom_loop_threshold:` to the number of repetitions after which the detector fires. It catches two patterns:
+
+- **Consecutive repetition** — `[A, A, A]` (same tool called N times in a row)
+- **Cyclic repetition** — `[A, B, C, A, B, C, A, B, C]` (same sequence repeated N times)
+
+When a doom loop is detected, a warning message is embedded directly in the tool result, prompting the LLM to try a fundamentally different approach. This avoids corrupting the Anthropic message format (no injected user messages between `tool_use`/`tool_result` pairs).
+
+`doom_loop_threshold` can also be supplied via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(doom_loop_threshold: 3)
+robot  = RobotLab.build(name: "runner", system_prompt: "...", config: config)
+```
+
+### Complementary to max_tool_rounds
+
+Use both together for comprehensive loop protection:
+
+```ruby
+robot = RobotLab.build(
+  name: "executor",
+  system_prompt: "Execute every step.",
+  local_tools: [StepTool],
+  max_tool_rounds:    20,   # hard ceiling on total tool calls
+  doom_loop_threshold: 3    # catches repetitive patterns early
+)
+```
+
+---
+
+## Automatic Context Compaction
+
+### The Problem
+
+Long-running robots accumulate conversation history. Eventually, the cumulative token count approaches the model's context window limit, causing API errors or degraded performance. Manually calling `compress_history` at the right moment requires application-level bookkeeping.
+
+### auto_compact
+
+Set `auto_compact:` to have the robot compress its history automatically before each `run()`:
+
+```ruby
+# Compact when estimated token usage exceeds 80% of the model's context window
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: :context_window
+)
+```
+
+### Tuning the Threshold
+
+`compact_threshold:` sets the fraction of the model's context window that triggers compaction. Defaults to `0.80` (80%):
+
+```ruby
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact:      :context_window,
+  compact_threshold: 0.70   # compact earlier, at 70%
+)
+```
+
+### Application-Owned Compaction
+
+Pass a `Proc` to take full control — the proc decides both when and how to compact:
+
+```ruby
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: ->(r) {
+    r.compress_history(recent_turns: 5) if r.chat.messages.size > 40
+  }
+)
+```
+
+The proc receives the robot instance and is called before every `run()` when messages are non-empty.
+
+### Options
+
+| Value | Behaviour |
+|-------|-----------|
+| `nil` / `:none` | No automatic compaction (default) |
+| `:context_window` | Compact when estimated token usage exceeds `compact_threshold` fraction of model's context window |
+| `Proc` | Called with the robot; application decides when and how to compact |
+
+Via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.75)
+robot  = RobotLab.build(name: "analyst", system_prompt: "...", config: config)
+```
+
+Requires the `classifier` gem (`~> 2.3`) when using `:context_window`. Without it, a `RobotLab::DependencyError` is caught and logged rather than raised, so the robot continues running uncompressed.
+
+---
+
 ## Learning Accumulation
 
 ### The Problem
@@ -237,6 +353,21 @@ end
 ```
 
 After all three runs, `reviewer.learnings` contains up to three insights (fewer if any are subsets of others).
+
+### Durable Learning (learn: Constructor Shorthand)
+
+The `robot_lab-durable` gem adds automatic end-of-session learning promotion. Enable it with `learn: true` in the constructor:
+
+```ruby
+reviewer = RobotLab.build(
+  name:         "reviewer",
+  system_prompt: "You are a Ruby code reviewer.",
+  learn:        true,
+  learn_domain: "ruby_review"   # optional namespace for the durable store
+)
+```
+
+At the end of each session, the robot reflects on its observations and promotes durable insights to a YAML-backed store that persists across process restarts. On the next run, those stored insights are automatically reloaded as learnings.
 
 ### Memory Persistence
 
@@ -484,3 +615,4 @@ puts "#{analysis.robot_name} (#{analysis.duration.round(2)}s): #{analysis.reply}
 - [Example 22 — Context Window Compression](../../examples/22_context_compression.rb)
 - [Example 23 — Convergence Detection](../../examples/23_convergence.rb)
 - [Example 24 — Structured Delegation](../../examples/24_structured_delegation.rb)
+- [RunConfig reference](../getting-started/configuration.md#runconfig-shared-operational-defaults)
