@@ -141,146 +141,43 @@ module RobotLab
       learn_domain: nil,
       store_path: nil
     )
-      @name = name.to_s
-      @name_from_constructor = (name.to_s != "robot")
-      @template = template
-      @system_prompt = system_prompt
-      @build_context = context
-      @description = description
-      @local_tools = Array(local_tools)
-      @skills = skills ? Array(skills).map(&:to_sym) : nil
-      @expanded_skills = nil
-      @pending_agent_skills = []
-      @agent_skill_store    = nil
-      @mcp_discovery = mcp_discovery
+      assign_identity_ivars(name: name, template: template, system_prompt: system_prompt,
+                            context: context, description: description, local_tools: local_tools,
+                            skills: skills, mcp_discovery: mcp_discovery)
 
-      # Build RunConfig from explicit kwargs, merged on top of passed-in config.
-      # Explicit constructor kwargs always override the shared config.
-      explicit_fields = {
+      build_effective_config(
         model: model, temperature: temperature, top_p: top_p, top_k: top_k,
         max_tokens: max_tokens, presence_penalty: presence_penalty,
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
         max_tool_rounds: max_tool_rounds, token_budget: token_budget,
-        doom_loop_threshold: doom_loop_threshold
-      }.compact
+        doom_loop_threshold: doom_loop_threshold, mcp_servers: mcp_servers,
+        mcp: mcp, tools: tools, config: config
+      )
 
-      # Only include mcp/tools if explicitly set (not the default :none sentinel)
-      resolved_mcp = mcp_servers.any? ? mcp_servers : mcp
-      explicit_fields[:mcp] = resolved_mcp unless ToolConfig.none_value?(resolved_mcp)
-      explicit_fields[:tools] = tools unless ToolConfig.none_value?(tools)
+      extract_config_ivars
+      initialize_runtime_state
+      initialize_memory
+      configure_learning(learn: learn, learn_domain: learn_domain, store_path: store_path)
 
-      explicit_config = RunConfig.new(**explicit_fields)
-      @config = config ? config.merge(explicit_config) : explicit_config
+      lab_config    = RobotLab.config
+      resolved_model = @config.model || lab_config.ruby_llm.model
+      chat_kwargs   = { model: resolved_model }
 
-      # Extract values from effective config for backward compatibility
-      @on_tool_call = @config.on_tool_call
-      @on_tool_result = @config.on_tool_result
-      @on_content = @config.on_content
-
-      # Store raw config values for hierarchical resolution
-      @mcp_config = @config.mcp || :none
-      @tools_config = @config.tools || :none
-
-      # MCP state
-      @mcp_clients = {}
-      @mcp_tools = []
-      @mcp_initialized = false
-
-      # Bus state (optional inter-robot communication)
-      @bus               = @config.bus
-      @message_counter   = 0
-      @outbox            = {}
-      @message_handler   = nil
-      @bus_poller        = nil
-      @private_bus_poller = nil
-      @bus_poller_group  = :default
-
-      # Token tracking
-      @total_input_tokens = 0
-      @total_output_tokens = 0
-
-      # Learning accumulation
-      @learnings = []
-
-      # Inherent memory (used when standalone, not in a network)
-      cache_enabled = @config.key?(:enable_cache) ? @config.enable_cache : true
-      @memory = Memory.new(enable_cache: cache_enabled)
-
-      # Restore persisted learnings from inherent memory if present
-      persisted = @memory.get(:learnings)
-      @learnings = Array(persisted) if persisted
-
-      if learn && defined?(Durable::Learning)
-        if learn_domain
-          setup_durable_learning(domain: learn_domain, store_path: store_path)
-        else
-          warn "[RobotLab] Robot '#{@name}': learn: true requires learn_domain: to be set. Durable learning disabled."
-        end
-      end
-
-      # Ensure config is loaded (triggers PM setup, RubyLLM config, etc.)
-      config = RobotLab.config
-
-      # Build chat kwargs for Agent's super
-      resolved_model = @config.model || config.ruby_llm.model
-      chat_kwargs = { model: resolved_model }
-
-      # Pass provider through for local providers (Ollama, GPUStack, etc.)
-      # RubyLLM auto-sets assume_model_exists for local providers when
-      # provider is specified.
+      # RubyLLM auto-sets assume_model_exists for local providers when provider is specified.
       @provider = provider
       if @provider
         chat_kwargs[:provider] = @provider
         chat_kwargs[:assume_model_exists] = true
       end
 
-      # Create the persistent chat via Agent's initialize
       super(chat: nil, **chat_kwargs)
 
-      # Dynamically delegate all with_* methods from the Chat class
-      define_chat_delegators
-
-      # Gather all skill IDs from constructor + main template front matter
-      all_skill_ids = Array(@skills)
-      if @template
-        parsed_main = PM.parse(@template)
-        fm_skills = extract_skills_from_metadata(parsed_main.metadata)
-        all_skill_ids = all_skill_ids + fm_skills
-      end
-
-      if all_skill_ids.any?
-        # Skills path: expand skills, merge config, concatenate bodies
-        apply_skills_and_template_to_chat(all_skill_ids, context)
-      elsif @template
-        # Standard path: single template, no skills
-        apply_template_to_chat(context)
-      end
-
-      @chat.with_instructions(@system_prompt) if @system_prompt
-
-      # Constructor params override template front matter (use config values)
-      @chat.with_temperature(@config.temperature) if @config.temperature
-
-      # These parameters don't have dedicated with_* methods on Chat;
-      # pass them through with_params.
-      extra_params = {
-        top_p: @config.top_p,
-        top_k: @config.top_k,
-        max_tokens: @config.max_tokens,
-        presence_penalty: @config.presence_penalty,
-        frequency_penalty: @config.frequency_penalty,
-        stop: @config.stop
-      }.compact
-      @chat.with_params(**extra_params) if extra_params.any?
-
-      # Apply callbacks
-      @chat.on_tool_call(&@on_tool_call) if @on_tool_call
-      @chat.on_tool_result(&@on_tool_result) if @on_tool_result
-
-      # Set up bus channel if a bus was provided
-      setup_bus_channel if @bus
+      apply_template
+      apply_system_prompt
+      apply_chat_params
+      register_chat_callbacks
     end
 
 
@@ -293,6 +190,138 @@ module RobotLab
       m = @chat.model
       m.respond_to?(:id) ? m.id : m.to_s
     end
+
+    private def assign_identity_ivars(name:, template:, system_prompt:, context:, description:,
+                                      local_tools:, skills:, mcp_discovery:)
+      @name = name.to_s
+      @name_from_constructor = (name.to_s != "robot")
+      @template = template
+      @system_prompt = system_prompt
+      @build_context = context
+      @description = description
+      @local_tools = Array(local_tools)
+      @skills = skills ? Array(skills).map(&:to_sym) : nil
+      @expanded_skills = nil
+      @pending_agent_skills = []
+      @agent_skill_store    = nil
+      @mcp_discovery = mcp_discovery
+    end
+
+
+    # Build RunConfig from explicit kwargs, merged on top of any passed-in config.
+    # Explicit constructor kwargs always win.
+    private def build_effective_config(model:, temperature:, top_p:, top_k:, max_tokens:, # rubocop:disable Metrics/ParameterLists
+                                       presence_penalty:, frequency_penalty:, stop:,
+                                       on_tool_call:, on_tool_result:, on_content:,
+                                       bus:, enable_cache:, max_tool_rounds:, token_budget:,
+                                       doom_loop_threshold:, mcp_servers:, mcp:, tools:, config:)
+      explicit_fields = {
+        model: model, temperature: temperature, top_p: top_p, top_k: top_k,
+        max_tokens: max_tokens, presence_penalty: presence_penalty,
+        frequency_penalty: frequency_penalty, stop: stop,
+        on_tool_call: on_tool_call, on_tool_result: on_tool_result,
+        on_content: on_content, bus: bus, enable_cache: enable_cache,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        doom_loop_threshold: doom_loop_threshold
+      }.compact
+
+      resolved_mcp = mcp_servers.any? ? mcp_servers : mcp
+      explicit_fields[:mcp]   = resolved_mcp unless ToolConfig.none_value?(resolved_mcp)
+      explicit_fields[:tools] = tools        unless ToolConfig.none_value?(tools)
+
+      explicit_config = RunConfig.new(**explicit_fields)
+      @config = config ? config.merge(explicit_config) : explicit_config
+    end
+
+
+    private def extract_config_ivars
+      @on_tool_call   = @config.on_tool_call
+      @on_tool_result = @config.on_tool_result
+      @on_content     = @config.on_content
+      @mcp_config     = @config.mcp   || :none
+      @tools_config   = @config.tools || :none
+    end
+
+
+    private def initialize_runtime_state
+      @mcp_clients         = {}
+      @mcp_tools           = []
+      @mcp_initialized     = false
+      @bus                 = @config.bus
+      @message_counter     = 0
+      @outbox              = {}
+      @message_handler     = nil
+      @bus_poller          = nil
+      @private_bus_poller  = nil
+      @bus_poller_group    = :default
+      @total_input_tokens  = 0
+      @total_output_tokens = 0
+      @learnings           = []
+    end
+
+
+    private def initialize_memory
+      cache_enabled = @config.key?(:enable_cache) ? @config.enable_cache : true
+      @memory = Memory.new(enable_cache: cache_enabled)
+      persisted = @memory.get(:learnings)
+      @learnings = Array(persisted) if persisted
+    end
+
+
+    private def configure_learning(learn:, learn_domain:, store_path:)
+      return unless learn && defined?(Durable::Learning)
+
+      if learn_domain
+        setup_durable_learning(domain: learn_domain, store_path: store_path)
+      else
+        warn "[RobotLab] Robot '#{@name}': learn: true requires learn_domain: to be set. Durable learning disabled."
+      end
+    end
+
+
+    private def apply_template
+      define_chat_delegators
+
+      all_skill_ids = Array(@skills)
+      if @template
+        parsed_main = PM.parse(@template)
+        fm_skills   = extract_skills_from_metadata(parsed_main.metadata)
+        all_skill_ids = all_skill_ids + fm_skills
+      end
+
+      if all_skill_ids.any?
+        apply_skills_and_template_to_chat(all_skill_ids, @build_context)
+      elsif @template
+        apply_template_to_chat(@build_context)
+      end
+    end
+
+
+    private def apply_system_prompt
+      @chat.with_instructions(@system_prompt) if @system_prompt
+    end
+
+
+    private def apply_chat_params
+      @chat.with_temperature(@config.temperature) if @config.temperature
+
+      extra_params = {
+        top_p: @config.top_p, top_k: @config.top_k,
+        max_tokens: @config.max_tokens,
+        presence_penalty: @config.presence_penalty,
+        frequency_penalty: @config.frequency_penalty,
+        stop: @config.stop
+      }.compact
+      @chat.with_params(**extra_params) if extra_params.any?
+    end
+
+
+    private def register_chat_callbacks
+      @chat.on_tool_call(&@on_tool_call)     if @on_tool_call
+      @chat.on_tool_result(&@on_tool_result) if @on_tool_result
+      setup_bus_channel if @bus
+    end
+
 
     # Dynamically delegate all with_* methods from @chat, returning self for chaining.
     # Discovered from the actual Chat class to avoid maintenance sync issues.
@@ -320,70 +349,18 @@ module RobotLab
     # @return [RobotResult]
     def run(message = nil, network: nil, network_memory: nil, network_config: nil,
             memory: nil, mcp: :none, tools: :none, **kwargs, &block)
-      # Determine which memory to use
-      run_memory = resolve_active_memory(network: network, network_memory: network_memory)
-
-      # Merge runtime memory if provided
-      case memory
-      when Memory
-        run_memory = memory
-      when Hash
-        run_memory.merge!(memory)
-      end
-
-      # Set current_writer so memory notifications know who wrote the value
+      run_memory = resolve_run_memory(memory, network: network, network_memory: network_memory)
       previous_writer = run_memory.current_writer
       run_memory.current_writer = @name
 
       begin
-        # Resolve hierarchical MCP and tools configuration
-        resolved_mcp = resolve_mcp_hierarchy(mcp, network: network, network_config: network_config)
-        resolved_tools = resolve_tools_hierarchy(tools, network: network, network_config: network_config)
-
-        # Filter MCP servers by semantic relevance when discovery is enabled.
-        # Only applies on the first run (before @mcp_initialized) so connections
-        # are not torn down mid-conversation.
-        if @mcp_discovery && !@mcp_initialized && resolved_mcp.is_a?(Array)
-          resolved_mcp = MCP::ServerDiscovery.select(message.to_s, from: resolved_mcp)
-        end
-
-        # Initialize or update MCP clients based on resolved config
-        ensure_mcp_clients(resolved_mcp)
-
-        # Apply filtered tools to the persistent chat
-        filtered = filtered_tools(resolved_tools)
-        @chat.with_tools(*filtered) if filtered.any?
-
-        # Re-render template with run-time context merged into build-time context.
-        # Template parameters (e.g. customer: null) may require values that are
-        # only available at run time — the robot gathers them before rendering.
         run_context = kwargs.except(:with)
+        prepare_tools(message: message, mcp: mcp, tools: tools,
+                      network: network, network_config: network_config)
         rerender_template(run_context) if @template && run_context.any?
-
-        # Prepend accumulated learnings to the user message
-        effective_message = inject_learnings(message)
-
-        # Compact conversation history if configured
-        maybe_compact
-
-        # Install circuit breaker for this run if max_tool_rounds is configured
-        install_circuit_breaker if @config.max_tool_rounds
-        install_doom_loop_detection
-
-        # Delegate to Agent's ask (which calls @chat.ask)
-        ask_kwargs = kwargs.slice(:with)
-        streaming = effective_streaming_block(block)
-        response = ask(effective_message, **ask_kwargs, &streaming)
-
+        response = invoke_ask(message: message, kwargs: kwargs, block: block)
         result = build_result(response, run_memory)
-
-        # Enforce token budget if configured
-        budget = @config.token_budget
-        if budget && @total_input_tokens + @total_output_tokens > budget
-          raise InferenceError,
-                "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
-        end
-
+        enforce_token_budget!
         result
       ensure
         remove_doom_loop_detection
@@ -716,9 +693,53 @@ module RobotLab
 
     private
 
-    # Determine which memory to use
     def resolve_active_memory(network: nil, network_memory: nil)
       network_memory || network&.memory || @memory
+    end
+
+
+    def resolve_run_memory(memory, network:, network_memory:)
+      run_memory = resolve_active_memory(network: network, network_memory: network_memory)
+      case memory
+      when Memory then memory
+      when Hash   then run_memory.tap { |m| m.merge!(memory) }
+      else             run_memory
+      end
+    end
+
+
+    def prepare_tools(message:, mcp:, tools:, network:, network_config:)
+      resolved_mcp   = resolve_mcp_hierarchy(mcp, network: network, network_config: network_config)
+      resolved_tools = resolve_tools_hierarchy(tools, network: network, network_config: network_config)
+
+      if @mcp_discovery && !@mcp_initialized && resolved_mcp.is_a?(Array)
+        resolved_mcp = MCP::ServerDiscovery.select(message.to_s, from: resolved_mcp)
+      end
+
+      ensure_mcp_clients(resolved_mcp)
+
+      filtered = filtered_tools(resolved_tools)
+      @chat.with_tools(*filtered) if filtered.any?
+    end
+
+
+    def invoke_ask(message:, kwargs:, block:)
+      effective_message = inject_learnings(message)
+      maybe_compact
+      install_circuit_breaker if @config.max_tool_rounds
+      install_doom_loop_detection
+      ask_kwargs = kwargs.slice(:with)
+      streaming  = effective_streaming_block(block)
+      ask(effective_message, **ask_kwargs, &streaming)
+    end
+
+
+    def enforce_token_budget!
+      budget = @config.token_budget
+      return unless budget && @total_input_tokens + @total_output_tokens > budget
+
+      raise InferenceError,
+            "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
     end
 
 

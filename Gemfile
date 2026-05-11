@@ -23,6 +23,7 @@ group :development, :test do
   gem "webmock"
   gem "vcr"
   gem "rubocop"
+  gem "flog"
   gem "debug"
 end
 

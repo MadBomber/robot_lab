@@ -115,7 +115,16 @@ module RobotLab
     # Process one delivery, then drain any queued deliveries for the robot.
     def process_and_drain(robot, delivery)
       robot.send(:process_delivery, delivery)
+      drain_queued_deliveries(robot)
+    rescue BusError => e
+      release_robot(robot)
+      RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
+    rescue => e
+      release_robot(robot)
+      RobotLab.config.logger.warn("BusPoller: unexpected error: #{e.message}")
+    end
 
+    def drain_queued_deliveries(robot)
       loop do
         next_delivery = @mutex.synchronize do
           name  = robot.name
@@ -138,12 +147,10 @@ module RobotLab
           RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
         end
       end
-    rescue BusError => e
+    end
+
+    def release_robot(robot)
       @mutex.synchronize { @robot_busy[robot.name] = false }
-      RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
-    rescue => e
-      @mutex.synchronize { @robot_busy[robot.name] = false }
-      RobotLab.config.logger.warn("BusPoller: unexpected error: #{e.message}")
     end
   end
 end

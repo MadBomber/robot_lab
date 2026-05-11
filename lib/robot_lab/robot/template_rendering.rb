@@ -99,46 +99,57 @@ module RobotLab
       # @param skill_ids [Array<Symbol>] skill IDs from constructor + front matter
       # @param context [Hash, Proc] variables to pass to all templates
       def apply_skills_and_template_to_chat(skill_ids, context)
-        visited = Set.new
-        # Prevent skills from pulling in the main template
-        visited.add(@template) if @template
+        bodies, accumulated_config, extras = collect_prompt_content(skill_ids, context)
+        apply_prompt_to_chat(bodies, accumulated_config, extras)
+      end
 
+
+      # Expand skills and render all bodies, configs, and extras into plain data.
+      # Pure computation — reads ivars but does not mutate @chat.
+      #
+      # @return [Array(Array<String>, RunConfig, Hash)] bodies, merged config, extras hash
+      def collect_prompt_content(skill_ids, context)
+        visited = Set.new
+        visited.add(@template) if @template
         @expanded_skills = expand_skills(skill_ids, visited)
 
         extras = {}
         accumulated_config = RunConfig.new
         bodies = []
-
         resolved_ctx = resolve_context(context, network: nil)
 
-        # Process each expanded skill
         @expanded_skills.each do |skill_id|
           parsed = PM.parse(skill_id)
           accumulate_extras(parsed.metadata, extras)
-          fm_config = RunConfig.from_front_matter(parsed.metadata)
-          accumulated_config = accumulated_config.merge(fm_config)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
 
-        # Process main template if present
         if @template
           parsed = PM.parse(@template)
           accumulate_extras(parsed.metadata, extras)
-          fm_config = RunConfig.from_front_matter(parsed.metadata)
-          accumulated_config = accumulated_config.merge(fm_config)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
 
-        # Apply accumulated extras (respects constructor precedence)
+        [bodies, accumulated_config, extras]
+      end
+
+
+      # Apply collected prompt content to @chat.
+      # Pure mutation — takes plain data and writes to @chat.
+      #
+      # @param bodies [Array<String>] rendered template bodies
+      # @param accumulated_config [RunConfig] merged skill + template config
+      # @param extras [Hash] accumulated front-matter extras (name, description, tools, mcp)
+      def apply_prompt_to_chat(bodies, accumulated_config, extras)
         apply_accumulated_extras(extras)
 
-        # Constructor config overrides skill + template config
         effective = accumulated_config.merge(@config)
         effective.apply_to(@chat)
 
-        # Set instructions once with all bodies joined
         combined = bodies.join("\n\n")
         @chat.with_instructions(combined) unless combined.empty?
       end

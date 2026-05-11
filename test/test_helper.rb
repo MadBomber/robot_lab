@@ -11,7 +11,8 @@ SimpleCov.start do
   add_group 'Streaming', 'lib/robot_lab/streaming'
   add_group 'Rails', 'lib/robot_lab/rails'
 
-  enable_coverage :branch if ENV['CI']
+  enable_coverage :branch
+  minimum_coverage line: 95, branch: 75
 end
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
