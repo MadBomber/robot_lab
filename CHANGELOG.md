@@ -8,13 +8,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-11
+
 ### Added
-- `Durable::Learning` — cross-session and within-session learning capability for robots. Robots accept `learn: true` and `learn_domain:` constructor params to persist knowledge across sessions via `~/.robot_lab/durable/` YAML files.
-- `Durable::Store` — YAML-backed knowledge store with file locking, keyword recall, and confidence tracking.
-- `Durable::Entry` — immutable value object for knowledge records with confidence progression.
-- `Durable::Reflector` — promotes session learnings to durable storage at end of each run.
-- `RecallKnowledge` tool — robots query past knowledge before uncertain decisions.
-- `RecordKnowledge` tool — robots persist new knowledge learned during a session.
+
+- **`flog` complexity gate** — `flog_check` Rake task enforces method-level complexity limits (warn ≥20, fail ≥50); `quality` task runs tests, RuboCop, and Flog in sequence with a unified pass/fail summary
+- `flog` gem added to development/test group
+- Branch coverage enabled unconditionally (previously CI-only) with minimum thresholds: line 95%, branch 75%
+
+### Changed
+
+- Bumped version to 0.2.1
+- **`Robot#initialize` decomposed** into focused private methods: `assign_identity_ivars`, `build_effective_config`, `extract_config_ivars`, `initialize_runtime_state`, `initialize_memory`, `configure_learning`, `apply_template`, `apply_system_prompt`, `apply_chat_params`, `register_chat_callbacks`
+- **`Robot#run` decomposed** into: `resolve_run_memory`, `prepare_tools`, `invoke_ask`, `enforce_token_budget!`
+- **`BusPoller#process_and_drain`** split into `drain_queued_deliveries` and `release_robot` for independent testability
+- **`TemplateRendering#apply_skills_and_template_to_chat`** split into `collect_prompt_content` (pure computation) and `apply_prompt_to_chat` (pure mutation)
+- Removed `.serena/` project configuration files from version control
+- Removed `.claude/memory.sqlite3` database files from version control
+
+## [0.2.0] - 2026-05-07
+
+### Added
+
+- **`Durable::Learning`** — cross-session and within-session learning capability for robots. Robots accept `learn: true` and `learn_domain:` constructor params to persist knowledge across sessions via `~/.robot_lab/durable/` YAML files.
+- **`Durable::Store`** — YAML-backed knowledge store with file locking, keyword recall, and confidence tracking.
+- **`Durable::Entry`** — immutable value object for knowledge records with confidence progression.
+- **`Durable::Reflector`** — promotes session learnings to durable storage at end of each run.
+- **`RecallKnowledge` tool** — robots query past knowledge before uncertain decisions.
+- **`RecordKnowledge` tool** — robots persist new knowledge learned during a session.
+- **`AgentSkill`** — value object for discoverable skills defined by `SKILL.md` files with YAML front matter (name, description, version, dependencies, parameters)
+- **`AgentSkillCatalog`** — service for locating and indexing `AgentSkills/` directories at runtime
+- **`AgentSkillMatching`** — `Robot` mixin enabling runtime embedding-based skill injection: the robot selects the most relevant skills from a catalog based on semantic similarity before each run
+- **`ScriptTool`** — factory that wraps shell scripts as robot tools; auto-generates JSON schema from script `--help` output
+- **`DoomLoopDetector`** — detects consecutive and cyclic tool-call repetition; wired into `Robot#run` via singleton `execute_tool` override
+- **`doom_loop_threshold`** field on `RunConfig` — configures the repetition threshold before a `ToolLoopError` is raised
+- **`auto_compact` and `compact_threshold`** fields on `RunConfig` — `:context_window` mode estimates token usage before each run and calls `compress_history` when usage exceeds the threshold (default 80%); a `Proc` value delegates the decision and strategy entirely to the caller
+
+### Changed
+
+- Bumped version to 0.2.0
+- **Extension gems extracted** — `robot_lab-document_store`, `robot_lab-durable`, `robot_lab-ractor`, and `robot_lab-rails` are now separate gems distributed via rubygems.org; the core gemspec drops `fastembed`, `ractor_queue`, and `ractor-wrapper` as hard dependencies
+- **`Durable::Learning` inclusion** is now conditional on the `robot_lab-durable` gem being loaded
+- **Tool Ractor routing** guarded on `RobotLab.respond_to?(:ractor_pool)` so the core gem runs without the ractor extension
+- **Memory drainer scheduling** — `@drainer_scheduled` remains `true` when rescheduling to prevent concurrent writers from spawning competing drain fibers
+- `@chat` state reset now uses `reset_messages!` / `add_message` public API instead of internal instance variable manipulation
+- Rails generators moved to `robot_lab-rails` extension gem
+
+### Fixed
+
+- Memory drainer double-schedule race when concurrent writers triggered overlapping drain cycles
+- `DocumentStore` instantiation guarded with a `LoadError` message when the extension gem is absent
+- `AgentSkill` YAML parsing hardened against empty strings and non-Hash front matter
+- Missing requires added to examples after gem extraction
+- `doom_loop_threshold` and `auto_compact` documented in README and guides
+- `learn:` parameter and `robot_lab-acp` documented in README
 
 ## [0.1.0] - 2026-04-29
 
