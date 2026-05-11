@@ -351,6 +351,11 @@ module RobotLab
     private
 
     def run_with_ractor_scheduler(run_context)
+      unless RobotLab.extension_loaded?(:ractor)
+        raise RobotLab::DependencyError,
+              "parallel_mode: :ractor requires the robot_lab-ractor gem. " \
+              "Add `gem 'robot_lab-ractor'` to your Gemfile."
+      end
       message   = run_context[:message].to_s
       dep_graph = @pipeline.step_dependencies  # { task_sym => [dep_sym, ...] }
 

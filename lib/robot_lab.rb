@@ -6,9 +6,6 @@ require 'securerandom'
 require 'digest'
 
 # Core dependencies
-# ActiveSupport delegation is required by ruby_llm (RubyLLM::Agent uses delegate)
-# but not declared in ruby_llm's gemspec. Load it before ruby_llm.
-require 'active_support/core_ext/module/delegation'
 require 'ruby_llm'
 require 'prompt_manager'
 require 'async'
@@ -77,7 +74,42 @@ loader.eager_load if defined?(Rails::Engine) || ENV["ROBOT_LAB_EAGER_LOAD"]
 module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb
 
+  @extensions = {}
+
   class << self
+    # Registers an extension gem so core can detect it without depending on it.
+    #
+    # Extension gems call this at load time to announce themselves. Core uses
+    # extension_loaded? to guard optional behavior instead of defined?/respond_to?.
+    #
+    # @param name [Symbol] identifier for the extension (e.g. :durable, :ractor)
+    # @param mod [Module, Object] the extension's primary module or a sentinel value
+    def register_extension(name, mod)
+      @extensions[name] = mod
+    end
+
+    # Returns true if the named extension gem has been loaded.
+    #
+    # @param name [Symbol] extension identifier
+    def extension_loaded?(name)
+      @extensions.key?(name)
+    end
+
+    # Returns the module registered for the named extension, or nil.
+    #
+    # @param name [Symbol] extension identifier
+    def extension(name)
+      @extensions[name]
+    end
+
+    # Returns the list of registered extension names.
+    #
+    # @return [Array<Symbol>]
+    def loaded_extensions
+      @extensions.keys
+    end
+
+
     # Returns the Config object (MywayConfig-based).
     #
     # Configuration is automatically loaded from:

@@ -16,6 +16,9 @@ module RobotLab
     # inline. The BusPoller drains each group's queue sequentially on
     # a dedicated OS thread, so robot.run() calls never interleave.
     #
+    # Owns:    @bus, @bus_poller, @private_bus_poller, @bus_poller_group, @bus_subscriber_id, @message_counter, @outbox, @message_handler
+    # Reads:   @name
+    # Contract: ivars initialized by initialize_runtime_state before first bus operation
     module BusMessaging
       # Send a message to another robot via the bus.
       #
@@ -180,27 +183,15 @@ module RobotLab
           entry[:replies] << message
         end
 
-        if @message_handler
-          if @message_handler.arity == 1
-            delivery.ack!
-            @message_handler.call(message)
-          else
-            @message_handler.call(delivery, message)
-          end
+        if @message_handler.arity == 1
+          delivery.ack!
+          @message_handler.call(message)
         else
-          handle_message_via_llm(delivery, message)
+          @message_handler.call(delivery, message)
         end
       rescue => e
         delivery.nack! if delivery.pending?
         raise BusError, "Error handling bus message on robot '#{@name}': #{e.message}"
-      end
-
-
-      # Default handler: interpret message via LLM and reply
-      def handle_message_via_llm(delivery, message)
-        delivery.ack!
-        result = run(message.content.to_s)
-        send_reply(to: message.from.to_sym, content: result.last_text_content, in_reply_to: message.key)
       end
 
 

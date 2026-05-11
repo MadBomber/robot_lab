@@ -44,7 +44,6 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
-    include Durable::Learning if defined?(Durable::Learning)
     prepend Robot::AgentSkillMatching
 
     # @!attribute [r] name
@@ -80,6 +79,37 @@ module RobotLab
     # @!attribute [r] tools_config
     #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
     attr_reader :mcp_config, :tools_config
+
+    # Returns the fully-merged configuration for this robot at runtime.
+    #
+    # Reflects the result of merging the RunConfig hierarchy (global → network →
+    # constructor kwargs → template front matter). Nil fields are omitted.
+    #
+    # @return [Hash] merged config keyed by field name
+    #
+    # @example
+    #   robot.effective_config
+    #   #=> { model: "claude-sonnet-4-6", temperature: 0.7, max_tokens: 4096 }
+    def effective_config
+      {
+        model:               @config.model,
+        temperature:         @config.temperature,
+        top_p:               @config.top_p,
+        top_k:               @config.top_k,
+        max_tokens:          @config.max_tokens,
+        presence_penalty:    @config.presence_penalty,
+        frequency_penalty:   @config.frequency_penalty,
+        stop:                @config.stop,
+        tools:               @config.tools,
+        mcp:                 @config.mcp,
+        max_tool_rounds:     @config.max_tool_rounds,
+        doom_loop_threshold: @config.doom_loop_threshold,
+        auto_compact:        @config.auto_compact,
+        compact_threshold:   @config.compact_threshold,
+        token_budget:        @config.token_budget
+      }.reject { |_, v| v.nil? }
+    end
+
 
     # Creates a new Robot instance.
     #
@@ -250,7 +280,7 @@ module RobotLab
       @bus                 = @config.bus
       @message_counter     = 0
       @outbox              = {}
-      @message_handler     = nil
+      @message_handler     = ->(_msg) {}
       @bus_poller          = nil
       @private_bus_poller  = nil
       @bus_poller_group    = :default
@@ -269,7 +299,7 @@ module RobotLab
 
 
     private def configure_learning(learn:, learn_domain:, store_path:)
-      return unless learn && defined?(Durable::Learning)
+      return unless learn && RobotLab.extension_loaded?(:durable)
 
       if learn_domain
         setup_durable_learning(domain: learn_domain, store_path: store_path)
@@ -745,7 +775,7 @@ module RobotLab
 
     # Extract run context from SimpleFlow::Result
     def extract_run_context(result)
-      run_params = result.context[:run_params] || {}
+      run_params = (result.context[:run_params] || {}).dup
 
       # Extract robot-specific params
       mcp = run_params.delete(:mcp) || :none

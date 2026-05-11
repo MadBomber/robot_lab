@@ -4,9 +4,9 @@ module RobotLab
   class Robot < RubyLLM::Agent
     # MCP client lifecycle and hierarchical tool/MCP resolution.
     #
-    # Expects the including class to provide:
-    #   @mcp_config, @tools_config, @mcp_clients, @mcp_tools,
-    #   @mcp_initialized, @name, @chat, @local_tools
+    # Owns:    @mcp_clients, @mcp_tools, @mcp_initialized, @failed_mcp_configs
+    # Reads:   @mcp_config, @tools_config, @name, @chat, @local_tools
+    # Contract: ivars initialized by initialize_runtime_state; lazy init on first run
     module MCPManagement
       private
 

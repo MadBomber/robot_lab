@@ -5,6 +5,10 @@ module RobotLab
     # Prepended module that intercepts run() to inject relevant AgentSkills.io
     # skills into the system prompt and tool list for the duration of each call.
     #
+    # Owns:    @_active_agent_skills, @_agent_skill_original_instructions, @_agent_skill_injected_tools
+    # Reads:   @pending_agent_skills, @agent_skill_store, @local_tools, @chat, @name
+    # Contract: prepended (wraps super); requires TemplateRendering to have set @pending_agent_skills
+    #
     # Skills are matched by embedding similarity between the incoming message
     # and each pending skill's description (via DocumentStore/fastembed).
     # Injected content is fully restored in an ensure block after run() returns.

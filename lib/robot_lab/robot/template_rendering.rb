@@ -6,9 +6,9 @@ module RobotLab
   class Robot < RubyLLM::Agent
     # Template loading, rendering, and front-matter extraction.
     #
-    # Expects the including class to provide:
-    #   @chat, @template, @build_context, @name, @name_from_constructor,
-    #   @description, @local_tools, @mcp_config
+    # Owns:    @expanded_skills, @pending_agent_skills, @agent_skill_store
+    # Reads:   @chat, @template, @build_context, @name, @name_from_constructor, @description, @local_tools, @mcp_config, @config
+    # Contract: called during initialize after assign_identity_ivars and build_effective_config
     module TemplateRendering
       # Front matter keys that map to chat configuration methods
       FRONT_MATTER_CONFIG_KEYS = %i[

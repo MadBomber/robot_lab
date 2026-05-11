@@ -450,16 +450,14 @@ module RobotLab
     #   hits.each { |h| puts "#{h[:key]} (#{h[:score].round(3)}): #{h[:text][0..80]}" }
     #
     def search_documents(query, limit: 5)
-      return [] unless @document_store
-
-      @document_store.search(query, limit: limit)
+      document_store.search(query, limit: limit)
     end
 
     # Keys of all documents stored in the embedded document store.
     #
     # @return [Array<Symbol>]
     def document_keys
-      @document_store&.keys || []
+      document_store.keys
     end
 
     # Remove a document from the store.
@@ -467,7 +465,7 @@ module RobotLab
     # @param key [Symbol, String]
     # @return [self]
     def delete_document(key)
-      @document_store&.delete(key)
+      document_store.delete(key)
       self
     end
 
@@ -687,7 +685,12 @@ module RobotLab
     private
 
     def document_store
-      @document_store ||= DocumentStore.new
+      unless RobotLab.extension_loaded?(:document_store)
+        raise RobotLab::DependencyError,
+              "document storage requires the robot_lab-document_store gem. " \
+              "Add `gem 'robot_lab-document_store'` to your Gemfile."
+      end
+      @document_store ||= RobotLab::DocumentStore.new
     end
 
     def create_semantic_cache

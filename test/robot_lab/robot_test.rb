@@ -2314,32 +2314,23 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil result
   end
 
-  def test_handle_message_via_llm_default_handler
-    # bus_messaging.rb lines 203, 223-225: handle_message_via_llm called when no on_message set
+  def test_default_handler_is_no_op
+    # Default @message_handler is a no-op lambda. A robot joined to a bus
+    # without on_message set should ack messages silently, not trigger LLM.
     bus = TypedBus::MessageBus.new
-    replies = []
+    llm_called = false
 
-    # alice will receive replies from bob's LLM handler
     alice = RobotLab::Robot.new(name: "alice", template: :assistant, bus: bus)
-    alice.on_message { |msg| replies << msg }
 
-    # bob has NO on_message set, so incoming messages go to handle_message_via_llm
+    # bob has NO on_message set — default handler should ack and do nothing
     bob = RobotLab::Robot.new(name: "bob", template: :assistant, bus: bus)
-
-    # Stub bob's chat.ask to return a fake LLM response
-    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
-      content: "LLM reply from bob", tool_calls: nil, stop_reason: "end_turn", tokens: nil
-    )
     bob_chat = bob.instance_variable_get(:@chat)
-    bob_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+    bob_chat.define_singleton_method(:ask) { |*| llm_called = true }
 
     Async { alice.send_message(to: :bob, content: "hello bob") }
 
-    # Wait for reply to propagate
-    wait_until(timeout: 2) { replies.size >= 1 }
-
-    assert_equal 1, replies.size
-    assert_equal "LLM reply from bob", replies.first.content
+    sleep 0.2
+    refute llm_called, "default handler must not trigger LLM"
   end
 
   # =========================================================================
