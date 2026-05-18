@@ -1,5 +1,7 @@
 .aigcm_msg
 *.log
+Gemfile.lock
+/site/
 /.bundle/
 /.yardoc
 /_yardoc/
