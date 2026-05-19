@@ -140,7 +140,7 @@ namespace :examples do
     failed = []
 
     # Single-file examples
-    Dir.glob("examples/*.rb").sort.each do |example|
+    Dir.glob("examples/*.rb").each do |example|
       base = File.basename(example)
 
       if EXTERNAL_SERVICE_EXAMPLES.key?(base)

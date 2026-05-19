@@ -18,11 +18,11 @@ group :development, :test do
   gem 'ractor_queue'
   gem 'ractor-wrapper'
   gem "rake"
-  gem "rouge"
-  gem "robot_lab-document_store"  #, path: "../robot_lab-document_store"
+  gem "robot_lab-document_store"  # , path: "../robot_lab-document_store"
   gem "robot_lab-durable"
   gem "robot_lab-ractor"
   gem "robot_lab-rails"
+  gem "rouge"
   gem "rubocop"
   gem "vcr"
   gem "webmock"
