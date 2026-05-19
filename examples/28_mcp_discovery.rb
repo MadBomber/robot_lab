@@ -12,6 +12,7 @@
 # == Key config
 #
 #   robot = RobotLab.build(
+#     model: "gpt-5.4",
 #     mcp_discovery: true,    # ← enables semantic filtering
 #     mcp: [ ... ]            # ← candidate servers, each with :description
 #   )
@@ -29,7 +30,7 @@
 # Usage:
 #   bundle exec ruby examples/28_mcp_discovery.rb
 
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Three representative MCP server configurations
 SERVERS = [
@@ -59,10 +60,8 @@ def show_query(label, query)
   puts
 end
 
-puts "=" * 60
-puts "Example 28: MCP Server Discovery"
+banner "MCP Server Discovery"
 puts "  Semantic server selection via TF cosine similarity"
-puts "=" * 60
 puts
 puts "Candidate servers:"
 SERVERS.each do |s|
@@ -70,14 +69,12 @@ SERVERS.each do |s|
 end
 puts
 
-puts "Discovery queries:"
-puts "-" * 60
+section "Discovery Queries"
 show_query("File ops",     "read my config file")
 show_query("Package mgmt", "install imagemagick via homebrew")
 show_query("Code review",  "list open pull requests on my repo")
 
-puts "Fallback cases:"
-puts "-" * 60
+section "Fallback Cases"
 
 # No description → all servers returned
 no_desc_servers = SERVERS.map { |s| s.except(:description) }
@@ -93,10 +90,10 @@ result = RobotLab::MCP::ServerDiscovery.select("install imagemagick", from: SERV
 puts "  High threshold  : returns all (#{result.size} servers) — no match above 1.0"
 
 puts
-puts "mcp_discovery: true on a Robot"
-puts "-" * 60
+section "mcp_discovery: true on a Robot"
 puts <<~NOTE
   RobotLab.build(
+  model: "gpt-5.4",
     name: "assistant",
     mcp_discovery: true,
     mcp: [
@@ -109,4 +106,4 @@ puts <<~NOTE
   # Only the :brew server is connected for this message:
   robot.run("install imagemagick")
 NOTE
-puts "=" * 60
+hr

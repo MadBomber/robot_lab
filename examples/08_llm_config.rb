@@ -29,19 +29,13 @@
 #   ROBOT_LAB_ENV=test ANTHROPIC_API_KEY=your_key ruby examples/08_llm_config.rb
 #   ROBOT_LAB_ENV=production ANTHROPIC_API_KEY=your_key ruby examples/08_llm_config.rb
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # =============================================================================
 # Demonstration
 # =============================================================================
 
-puts "=" * 70
-puts "Example 8: LLM Configuration via MywayConfig"
-puts "=" * 70
-puts
+banner "LLM Configuration via MywayConfig"
 
 # --- Gather environment from the user via AskUser ---
 ask = RobotLab::AskUser.new
@@ -73,8 +67,7 @@ api_key = config.ruby_llm.anthropic_api_key
 puts "  anthropic_api_key:  #{api_key ? '[SET via config]' : (ENV['ANTHROPIC_API_KEY'] ? '[SET via env]' : '(not set)')}"
 puts
 
-puts "-" * 70
-puts "Configuration hierarchy (highest priority first):"
+section "Configuration Hierarchy (highest priority first)"
 puts
 puts "  Per-Robot (override global settings for a specific robot):"
 puts "  11. Run-time context:      kwargs to robot.run re-render template"
@@ -92,17 +85,11 @@ puts "   4. Environment variables: ROBOT_LAB_RUBY_LLM__MODEL, etc."
 puts "   3. Project config:        ./config/robot_lab.yml"
 puts "   2. User config:           ~/.config/robot_lab/config.yml"
 puts "   1. Bundled defaults:      lib/robot_lab/config/defaults.yml + env overrides"
-puts "-" * 70
-puts
 
-# --- RunConfig demonstration ---
-puts "-" * 70
-puts "RunConfig: Shared Operational Defaults"
-puts "-" * 70
-puts
+section "RunConfig: Shared Operational Defaults"
 
-shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
-puts "  shared = RunConfig.new(model: \"claude-sonnet-4\", temperature: 0.5)"
+shared = RobotLab::RunConfig.new(model: LLM[:default].model, temperature: 0.5)
+puts "  shared = RunConfig.new(model: \"gpt-5.4\", temperature: 0.5)"
 puts "  shared.to_h => #{shared.to_h.inspect}"
 puts
 
@@ -116,13 +103,14 @@ puts
 
 # Create a robot using the configuration
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "config_demo",
   template: :llm_config_demo,
   local_tools: [RobotLab::AskUser],
   context: {
     environment: env,
-    model: config.ruby_llm.model,
-    provider: config.ruby_llm.provider.to_s
+    model: LLM[:default].model,
+    provider: LLM[:default].provider
   }
 )
 
@@ -153,7 +141,7 @@ puts <<~FOOTER
     Per-Robot: RunConfig, template front matter, constructor params, with_*
 
   RunConfig lets you express shared defaults that flow through the hierarchy:
-    shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+    shared = RobotLab::RunConfig.new(model: "gpt-5.4", temperature: 0.5)
     network = RobotLab.create_network(name: "team", config: shared) { ... }
     robot = RobotLab.build(name: "bot", config: shared, temperature: 0.9)
 

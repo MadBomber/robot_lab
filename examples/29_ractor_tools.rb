@@ -26,9 +26,7 @@
 #   SHA-256 rounds (~320 ms on modern hardware) so the 4-6× speedup is
 #   clearly visible on a 6-core machine.
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "robot_lab/ractor"
 require "digest"
 
@@ -116,10 +114,7 @@ end
 # Demo
 # =============================================================================
 
-puts "=" * 62
-puts "Example 29: Ractor-Safe CPU Tools"
-puts "=" * 62
-puts
+banner "Ractor-Safe CPU Tools"
 
 DIVIDER = ("─" * 54).freeze
 
@@ -239,6 +234,5 @@ puts "    #{DIVIDER}"
 RobotLab.shutdown_ractor_pool
 puts "    Pool shut down cleanly (poison-pill × #{pool.size} workers)."
 puts
-puts "=" * 62
+hr
 puts "Example 29 complete."
-puts "=" * 62

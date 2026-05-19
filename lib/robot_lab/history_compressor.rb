@@ -124,13 +124,11 @@ module RobotLab
 
       if score >= @keep_threshold
         :keep
-      elsif score < @drop_threshold
+      elsif score < @drop_threshold || !@summarizer
         :drop
-      elsif @summarizer
+      else
         summary = @summarizer.call(text).to_s.strip
         summary.empty? ? :drop : summary
-      else
-        :drop
       end
     end
 
@@ -141,10 +139,7 @@ module RobotLab
       @messages.each_with_index do |msg, idx|
         action = actions[idx]
 
-        if action.nil?
-          # Pinned or recent: always include
-          result << msg
-        elsif action == :keep
+        if action.nil? || action == :keep
           result << msg
         elsif action == :drop
           # Omit entirely
@@ -166,7 +161,7 @@ module RobotLab
       role = msg.role
 
       return true if role == :system
-      return true if role == :tool || role == :tool_result
+      return true if %i[tool tool_result].include?(role)
 
       # Assistant tool-call dispatcher: content is nil or blank
       if role == :assistant
@@ -185,7 +180,6 @@ module RobotLab
       case content
       when String then content
       when Array  then content.filter_map { |p| p[:text] || p["text"] }.join(" ")
-      else nil
       end
     end
 

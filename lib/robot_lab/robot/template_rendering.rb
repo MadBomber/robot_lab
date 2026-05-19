@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module RobotLab
   class Robot < RubyLLM::Agent
     # Template loading, rendering, and front-matter extraction.
@@ -64,7 +62,6 @@ module RobotLab
         end
       end
 
-
       # Re-render the template with run-time context merged into build-time context.
       # prompt_manager parameters may be required (null) and only available at run time.
       def rerender_template(run_context)
@@ -93,7 +90,6 @@ module RobotLab
         end
       end
 
-
       # Orchestrate skill expansion and template application.
       #
       # @param skill_ids [Array<Symbol>] skill IDs from constructor + front matter
@@ -102,7 +98,6 @@ module RobotLab
         bodies, accumulated_config, extras = collect_prompt_content(skill_ids, context)
         apply_prompt_to_chat(bodies, accumulated_config, extras)
       end
-
 
       # Expand skills and render all bodies, configs, and extras into plain data.
       # Pure computation — reads ivars but does not mutate @chat.
@@ -137,7 +132,6 @@ module RobotLab
         [bodies, accumulated_config, extras]
       end
 
-
       # Apply collected prompt content to @chat.
       # Pure mutation — takes plain data and writes to @chat.
       #
@@ -154,7 +148,6 @@ module RobotLab
         @chat.with_instructions(combined) unless combined.empty?
       end
 
-
       # Recursively expand skill IDs depth-first.
       # Checks AgentSkillCatalog first; falls back to PM template lookup.
       # Returns a flat Array<Symbol> in processing order (deepest first).
@@ -165,7 +158,6 @@ module RobotLab
       def expand_skills(skill_ids, visited = Set.new)
         expand_skills_with_catalog(skill_ids, visited, AgentSkillCatalog.instance)
       end
-
 
       # Recursively expand skill IDs depth-first, using the given catalog.
       # AgentSkills folder format takes priority over PM template lookup.
@@ -217,7 +209,6 @@ module RobotLab
         result
       end
 
-
       # Extract skills array from metadata.
       #
       # @param metadata [PM::Metadata] front matter metadata
@@ -227,7 +218,6 @@ module RobotLab
 
         Array(metadata.skills).map(&:to_sym)
       end
-
 
       # Accumulate extras from metadata into a hash.
       # Later calls overwrite earlier values (last-write-wins).
@@ -247,11 +237,9 @@ module RobotLab
           extras[:tools] = metadata.tools
         end
 
-        if metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array)
-          extras[:mcp] = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
-        end
+        return unless metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array)
+        extras[:mcp] = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
       end
-
 
       # Apply accumulated extras to the robot, respecting constructor precedence.
       #
@@ -269,11 +257,9 @@ module RobotLab
           @local_tools = resolve_frontmatter_tools(extras[:tools])
         end
 
-        if extras[:mcp] && ToolConfig.none_value?(@mcp_config)
-          @mcp_config = extras[:mcp]
-        end
+        return unless extras[:mcp] && ToolConfig.none_value?(@mcp_config)
+        @mcp_config = extras[:mcp]
       end
-
 
       # Extract identity and capability keys from front matter metadata.
       # Constructor-provided values take precedence over frontmatter.
@@ -290,11 +276,9 @@ module RobotLab
           @local_tools = resolve_frontmatter_tools(metadata.tools)
         end
 
-        if metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array) && ToolConfig.none_value?(@mcp_config)
-          @mcp_config = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
-        end
+        return unless metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array) && ToolConfig.none_value?(@mcp_config)
+        @mcp_config = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
       end
-
 
       # Render a parsed template body, returning nil if required params are missing.
       #
@@ -308,7 +292,6 @@ module RobotLab
 
         nil
       end
-
 
       # Resolve string tool names from frontmatter to Ruby constants.
       # Tool subclasses are instantiated; instances are used as-is.
@@ -331,7 +314,6 @@ module RobotLab
           end
         end
       end
-
 
       def resolve_context(context, network:)
         case context

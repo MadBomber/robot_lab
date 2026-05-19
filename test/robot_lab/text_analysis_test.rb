@@ -125,8 +125,8 @@ class RobotLab::TextAnalysisTest < Minitest::Test
     model  = RobotLab::TextAnalysis.fit(corpus)
     vec    = RobotLab::TextAnalysis.transform(model, "ruby programming")
     assert_kind_of Hash, vec
-    assert vec.keys.all? { |k| k.is_a?(Symbol) }, "expected Symbol keys"
-    assert vec.values.all? { |v| v.is_a?(Float) }, "expected Float values"
+    assert vec.keys.all?(Symbol), "expected Symbol keys"
+    assert vec.values.all?(Float), "expected Float values"
   end
 
   def test_transform_empty_text_returns_hash

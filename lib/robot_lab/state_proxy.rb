@@ -46,7 +46,6 @@ module RobotLab
       old_value = @data[key]
       @data[key] = value
       @on_change&.call(key, old_value, value) if old_value != value
-      value
     end
 
     # Check if key exists
@@ -85,8 +84,12 @@ module RobotLab
     #
     # @yield [Symbol, Object]
     #
-    def each(&block)
-      @data.each(&block)
+    def each(&)
+      @data.each(&)
+    end
+
+    def map(&)
+      @data.map(&)
     end
 
     # Delete a key
@@ -155,7 +158,7 @@ module RobotLab
     #   proxy.name        # Same as proxy[:name]
     #   proxy.name = "x"  # Same as proxy[:name] = "x"
     #
-    def method_missing(method_name, *args, &block)
+    def method_missing(method_name, *args, &)
       method_str = method_name.to_s
 
       if method_str.end_with?("=")
@@ -173,6 +176,5 @@ module RobotLab
     def inspect
       "#<RobotLab::StateProxy #{@data.inspect}>"
     end
-
   end
 end

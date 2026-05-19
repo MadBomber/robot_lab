@@ -14,7 +14,8 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
   def user_msg(content)                         = msg(:user, content)
   def assistant_msg(content)                    = msg(:assistant, content)
   def tool_result_msg                           = msg(:tool_result, '{ "result": 42 }')
-  def tool_call_msg                             = msg(:assistant, nil)   # nil content = tool dispatcher
+  # nil content = tool dispatcher
+  def tool_call_msg                             = msg(:assistant, nil)
 
   def compressor(messages:, recent_turns: 2, keep: 0.6, drop: 0.2, summarizer: nil)
     RobotLab::HistoryCompressor.new(
@@ -159,7 +160,10 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
   def test_summarizer_called_for_medium_tier
     setup_classifier_or_skip
     calls = []
-    summarizer = ->(text) { calls << text; "SUMMARY: #{text[0..20]}" }
+    summarizer = lambda { |text|
+      calls << text
+      "SUMMARY: #{text[0..20]}"
+    }
 
     # Craft messages where old turns may fall in medium relevance
     msgs = [
@@ -174,7 +178,7 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
 
     result = compressor(messages: msgs, recent_turns: 2, keep: 0.9, drop: 0.01, summarizer: summarizer).call
     assert_kind_of Array, result
-    assert result.any? { |m| m.role == :system }
+    assert(result.any? { |m| m.role == :system })
   end
 
   def test_nil_summarizer_drops_medium_tier
@@ -192,13 +196,17 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
 
     result = compressor(messages: msgs, recent_turns: 2, keep: 0.9, drop: 0.01, summarizer: nil).call
     assert_kind_of Array, result
-    assert result.any? { |m| m.role == :system }
+    assert(result.any? { |m| m.role == :system })
   end
 
   def test_summarizer_preserves_user_role
     setup_classifier_or_skip
     summaries = []
-    summarizer = ->(text) { s = "Summary: #{text[0..15]}"; summaries << s; s }
+    summarizer = lambda { |text|
+      s = "Summary: #{text[0..15]}"
+      summaries << s
+      s
+    }
 
     msgs = [
       system_msg,
@@ -215,7 +223,7 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
     # Any summarized messages must preserve their original role
     result.each do |m|
       next unless summaries.include?(m.content)
-      original = msgs.find { |o| summaries.any? { |s| m.content == s } }
+      msgs.find { |_o| summaries.any? { |s| m.content == s } }
       # user summaries must respond true to user?, assistant summaries to assistant?
       if m.role == :user
         assert m.user?, "summarized user message should respond true to user?"

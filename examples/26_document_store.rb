@@ -13,15 +13,10 @@
 #   ruby examples/26_document_store.rb
 #   (Downloads the ~23 MB ONNX model on first run; cached afterwards.)
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "robot_lab/document_store"
 
-puts "=" * 60
-puts "Example 26: Embedding-Based Document Store"
-puts "=" * 60
-puts
+banner "Embedding-Based Document Store"
 puts "Note: First run downloads the fastembed model (~23 MB, cached)."
 puts
 
@@ -98,7 +93,7 @@ end
 # ---------------------------------------------------------------------------
 # Delete and verify
 # ---------------------------------------------------------------------------
-puts "── Delete :redis_caching_guide, re-run cache query"
+section "Delete :redis_caching_guide, Re-run Cache Query"
 store.delete(:redis_caching_guide)
 results = store.search("Redis evicting keys unexpectedly", limit: 2)
 puts "   Remaining keys: #{store.keys.inspect}"
@@ -108,7 +103,7 @@ puts
 # ---------------------------------------------------------------------------
 # Memory integration
 # ---------------------------------------------------------------------------
-puts "── Memory integration"
+section "Memory Integration"
 memory = RobotLab::Memory.new(enable_cache: false)
 
 DOCUMENTS.each { |key, text| memory.store_document(key, text) }
@@ -125,10 +120,7 @@ puts
 # ---------------------------------------------------------------------------
 # RAG pattern
 # ---------------------------------------------------------------------------
-puts "=" * 60
-puts "RAG Pattern: retrieve relevant docs, then generate with LLM"
-puts "=" * 60
-puts
+section "RAG Pattern: Retrieve Relevant Docs, Then Generate with LLM"
 
 rag_query = "Our Sidekiq jobs exhaust retries and land in the dead queue after a Stripe outage."
 

@@ -99,7 +99,7 @@ module RobotLab
 
         seconds = value.to_f
         # If the caller passed milliseconds (>= 1000), convert to seconds
-        seconds = seconds / 1000.0 if seconds >= 1000
+        seconds /= 1000.0 if seconds >= 1000
         [seconds, 1].max
       end
     end

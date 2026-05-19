@@ -48,7 +48,7 @@ class RobotLab::ConfigTest < Minitest::Test
   end
 
   def test_default_streaming_enabled_from_config
-    # Note: In test environment this may be false per defaults.yml
+    # NOTE: In test environment this may be false per defaults.yml
     # This tests that the value is a boolean
     assert [true, false].include?(RobotLab.config.streaming_enabled)
   end

@@ -142,8 +142,8 @@ module RobotLab
     #
     # @yield [Tool] Each tool in the manifest
     #
-    def each(&block)
-      @tools.values.each(&block)
+    def each(&)
+      @tools.values.each(&)
     end
 
     # Clear all tools
@@ -173,9 +173,7 @@ module RobotLab
     #
     def merge(other)
       case other
-      when ToolManifest
-        other.each { |tool| add(tool) }
-      when Array
+      when ToolManifest, Array
         other.each { |tool| add(tool) }
       when Tool
         add(other)
@@ -194,8 +192,8 @@ module RobotLab
     #
     # @param args [Array] arguments passed to to_json
     # @return [String] JSON representation
-    def to_json(*args)
-      to_h.to_json(*args)
+    def to_json(*)
+      to_h.to_json(*)
     end
 
     # Create manifest from hash of tool definitions

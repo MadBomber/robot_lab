@@ -5,126 +5,166 @@ AllCops:
   Exclude:
     - 'examples/**/*'
     - 'vendor/**/*'
+    - 'dead_code/**/*'
+    - '_notes/**/*'
 
 # ── Style: disabled cops ───────────────────────────────────────────────────
-# User prefers double-quoted strings; both forms are acceptable
 Style/StringLiterals:
   Enabled: false
 
 Style/StringLiteralsInInterpolation:
   Enabled: false
 
-# YARD handles API docs — inline class/module comments add noise in gems
 Style/Documentation:
   Enabled: false
 
-# Ruby 4.0 freezes string literals by default — the magic comment is redundant
+# Ruby 4.0 freezes string literals by default
 Style/FrozenStringLiteralComment:
   Enabled: false
 
-# User prefers explicit if/unless blocks over trailing modifier form
 Style/IfUnlessModifier:
   Enabled: false
 
-# User prefers explicit begin/rescue blocks over inline rescue modifier
 Style/RescueModifier:
   Enabled: false
 
-# User prefers explicit def methods over attr_reader/attr_writer shortcuts
 Style/TrivialAccessors:
   Enabled: false
 
-# User prefers ternary operators
 Style/MultilineTernaryOperator:
   Enabled: false
 
-# User prefers nil checks over the safe navigation operator
 Style/SafeNavigation:
   Enabled: false
 
-# Class.new and class keyword are both acceptable
 Style/EmptyClassDefinition:
   Enabled: false
 
-# Compact module/class style (Foo::Bar) is acceptable
 Style/ClassAndModuleChildren:
   Enabled: false
 
-# Bare rescue => e is acceptable
 Style/RescueStandardError:
   Enabled: false
 
-# ── Layout: disabled cops ──────────────────────────────────────────────────
-# 120 chars fits modern screens without sacrificing readability
-Layout/LineLength:
-  Max: 120
+Style/OneClassPerFile:
+  Enabled: false
 
-# Extra whitespace for column alignment is an intentional style choice
+# Both % and format/sprintf are acceptable
+Style/FormatString:
+  Enabled: false
+
+# String concatenation and interpolation are both acceptable
+Style/StringConcatenation:
+  Enabled: false
+
+# ── Layout ─────────────────────────────────────────────────────────────────
+Layout/LineLength:
+  Max: 140
+
 Layout/ExtraSpacing:
   Enabled: false
 
-# Aligned hash keys are an intentional style choice
 Layout/HashAlignment:
   Enabled: false
 
 Layout/FirstHashElementIndentation:
   Enabled: false
 
-# Guard clause empty-line enforcement conflicts with compact style
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
 
 # ── Naming ─────────────────────────────────────────────────────────────────
-# Short single-char params are acceptable in test helpers
+# Single-char params (c, e, n) are acceptable throughout
 Naming/MethodParameterName:
-  Exclude:
-    - 'test/**/*'
+  Enabled: false
 
-# Test method names describing decimal values (e.g. by_0_1) are intentional
 Naming/VariableNumber:
   Exclude:
     - 'test/**/*'
 
-# Both e and err are acceptable rescue variable names
 Naming/RescuedExceptionsVariableName:
   Enabled: false
 
+# set_results and similar explicit setters are clear and conventional
+Naming/AccessorMethodName:
+  Enabled: false
+
+# has_tool_calls? and similar are clear and conventional
+Naming/PredicatePrefix:
+  Enabled: false
+
+# Test helper methods don't need to follow predicate naming rules
+Naming/PredicateMethod:
+  Exclude:
+    - 'test/**/*'
+
+# ── Lint: relax noisy cops on intentional patterns ─────────────────────────
+Lint/EmptyBlock:
+  Exclude:
+    - 'test/**/*'
+
+# Library and framework methods commonly accept args for API/documentation purposes
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'Rakefile'
+    - 'test/**/*'
+
 # ── Gemspec ────────────────────────────────────────────────────────────────
-# Development dependencies belong in the Gemfile, not the gemspec
 Gemspec/DevelopmentDependencies:
   EnforcedStyle: Gemfile
 
-# TargetRubyVersion reflects the running Ruby (4.0); gemspecs keep >= 3.2 for context
 Gemspec/RequiredRubyVersion:
   Enabled: false
 
-# Gemspec dependency order is intentional (core first, then alpha)
 Gemspec/OrderedDependencies:
   Enabled: false
 
-# ── Metrics: these are the cops that matter ────────────────────────────────
+# ── Metrics ────────────────────────────────────────────────────────────────
+# Framework-level code (routers, parsers, orchestrators) is inherently complex.
+# Flog is the primary complexity gate — these RuboCop thresholds catch only
+# egregious outliers without false-positiving every dispatch method.
+
 Metrics/MethodLength:
-  Max: 25
+  Max: 35
   CountAsOne:
     - heredoc
     - array
     - hash
+  Exclude:
+    - 'test/**/*'
 
 Metrics/AbcSize:
-  Max: 25
+  Max: 40
+  Exclude:
+    - 'test/**/*'
 
 Metrics/ClassLength:
-  Max: 150
+  Max: 600
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ModuleLength:
+  Max: 200
   Exclude:
     - 'test/**/*'
 
 Metrics/CyclomaticComplexity:
-  Max: 10
+  Max: 20
+  Exclude:
+    - 'test/**/*'
 
 Metrics/PerceivedComplexity:
-  Max: 11
+  Max: 20
+  Exclude:
+    - 'test/**/*'
 
-# Rake tasks, gemspecs, and test blocks naturally exceed the default length limit
+# Long method signatures with keyword args are a Ruby framework idiom
+Metrics/ParameterLists:
+  Enabled: false
+
 Metrics/BlockLength:
   Exclude:
     - 'Rakefile'

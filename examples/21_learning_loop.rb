@@ -19,9 +19,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/21_learning_loop.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 SNIPPETS = [
   {
@@ -66,20 +64,17 @@ SNIPPETS = [
   }
 ].freeze
 
-puts "=" * 65
-puts "Example 21: Learning Accumulation Loop"
-puts "=" * 65
-puts
+banner "Learning Accumulation Loop"
 
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "code_reviewer",
-  system_prompt: <<~PROMPT,
+  system_prompt: <<~PROMPT
     You are a concise Ruby code reviewer. For each snippet:
     1. Identify the main issue (one sentence).
     2. Show the improved version (code block).
     Keep responses under 80 words total.
   PROMPT
-  model: "claude-haiku-4-5-20251001"
 )
 
 SNIPPETS.each_with_index do |item, i|
@@ -88,7 +83,7 @@ SNIPPETS.each_with_index do |item, i|
   # ---------------------------------------------------------------
   # Show what learnings are active going into this run
   # ---------------------------------------------------------------
-  puts "--- Run #{run_number} ---"
+  section "Run #{run_number}"
   if robot.learnings.empty?
     puts "Learnings:  (none yet)"
   else
@@ -117,16 +112,14 @@ end
 # ---------------------------------------------------------------
 # Show the full accumulated learning list
 # ---------------------------------------------------------------
-puts "=" * 65
-puts "Accumulated learnings (#{robot.learnings.size} total):"
+section "Accumulated Learnings (#{robot.learnings.size} total)"
 robot.learnings.each_with_index { |l, i| puts "  #{i + 1}. #{l}" }
 puts
 
 # ---------------------------------------------------------------
 # Demonstrate superset dedup: a broader learning replaces narrower ones
 # ---------------------------------------------------------------
-puts "--- Deduplication demo ---"
-puts
+section "Deduplication Demo"
 robot2 = RobotLab.build(name: "reviewer2", system_prompt: "You review code.")
 
 robot2.learn("avoid using puts")
@@ -140,14 +133,13 @@ puts
 # Demonstrate persistence: learnings survive a robot rebuild using
 # the same Memory object
 # ---------------------------------------------------------------
-puts "--- Persistence across rebuild ---"
-puts
+section "Persistence Across Rebuild"
 
 shared_memory = robot.instance_variable_get(:@memory)
 rebuilt = RobotLab.build(
+  model: LLM[:default].model,
   name: "code_reviewer",
-  system_prompt: "You review code.",
-  model: "claude-haiku-4-5-20251001"
+  system_prompt: "You review code."
 )
 rebuilt.instance_variable_set(:@memory, shared_memory)
 
@@ -159,6 +151,5 @@ puts "Learnings on rebuilt robot (#{rebuilt.learnings.size}):"
 rebuilt.learnings.each_with_index { |l, i| puts "  #{i + 1}. #{l}" }
 puts
 
-puts "=" * 65
+hr
 puts "Learning loop demo complete."
-puts "=" * 65

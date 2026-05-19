@@ -65,7 +65,6 @@ module RobotLab
         case content
         when String then content
         when Array  then content.filter_map { |p| p[:text] || p["text"] }.join(" ")
-        else nil
         end
       end
     end

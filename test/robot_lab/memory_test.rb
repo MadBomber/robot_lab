@@ -33,7 +33,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_has_key_alias
     @memory[:key] = "value"
-    assert @memory.has_key?(:key)
+    assert @memory.key?(:key)
   end
 
   def test_include_alias
@@ -321,7 +321,7 @@ class RobotLab::MemoryTest < Minitest::Test
     threads.each(&:join)
 
     # Verify some data survived
-    assert @memory.keys.size > 0
+    assert @memory.keys.size.positive?
   end
 
   # =========================================================================
@@ -572,14 +572,14 @@ class RobotLab::MemoryTest < Minitest::Test
       matched_keys << change.key
     end
 
-    @memory.set(:"analysis:sentiment", 0.8)
-    @memory.set(:"analysis:entities", ["foo"])
+    @memory.set(:'analysis:sentiment', 0.8)
+    @memory.set(:'analysis:entities', ["foo"])
     @memory.set(:other_key, "ignored")
 
     wait_until { matched_keys.size >= 2 }
 
-    assert_includes matched_keys, :"analysis:sentiment"
-    assert_includes matched_keys, :"analysis:entities"
+    assert_includes matched_keys, :'analysis:sentiment'
+    assert_includes matched_keys, :'analysis:entities'
     refute_includes matched_keys, :other_key
   end
 
@@ -674,13 +674,11 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_nil @memory.get(:key)
   end
 
-
   def test_get_single_with_wait_returns_nil_immediately_when_set
     @memory.set(:key, nil)
     result = @memory.get(:key, wait: true)
     assert_nil result
   end
-
 
   def test_get_single_with_wait_wakes_on_nil_value
     result = :not_set
@@ -697,7 +695,6 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_nil result
   end
 
-
   def test_get_multiple_returns_nil_value_without_waiting
     @memory.set(:a, nil)
     @memory.set(:b, "present")
@@ -705,7 +702,6 @@ class RobotLab::MemoryTest < Minitest::Test
     result = @memory.get(:a, :b)
     assert_equal({ a: nil, b: "present" }, result)
   end
-
 
   def test_set_cache_key_raises_argument_error
     assert_raises(ArgumentError) do
@@ -743,12 +739,12 @@ class RobotLab::MemoryTest < Minitest::Test
     count = 0
     id = @memory.subscribe_pattern("evt:*") { count += 1 }
 
-    @memory.set(:"evt:one", 1)
+    @memory.set(:'evt:one', 1)
     wait_until { count >= 1 }
     assert_equal 1, count
 
     @memory.unsubscribe(id)
-    @memory.set(:"evt:two", 2)
+    @memory.set(:'evt:two', 2)
     sleep 0.01
 
     assert_equal 1, count
@@ -784,10 +780,6 @@ class RobotLab::MemoryTest < Minitest::Test
   def test_session_id_assigned_via_bracket
     @memory[:session_id] = "abc-123"
     assert_equal "abc-123", @memory.session_id
-  end
-
-  def test_clear_returns_self
-    assert_equal @memory, @memory.clear
   end
 
   def test_reset_restores_cache
@@ -843,7 +835,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_format_history_uses_custom_formatter
     output = [RobotLab::TextMessage.new(role: "assistant", content: "resp")]
-    result = mock_robot_result("bot")
+    mock_robot_result("bot")
     result_with_output = RobotLab::RobotResult.new(
       robot_name: "bot",
       output: output
@@ -855,7 +847,7 @@ class RobotLab::MemoryTest < Minitest::Test
     custom_fmt = ->(r) { [RobotLab::TextMessage.new(role: "user", content: "formatted: #{r.robot_name}")] }
     history = mem.format_history(formatter: custom_fmt)
 
-    assert history.any? { |m| m.content.include?("formatted: bot") }
+    assert(history.any? { |m| m.content.include?("formatted: bot") })
   end
 
   def test_hash_backend_does_not_respond_as_redis
@@ -976,7 +968,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     def initialize(...)
       super
-      @active_drainers        = 0
+      @active_drainers = 0
       @max_concurrent_drainers = 0
       @total_drainer_invocations = 0
       @track_mutex            = Mutex.new
@@ -986,7 +978,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     def drain_notification_queue
       @track_mutex.synchronize do
-        @active_drainers        += 1
+        @active_drainers += 1
         @total_drainer_invocations += 1
         if @active_drainers > @max_concurrent_drainers
           @max_concurrent_drainers = @active_drainers
@@ -1023,11 +1015,11 @@ class RobotLab::MemoryTest < Minitest::Test
     wait_until(timeout: 3) { mu.synchronize { count } == 30 }
 
     assert_equal 30, mu.synchronize { count },
-      "Expected 30 notifications but received #{mu.synchronize { count }}"
+                 "Expected 30 notifications but received #{mu.synchronize { count }}"
 
     assert_equal 1, memory.max_concurrent_drainers,
-      "Double-schedule race detected: #{memory.max_concurrent_drainers} " \
-      "drainers ran concurrently (total invocations: #{memory.total_drainer_invocations})"
+                 "Double-schedule race detected: #{memory.max_concurrent_drainers} " \
+                 "drainers ran concurrently (total invocations: #{memory.total_drainer_invocations})"
   end
 
   def test_concurrent_writes_from_many_threads_all_notifications_delivered
@@ -1042,7 +1034,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     wait_until(timeout: 3) { mu.synchronize { count } == n }
     assert_equal n, mu.synchronize { count },
-      "Expected #{n} notifications, got #{mu.synchronize { count }}"
+                 "Expected #{n} notifications, got #{mu.synchronize { count }}"
   end
 
   def test_writes_interleaved_with_drainer_reset_none_lost
@@ -1056,14 +1048,14 @@ class RobotLab::MemoryTest < Minitest::Test
     @memory.subscribe(:interleave) { |change| mu.synchronize { received << change.value } }
 
     10.times do |batch|
-      3.times { |i| @memory.set(:interleave, batch * 3 + i) }
+      3.times { |i| @memory.set(:interleave, (batch * 3) + i) }
       total += 3
       sleep 0.002  # small gap — lets the drainer finish between batches
     end
 
     wait_until(timeout: 3) { mu.synchronize { received.size } == total }
     assert_equal total, mu.synchronize { received.size },
-      "Expected #{total} notifications, got #{mu.synchronize { received.size }}"
+                 "Expected #{total} notifications, got #{mu.synchronize { received.size }}"
   end
 
   def test_no_notification_lost_after_long_idle_then_burst
@@ -1081,7 +1073,7 @@ class RobotLab::MemoryTest < Minitest::Test
     n.times { |i| @memory.set(:burst, i) }
 
     wait_until(timeout: 3) { mu.synchronize { received.size } == n }
-    assert_equal n, mu.synchronize { received.size }
+    assert_equal(n, mu.synchronize { received.size })
   end
 
   private

@@ -9,10 +9,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/03_network.rb
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Classifier robot that activates the appropriate specialist
 class ClassifierRobot < RobotLab::Robot
@@ -40,7 +37,7 @@ class ClassifierRobot < RobotLab::Robot
 end
 
 # Shared RunConfig — all robots in this network use the same model
-shared_config = RobotLab::RunConfig.new(model: "claude-3-haiku-20240307")
+shared_config = RobotLab::RunConfig.new(model: LLM[:default].model)
 
 # Create specialized robots (no model: needed — inherited from RunConfig)
 classifier = ClassifierRobot.new(
@@ -50,18 +47,21 @@ classifier = ClassifierRobot.new(
 )
 
 billing_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "billing",
   template: :billing,
   config: shared_config
 )
 
 technical_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "technical",
   template: :technical,
   config: shared_config
 )
 
 general_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "general",
   template: :general,
   config: shared_config
@@ -75,11 +75,10 @@ network = RobotLab.create_network(name: "support_network", config: shared_config
   task :general, general_robot, depends_on: :optional
 end
 
-puts "Running multi-robot network..."
-puts "-" * 40
+banner "Multi-Robot Network"
 puts "Network structure:"
 puts network.visualize
-puts "-" * 40
+hr
 
 # Run the network with a billing question
 result = network.run(message: "I was charged twice for my subscription last month. Can you help?")
@@ -102,4 +101,4 @@ if result.value.is_a?(RobotLab::RobotResult)
   puts "   Response: #{content[0..200]}..." if content
 end
 
-puts "-" * 40
+hr

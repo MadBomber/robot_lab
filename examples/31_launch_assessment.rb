@@ -47,11 +47,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/31_launch_assessment.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
+require_relative "common"
 
 # ── AnalystRobot ────────────────────────────────────────────────────────────────
 #
@@ -65,6 +61,7 @@ class AnalystRobot < RobotLab::Robot
   def initialize(name:, memory_key:, role:)
     super(
       name:          name,
+      model:         LLM[:default].model,
       system_prompt: "You are a #{role}. " \
                      "Review the product brief in 2-3 crisp sentences from your area of expertise. " \
                      "Close with a one-word verdict: READY or NOT-READY."
@@ -172,6 +169,7 @@ end
 
 director = LaunchDirector.new(
   name:          "launch_director",
+  model:         LLM[:default].model,
   system_prompt: "You are the VP of Product making the final launch call."
 )
 
@@ -202,10 +200,8 @@ end
 
 # ── Run ─────────────────────────────────────────────────────────────────────────
 
-puts "=" * 68
-puts "Example 31: Product Launch Assessment"
+banner "Product Launch Assessment"
 puts "  6 specialist analysts in parallel, max_concurrent_robots: 4"
-puts "=" * 68
 puts
 puts "Pipeline:"
 puts network.visualize
@@ -215,30 +211,21 @@ puts
 puts "Product brief:"
 puts PRODUCT_BRIEF.strip.gsub(/^/, "  ")
 puts
-puts "-" * 68
-puts "Running — analysts 5 and 6 queue until a semaphore slot opens..."
-puts "-" * 68
-puts
+section "Running — Analysts 5 and 6 Queue Until a Semaphore Slot Opens"
 
 $run_start = Time.now
 result     = network.run(message: PRODUCT_BRIEF)
 elapsed    = "%.1f" % (Time.now - $run_start)
 
 puts
-puts "-" * 68
+hr
 puts "All analysts complete. Total wall time: #{elapsed}s"
-puts "-" * 68
-puts
-puts "=" * 68
-puts "LAUNCH DIRECTOR RECOMMENDATION"
-puts "=" * 68
-puts
+hr
+
+section "Launch Director Recommendation"
 puts network.memory[:recommendation]
 puts
-puts "=" * 68
-puts "INDIVIDUAL ANALYST VERDICTS"
-puts "=" * 68
-puts
+section "Individual Analyst Verdicts"
 analyst_robots.each do |robot|
   label  = robot.name.gsub("_", " ").upcase
   finding = network.memory.get(robot.memory_key).to_s

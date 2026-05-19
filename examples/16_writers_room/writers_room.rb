@@ -35,13 +35,11 @@
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require "json"
-require_relative "../../lib/robot_lab"
+require_relative "../common"
 require_relative "display"
 require_relative "tools"
 require_relative "room"
 require_relative "writer"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
 
 # ── Mode Descriptors ────────────────────────────────────────
 
@@ -128,7 +126,7 @@ FileUtils.mkdir_p(OUTPUT_DIR)
 display = Display.new(log_path: log_path)
 
 shared_config = RobotLab::RunConfig.new(
-  model: "claude-sonnet-4-5-20250929",
+  model: LLM[:default].model,
   temperature: 0.7
 )
 

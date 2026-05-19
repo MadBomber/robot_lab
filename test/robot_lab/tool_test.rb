@@ -197,7 +197,10 @@ class RobotLab::ToolTest < Minitest::Test
         properties: { key: { type: "string" } },
         required: ["key"]
       }
-    ) { |args| received_args = args; "ok" }
+    ) do |args|
+      received_args = args
+      "ok"
+    end
 
     tool.call({ "key" => "value" })
     assert_equal({ key: "value" }, received_args)
@@ -205,7 +208,10 @@ class RobotLab::ToolTest < Minitest::Test
 
   def test_call_with_symbol_keys
     received_args = nil
-    tool = RobotLab::Tool.create(name: "test") { |args| received_args = args; "ok" }
+    tool = RobotLab::Tool.create(name: "test") do |args|
+      received_args = args
+      "ok"
+    end
 
     tool.call({ key: "value" })
     assert_equal({ key: "value" }, received_args)
@@ -296,7 +302,7 @@ class RobotLab::ToolTest < Minitest::Test
   def test_params_schema_from_param_dsl
     klass = Class.new(RobotLab::Tool) do
       param :x, type: "integer", desc: "An integer"
-      def execute(x:); x; end
+      def execute(x:) = x
     end
 
     tool = klass.new
@@ -348,7 +354,7 @@ class RobotLab::ToolTest < Minitest::Test
 
   def test_execute_error_is_logged
     tool = RobotLab::Tool.create(name: "log_tool") do |_args|
-      raise RuntimeError, "disk full"
+      raise "disk full"
     end
 
     log_output = StringIO.new
@@ -422,12 +428,12 @@ class RobotLab::ToolTest < Minitest::Test
 
   def test_raise_on_error_is_per_class
     safe_class = Class.new(RobotLab::Tool) do
-      def execute(**); raise "oops"; end
+      def execute(**) = raise("oops")
     end
 
     critical_class = Class.new(RobotLab::Tool) do
       self.raise_on_error = true
-      def execute(**); raise "oops"; end
+      def execute(**) = raise("oops")
     end
 
     # Safe class returns error string
@@ -507,7 +513,7 @@ class RobotLab::ToolTest < Minitest::Test
     klass = Class.new(RobotLab::Tool) do
       description "Inline tool"
       param :x, type: "string", desc: "Input"
-      def execute(x:); "inline:#{x}"; end
+      def execute(x:) = "inline:#{x}"
     end
     tool = klass.new
     assert_equal "inline:hello", tool.call({ "x" => "hello" })

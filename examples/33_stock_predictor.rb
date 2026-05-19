@@ -207,6 +207,7 @@ puts "-" * 60
 redis      = Redis.new
 prices     = []
 robot      = RobotLab.build(
+  model: "gpt-5.4",
                name:          "predictor_tuner",
                system_prompt: <<~PROMPT,
                  You are a quantitative analyst tuning an ensemble stock price range

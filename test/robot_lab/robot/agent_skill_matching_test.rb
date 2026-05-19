@@ -96,7 +96,7 @@ module RobotLab
 
         instructions = system_instructions(robot)
         assert_includes instructions, skill.instructions,
-          "Expected skill instructions to survive rerender_template"
+                        "Expected skill instructions to survive rerender_template"
       end
 
       def test_match_degrades_gracefully_on_embedding_failure

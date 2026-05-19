@@ -22,6 +22,7 @@ class RecruitAnalyst < RobotLab::Tool
       robot.analysts_spawned += 1
       robot.spawn(
         name: "#{specialty}_analyst",
+        model: LLM[:default].model,
         system_prompt:
           "You are an expert #{specialty.tr('_', ' ')} analyst " \
           "for stand-up comedy. You've studied the craft for decades. " \
@@ -85,6 +86,7 @@ class Scout < RobotLab::Robot
 
     super(
       name: "scout",
+      model: LLM[:default].model,
       template: :open_mic_scout,
       bus: bus,
       local_tools: [

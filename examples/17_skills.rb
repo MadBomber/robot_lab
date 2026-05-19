@@ -40,10 +40,7 @@
 #   ├── pii_redactor.md         — Leaf skill: redact PII
 #   └── audit_trail.md          — Leaf skill: audit metadata in every response
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Send logger output to a file instead of stdout
 require 'logger'
@@ -120,10 +117,7 @@ ALERTS = [
 # Build the Incident Responder with Composable Skills
 # =============================================================================
 
-puts "=" * 70
-puts "RobotLab Skills Demo — SRE Incident Response System"
-puts "=" * 70
-puts
+banner "RobotLab Skills Demo — SRE Incident Response System"
 
 # Show the skill composition
 puts "Skill composition:"
@@ -142,6 +136,7 @@ puts
 # - sre_compliance:    Recursive skill — auto-expands to include pii_redactor
 #                      and audit_trail before its own compliance instructions
 responder = RobotLab.build(
+  model: LLM[:default].model,
   name: "incident_responder",
   template: :incident_responder,
   skills: [:runbook_protocol, :structured_output, :sre_compliance],
@@ -165,13 +160,13 @@ messages = chat.instance_variable_get(:@messages)
 system_msg = messages.find { |m| m.role.to_s == "system" }
 if system_msg
   prompt = system_msg.content
-  puts "-" * 70
+  hr
   puts "Assembled system prompt (#{prompt.length} chars, #{prompt.lines.count} lines):"
-  puts "-" * 70
+  hr
   prompt.lines.each_with_index do |line, i|
     puts "  %3d  %s" % [i + 1, line]
   end
-  puts "-" * 70
+  hr
 end
 
 # =============================================================================
@@ -179,6 +174,7 @@ end
 # =============================================================================
 
 plain_responder = RobotLab.build(
+  model: LLM[:default].model,
   name: "plain_responder",
   template: :incident_responder,
   context: {
@@ -202,11 +198,7 @@ end
 # =============================================================================
 
 ALERTS.each_with_index do |alert, index|
-  puts
-  puts "=" * 70
-  puts "Incident #{index + 1}: #{alert[:label]}"
-  puts "=" * 70
-  puts
+  section "Incident #{index + 1}: #{alert[:label]}"
 
   result = responder.run(alert[:data])
   content = result.output.first&.content.to_s
@@ -217,7 +209,6 @@ ALERTS.each_with_index do |alert, index|
   puts
 end
 
-puts "=" * 70
 puts
 puts <<~FOOTER
   This example demonstrates:

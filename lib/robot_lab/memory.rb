@@ -89,7 +89,8 @@ module RobotLab
     #
     # @example Network-owned memory
     #   Memory.new(network_name: "support_pipeline")
-    def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true, network_name: nil)
+    def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true,
+                   network_name: nil)
       @backend = select_backend(backend)
       @mutex = Mutex.new
       @enable_cache = enable_cache
@@ -104,7 +105,7 @@ module RobotLab
       set_internal(:cache, @enable_cache ? RubyLLM::SemanticCache : nil)
 
       # Data proxy for method-style access
-      @data_proxy = nil
+      @data = nil
 
       # Reactive infrastructure
       @subscriptions = Hash.new { |h, k| h[k] = [] }
@@ -149,7 +150,7 @@ module RobotLab
       # Reserved keys have special handling (no notifications)
       case key
       when :data
-        @data_proxy = nil  # Reset proxy
+        @data = nil  # Reset proxy
         set_internal(:data, value.is_a?(Hash) ? value.transform_keys(&:to_sym) : value)
       when :results
         set_internal(:results, Array(value))
@@ -164,8 +165,6 @@ module RobotLab
         # Non-reserved keys use reactive set
         set(key, value)
       end
-
-      value
     end
 
     # Access runtime data through StateProxy
@@ -173,7 +172,7 @@ module RobotLab
     # @return [StateProxy] proxy for method-style data access
     #
     def data
-      @data_proxy ||= StateProxy.new(get_internal(:data) || {})
+      @data ||= StateProxy.new(get_internal(:data) || {})
     end
 
     # Get copy of results (immutable access)
@@ -207,7 +206,6 @@ module RobotLab
     #
     def session_id=(id)
       set_internal(:session_id, id)
-      self
     end
 
     # Get the semantic cache module
@@ -588,7 +586,7 @@ module RobotLab
         @backend[:session_id] = nil
         @backend[:cache] = cached  # Restore cache instance
       end
-      @data_proxy = nil
+      @data = nil
       self
     end
 
@@ -639,7 +637,7 @@ module RobotLab
         results: results.map(&:export),
         messages: messages.map(&:to_h),
         session_id: session_id,
-        custom: keys.each_with_object({}) { |k, h| h[k] = self[k] }
+        custom: keys.to_h { |k| [k, self[k]] }
       }.compact
     end
 
@@ -648,8 +646,8 @@ module RobotLab
     # @param args [Array] arguments passed to to_json
     # @return [String]
     #
-    def to_json(*args)
-      to_h.to_json(*args)
+    def to_json(*)
+      to_h.to_json(*)
     end
 
     # Reconstruct memory from hash
@@ -699,11 +697,9 @@ module RobotLab
 
     def select_backend(preference)
       case preference
-      when :redis
-        create_redis_backend || create_hash_backend
       when :hash
         create_hash_backend
-      else # :auto
+      else # :redis, :auto
         create_redis_backend || create_hash_backend
       end
     end
@@ -725,7 +721,7 @@ module RobotLab
 
       # Check if Redis is configured in RobotLab
       redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
-      redis_config || ENV["REDIS_URL"]
+      redis_config || ENV.fetch("REDIS_URL", nil)
     end
 
     def get_internal(key)
@@ -880,14 +876,14 @@ module RobotLab
       end
     ensure
       reschedule = @notification_queue_mutex.synchronize do
-        if !@notification_queue.empty?
+        if @notification_queue.empty?
+          @drainer_scheduled = false
+          false
+        else
           # Keep the flag set so concurrent writers don't also spawn a drainer.
           # Only we will reschedule — no double-schedule race.
           @drainer_scheduled = true
           true
-        else
-          @drainer_scheduled = false
-          false
         end
       end
       dispatch_async { drain_notification_queue } if reschedule
@@ -900,9 +896,9 @@ module RobotLab
     def pattern_to_regex(pattern)
       # Convert glob pattern to regex
       regex_str = pattern
-        .gsub(".", "\\.")
-        .gsub("*", ".*")
-        .gsub("?", ".")
+                  .gsub(".", "\\.")
+                  .gsub("*", ".*")
+                  .gsub("?", ".")
 
       Regexp.new("\\A#{regex_str}\\z")
     end
@@ -927,7 +923,6 @@ module RobotLab
     def []=(key, value)
       serialized = value.is_a?(String) ? value : value.to_json
       @redis.set("#{@namespace}:#{key}", serialized)
-      value
     end
 
     def key?(key)

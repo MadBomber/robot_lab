@@ -11,10 +11,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/05_streaming.rb
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Send logger output to a file instead of stdout
 require 'logger'
@@ -22,19 +19,17 @@ log_file = File.join(__dir__, "05.log")
 RobotLab.config.logger = Logger.new(log_file)
 RubyLLM.configure { |c| c.logger = Logger.new(log_file) }
 
-puts "Streaming Content Example"
-puts "=" * 50
-puts ""
+banner "Streaming Content"
 
 # ── 1. Stored callback (on_content:) ─────────────────────────────
 #
 # Wire streaming at build time. The callback fires on every run() call.
 
-puts "1. Stored callback (on_content:)"
-puts "-" * 50
+section "1. Stored Callback (on_content:)"
 
 chunks_received = 0
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "storyteller",
   system_prompt: "You are a concise storyteller. Keep responses under 3 sentences.",
   on_content: ->(chunk) {
@@ -53,11 +48,11 @@ puts ""
 #
 # Pass a block to run() for one-off streaming.
 
-puts "2. Per-call block"
-puts "-" * 50
+section "2. Per-call Block"
 
 block_chunks = 0
 bare_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "factbot",
   system_prompt: "You are concise. Answer in one sentence."
 )
@@ -75,13 +70,13 @@ puts ""
 #
 # When both exist, both fire: stored callback first, then block.
 
-puts "3. Both together (stored fires first, then block)"
-puts "-" * 50
+section "3. Both Together (stored fires first, then block)"
 
 stored_log = []
 block_log  = []
 
 combo_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "combo",
   system_prompt: "You are concise. Answer in one sentence.",
   on_content: ->(chunk) { stored_log << chunk.content }
@@ -101,11 +96,11 @@ puts ""
 #
 # on_content participates in the config cascade.
 
-puts "4. Via RunConfig (config cascade)"
-puts "-" * 50
+section "4. Via RunConfig (config cascade)"
 
 config_chunks = 0
 config = RobotLab::RunConfig.new(
+  model: LLM[:default].model,
   on_content: ->(chunk) {
     print chunk.content
     config_chunks += 1
@@ -113,6 +108,7 @@ config = RobotLab::RunConfig.new(
 )
 
 config_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "config_bot",
   system_prompt: "You are concise. Answer in one sentence.",
   config: config
@@ -126,9 +122,7 @@ puts ""
 
 # ── Summary ──────────────────────────────────────────────────────
 
-puts "=" * 50
-puts "Summary"
-puts ""
+section "Summary"
 puts <<~SUMMARY
   on_content: callback  — wired at build time, fires every run()
   run() { |chunk| ... } — per-call streaming block

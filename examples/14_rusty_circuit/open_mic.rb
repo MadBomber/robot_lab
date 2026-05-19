@@ -38,10 +38,8 @@
 
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
-require_relative "../../lib/robot_lab"
+require_relative "../common"
 require_relative "display"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
 
 MAX_ROUNDS = 5
 

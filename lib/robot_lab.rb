@@ -109,7 +109,6 @@ module RobotLab
       @extensions.keys
     end
 
-
     # Returns the Config object (MywayConfig-based).
     #
     # Configuration is automatically loaded from:
@@ -129,7 +128,6 @@ module RobotLab
       @config ||= Config.new.tap(&:after_load)
     end
 
-
     # Yields the Config object for block-style configuration.
     #
     # @yield [Config] the config instance
@@ -143,7 +141,6 @@ module RobotLab
       yield config
     end
 
-
     # Reload configuration from all sources.
     #
     # Clears the cached Config instance, forcing it to be
@@ -154,7 +151,6 @@ module RobotLab
       @config = nil
       config
     end
-
 
     # Factory method to create a new Robot instance.
     #
@@ -182,7 +178,8 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil, config: nil, **options)
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil,
+              config: nil, **)
       Robot.new(
         name: name,
         template: template,
@@ -192,10 +189,9 @@ module RobotLab
         bus: bus,
         skills: skills,
         config: config,
-        **options
+        **
       )
     end
-
 
     # Factory method to create a new Network of robots.
     #
@@ -224,10 +220,9 @@ module RobotLab
     #     step :entities, entity_bot, depends_on: [:fetch]
     #     step :merge, merger, depends_on: [:sentiment, :entities]
     #   end
-    def create_network(name:, concurrency: :auto, config: nil, &block)
-      Network.new(name: name, concurrency: concurrency, config: config, &block)
+    def create_network(name:, concurrency: :auto, config: nil, &)
+      Network.new(name: name, concurrency: concurrency, config: config, &)
     end
-
 
     # Factory method to create a new Memory object.
     #
@@ -245,10 +240,8 @@ module RobotLab
     #
     # @example Memory with caching disabled
     #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
-    def create_memory(data: {}, enable_cache: true, **options)
-      Memory.new(data: data, enable_cache: enable_cache, **options)
+    def create_memory(data: {}, enable_cache: true, **)
+      Memory.new(data: data, enable_cache: enable_cache, **)
     end
-
-
   end
 end

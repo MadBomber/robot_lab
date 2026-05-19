@@ -81,8 +81,8 @@ class RobotLab::StateProxyTest < Minitest::Test
   end
 
   def test_has_key_alias
-    assert @proxy.has_key?(:count)
-    refute @proxy.has_key?(:missing)
+    assert @proxy.key?(:count)
+    refute @proxy.key?(:missing)
   end
 
   def test_include_alias
@@ -105,8 +105,7 @@ class RobotLab::StateProxyTest < Minitest::Test
 
   # Each iteration test
   def test_each_iterates_over_key_value_pairs
-    pairs = []
-    @proxy.each { |k, v| pairs << [k, v] }
+    pairs = @proxy.map { |k, v| [k, v] }
 
     assert_includes pairs, [:count, 0]
     assert_includes pairs, [:name, "test"]

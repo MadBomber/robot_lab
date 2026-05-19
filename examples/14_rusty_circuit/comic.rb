@@ -56,6 +56,7 @@ class GetCoaching < RobotLab::Tool
       robot.coaches_spawned += 1
       robot.spawn(
         name: "comedy_coach",
+        model: LLM[:default].model,
         system_prompt:
           "You are a veteran comedy coach backstage at a live show. " \
           "A comedian is struggling and needs quick, actionable advice. " \
@@ -100,6 +101,7 @@ class Comic < RobotLab::Robot
 
     super(
       name: "comic",
+      model: LLM[:default].model,
       template: :open_mic_comic,
       bus: bus,
       local_tools: [

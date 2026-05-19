@@ -81,7 +81,7 @@ class RobotLab::MCP::Transports::StdioTest < Minitest::Test
 
     response_json = JSON.generate({ jsonrpc: "2.0", id: 1, result: { tools: [] } })
     fake_stdin = StringIO.new
-    fake_stdout = StringIO.new(response_json + "\n")
+    fake_stdout = StringIO.new("#{response_json}\n")
     transport.instance_variable_set(:@stdin, fake_stdin)
     transport.instance_variable_set(:@stdout, fake_stdout)
 
@@ -98,7 +98,7 @@ class RobotLab::MCP::Transports::StdioTest < Minitest::Test
     notification = JSON.generate({ jsonrpc: "2.0", method: "notifications/something" })
     response = JSON.generate({ jsonrpc: "2.0", id: 1, result: { ok: true } })
     fake_stdin = StringIO.new
-    fake_stdout = StringIO.new(notification + "\n" + response + "\n")
+    fake_stdout = StringIO.new("#{notification}\n#{response}\n")
     transport.instance_variable_set(:@stdin, fake_stdin)
     transport.instance_variable_set(:@stdout, fake_stdout)
 
@@ -185,7 +185,7 @@ class RobotLab::MCP::Transports::StdioTest < Minitest::Test
 
     init_response = JSON.generate({ jsonrpc: "2.0", id: 0, result: { protocolVersion: "2024-11-05" } })
     fake_stdin = StringIO.new
-    fake_stdout = StringIO.new(init_response + "\n")
+    fake_stdout = StringIO.new("#{init_response}\n")
     transport.instance_variable_set(:@stdin, fake_stdin)
     transport.instance_variable_set(:@stdout, fake_stdout)
 

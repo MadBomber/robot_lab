@@ -29,13 +29,16 @@ class MemoryBlockingReadIntegrationTest < Minitest::Test
     mutex = Mutex.new
 
     threads = 3.times.map do
-      Thread.new { v = memory.get(:signal, wait: 2); mutex.synchronize { results << v } }
+      Thread.new do
+        v = memory.get(:signal, wait: 2)
+        mutex.synchronize { results << v }
+      end
     end
     sleep 0.05
     memory[:signal] = "go"
     threads.each { |t| t.join(1) }
 
     assert_equal 3, results.size
-    assert results.all? { |r| r == "go" }
+    assert(results.all? { |r| r == "go" })
   end
 end

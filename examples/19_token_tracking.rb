@@ -20,9 +20,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/19_token_tracking.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Anthropic claude-haiku-4-5 pricing (as of early 2026)
 HAIKU_INPUT_CPM  = 0.80   # $ per 1M input tokens
@@ -41,15 +39,12 @@ def first_line(text)
   text&.strip&.lines&.first&.strip || ""
 end
 
-puts "=" * 60
-puts "Example 19: Per-Robot Token & Cost Tracking"
-puts "=" * 60
-puts
+banner "Per-Robot Token & Cost Tracking"
 
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "analyst",
-  system_prompt: "You are a concise technical analyst. Keep every reply under 40 words.",
-  model: "claude-haiku-4-5-20251001"
+  system_prompt: "You are a concise technical analyst. Keep every reply under 40 words."
 )
 
 prompts = [
@@ -71,7 +66,7 @@ prompts.each_with_index do |prompt, i|
   puts
 end
 
-puts "-" * 60
+hr
 puts "After #{prompts.size} runs:"
 puts "  Total tokens: #{token_summary(robot.total_input_tokens, robot.total_output_tokens)}"
 puts "  Total cost:   #{run_cost(robot.total_input_tokens, robot.total_output_tokens)}"
@@ -106,14 +101,14 @@ puts
 # To start truly fresh (new context, new counter), build a new robot.
 # ---------------------------------------------------------------
 
-puts "-" * 60
+hr
 puts "Fresh robot — genuinely zero context:"
 puts
 
 fresh = RobotLab.build(
+  model: LLM[:default].model,
   name: "analyst2",
-  system_prompt: "You are a concise technical analyst. Keep every reply under 40 words.",
-  model: "claude-haiku-4-5-20251001"
+  system_prompt: "You are a concise technical analyst. Keep every reply under 40 words."
 )
 
 result = fresh.run("What is memoization?")
@@ -123,6 +118,5 @@ puts "  This run:   #{token_summary(result.input_tokens, result.output_tokens)}"
 puts "  Cumulative: #{token_summary(fresh.total_input_tokens, fresh.total_output_tokens)}"
 puts
 
-puts "=" * 60
+hr
 puts "Token tracking demo complete."
-puts "=" * 60

@@ -80,7 +80,7 @@ class RobotLab::WaiterTest < Minitest::Test
     threads.each { |t| t.join(1) }
 
     assert_equal 3, results.size
-    assert results.all? { |r| r == "broadcast" }
+    assert(results.all? { |r| r == "broadcast" })
   end
 
   def test_signal_with_nil_value

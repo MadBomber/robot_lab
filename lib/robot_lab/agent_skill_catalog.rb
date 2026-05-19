@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "pathname"
-
 module RobotLab
   # Singleton registry that scans ~/.prompts/skills/ and provides
   # AgentSkill lookup by ID.

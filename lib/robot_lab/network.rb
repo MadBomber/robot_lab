@@ -86,7 +86,7 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
-    def initialize(name:, concurrency: :auto, memory: nil, config: nil, parallel_mode: :async, &block)
+    def initialize(name:, concurrency: :auto, memory: nil, config: nil, parallel_mode: :async, &)
       @name = name.to_s
       @robots = {}
       @tasks = {}
@@ -97,7 +97,7 @@ module RobotLab
       @broadcast_handlers = []
       @bus_poller = BusPoller.new.start
 
-      instance_eval(&block) if block_given?
+      instance_eval(&) if block_given?
     end
 
     # Add a robot as a pipeline task with optional per-task configuration
@@ -123,7 +123,8 @@ module RobotLab
     # @example Task with dependencies
     #   task :writer, writer_robot, depends_on: [:analyst]
     #
-    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none, poller_group: :default)
+    def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none,
+             poller_group: :default)
       task_wrapper = Task.new(
         name: name,
         robot: robot,
@@ -158,8 +159,8 @@ module RobotLab
     #   end
     #   task :process, processor, depends_on: :fetch_data
     #
-    def parallel(name = nil, depends_on: :none, &block)
-      @pipeline.parallel(name, depends_on: depends_on, &block)
+    def parallel(name = nil, depends_on: :none, &)
+      @pipeline.parallel(name, depends_on: depends_on, &)
       self
     end
 
@@ -378,6 +379,5 @@ module RobotLab
       scheduler.shutdown
       results
     end
-
   end
 end

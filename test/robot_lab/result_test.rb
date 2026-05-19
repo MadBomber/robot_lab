@@ -56,7 +56,7 @@ class RobotLab::RobotResultTest < Minitest::Test
 
     refute_nil checksum
     assert_kind_of String, checksum
-    assert checksum.length > 0
+    assert checksum.length.positive?
   end
 
   def test_result_checksum_consistency
@@ -283,7 +283,6 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert result.created_at.is_a?(Time)
   end
 
-
   # --- Token tracking ---
 
   def test_token_fields_default_to_zero
@@ -291,7 +290,6 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert_equal 0, result.input_tokens
     assert_equal 0, result.output_tokens
   end
-
 
   def test_token_fields_accept_values
     result = RobotLab::RobotResult.new(
@@ -304,7 +302,6 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert_equal 50, result.output_tokens
   end
 
-
   def test_token_fields_coerce_to_integer
     result = RobotLab::RobotResult.new(
       robot_name: "robot",
@@ -315,7 +312,6 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert_equal 42, result.input_tokens
     assert_equal 21, result.output_tokens
   end
-
 
   def test_export_includes_tokens_when_nonzero
     result = RobotLab::RobotResult.new(
@@ -329,14 +325,12 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert_equal 50, exported[:output_tokens]
   end
 
-
   def test_export_omits_tokens_when_zero
     result = RobotLab::RobotResult.new(robot_name: "robot", output: [])
     exported = result.export
     refute exported.key?(:input_tokens)
     refute exported.key?(:output_tokens)
   end
-
 
   def test_from_hash_restores_token_fields
     hash = {
@@ -392,7 +386,7 @@ class RobotLab::RobotResultTest < Minitest::Test
   end
 
   def test_normalize_tool_results_handles_tool_result_hash
-    tool = RobotLab::ToolMessage.new(id: "t1", name: "calc", input: {})
+    RobotLab::ToolMessage.new(id: "t1", name: "calc", input: {})
     result = RobotLab::RobotResult.new(
       robot_name: "robot",
       output: [],

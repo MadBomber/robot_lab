@@ -94,7 +94,7 @@ module RobotLab
       def filter_tools(tools, allowed_names:)
         return [] if allowed_names.empty?
 
-        allowed_set = allowed_names.map(&:to_s).to_set
+        allowed_set = allowed_names.to_set(&:to_s)
         tools.select { |tool| allowed_set.include?(tool_name(tool)) }
       end
 

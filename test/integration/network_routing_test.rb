@@ -58,7 +58,7 @@ class NetworkRoutingIntegrationTest < Minitest::Test
     writer  = build_robot(name: "writer")
     checker = build_robot(name: "checker")
 
-    shared_memory = nil
+    nil
     writer_chat = writer.instance_variable_get(:@chat)
     writer_chat.define_singleton_method(:ask) do |*|
       FakeResponse.new(content: "written", tool_calls: nil, stop_reason: "end_turn", tokens: nil)

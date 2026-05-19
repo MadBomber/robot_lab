@@ -18,25 +18,18 @@
 # Usage:
 #   bundle exec ruby examples/10_memory.rb
 
-# Configure template path before loading
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "json"
 require "amazing_print"
 require "hashdiff"
 
-puts "=" * 70
-puts "Example 10: Advanced Memory Operations"
-puts "=" * 70
-puts
+banner "Advanced Memory Operations"
 
 # =============================================================================
 # Section 1: StateProxy for method-style access
 # =============================================================================
 
-puts "--- Section 1: StateProxy for Method-Style Access ---"
-puts
+section "Section 1: StateProxy for Method-Style Access"
 
 memory = RobotLab.create_memory(
   data: { category: nil, priority: "low" },
@@ -64,8 +57,7 @@ puts
 # Section 2: Subscriptions and MemoryChange
 # =============================================================================
 
-puts "--- Section 2: Subscriptions and MemoryChange ---"
-puts
+section "Section 2: Subscriptions and MemoryChange"
 
 changes = []
 
@@ -107,8 +99,7 @@ puts
 # Section 3: Pattern subscriptions
 # =============================================================================
 
-puts "--- Section 3: Pattern Subscriptions ---"
-puts
+section "Section 3: Pattern Subscriptions"
 
 pattern_changes = []
 
@@ -135,8 +126,7 @@ puts
 # Section 4: Unsubscribe
 # =============================================================================
 
-puts "--- Section 4: Unsubscribe ---"
-puts
+section "Section 4: Unsubscribe"
 
 count_before = changes.size
 memory.unsubscribe(sub_id)
@@ -152,8 +142,7 @@ puts
 # Section 5: Key management
 # =============================================================================
 
-puts "--- Section 5: Key Management ---"
-puts
+section "Section 5: Key Management"
 
 puts "memory.keys (non-reserved):"
 ap memory.keys
@@ -171,8 +160,7 @@ puts
 # Section 6: Serialization round-trip
 # =============================================================================
 
-puts "--- Section 6: Serialization Round-Trip ---"
-puts
+section "Section 6: Serialization Round-Trip"
 
 hash = memory.to_h
 puts "memory.to_h:"
@@ -214,8 +202,7 @@ puts
 # Section 7: Clone for isolation
 # =============================================================================
 
-puts "--- Section 7: Clone for Isolation ---"
-puts
+section "Section 7: Clone for Isolation"
 
 cloned = memory.clone
 cloned.set(:isolated_key, "only in clone")
@@ -244,8 +231,7 @@ puts
 # Section 8: Delete and reserved key protection
 # =============================================================================
 
-puts "--- Section 8: Delete and Reserved Key Protection ---"
-puts
+section "Section 8: Delete and Reserved Key Protection"
 
 before_delete = memory.to_h
 memory.delete(:status)
@@ -272,8 +258,7 @@ puts
 # Section 9: Clear vs Reset
 # =============================================================================
 
-puts "--- Section 9: Clear vs Reset ---"
-puts
+section "Section 9: Clear vs Reset"
 
 memory.set(:temp1, "value1")
 memory.set(:temp2, "value2")
@@ -326,6 +311,5 @@ Hashdiff.diff(before_reset, after_reset).each do |change|
 end
 puts
 
-puts "=" * 70
+hr
 puts "All sections completed without any LLM calls."
-puts "=" * 70

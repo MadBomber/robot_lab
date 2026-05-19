@@ -23,7 +23,7 @@ class Heckler < RobotLab::Robot
     @won_over = false
     @display  = display
 
-    super(name: "heckler", template: :open_mic_heckler, bus: bus)
+    super(name: "heckler", model: LLM[:default].model, template: :open_mic_heckler, bus: bus)
 
     # Handle incoming messages — the core processing guard
     # serializes all deliveries, preventing concurrent run()

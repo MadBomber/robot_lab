@@ -76,8 +76,6 @@ module RobotLab
         from
       end
 
-      private
-
       # @param servers [Array<Hash, MCP::Server>]
       def self.any_descriptions?(servers)
         servers.any? { |s| !description_for(s).empty? }

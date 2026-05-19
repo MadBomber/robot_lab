@@ -46,7 +46,10 @@ class RobotLab::DoomLoopDetectorTest < Minitest::Test
 
   def test_two_tool_cycle_detected_after_three_repetitions
     # A,B, A,B, A,B
-    3.times { @detector.track("search"); @detector.track("write") }
+    3.times do
+      @detector.track("search")
+      @detector.track("write")
+    end
     assert @detector.doom_loop?
   end
 
@@ -62,7 +65,10 @@ class RobotLab::DoomLoopDetectorTest < Minitest::Test
 
   def test_partial_cycle_not_detected
     # A,B, A,B, A — only 2.5 cycles, not 3
-    2.times { @detector.track("read"); @detector.track("write") }
+    2.times do
+      @detector.track("read")
+      @detector.track("write")
+    end
     @detector.track("read")
     refute @detector.doom_loop?
   end
@@ -106,7 +112,10 @@ class RobotLab::DoomLoopDetectorTest < Minitest::Test
   end
 
   def test_cyclic_warning_names_the_pattern
-    3.times { @detector.track("read"); @detector.track("write") }
+    3.times do
+      @detector.track("read")
+      @detector.track("write")
+    end
     msg = @detector.warning_message
     assert_includes msg, "→"
     assert_includes msg, "loop"

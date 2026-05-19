@@ -60,7 +60,10 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     end
 
     received_message = nil
-    stub_robot_ask(robot2) { |msg| received_message = msg; "read it" }
+    stub_robot_ask(robot2) do |msg|
+      received_message = msg
+      "read it"
+    end
 
     network = RobotLab::Network.new(name: "shared_mem")
     network.task(:writer, robot1, depends_on: :none)
@@ -109,7 +112,10 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     stub_robot_ask(robot1) { |_msg| "output from first" }
 
     received_message = nil
-    stub_robot_ask(robot2) { |msg| received_message = msg; "output from second" }
+    stub_robot_ask(robot2) do |msg|
+      received_message = msg
+      "output from second"
+    end
 
     network = RobotLab::Network.new(name: "chaining") do
       task :first, robot1, depends_on: :none
@@ -164,7 +170,7 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
 
     # Stub ask to raise
     chat = robot.instance_variable_get(:@chat)
-    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise RuntimeError, "simulated failure" }
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise "simulated failure" }
 
     network = RobotLab::Network.new(name: "fault_test") do
       task :bad_robot, robot, depends_on: :none

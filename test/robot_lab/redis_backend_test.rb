@@ -29,11 +29,11 @@ class RobotLab::RedisBackendTest < Minitest::Test
   end
 
   def test_set_and_get_hash
-    @backend[:data] = { score: 0.8, tags: ["a", "b"] }
+    @backend[:data] = { score: 0.8, tags: %w[a b] }
     result = @backend[:data]
 
     assert_equal 0.8, result[:score]
-    assert_equal ["a", "b"], result[:tags]
+    assert_equal %w[a b], result[:tags]
   end
 
   def test_set_and_get_array

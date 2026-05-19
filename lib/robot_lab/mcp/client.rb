@@ -141,8 +141,7 @@ module RobotLab
       #
       def get_prompt(name, arguments = {})
         ensure_connected!
-        response = request(method: "prompts/get", params: { name: name, arguments: arguments })
-        response
+        request(method: "prompts/get", params: { name: name, arguments: arguments })
       end
 
       # Checks if the client is connected to the server.

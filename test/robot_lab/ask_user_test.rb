@@ -80,7 +80,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_choices_displayed_numbered
     @input.string = "1\n"
 
-    @tool.call("question" => "Pick:", "choices" => ["Ruby", "Python", "Go"])
+    @tool.call("question" => "Pick:", "choices" => %w[Ruby Python Go])
 
     output = @output.string
     assert_includes output, "1. Ruby"
@@ -91,7 +91,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_numeric_input_maps_to_choice
     @input.string = "2\n"
 
-    result = @tool.call("question" => "Pick:", "choices" => ["Ruby", "Python", "Go"])
+    result = @tool.call("question" => "Pick:", "choices" => %w[Ruby Python Go])
 
     assert_equal "Python", result
   end
@@ -99,7 +99,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_text_input_with_choices_returned_as_is
     @input.string = "Ruby\n"
 
-    result = @tool.call("question" => "Pick:", "choices" => ["Ruby", "Python", "Go"])
+    result = @tool.call("question" => "Pick:", "choices" => %w[Ruby Python Go])
 
     assert_equal "Ruby", result
   end
@@ -107,7 +107,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_out_of_range_number_returned_as_is
     @input.string = "9\n"
 
-    result = @tool.call("question" => "Pick:", "choices" => ["Ruby", "Python"])
+    result = @tool.call("question" => "Pick:", "choices" => %w[Ruby Python])
 
     assert_equal "9", result
   end
@@ -115,7 +115,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_zero_input_returned_as_is
     @input.string = "0\n"
 
-    result = @tool.call("question" => "Pick:", "choices" => ["Ruby", "Python"])
+    result = @tool.call("question" => "Pick:", "choices" => %w[Ruby Python])
 
     assert_equal "0", result
   end
@@ -149,7 +149,7 @@ class RobotLab::AskUserTest < Minitest::Test
   def test_choices_with_default_on_empty_input
     @input.string = "\n"
 
-    result = @tool.call("question" => "Pick:", "choices" => ["A", "B"], "default" => "A")
+    result = @tool.call("question" => "Pick:", "choices" => %w[A B], "default" => "A")
 
     assert_equal "A", result
   end

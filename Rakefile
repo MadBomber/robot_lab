@@ -128,14 +128,37 @@ namespace :examples do
     "18_rails" => { setup: "bin/setup", run: "bin/dev" }
   }.freeze
 
+  # Examples that require external services or user setup not guaranteed to be present
+  EXTERNAL_SERVICE_EXAMPLES = {
+    "33_stock_generator.rb" => "Redis server on localhost:6379",
+    "33_stock_predictor.rb" => "Redis server on localhost:6379 + running 33_stock_generator",
+    "34_agentskills.rb"     => "AgentSkills skill file at ~/.prompts/skills/code_reviewer/SKILL.md"
+  }.freeze
+
   desc "Run all examples (excludes standalone apps like 18_rails)"
   task :all do
+    failed = []
+
     # Single-file examples
     Dir.glob("examples/*.rb").sort.each do |example|
+      base = File.basename(example)
+
+      if EXTERNAL_SERVICE_EXAMPLES.key?(base)
+        puts "\n#{'=' * 60}"
+        puts "Skipped: #{example} (requires #{EXTERNAL_SERVICE_EXAMPLES[base]})"
+        puts '=' * 60
+        next
+      end
+
       puts "\n#{'=' * 60}"
       puts "Running: #{example}"
       puts '=' * 60
-      ruby example
+      begin
+        ruby example
+      rescue RuntimeError => e
+        puts "FAILED: #{example} — #{e.message}"
+        failed << example
+      end
     end
 
     # Subdirectory-based demos
@@ -146,7 +169,12 @@ namespace :examples do
       puts "\n#{'=' * 60}"
       puts "Running: #{path}"
       puts '=' * 60
-      ruby path
+      begin
+        ruby path
+      rescue RuntimeError => e
+        puts "FAILED: #{path} — #{e.message}"
+        failed << path
+      end
     end
 
     # Remind about standalone apps
@@ -156,6 +184,14 @@ namespace :examples do
       puts "  Setup: cd examples/#{dir} && #{commands[:setup]}"
       puts "  Run:   cd examples/#{dir} && #{commands[:run]}"
       puts '=' * 60
+    end
+
+    if failed.any?
+      puts "\n#{'=' * 60}"
+      puts "#{failed.size} example(s) failed:"
+      failed.each { |f| puts "  #{f}" }
+      puts '=' * 60
+      exit 1
     end
   end
 

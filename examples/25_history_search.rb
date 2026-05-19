@@ -13,19 +13,14 @@
 # Usage:
 #   ruby examples/25_history_search.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
 require "json"
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 CONVERSATION_TURNS = File.readlines(
   File.join(__dir__, "25_history_search", "conversation.jsonl"), chomp: true
 ).map { |line| JSON.parse(line, symbolize_names: true) }.freeze
 
-puts "=" * 60
-puts "Example 25: Chat History Search"
-puts "=" * 60
-puts
+banner "Chat History Search"
 
 # ---------------------------------------------------------------------------
 # Minimal message stub — populates history without LLM calls
@@ -35,7 +30,7 @@ FakeMsg = Struct.new(:role, :content, :tool_calls)
 # ---------------------------------------------------------------------------
 # Build a robot and inject the conversation fixture
 # ---------------------------------------------------------------------------
-robot = RobotLab.build(name: "tech_lead", system_prompt: "You are a senior engineering advisor.")
+robot = RobotLab.build(model: LLM[:default].model, name: "tech_lead", system_prompt: "You are a senior engineering advisor.")
 
 messages = CONVERSATION_TURNS.map { |t| FakeMsg.new(t[:role], t[:content], nil) }
 robot.instance_variable_get(:@chat).instance_variable_set(:@messages, messages)
@@ -88,7 +83,7 @@ end
 # ---------------------------------------------------------------------------
 # RAG pattern — retrieve the most relevant turns, then inject as context
 # ---------------------------------------------------------------------------
-puts "── RAG pattern: retrieve context, then call LLM ────────────────"
+section "RAG Pattern: Retrieve Context, Then Call LLM"
 puts "(showing retrieved context — no actual LLM call)"
 puts
 
@@ -111,9 +106,7 @@ puts
 # ---------------------------------------------------------------------------
 # When to use search_history
 # ---------------------------------------------------------------------------
-puts "=" * 60
-puts "When to use search_history"
-puts "=" * 60
+section "When to Use search_history"
 puts <<~'TEXT'
 
   Without search_history:

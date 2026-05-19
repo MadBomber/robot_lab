@@ -390,7 +390,7 @@ class RobotLab::NetworkTest < Minitest::Test
     network.task(:robot1, @robot1, depends_on: :none)
 
     captured_max_concurrent = nil
-    network.pipeline.define_singleton_method(:call_parallel) do |result, **kwargs|
+    network.pipeline.define_singleton_method(:call_parallel) do |_result, **kwargs|
       captured_max_concurrent = kwargs[:max_concurrent]
       SimpleFlow::Result.new(nil)
     end
@@ -404,7 +404,7 @@ class RobotLab::NetworkTest < Minitest::Test
     network.task(:robot1, @robot1, depends_on: :none)
 
     captured_max_concurrent = :not_set
-    network.pipeline.define_singleton_method(:call_parallel) do |result, **kwargs|
+    network.pipeline.define_singleton_method(:call_parallel) do |_result, **kwargs|
       captured_max_concurrent = kwargs[:max_concurrent]
       SimpleFlow::Result.new(nil)
     end

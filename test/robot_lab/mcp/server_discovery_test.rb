@@ -83,7 +83,7 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
 
   def test_works_with_server_objects
     result = MCP::ServerDiscovery.select("install imagemagick", from: server_objects)
-    assert result.any? { |s| s.name == "brew" }
+    assert(result.any? { |s| s.name == "brew" })
   end
 
   def test_works_with_mixed_hash_and_server_objects
@@ -92,7 +92,7 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
       server("brew", "Install, update, and manage macOS packages via Homebrew")
     ]
     result = MCP::ServerDiscovery.select("install imagemagick", from: mixed)
-    assert result.any? { |s| s.is_a?(Hash) ? s[:name] == "brew" : s.name == "brew" }
+    assert(result.any? { |s| s.is_a?(Hash) ? s[:name] == "brew" : s.name == "brew" })
   end
 
   # ── fallback: nothing above threshold ────────────────────────────────────

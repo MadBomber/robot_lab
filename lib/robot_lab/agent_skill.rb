@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "yaml"
-require "pathname"
 
 module RobotLab
   # Value object representing an AgentSkills.io skill folder.

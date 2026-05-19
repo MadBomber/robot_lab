@@ -18,7 +18,7 @@ class BusCoordinationIntegrationTest < Minitest::Test
   end
 
   def test_reply_correlates_with_sent_message
-    bus  = TypedBus::MessageBus.new
+    bus = TypedBus::MessageBus.new
     alice = RobotLab::Robot.new(name: "alice", template: :assistant, bus: bus)
     bob   = RobotLab::Robot.new(name: "bob",   template: :assistant, bus: bus)
 

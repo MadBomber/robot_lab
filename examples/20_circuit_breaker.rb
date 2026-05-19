@@ -25,9 +25,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/20_circuit_breaker.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # -------------------------------------------------------------------------
 # A tool that always says "more steps remain" — designed to induce looping
@@ -62,10 +60,7 @@ class MultiStepProcessor < RubyLLM::Tool
   end
 end
 
-puts "=" * 60
-puts "Example 20: Tool Loop Circuit Breaker"
-puts "=" * 60
-puts
+banner "Tool Loop Circuit Breaker"
 
 TASK = "Run the batch process from step 1 using the MultiStepProcessor tool. " \
        "Execute every step sequentially until the process reports 'complete'."
@@ -78,15 +73,14 @@ TASK = "Run the batch process from step 1 using the MultiStepProcessor tool. " \
 # history. Call clear_messages to flush the broken context before reuse.
 # -------------------------------------------------------------------------
 
-puts "--- Part 1: Circuit breaker fires (max_tool_rounds: 5) ---"
-puts
+section "Part 1: Circuit Breaker Fires (max_tool_rounds: 5)"
 
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "process_runner",
   system_prompt: "You are a process runner. Execute tasks exactly as instructed.",
   local_tools: [MultiStepProcessor],
-  max_tool_rounds: 5,
-  model: "claude-haiku-4-5-20251001"
+  max_tool_rounds: 5
 )
 
 begin
@@ -106,8 +100,7 @@ puts
 # Only the conversation history is cleared — the robot is then reusable.
 # -------------------------------------------------------------------------
 
-puts "--- Part 2: Recover with clear_messages ---"
-puts
+section "Part 2: Recover with clear_messages"
 
 robot.clear_messages
 puts "Chat flushed. Robot config (tools, max_tool_rounds) is unchanged."
@@ -125,8 +118,7 @@ puts
 # not a tax on well-behaved tool interactions.
 # -------------------------------------------------------------------------
 
-puts "--- Part 3: No circuit breaker — task terminates naturally ---"
-puts
+section "Part 3: No Circuit Breaker — Task Terminates Naturally"
 
 class SingleStep < RubyLLM::Tool
   description "Doubles a number and returns the result immediately."
@@ -138,16 +130,15 @@ class SingleStep < RubyLLM::Tool
 end
 
 unguarded = RobotLab.build(
+  model: LLM[:default].model,
   name: "calculator",
   system_prompt: "Use the provided tool to answer questions.",
-  local_tools: [SingleStep],
-  model: "claude-haiku-4-5-20251001"
+  local_tools: [SingleStep]
 )
 
 result = unguarded.run("Double the number 21 using the tool.")
 puts "Result: #{result.reply&.strip}"
 puts
 
-puts "=" * 60
+hr
 puts "Circuit breaker demo complete."
-puts "=" * 60

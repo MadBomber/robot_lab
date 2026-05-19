@@ -36,7 +36,7 @@ module RobotLab
       end
 
       begin
-        ready = IO.select([@read_io], nil, nil, timeout)
+        ready = @read_io.wait_readable(timeout)
 
         @mutex.synchronize do
           @waiter_count -= 1
