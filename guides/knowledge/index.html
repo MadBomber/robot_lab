@@ -2933,7 +2933,10 @@
 </tbody>
 </table>
 <h3 id="dependency">Dependency<a class="headerlink" href="#dependency" title="Permanent link">&para;</a></h3>
-<p><code>fastembed</code> is a core RobotLab dependency — no optional gem required. The ONNX model is downloaded on first use.</p>
+<p>The embedding-based document store requires the <a href="https://github.com/MadBomber/robot_lab-document_store"><code>robot_lab-document_store</code></a> extension gem. Add it to your Gemfile:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab-document_store&quot;</span>
+</span></code></pre></div>
+<p>This gem bundles <code>fastembed</code> for ONNX-based embeddings. The <code>BAAI/bge-small-en-v1.5</code> model (~23 MB) is downloaded on first use and cached in <code>~/.cache/fastembed/</code>. Without <code>robot_lab-document_store</code> loaded, calling <code>memory.store_document</code> or <code>memory.search_documents</code> raises <code>RobotLab::DependencyError</code>.</p>
 <hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
