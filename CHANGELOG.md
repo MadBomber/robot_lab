@@ -8,7 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.1] - 2026-05-11
+## [0.2.1] - 2026-05-19
+
+### Added
+
+- **`examples/common.rb`** — shared setup file required by all numbered examples. Defines:
+  - `LlmConfig = Data.define(:provider, :model)` and a frozen `LLM` hash with `:default` (OpenAI/gpt-5.4), `:local` (Ollama/llama3.2), and `:anthropic` (claude-opus-4-7) entries — access as `LLM[:default].model`
+  - `RubyLLM.configure` with null logger and `LLM[:default].model` as `default_model`
+  - `RobotLab.configure` with null logger
+  - Output helpers: `banner(title)`, `section(title)`, `hr`, `show_code(ruby_string, label:)` using `rouge` for syntax highlighting
+- **`rouge` gem** added to development group for syntax-highlighted example output
+- **`.envrc` files** in `examples/`, `examples/14_rusty_circuit/`, `examples/15_memory_network_and_bus/`, and `examples/16_writers_room/` — each exports `ROBOT_LAB_TEMPLATE_PATH` pointing at the local `prompts/` directory for use with [direnv](https://direnv.net/)
+
+### Changed
+
+- **All 27+ numbered examples** refactored to `require_relative "common"` instead of requiring the gem directly, and to use `LLM[:default].model` instead of the hardcoded string `"gpt-5.4"`
+- **Example 04 (MCP)** now calls `robot.connect_mcp!` before inspecting MCP attributes, fixing a lazy-initialization issue where `mcp_clients` and `mcp_tools` were empty until the first `run()` call
+
+## [0.2.1] - 2026-05-11 (unreleased)
 
 ### Added
 

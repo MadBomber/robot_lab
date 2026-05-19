@@ -40,7 +40,11 @@ If you're new to RobotLab, start here:
 
 -   [:octicons-pulse-24: **Observability & Safety**](observability.md)
 
-    Token tracking, circuit breakers, and learning accumulation
+    Token tracking, circuit breakers, doom loop detection, auto compaction, and learning accumulation
+
+-   [:octicons-search-24: **Knowledge & Retrieval**](knowledge.md)
+
+    Chat history search and embedding-based document store for RAG workflows
 
 </div>
 
@@ -54,7 +58,8 @@ If you're new to RobotLab, start here:
 | [MCP Integration](mcp-integration.md) | External tool servers | 10 min |
 | [Streaming](streaming.md) | Real-time responses | 5 min |
 | [Memory](memory.md) | Shared data store | 5 min |
-| [Observability & Safety](observability.md) | Token tracking, circuit breaker, learning loop | 10 min |
+| [Observability & Safety](observability.md) | Token tracking, circuit breaker, doom loop detection, auto compaction, learning loop | 10 min |
+| [Knowledge & Retrieval](knowledge.md) | Chat history search and embedding-based document store (RAG) | 10 min |
 
 ## Extension Gems
 

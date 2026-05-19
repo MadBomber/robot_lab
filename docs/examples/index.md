@@ -159,7 +159,7 @@ puts result.last_text_content
 
 3. Run example:
    ```bash
-   ruby examples/basic_chat.rb
+   ruby examples/01_simple_robot.rb
    ```
 
 Or use the provided rake tasks:
@@ -168,6 +168,40 @@ Or use the provided rake tasks:
 bundle exec rake examples:all          # Run all examples
 bundle exec rake examples:run[1]       # Run specific example by number
 ```
+
+## Shared Example Setup (`examples/common.rb`)
+
+All numbered examples (`01_*.rb` through `34_*.rb`) begin with:
+
+```ruby
+require_relative "common"
+```
+
+`common.rb` handles the shared boilerplate so individual examples stay focused:
+
+- **`LLM` hash** — frozen lookup of provider/model pairs accessible as `LLM[:default]`, `LLM[:local]`, `LLM[:anthropic]`. Each entry is a `LlmConfig = Data.define(:provider, :model)` value, so you access the model string as `LLM[:default].model`.
+- **`RubyLLM.configure`** — sets a null logger and `LLM[:default].model` as the `default_model`.
+- **`RobotLab.configure`** — sets a null logger.
+- **Output helpers** — `banner(title)`, `section(title)`, `hr`, and `show_code(ruby_string, label:)` (Rouge-highlighted) for consistent terminal formatting.
+
+## Template Path via direnv
+
+Examples that bundle their own `prompts/` directory ship with a `.envrc` file:
+
+```
+examples/.envrc
+examples/14_rusty_circuit/.envrc
+examples/15_memory_network_and_bus/.envrc
+examples/16_writers_room/.envrc
+```
+
+Each sets `ROBOT_LAB_TEMPLATE_PATH` to the local `prompts/` directory when [direnv](https://direnv.net/) is active. `common.rb` also sets this variable as a fallback if `direnv` has not loaded the `.envrc`:
+
+```ruby
+ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
+```
+
+This means examples work correctly whether you run them from the project root with rake tasks or directly from inside the example's own directory.
 
 ## Message Bus
 

@@ -93,7 +93,7 @@ robot = RobotLab.build(
 
 ### Configuration
 
-RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layered configuration. There is no `configure` block. Configuration is loaded automatically from multiple sources in priority order:
+RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layered configuration. Configuration is loaded automatically from multiple sources in priority order:
 
 1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
 2. Environment-specific overrides (development, test, production)
@@ -122,6 +122,14 @@ ruby_llm:
   model: claude-sonnet-4
   anthropic_api_key: sk-ant-...
   request_timeout: 180
+```
+
+Runtime-only attributes (such as the logger) can be set with a `configure` block:
+
+```ruby
+RobotLab.configure do |c|
+  c.logger = Logger.new(File::NULL)   # silence logging
+end
 ```
 
 ### Using Templates

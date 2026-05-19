@@ -116,6 +116,30 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: Configuration](getting-started/configuration.md)
 
+-   :material-shield-check:{ .lg .middle } **Observability & Safety**
+
+    ---
+
+    Token tracking, `max_tool_rounds` circuit breaker, `doom_loop_threshold` pattern detection, and `auto_compact` context window management keep robots reliable in production.
+
+    [:octicons-arrow-right-24: Observability Guide](guides/observability.md)
+
+-   :material-brain:{ .lg .middle } **Runtime Skill Matching**
+
+    ---
+
+    `AgentSkillMatching` selects the most relevant `AgentSkill` files from a catalog directory via semantic similarity before each `run()`, injecting only what the robot needs.
+
+    [:octicons-arrow-right-24: Using Tools](guides/using-tools.md)
+
+-   :material-book-open-outline:{ .lg .middle } **Knowledge & Retrieval**
+
+    ---
+
+    `robot.search_history` for semantic search over conversation turns, and `memory.store_document` / `memory.search_documents` for embedding-based RAG.
+
+    [:octicons-arrow-right-24: Knowledge Guide](guides/knowledge.md)
+
 </div>
 
 ## Extension Gems

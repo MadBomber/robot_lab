@@ -171,7 +171,13 @@ result = robot.run("Use the following context:\n#{context}\n\nQuestion: #{user_q
 
 ### Dependency
 
-`fastembed` is a core RobotLab dependency — no optional gem required. The ONNX model is downloaded on first use.
+The embedding-based document store requires the [`robot_lab-document_store`](https://github.com/MadBomber/robot_lab-document_store) extension gem. Add it to your Gemfile:
+
+```ruby
+gem "robot_lab-document_store"
+```
+
+This gem bundles `fastembed` for ONNX-based embeddings. The `BAAI/bge-small-en-v1.5` model (~23 MB) is downloaded on first use and cached in `~/.cache/fastembed/`. Without `robot_lab-document_store` loaded, calling `memory.store_document` or `memory.search_documents` raises `RobotLab::DependencyError`.
 
 ---
 
