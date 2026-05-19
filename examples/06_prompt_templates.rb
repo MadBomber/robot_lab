@@ -17,10 +17,7 @@
 #   ├── product_support.md
 #   └── escalation.md
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # =============================================================================
 # Sample Data
@@ -179,10 +176,8 @@ end
 # Main Demo
 # =============================================================================
 
-puts "=" * 70
-puts "RobotLab + Prompt Templates Demo"
+banner "RobotLab + Prompt Templates Demo"
 puts "E-Commerce Support Network with Dynamic Context"
-puts "=" * 70
 puts
 
 # Template path is set via ROBOT_LAB_TEMPLATE_PATH env var (see top of file)
@@ -201,11 +196,12 @@ triage_robot = TriageRobot.new(
     company_name: COMPANY_NAME,
     categories: CATEGORIES
   },
-  model: "claude-3-haiku-20240307"
+  model: LLM[:default].model
 )
 
 # Order Support Robot
 order_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "order",
   description: "Handles order-related inquiries with full order history",
   template: :order_support,
@@ -214,12 +210,12 @@ order_robot = RobotLab.build(
     company_name: COMPANY_NAME,
     policies: POLICIES,
     capabilities: ORDER_CAPABILITIES
-  },
-  model: "claude-3-haiku-20240307"
+  }
 )
 
 # Product Support Robot
 product_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "product",
   description: "Answers product questions with catalog knowledge",
   template: :product_support,
@@ -229,12 +225,12 @@ product_robot = RobotLab.build(
     products: PRODUCTS,
     promotions: PROMOTIONS,
     product_categories: PRODUCT_CATEGORIES
-  },
-  model: "claude-3-haiku-20240307"
+  }
 )
 
 # Escalation Robot
 escalation_robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "escalation",
   description: "Handles complex cases requiring special authority",
   template: :escalation,
@@ -242,8 +238,7 @@ escalation_robot = RobotLab.build(
   context: {
     company_name: COMPANY_NAME,
     authorities: ESCALATION_AUTHORITIES
-  },
-  model: "claude-3-haiku-20240307"
+  }
 )
 
 # -----------------------------------------------------------------------------
@@ -277,10 +272,7 @@ demo_queries = [
 ]
 
 demo_queries.each_with_index do |query, index|
-  puts
-  puts "-" * 70
-  puts "Scenario #{index + 1}: #{query[:label]}"
-  puts "-" * 70
+  section "Scenario #{index + 1}: #{query[:label]}"
   puts "Customer: #{query[:message]}"
   puts
 
@@ -311,7 +303,7 @@ demo_queries.each_with_index do |query, index|
   end
 
   puts
-  puts "=" * 70
+  hr
 end
 
 puts

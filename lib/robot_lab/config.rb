@@ -43,7 +43,6 @@ module RobotLab
       @logger ||= default_logger
     end
 
-
     # Apply RubyLLM configuration after loading.
     #
     # This method should be called after initialization to configure
@@ -55,7 +54,6 @@ module RobotLab
       apply_ruby_llm_config!
       apply_prompt_manager!
     end
-
 
     # Apply all RubyLLM settings from the ruby_llm configuration section.
     #
@@ -100,7 +98,6 @@ module RobotLab
       set_if_present(c, :vertexai_location, :vertexai_location, 'GOOGLE_CLOUD_LOCATION')
     end
 
-
     def apply_provider_endpoints(c)
       c.openai_api_base = ruby_llm.openai_api_base if ruby_llm.openai_api_base
       c.gemini_api_base = ruby_llm.gemini_api_base if ruby_llm.gemini_api_base
@@ -109,13 +106,11 @@ module RobotLab
       c.xai_api_base = ruby_llm.xai_api_base if ruby_llm.xai_api_base
     end
 
-
     def apply_openai_options(c)
       c.openai_organization_id = ruby_llm.openai_organization_id if ruby_llm.openai_organization_id
       c.openai_project_id = ruby_llm.openai_project_id if ruby_llm.openai_project_id
       c.openai_use_system_role = ruby_llm.openai_use_system_role unless ruby_llm.openai_use_system_role.nil?
     end
-
 
     def apply_default_models(c)
       c.default_model = ruby_llm.default_model if ruby_llm.default_model
@@ -123,7 +118,6 @@ module RobotLab
       c.default_image_model = ruby_llm.default_image_model if ruby_llm.default_image_model
       c.default_moderation_model = ruby_llm.default_moderation_model if ruby_llm.default_moderation_model
     end
-
 
     def apply_connection_settings(c)
       c.request_timeout = ruby_llm.request_timeout if ruby_llm.request_timeout
@@ -134,13 +128,11 @@ module RobotLab
       c.http_proxy = ruby_llm.http_proxy if ruby_llm.http_proxy
     end
 
-
     def apply_logging_options(c)
       c.log_file = ruby_llm.log_file if ruby_llm.log_file
       c.log_level = ruby_llm.log_level if ruby_llm.log_level
       c.log_stream_debug = ruby_llm.log_stream_debug unless ruby_llm.log_stream_debug.nil?
     end
-
 
     def apply_prompt_manager!
       path = resolved_template_path
@@ -151,14 +143,12 @@ module RobotLab
       end
     end
 
-
     # Set a RubyLLM config attribute from config value or standard env var.
     # Only sets when a non-nil value is found, to avoid overwriting defaults.
     def set_if_present(c, setter, config_key, env_var)
-      value = ruby_llm.public_send(config_key) || ENV[env_var]
+      value = ruby_llm.public_send(config_key) || ENV.fetch(env_var, nil)
       c.public_send(:"#{setter}=", value) if value
     end
-
 
     def resolved_template_path
       return template_path if template_path
@@ -169,7 +159,6 @@ module RobotLab
         'prompts'
       end
     end
-
 
     def default_logger
       if defined?(Rails) && Rails.respond_to?(:logger)

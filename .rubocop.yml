@@ -1,0 +1,172 @@
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 4.0
+  Exclude:
+    - 'examples/**/*'
+    - 'vendor/**/*'
+    - 'dead_code/**/*'
+    - '_notes/**/*'
+
+# ── Style: disabled cops ───────────────────────────────────────────────────
+Style/StringLiterals:
+  Enabled: false
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+# Ruby 4.0 freezes string literals by default
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/TrivialAccessors:
+  Enabled: false
+
+Style/MultilineTernaryOperator:
+  Enabled: false
+
+Style/SafeNavigation:
+  Enabled: false
+
+Style/EmptyClassDefinition:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/RescueStandardError:
+  Enabled: false
+
+Style/OneClassPerFile:
+  Enabled: false
+
+# Both % and format/sprintf are acceptable
+Style/FormatString:
+  Enabled: false
+
+# String concatenation and interpolation are both acceptable
+Style/StringConcatenation:
+  Enabled: false
+
+# ── Layout ─────────────────────────────────────────────────────────────────
+Layout/LineLength:
+  Max: 140
+
+Layout/ExtraSpacing:
+  Enabled: false
+
+Layout/HashAlignment:
+  Enabled: false
+
+Layout/FirstHashElementIndentation:
+  Enabled: false
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+# ── Naming ─────────────────────────────────────────────────────────────────
+# Single-char params (c, e, n) are acceptable throughout
+Naming/MethodParameterName:
+  Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'test/**/*'
+
+Naming/RescuedExceptionsVariableName:
+  Enabled: false
+
+# set_results and similar explicit setters are clear and conventional
+Naming/AccessorMethodName:
+  Enabled: false
+
+# has_tool_calls? and similar are clear and conventional
+Naming/PredicatePrefix:
+  Enabled: false
+
+# Test helper methods don't need to follow predicate naming rules
+Naming/PredicateMethod:
+  Exclude:
+    - 'test/**/*'
+
+# ── Lint: relax noisy cops on intentional patterns ─────────────────────────
+Lint/EmptyBlock:
+  Exclude:
+    - 'test/**/*'
+
+# Library and framework methods commonly accept args for API/documentation purposes
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'Rakefile'
+    - 'test/**/*'
+
+# ── Gemspec ────────────────────────────────────────────────────────────────
+Gemspec/DevelopmentDependencies:
+  EnforcedStyle: Gemfile
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Gemspec/OrderedDependencies:
+  Enabled: false
+
+# ── Metrics ────────────────────────────────────────────────────────────────
+# Framework-level code (routers, parsers, orchestrators) is inherently complex.
+# Flog is the primary complexity gate — these RuboCop thresholds catch only
+# egregious outliers without false-positiving every dispatch method.
+
+Metrics/MethodLength:
+  Max: 35
+  CountAsOne:
+    - heredoc
+    - array
+    - hash
+  Exclude:
+    - 'test/**/*'
+
+Metrics/AbcSize:
+  Max: 40
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Max: 600
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ModuleLength:
+  Max: 200
+  Exclude:
+    - 'test/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+Metrics/PerceivedComplexity:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+# Long method signatures with keyword args are a Ruby framework idiom
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/BlockLength:
+  Exclude:
+    - 'Rakefile'
+    - '*.gemspec'
+    - 'test/**/*'

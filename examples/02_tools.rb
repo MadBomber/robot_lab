@@ -8,10 +8,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/02_tools.rb
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # Define tools using RubyLLM::Tool
 class Calculator < RubyLLM::Tool
@@ -81,14 +78,13 @@ end
 
 # Create robot with tools
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "assistant",
   template: :assistant,
-  local_tools: [Calculator, FortuneCookie],
-  model: "claude-3-haiku-20240307"
+  local_tools: [Calculator, FortuneCookie]
 )
 
-puts "Running robot with tools..."
-puts "-" * 40
+banner "Robot with Tools"
 
 # Run the robot
 result = robot.run("What is 15 multiplied by 7? Also, give me a fortune about my career.")
@@ -100,4 +96,4 @@ result.output.each do |message|
   puts "  #{message.content}" if message.respond_to?(:content)
 end
 
-puts "-" * 40
+hr

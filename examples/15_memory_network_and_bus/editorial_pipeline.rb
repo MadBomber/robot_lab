@@ -36,10 +36,8 @@
 
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
-require_relative "../../lib/robot_lab"
+require_relative "../common"
 require "fileutils"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
 
 MAX_REVISIONS = 3
 OUTPUT_DIR    = File.join(__dir__, "output")
@@ -59,6 +57,7 @@ bus = TypedBus::MessageBus.new
 
 mac_writer = OsWriter.new(
   name: "mac_writer",
+  model: LLM[:default].model,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -70,6 +69,7 @@ mac_writer = OsWriter.new(
 
 win_writer = OsWriter.new(
   name: "win_writer",
+  model: LLM[:default].model,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -81,6 +81,7 @@ win_writer = OsWriter.new(
 
 linux_writer = LinuxWriter.new(
   name: "linux_writer",
+  model: LLM[:default].model,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -93,6 +94,7 @@ linux_writer = LinuxWriter.new(
 
 editor = OsEditor.new(
   name: "editor",
+  model: LLM[:default].model,
   template: :os_editor,
   bus: bus
 )
@@ -114,6 +116,7 @@ end
 
 chief = EditorInChief.new(
   name: "chief",
+  model: LLM[:default].model,
   template: :os_chief,
   bus: bus
 )

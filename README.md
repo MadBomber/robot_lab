@@ -26,7 +26,7 @@
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
 - <strong>Layered Configuration</strong> - Cascading YAML, env vars, and RunConfig<br>
-- <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting<br>
+- <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting (via <a href="https://github.com/MadBomber/robot_lab-rails">robot_lab-rails</a>)<br>
 - <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>
 - <strong>Tool Loop Circuit Breaker</strong> - <code>max_tool_rounds:</code> guards against runaway tool call loops<br>
 - <strong>Learning Accumulation</strong> - <code>robot.learn()</code> builds up cross-run observations with deduplication<br>
@@ -93,7 +93,7 @@ robot = RobotLab.build(
 
 ### Configuration
 
-RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layered configuration. There is no `configure` block. Configuration is loaded automatically from multiple sources in priority order:
+RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layered configuration. Configuration is loaded automatically from multiple sources in priority order:
 
 1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
 2. Environment-specific overrides (development, test, production)
@@ -122,6 +122,14 @@ ruby_llm:
   model: claude-sonnet-4
   anthropic_api_key: sk-ant-...
   request_timeout: 180
+```
+
+Runtime-only attributes (such as the logger) can be set with a `configure` block:
+
+```ruby
+RobotLab.configure do |c|
+  c.logger = Logger.new(File::NULL)   # silence logging
+end
 ```
 
 ### Using Templates
@@ -677,6 +685,67 @@ robot.clear_messages   # flushes broken history; system prompt is kept
 result = robot.run("Something new.")  # robot is healthy again
 ```
 
+## Doom Loop Detection
+
+Doom loop detection catches the subtler failure mode where a robot repeats the same tool call pattern indefinitely — not hitting `max_tool_rounds`, but cycling through the same sequence over and over. Set `doom_loop_threshold:` to enable it:
+
+```ruby
+robot = RobotLab.build(
+  name: "runner",
+  system_prompt: "Execute steps.",
+  local_tools: [StepTool],
+  doom_loop_threshold: 3   # alert after 3 identical consecutive or cyclic sequences
+)
+```
+
+When a doom loop is detected, a warning is embedded directly into the tool result, prompting the LLM to try a different approach. Detection covers both consecutive repetition (`A,A,A`) and cyclic patterns (`A,B,C,A,B,C`). Via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(doom_loop_threshold: 3)
+robot  = RobotLab.build(name: "runner", system_prompt: "...", config: config)
+```
+
+## Automatic Context Compaction
+
+`auto_compact` triggers context window compression automatically before each `run()`, preventing context overflow without manual intervention.
+
+```ruby
+# Built-in trigger: compact when estimated token usage exceeds 80% of context window
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: :context_window
+)
+
+# Tune the threshold (here: compact at 70%)
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact:      :context_window,
+  compact_threshold: 0.70
+)
+
+# Application-owned compaction: full control over when and how
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  auto_compact: ->(r) { r.compress_history(recent_turns: 5) if r.chat.messages.size > 40 }
+)
+```
+
+| Value | Behaviour |
+|-------|-----------|
+| `nil` / `:none` | No automatic compaction (default) |
+| `:context_window` | Compact when estimated token usage exceeds `compact_threshold` fraction of model's context window |
+| `Proc` | Called with the robot before each `run()`; application decides when and how to compact |
+
+`compact_threshold` defaults to `0.80` (80%). Requires the `classifier` gem when using the built-in `:context_window` strategy. Via `RunConfig`:
+
+```ruby
+config = RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.75)
+robot  = RobotLab.build(name: "analyst", system_prompt: "...", config: config)
+```
+
 ## Learning Accumulation
 
 `robot.learn(text)` records a cross-run observation. On each subsequent `run()`, active learnings are automatically prepended to the user message as a `LEARNINGS FROM PREVIOUS RUNS:` block so the LLM can incorporate prior context without needing a persistent chat:
@@ -691,6 +760,17 @@ reviewer.run("Review snippet A")
 reviewer.learn("This codebase prefers map/collect over manual array accumulation")
 
 reviewer.run("Review snippet B")  # learning is injected automatically
+```
+
+Pass `learn: true` in the constructor to enable automatic end-of-session learning promotion via the `robot_lab-durable` gem:
+
+```ruby
+reviewer = RobotLab.build(
+  name: "reviewer",
+  system_prompt: "You are a Ruby code reviewer.",
+  learn: true,
+  learn_domain: "ruby_review"
+)
 ```
 
 Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot's `Memory` and survive a robot rebuild when the same `Memory` object is reused.
@@ -796,101 +876,17 @@ future.robot_name     # => "analyst"
 future.delegated_by   # => "manager"
 ```
 
-## Ractor Parallelism
+## Extension Gems
 
-RobotLab supports true CPU parallelism via Ruby Ractors — isolated execution contexts that bypass the GVL. Two modes are available:
+RobotLab's optional capabilities are packaged as separate gems:
 
-**CPU-bound tools** — mark a tool `ractor_safe true` and RobotLab automatically routes its calls through a global `RactorWorkerPool` instead of running inline:
-
-```ruby
-class TranscribeAudio < RubyLLM::Tool
-  ractor_safe true
-  description "Transcribe an audio file"
-  param :path, type: :string, desc: "Path to audio file"
-
-  def execute(path:)
-    AudioTranscriber.run(path)  # pure computation, no shared mutable state
-  end
-end
-```
-
-**Parallel robot networks** — pass `parallel_mode: :ractor` when creating a network to dispatch independent robots across hardware threads simultaneously:
-
-```ruby
-network = RobotLab.create_network(name: "analysis", parallel_mode: :ractor) do
-  task :fetch,     fetcher_robot,    depends_on: :none
-  task :sentiment, sentiment_robot,  depends_on: [:fetch]
-  task :entities,  entity_robot,     depends_on: [:fetch]   # runs in parallel with sentiment
-  task :summarize, summary_robot,    depends_on: [:sentiment, :entities]
-end
-
-results = network.run(message: "Analyze customer feedback")
-# => { "fetch" => "...", "sentiment" => "positive", "entities" => "...", "summarize" => "..." }
-```
-
-See the [Ractor Parallelism guide](https://madbomber.github.io/robot_lab/guides/ractor-parallelism) for constraints, the frozen-data contract, and `RactorMemoryProxy` for shared state.
-
-## Rails Integration
-
-```bash
-rails generate robot_lab:install
-rails db:migrate
-```
-
-This creates:
-- `config/initializers/robot_lab.rb` - Configuration
-- `app/robots/` - Directory for your robots
-- Database tables for conversation history
-
-### Background Jobs
-
-RobotLab ships with `RobotLab::Job`, an `ActiveJob::Base` subclass that handles the full robot-run lifecycle: robot class resolution, Turbo Stream wiring, thread-record persistence, and completion/error broadcasting.
-
-**Generic job** (robot class supplied at enqueue time):
-
-```bash
-rails generate robot_lab:install   # creates app/jobs/robot_run_job.rb
-```
-
-```ruby
-# app/jobs/robot_run_job.rb  (generated)
-class RobotRunJob < RobotLab::Job
-  queue_as :default
-end
-
-# Enqueue from a controller:
-RobotRunJob.perform_later(
-  robot_class: "SupportRobot",
-  message:     params[:message],
-  thread_id:   session_id
-)
-```
-
-**Dedicated job** (robot class bound at the class level via DSL):
-
-```bash
-rails generate robot_lab:job Support            # binds to SupportRobot, queue: default
-rails generate robot_lab:job Support --queue ai # custom queue
-```
-
-```ruby
-# app/jobs/support_job.rb  (generated)
-class SupportJob < RobotLab::Job
-  queue_as :default
-  robot_class SupportRobot
-end
-
-# Enqueue (no robot_class: needed):
-SupportJob.perform_later(message: params[:message], thread_id: session_id)
-```
-
-When `thread_id` is provided and [turbo-rails](https://github.com/hotwired/turbo-rails) is installed, `RobotLab::Job` automatically:
-
-- Wires `on_content` / `on_tool_call` Turbo Stream callbacks so the UI updates in real time
-- Broadcasts a **completion** event to `"robot_lab_thread_#{thread_id}"` when the run finishes
-- Broadcasts an **error** event (HTML-escaped) if the job raises
-
-Omitting `thread_id` runs the robot in fire-and-forget mode — no persistence, no broadcasting.
+| Gem | Description |
+|-----|-------------|
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism via Ruby Ractors — `ractor_safe` tools and DAG-scheduled parallel networks |
+| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` ActiveJob base with Turbo Stream broadcasting |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence via YAML-backed durable store |
+| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | In-memory vector store with fastembed embeddings for semantic search / RAG |
+| [robot_lab-acp](https://github.com/MadBomber/robot_lab-acp) | Expose robots and networks as ACP (Agent Communication Protocol) HTTP+SSE services |
 
 ## Documentation
 

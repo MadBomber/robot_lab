@@ -4,6 +4,10 @@ module RobotLab
   class Robot
     # Semantic search over a robot's conversation history.
     #
+    # Owns:    nothing (read-only mixin)
+    # Reads:   @chat (specifically @chat.messages)
+    # Contract: no initialization required; safe to call any time after initialize
+    #
     # Scores each message in @chat.messages against the query using stemmed
     # term-frequency cosine similarity (via the +classifier+ gem).  Returns the
     # top-N messages ranked by relevance.
@@ -61,7 +65,6 @@ module RobotLab
         case content
         when String then content
         when Array  then content.filter_map { |p| p[:text] || p["text"] }.join(" ")
-        else nil
         end
       end
     end

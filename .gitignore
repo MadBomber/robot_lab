@@ -1,5 +1,7 @@
 .aigcm_msg
 *.log
+Gemfile.lock
+/site/
 /.bundle/
 /.yardoc
 /_yardoc/
@@ -10,3 +12,4 @@
 /tmp/
 examples/27_incident_response/output/
 .worktrees/
+_notes/

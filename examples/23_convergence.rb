@@ -19,9 +19,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/23_convergence.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # ---------------------------------------------------------------------------
 # Check optional dependency
@@ -34,10 +32,7 @@ rescue LoadError
   exit 1
 end
 
-puts "=" * 60
-puts "Example 23: Debate Convergence Detection"
-puts "=" * 60
-puts
+banner "Debate Convergence Detection"
 
 # ---------------------------------------------------------------------------
 # Similarity scoring
@@ -61,8 +56,7 @@ pairs = {
   ]
 }
 
-puts "Similarity scores:"
-puts "-" * 60
+section "Similarity Scores"
 pairs.each do |label, (a, b)|
   score = RobotLab::Convergence.similarity(a, b)
   converged = RobotLab::Convergence.detected?(a, b, threshold: 0.6)
@@ -74,11 +68,8 @@ end
 # ---------------------------------------------------------------------------
 # Router fast-path pattern
 # ---------------------------------------------------------------------------
-puts "=" * 60
-puts "Router fast-path pattern"
-puts "=" * 60
-puts <<~RUBY
-
+section "Router Fast-Path Pattern"
+show_code <<~RUBY
   # Two verifier robots run in parallel and store their replies in shared memory.
   # The router checks convergence before dispatching to the expensive reconciler.
 
@@ -100,14 +91,12 @@ puts <<~RUBY
   )
 
   result = network.run(message: "Is this claim accurate?")
-
 RUBY
 
 # ---------------------------------------------------------------------------
 # Demonstrate with simulated verifier outputs
 # ---------------------------------------------------------------------------
-puts "Simulating verifier fast-path:"
-puts "-" * 60
+section "Simulating Verifier Fast-Path"
 
 verifier_outputs = [
   {

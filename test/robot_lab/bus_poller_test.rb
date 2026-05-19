@@ -72,7 +72,7 @@ class RobotLab::BusPollerTest < Minitest::Test
 
     @poller.enqueue(robot: robot, delivery: :first)
 
-    assert_equal [:first, :second], order
+    assert_equal %i[first second], order
   end
 
   def test_enqueue_clears_busy_flag_after_processing
@@ -94,7 +94,7 @@ class RobotLab::BusPollerTest < Minitest::Test
   end
 
   def test_enqueue_clears_busy_flag_on_unexpected_error
-    robot = stub_robot("bot") { |_d| raise RuntimeError, "unexpected" }
+    robot = stub_robot("bot") { |_d| raise "unexpected" }
 
     @poller.enqueue(robot: robot, delivery: :x)
 
@@ -123,10 +123,10 @@ class RobotLab::BusPollerTest < Minitest::Test
   private
 
   # Builds a minimal robot-like object whose #process_delivery calls &block.
-  def stub_robot(name, &block)
+  def stub_robot(name, &)
     robot = Object.new
     robot.define_singleton_method(:name) { name }
-    robot.define_singleton_method(:process_delivery, &block)
+    robot.define_singleton_method(:process_delivery, &)
     robot
   end
 end

@@ -29,7 +29,7 @@ class RobotLab::ToolConfigTest < Minitest::Test
   end
 
   def test_resolve_tools_converts_to_strings
-    result = RobotLab::ToolConfig.resolve_tools([:tool1, :tool2], parent_value: [])
+    result = RobotLab::ToolConfig.resolve_tools(%i[tool1 tool2], parent_value: [])
     assert_equal %w[tool1 tool2], result
   end
 
@@ -103,7 +103,7 @@ class RobotLab::ToolConfigTest < Minitest::Test
 
   def test_filter_tools_with_string_tool
     result = RobotLab::ToolConfig.filter_tools(
-      ["search", "refund"],
+      %w[search refund],
       allowed_names: ["search"]
     )
     assert_equal ["search"], result
@@ -111,7 +111,7 @@ class RobotLab::ToolConfigTest < Minitest::Test
 
   def test_filter_tools_with_symbol_tool
     result = RobotLab::ToolConfig.filter_tools(
-      [:search, :refund],
+      %i[search refund],
       allowed_names: ["search"]
     )
     assert_equal [:search], result
@@ -141,8 +141,6 @@ class RobotLab::ToolConfigTest < Minitest::Test
     result = RobotLab::ToolConfig.resolve_tools(:none, parent_value: %w[tool1])
     assert_equal [], result
   end
-
-  private
 
   class MockTool
     attr_reader :name

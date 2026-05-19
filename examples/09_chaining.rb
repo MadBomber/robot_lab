@@ -17,10 +17,7 @@
 # Usage:
 #   bundle exec ruby examples/09_chaining.rb
 
-# Configure template path before loading
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "amazing_print"
 require "hashdiff"
 require "stringio"
@@ -55,21 +52,18 @@ def show_config(robot, previous_config = nil)
   current
 end
 
-puts "=" * 70
-puts "Example 9: Robot Chaining & Reconfiguration"
-puts "=" * 70
-puts
+banner "Robot Chaining & Reconfiguration"
 
 # =============================================================================
 # Section 1: Template front matter config
 # =============================================================================
 
-puts "--- Section 1: Template Front Matter Config ---"
-puts
+section "Section 1: Template Front Matter Config"
 
 # The 'configurable' template sets temperature: 0.3 and max_tokens: 200
 # via YAML front matter. These are applied automatically.
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "chameleon",
   template: :configurable,
   context: { task_type: "analysis" }
@@ -83,8 +77,7 @@ puts
 # Section 2: with_* method chaining
 # =============================================================================
 
-puts "--- Section 2: with_* Method Chaining ---"
-puts
+section "Section 2: with_* Method Chaining"
 
 # with_* methods return self, enabling fluent chaining.
 # These override whatever the template set.
@@ -98,8 +91,7 @@ puts
 # Section 3: update() for reconfiguration
 # =============================================================================
 
-puts "--- Section 3: update() for Reconfiguration ---"
-puts
+section "Section 3: update() for Reconfiguration"
 
 # update() can swap the template, model, temperature, and other settings.
 robot.update(template: :assistant, temperature: 0.5)
@@ -119,12 +111,12 @@ puts
 # Section 4: Constructor params override front matter
 # =============================================================================
 
-puts "--- Section 4: Constructor Params Override Front Matter ---"
-puts
+section "Section 4: Constructor Params Override Front Matter"
 
 # The configurable template sets temperature: 0.3 in front matter.
 # Passing temperature: 0.9 to the constructor overrides it.
 robot2 = RobotLab.build(
+  model: LLM[:default].model,
   name: "override_demo",
   template: :configurable,
   context: { task_type: "creative" },
@@ -139,18 +131,18 @@ puts
 # Section 5: RunConfig as alternative to individual kwargs
 # =============================================================================
 
-puts "--- Section 5: RunConfig as Alternative to Individual kwargs ---"
-puts
+section "Section 5: RunConfig as Alternative to Individual kwargs"
 
 # Instead of passing model:, temperature:, etc. individually,
 # use a RunConfig to express shared defaults.
-shared = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+shared = RobotLab::RunConfig.new(model: LLM[:default].model, temperature: 0.5)
 
 puts "RunConfig: #{shared.to_h.inspect}"
 puts
 
 # Robot inherits from RunConfig; constructor kwargs still override
 robot3 = RobotLab.build(
+  model: LLM[:default].model,
   name: "runconfig_demo",
   template: :configurable,
   context: { task_type: "analysis" },
@@ -178,8 +170,7 @@ puts
 # Section 6: Bare robot with chaining
 # =============================================================================
 
-puts "--- Section 6: Bare Robot with Chaining ---"
-puts
+section "Section 6: Bare Robot with Chaining"
 
 # A bare robot has no template. Configure entirely via chaining.
 bare = RobotLab.build(name: "bare")
@@ -200,8 +191,7 @@ puts
 # Section 7: with_template() on an existing robot
 # =============================================================================
 
-puts "--- Section 7: with_template() on Existing Robot ---"
-puts
+section "Section 7: with_template() on Existing Robot"
 
 # You can apply a template to a robot after creation.
 bare.with_template(:helper)
@@ -214,8 +204,7 @@ puts
 # Section 8: AskUser tool for gathering template parameters
 # =============================================================================
 
-puts "--- Section 8: AskUser for Template Parameters ---"
-puts
+section "Section 8: AskUser for Template Parameters"
 puts "The :configurable template declares `task_type: general` in its front"
 puts "matter. That default is offered to the user — they can accept it by"
 puts "pressing Enter or type something else. Parameters with null values"
@@ -225,6 +214,7 @@ puts
 # Build a robot with AskUser — the template's task_type default ("general")
 # is offered to the user, who can accept or override it.
 interactive = RobotLab.build(
+  model: LLM[:default].model,
   name: "interactive_demo",
   template: :configurable,
   local_tools: [RobotLab::AskUser]
@@ -257,6 +247,5 @@ puts
 puts "If the user had pressed Enter, the default \"general\" would be kept."
 puts
 
-puts "=" * 70
+hr
 puts "All sections completed without any LLM calls."
-puts "=" * 70

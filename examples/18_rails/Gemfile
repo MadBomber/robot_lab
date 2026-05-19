@@ -8,3 +8,4 @@ gem "puma", "~> 6.0"
 gem "turbo-rails", "~> 2.0"
 
 gem "robot_lab", path: "../.."
+gem "robot_lab-rails", path: "../../../robot_lab-rails"

@@ -4,7 +4,7 @@ require "test_helper"
 
 class RobotLab::ToolManifestTest < Minitest::Test
   def setup
-    @tool1 = build_tool(name: "get_weather") { |args| "sunny" }
+    @tool1 = build_tool(name: "get_weather") { |_args| "sunny" }
     @tool2 = build_tool(name: "calculate") { |args| args[:a] + args[:b] }
     @manifest = RobotLab::ToolManifest.new([@tool1, @tool2])
   end
@@ -187,8 +187,7 @@ class RobotLab::ToolManifestTest < Minitest::Test
 
   # Each tests
   def test_each_iterates_over_tools
-    tools = []
-    @manifest.each { |tool| tools << tool }
+    tools = @manifest.map { |tool| tool }
 
     assert_includes tools, @tool1
     assert_includes tools, @tool2

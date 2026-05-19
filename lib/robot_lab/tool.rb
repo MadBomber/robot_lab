@@ -94,7 +94,7 @@ module RobotLab
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     def call(args)
-      if self.class.ractor_safe? && !self.class.name.nil?
+      if self.class.ractor_safe? && !self.class.name.nil? && RobotLab.extension_loaded?(:ractor)
         RobotLab.ractor_pool.submit(self.class.name, args)
       else
         super
@@ -204,8 +204,8 @@ module RobotLab
     #
     # @param args [Array] arguments passed to to_json
     # @return [String]
-    def to_json(*args)
-      to_h.to_json(*args)
+    def to_json(*)
+      to_h.to_json(*)
     end
 
     private

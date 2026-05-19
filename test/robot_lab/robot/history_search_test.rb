@@ -102,9 +102,9 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
     assert_respond_to r, :score
     assert_respond_to r, :index
     assert_kind_of Float, r.score
-    assert r.score >= 0.0 && r.score <= 1.0
+    assert r.score.between?(0.0, 1.0)
     assert_kind_of Integer, r.index
-    assert [:user, :assistant, :system].include?(r.role)
+    assert %i[user assistant system].include?(r.role)
   end
 
   def test_index_corresponds_to_position_in_message_array
@@ -152,10 +152,10 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
 
   def test_short_messages_below_min_length_are_skipped
     @fake_chat.messages.replace([
-      msg(:user,      "Hi"),
-      msg(:assistant, "Hello"),
-      msg(:user,      "Ruby on Rails enables rapid web application development.")
-    ])
+                                  msg(:user,      "Hi"),
+                                  msg(:assistant, "Hello"),
+                                  msg(:user,      "Ruby on Rails enables rapid web application development.")
+                                ])
 
     results = @robot.search_history("Ruby web Rails development")
     # The two short messages should not appear (below MIN_SCORE_LENGTH)

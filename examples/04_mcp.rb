@@ -21,10 +21,7 @@
 #   - Reading file contents and repository information
 #   - Managing branches and commits
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # GitHub MCP server configuration using StdIO transport
 github_server = {
@@ -39,14 +36,11 @@ github_server = {
   }
 }
 
-puts <<~HEADER
-  MCP Integration Example: GitHub
-  #{"=" * 40}
+banner "MCP Integration Example: GitHub"
 
-  This example demonstrates using the GitHub MCP server to interact
-  with GitHub repositories through the Model Context Protocol.
-
-HEADER
+puts "This example demonstrates using the GitHub MCP server to interact"
+puts "with GitHub repositories through the Model Context Protocol."
+puts
 
 # Verify prerequisites
 unless ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
@@ -65,9 +59,7 @@ end
 # Part 1: Direct MCP Client Usage
 # ============================================================================
 
-puts "PART 1: Direct MCP Client Usage"
-puts "-" * 40
-puts
+section "Part 1: Direct MCP Client Usage"
 puts "Connecting to GitHub MCP server..."
 
 begin
@@ -91,7 +83,7 @@ begin
 
   # List available tools
   puts "Available GitHub Tools:"
-  puts "-" * 40
+  hr
 
   tools = client.list_tools
   if tools.empty?
@@ -103,7 +95,7 @@ begin
     end
   end
 
-  puts "-" * 40
+  hr
   puts "Total: #{tools.size} tools available"
   puts
 
@@ -134,22 +126,22 @@ begin
   # Part 2: Robot + MCP Integration
   # ============================================================================
 
-  puts
-  puts "=" * 40
-  puts "PART 2: Robot + MCP Integration"
-  puts "-" * 40
-  puts
+
+  section "Part 2: Robot + MCP Integration"
 
   puts "Creating Robot with MCP server integration..."
   puts
 
-  # Create a Robot with MCP server - tools are automatically discovered
+  # Create a Robot with MCP server - tools are automatically discovered.
+  # connect_mcp! forces eager connection; without it MCP clients initialize
+  # lazily on the first run() call, leaving mcp_clients empty until then.
   robot = RobotLab.build(
+    model: LLM[:default].model,
     name: "github_assistant",
     template: :github_assistant,
-    mcp_servers: [github_server],
-    model: "claude-3-haiku-20240307"
+    mcp_servers: [github_server]
   )
+  robot.connect_mcp!
 
   puts "Robot created: #{robot.name}"
   puts "  Model: #{robot.model}"
@@ -159,7 +151,7 @@ begin
 
   # Show discovered MCP tools
   puts "Discovered MCP Tools:"
-  puts "-" * 40
+  hr
   robot.mcp_tools.first(10).each do |tool|
     puts "  #{tool.name}"
     puts "    #{tool.description&.slice(0, 60)}..." if tool.description
@@ -170,13 +162,13 @@ begin
   # Run the robot with a query that will use MCP tools
   puts "Running Robot with a GitHub query..."
   puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
-  puts "-" * 40
+  hr
 
   result = robot.run("What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.")
 
   puts
   puts "Robot Response:"
-  puts "-" * 40
+  hr
   result.output.each do |msg|
     puts msg.content if msg.respond_to?(:content)
   end
@@ -185,7 +177,7 @@ begin
   # Show tool calls if any were made
   if result.tool_calls.any?
     puts "Tool Calls Made:"
-    puts "-" * 40
+    hr
     result.tool_calls.each do |tc|
       tool_info = tc.respond_to?(:tool) ? tc.tool : tc
       puts "  #{tool_info[:name] || tool_info}"
@@ -212,5 +204,5 @@ rescue Errno::ENOENT
 end
 
 puts
-puts "=" * 40
+hr
 puts "Example complete!"

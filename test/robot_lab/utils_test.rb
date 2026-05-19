@@ -5,6 +5,7 @@ require "test_helper"
 # Expose dispatch_async for testing
 class UtilsTestHarness
   include RobotLab::Utils
+
   public :dispatch_async
 end
 
@@ -31,7 +32,7 @@ class RobotLab::UtilsTest < Minitest::Test
       RobotLab.config.logger = Logger.new(log_output)
 
       Async do
-        @harness.dispatch_async { raise RuntimeError, "kaboom" }
+        @harness.dispatch_async { raise "kaboom" }
       end
 
       log_output.rewind

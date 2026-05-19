@@ -19,10 +19,7 @@
 # Usage:
 #   bundle exec ruby examples/11_network_introspection.rb
 
-# Configure template path before loading
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "amazing_print"
 require "tempfile"
 
@@ -50,21 +47,18 @@ def render_dot_image(dot_source)
   end
 end
 
-puts "=" * 70
-puts "Example 11: Network Visualization & Introspection"
-puts "=" * 70
-puts
+banner "Network Visualization & Introspection"
 
 # Shared RunConfig for all robots in this network
-shared_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+shared_config = RobotLab::RunConfig.new(model: LLM[:default].model, temperature: 0.5)
 
 # Per-task RunConfig override for the writer (higher creativity)
 creative_config = RobotLab::RunConfig.new(temperature: 0.9)
 
 # Build robots (no LLM calls, just instances)
-classifier = RobotLab.build(name: "classifier", system_prompt: "Classify input")
-analyst    = RobotLab.build(name: "analyst",    system_prompt: "Analyze data")
-writer     = RobotLab.build(name: "writer",     system_prompt: "Write summary")
+classifier = RobotLab.build(model: LLM[:default].model, name: "classifier", system_prompt: "Classify input")
+analyst    = RobotLab.build(model: LLM[:default].model, name: "analyst",    system_prompt: "Analyze data")
+writer     = RobotLab.build(model: LLM[:default].model, name: "writer",     system_prompt: "Write summary")
 
 # Build network with RunConfig, dependencies, and per-task config
 network = RobotLab.create_network(name: "demo_pipeline", config: shared_config) do
@@ -77,8 +71,7 @@ end
 # Section 1: Visualization outputs
 # =============================================================================
 
-puts "--- Section 1: Visualization ---"
-puts
+section "Section 1: Visualization"
 
 mermaid = network.to_mermaid
 if mermaid
@@ -123,8 +116,7 @@ end
 # Section 2: Robot access
 # =============================================================================
 
-puts "--- Section 2: Robot Access ---"
-puts
+section "Section 2: Robot Access"
 
 # Access by task name with robot() method
 # Note: robots are keyed by task name (the first arg to task()), not robot.name
@@ -146,10 +138,9 @@ puts
 # Section 3: Dynamic robot addition
 # =============================================================================
 
-puts "--- Section 3: Dynamic Robot Addition ---"
-puts
+section "Section 3: Dynamic Robot Addition"
 
-reviewer = RobotLab.build(name: "reviewer", system_prompt: "Review output")
+reviewer = RobotLab.build(model: LLM[:default].model, name: "reviewer", system_prompt: "Review output")
 network.add_robot(reviewer)
 
 puts "After add_robot(reviewer):"
@@ -168,8 +159,7 @@ puts
 # Section 4: Network introspection
 # =============================================================================
 
-puts "--- Section 4: Network Introspection ---"
-puts
+section "Section 4: Network Introspection"
 
 puts "network.to_h:"
 ap network.to_h
@@ -188,8 +178,7 @@ puts
 # Section 5: RunConfig Introspection
 # =============================================================================
 
-puts "--- Section 5: RunConfig Introspection ---"
-puts
+section "Section 5: RunConfig Introspection"
 
 puts "Network RunConfig (shared defaults):"
 ap network.config.to_h
@@ -205,8 +194,7 @@ puts
 # Section 6: Broadcast
 # =============================================================================
 
-puts "--- Section 6: Broadcast ---"
-puts
+section "Section 6: Broadcast"
 
 broadcast_messages = []
 
@@ -233,8 +221,7 @@ puts
 # Section 7: Shared memory access
 # =============================================================================
 
-puts "--- Section 7: Shared Network Memory ---"
-puts
+section "Section 7: Shared Network Memory"
 
 puts "network.memory is a #{network.memory.class}"
 puts "network.memory.network_name = #{network.memory.network_name.inspect}"
@@ -248,6 +235,5 @@ puts "network.memory.to_h:"
 ap network.memory.to_h
 puts
 
-puts "=" * 70
+hr
 puts "All sections completed without any LLM calls."
-puts "=" * 70

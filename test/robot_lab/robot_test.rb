@@ -14,7 +14,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal :assistant, robot.template
   end
 
-
   def test_initialization_converts_name_to_string
     robot = RobotLab::Robot.new(
       name: :my_robot,
@@ -23,7 +22,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal 'my_robot', robot.name
   end
-
 
   def test_initialization_with_description
     robot = RobotLab::Robot.new(
@@ -35,7 +33,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'A helpful assistant', robot.description
   end
 
-
   def test_initialization_with_context
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -46,7 +43,6 @@ class RobotLab::RobotTest < Minitest::Test
     build_context = robot.instance_variable_get(:@build_context)
     assert_equal 'Acme', build_context[:company]
   end
-
 
   def test_initialization_with_local_tools
     tool = build_tool(name: 'calculator') { |input| input[:a] + input[:b] }
@@ -61,7 +57,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal tool, robot.local_tools.first
   end
 
-
   def test_initialization_wraps_single_tool_in_array
     tool = build_tool(name: 'calculator') { |input| input }
 
@@ -75,7 +70,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, robot.local_tools.size
   end
 
-
   def test_initialization_with_custom_model
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -86,7 +80,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes robot.model, 'claude-sonnet-4'
   end
 
-
   def test_initialization_uses_default_model
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -95,7 +88,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_includes robot.model, 'claude-sonnet-4'
   end
-
 
   # system_prompt tests
   def test_initialization_with_system_prompt_only
@@ -109,7 +101,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'You are a helpful assistant.', robot.system_prompt
   end
 
-
   def test_initialization_with_template_and_system_prompt
     robot = RobotLab::Robot.new(
       name: 'enhanced_bot',
@@ -121,7 +112,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'Additional context for today.', robot.system_prompt
   end
 
-
   def test_initialization_allows_bare_robot
     robot = RobotLab::Robot.new(name: 'bare_bot')
 
@@ -129,7 +119,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil robot.template
     assert_nil robot.system_prompt
   end
-
 
   def test_to_h_includes_system_prompt
     robot = RobotLab::Robot.new(
@@ -141,7 +130,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'You are helpful.', hash[:system_prompt]
   end
 
-
   def test_to_h_excludes_nil_system_prompt
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -151,7 +139,6 @@ class RobotLab::RobotTest < Minitest::Test
     hash = robot.to_h
     refute hash.key?(:system_prompt)
   end
-
 
   def test_initialization_with_mcp_inherit
     robot = RobotLab::Robot.new(
@@ -163,7 +150,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal :inherit, robot.mcp_config
   end
 
-
   def test_initialization_with_mcp_none
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -173,7 +159,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal :none, robot.mcp_config
   end
-
 
   def test_initialization_with_mcp_servers_legacy
     servers = [{ name: 'server1', command: 'npx server1' }]
@@ -188,7 +173,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal servers, robot.mcp_config
   end
 
-
   def test_initialization_with_tools_config
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -198,7 +182,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal %w[search refund], robot.tools_config
   end
-
 
   def test_initialization_with_on_tool_call_callback
     callback = ->(call) { call }
@@ -212,7 +195,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal callback, robot.instance_variable_get(:@on_tool_call)
   end
 
-
   def test_initialization_with_on_tool_result_callback
     callback = ->(result) { result }
 
@@ -225,12 +207,10 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal callback, robot.instance_variable_get(:@on_tool_result)
   end
 
-
   # Agent inheritance
   def test_robot_inherits_from_agent
     assert RobotLab::Robot < RubyLLM::Agent
   end
-
 
   # MCP state
   def test_mcp_clients_initially_empty
@@ -243,7 +223,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [], robot.mcp_tools
   end
 
-
   # Disconnect
   def test_disconnect_returns_self
     robot = RobotLab::Robot.new(
@@ -253,7 +232,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal robot, robot.disconnect
   end
-
 
   # Serialization
   def test_to_h_exports_robot_config
@@ -278,7 +256,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal %w[search], hash[:tools_config]
   end
 
-
   def test_to_h_includes_model
     robot = RobotLab::Robot.new(
       name: 'helper',
@@ -289,7 +266,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes hash[:model], 'claude-sonnet-4'
   end
 
-
   def test_to_h_excludes_nil_values
     robot = RobotLab::Robot.new(
       name: 'helper'
@@ -299,7 +275,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     refute hash.key?(:description)
   end
-
 
   def test_to_h_includes_mcp_servers
     robot = RobotLab::Robot.new(
@@ -312,7 +287,6 @@ class RobotLab::RobotTest < Minitest::Test
     # mcp_servers should be empty array when no MCP clients connected
     assert_equal [], hash[:mcp_servers]
   end
-
 
   # Context resolution
   def test_context_can_be_proc
@@ -330,7 +304,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert build_context.is_a?(Proc)
   end
 
-
   # Template validation
   def test_different_templates
     %i[assistant helper classifier billing technical].each do |template|
@@ -343,12 +316,11 @@ class RobotLab::RobotTest < Minitest::Test
     end
   end
 
-
   # Multiple tools
   def test_initialization_with_multiple_tools
     tool1 = build_tool(name: 'search') { |i| "found: #{i}" }
     tool2 = build_tool(name: 'calculate') { |i| i[:a] + i[:b] }
-    tool3 = build_tool(name: 'format') { |i| i.to_s }
+    tool3 = build_tool(name: 'format', &:to_s)
 
     robot = RobotLab::Robot.new(
       name: 'multi_tool_robot',
@@ -360,7 +332,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal %w[search calculate format], robot.local_tools.map(&:name)
   end
 
-
   # Private method: resolve_context
   def test_resolve_context_with_hash
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -368,7 +339,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal({ key: 'value' }, result)
   end
-
 
   def test_resolve_context_with_proc
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -378,7 +348,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal({ computed: 'data', has_network: false }, result)
   end
 
-
   def test_resolve_context_with_nil
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
     result = robot.send(:resolve_context, nil, network: nil)
@@ -386,14 +355,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal({}, result)
   end
 
-
   def test_resolve_context_with_invalid_type
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
     result = robot.send(:resolve_context, 'invalid', network: nil)
 
     assert_equal({}, result)
   end
-
 
   # Bus integration tests
 
@@ -404,7 +371,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal({}, robot.outbox)
   end
 
-
   def test_initialization_with_bus
     bus = TypedBus::MessageBus.new
     robot = RobotLab::Robot.new(name: 'bus_bot', template: :assistant, bus: bus)
@@ -413,24 +379,20 @@ class RobotLab::RobotTest < Minitest::Test
     assert bus.channel?(:bus_bot)
   end
 
-
   def test_bus_channel_is_typed
     bus = TypedBus::MessageBus.new
     RobotLab::Robot.new(name: 'typed_bot', template: :assistant, bus: bus)
 
     error = nil
     Async do
-      begin
-        bus.publish(:typed_bot, "not a RobotMessage")
-      rescue ArgumentError => e
-        error = e
-      end
+      bus.publish(:typed_bot, "not a RobotMessage")
+    rescue ArgumentError => e
+      error = e
     end
 
     assert_kind_of ArgumentError, error
     assert_match(/Expected RobotLab::RobotMessage/, error.message)
   end
-
 
   def test_send_message_increments_counter
     bus = TypedBus::MessageBus.new
@@ -444,7 +406,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, msg1.id
     assert_equal 2, msg2.id
   end
-
 
   def test_send_message_tracks_in_outbox
     bus = TypedBus::MessageBus.new
@@ -460,7 +421,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [], alice.outbox[msg.key][:replies]
   end
 
-
   def test_send_message_without_bus_raises
     robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
 
@@ -469,7 +429,6 @@ class RobotLab::RobotTest < Minitest::Test
     end
   end
 
-
   def test_send_reply_without_bus_raises
     robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
 
@@ -477,7 +436,6 @@ class RobotLab::RobotTest < Minitest::Test
       robot.send_reply(to: :someone, content: "reply", in_reply_to: "someone:1")
     end
   end
-
 
   def test_on_message_sets_custom_handler
     bus = TypedBus::MessageBus.new
@@ -496,7 +454,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "alice", received.first.from
   end
 
-
   def test_disconnect_with_bus
     bus = TypedBus::MessageBus.new
     robot = RobotLab::Robot.new(name: 'disc_bot', template: :assistant, bus: bus)
@@ -506,7 +463,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal robot, result
   end
 
-
   def test_to_h_includes_bus_flag
     bus = TypedBus::MessageBus.new
     robot = RobotLab::Robot.new(name: 'bus_bot', template: :assistant, bus: bus)
@@ -515,14 +471,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal true, hash[:bus]
   end
 
-
   def test_to_h_excludes_bus_when_nil
     robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
 
     hash = robot.to_h
     refute hash.key?(:bus)
   end
-
 
   def test_on_message_auto_acks_with_single_arg_block
     bus = TypedBus::MessageBus.new
@@ -538,7 +492,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, received.size
     assert_equal "auto-ack test", received.first.content
   end
-
 
   def test_reply_convenience_method
     bus = TypedBus::MessageBus.new
@@ -560,7 +513,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert replies.first.reply?
   end
 
-
   def test_build_factory_with_bus
     bus = TypedBus::MessageBus.new
     robot = RobotLab.build(name: 'factory_bot', bus: bus)
@@ -568,7 +520,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal bus, robot.bus
     assert bus.channel?(:factory_bot)
   end
-
 
   # Private method: normalize_tool_calls
   def test_normalize_tool_calls_with_nil
@@ -578,14 +529,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [], result
   end
 
-
   def test_normalize_tool_calls_with_empty_array
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
     result = robot.send(:normalize_tool_calls, [])
 
     assert_equal [], result
   end
-
 
   def test_normalize_tool_calls_with_hash
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -595,7 +544,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, result.size
     assert result.first.is_a?(RobotLab::ToolResultMessage)
   end
-
 
   def test_normalize_tool_calls_preserves_non_hash_items
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -607,7 +555,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal [existing_message], result
   end
-
 
   # Private method: all_tools
   def test_all_tools_combines_local_and_mcp_tools
@@ -628,7 +575,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes all.map(&:name), 'mcp_tool'
   end
 
-
   # Private method: filtered_tools
   def test_filtered_tools_returns_all_when_empty_whitelist
     tool1 = build_tool(name: 'tool1') { |i| i }
@@ -642,7 +588,6 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.send(:filtered_tools, [])
     assert_equal 2, result.size
   end
-
 
   def test_filtered_tools_filters_by_name
     tool1 = build_tool(name: 'search') { |i| i }
@@ -658,7 +603,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'search', result.first.name
   end
 
-
   # Private method: ensure_mcp_clients
   def test_ensure_mcp_clients_with_empty_servers
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -668,7 +612,6 @@ class RobotLab::RobotTest < Minitest::Test
     refute robot.instance_variable_get(:@mcp_initialized)
   end
 
-
   # MCP hierarchy resolution
   def test_resolve_mcp_hierarchy_with_none
     robot = RobotLab::Robot.new(name: 'test', template: :assistant, mcp: :none)
@@ -677,14 +620,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [], result
   end
 
-
   def test_resolve_tools_hierarchy_with_none
     robot = RobotLab::Robot.new(name: 'test', template: :assistant, tools: :none)
     result = robot.send(:resolve_tools_hierarchy, :none, network: nil)
 
     assert_equal [], result
   end
-
 
   # Spawn tests
   # with_bus tests
@@ -700,7 +641,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert bus.channel?(:lonely)
   end
 
-
   def test_with_bus_creates_new_bus
     bot = RobotLab::Robot.new(name: 'lonely', template: :assistant)
 
@@ -709,7 +649,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_instance_of TypedBus::MessageBus, bot.bus
     assert bot.bus.channel?(:lonely)
   end
-
 
   def test_with_bus_noop_when_already_on_same_bus
     bus = TypedBus::MessageBus.new
@@ -721,7 +660,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal bus, bot.bus
   end
 
-
   def test_with_bus_allows_switching_buses
     bus1 = TypedBus::MessageBus.new
     bus2 = TypedBus::MessageBus.new
@@ -732,7 +670,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal bus2, bot.bus
     assert bus2.channel?(:bot)
   end
-
 
   def test_with_bus_enables_messaging
     bot1 = RobotLab::Robot.new(name: 'alice', template: :assistant)
@@ -749,7 +686,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal ['hello'], received
   end
 
-
   def test_spawn_creates_robot_on_same_bus
     bus = TypedBus::MessageBus.new
     parent = RobotLab::Robot.new(name: 'parent', template: :assistant, bus: bus)
@@ -761,7 +697,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal bus, child.bus
     assert bus.channel?(:child)
   end
-
 
   def test_spawn_without_bus_creates_one
     robot = RobotLab::Robot.new(name: 'no_bus', template: :assistant)
@@ -775,7 +710,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert robot.bus.channel?(:no_bus)
     assert robot.bus.channel?(:child)
   end
-
 
   def test_spawn_child_can_receive_messages
     bus = TypedBus::MessageBus.new
@@ -792,7 +726,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'parent', received.first.from
   end
 
-
   def test_spawn_passes_options_through
     bus = TypedBus::MessageBus.new
     tool = build_tool(name: 'test_tool') { |i| i }
@@ -804,7 +737,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'test_tool', child.local_tools.first.name
   end
 
-
   def test_spawn_defaults_name_to_robot
     bot = RobotLab.build
     bot2 = bot.spawn(system_prompt: 'test')
@@ -812,16 +744,17 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'robot', bot2.name
   end
 
-
   # Frontmatter extras tests
 
   def test_frontmatter_tools_are_resolved
     # Define a tool class that frontmatter can reference
-    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
-      description "A test tool defined for frontmatter resolution"
-      param :input, type: "string", desc: "Test input"
-      define_method(:execute) { |input:| "test: #{input}" }
-    }) unless defined?(::FrontmatterTestTool)
+    unless defined?(::FrontmatterTestTool)
+      Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
+        description "A test tool defined for frontmatter resolution"
+        param :input, type: "string", desc: "Test input"
+        define_method(:execute) { |input:| "test: #{input}" }
+      end)
+    end
 
     robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_tools_test)
 
@@ -829,13 +762,14 @@ class RobotLab::RobotTest < Minitest::Test
     assert_kind_of ::FrontmatterTestTool, robot.local_tools.first
   end
 
-
   def test_constructor_tools_override_frontmatter_tools
-    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
-      description "A test tool defined for frontmatter resolution"
-      param :input, type: "string", desc: "Test input"
-      define_method(:execute) { |input:| "test: #{input}" }
-    }) unless defined?(::FrontmatterTestTool)
+    unless defined?(::FrontmatterTestTool)
+      Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
+        description "A test tool defined for frontmatter resolution"
+        param :input, type: "string", desc: "Test input"
+        define_method(:execute) { |input:| "test: #{input}" }
+      end)
+    end
 
     my_tool = build_tool(name: 'my_tool') { |i| i }
     robot = RobotLab::Robot.new(
@@ -848,10 +782,9 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'my_tool', robot.local_tools.first.name
   end
 
-
   def test_frontmatter_unresolvable_tool_warns
     # Create a template referencing a non-existent tool
-    template_path = File.join(ENV['ROBOT_LAB_TEMPLATE_PATH'], 'frontmatter_bad_tool_test.md')
+    template_path = File.join(ENV.fetch('ROBOT_LAB_TEMPLATE_PATH', nil), 'frontmatter_bad_tool_test.md')
     File.write(template_path, <<~MD)
       ---
       description: Template with bad tool reference
@@ -868,7 +801,6 @@ class RobotLab::RobotTest < Minitest::Test
     File.delete(template_path) if template_path && File.exist?(template_path)
   end
 
-
   def test_frontmatter_mcp_config
     robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_mcp_test)
 
@@ -877,7 +809,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "test_server", robot.mcp_config.first[:name]
     assert_equal "stdio", robot.mcp_config.first[:transport]
   end
-
 
   def test_constructor_mcp_overrides_frontmatter_mcp
     custom_mcp = [{ name: 'custom_server', transport: 'stdio', command: 'test' }]
@@ -890,13 +821,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal custom_mcp, robot.mcp_config
   end
 
-
   def test_frontmatter_name_overrides_default
     robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_named_test)
 
     assert_equal 'support_bot', robot.name
   end
-
 
   def test_constructor_name_overrides_frontmatter_name
     robot = RobotLab::Robot.new(name: 'my_custom_name', template: :frontmatter_named_test)
@@ -904,13 +833,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'my_custom_name', robot.name
   end
 
-
   def test_frontmatter_description
     robot = RobotLab::Robot.new(name: 'robot', template: :frontmatter_named_test)
 
     assert_equal 'Test template with name in frontmatter', robot.description
   end
-
 
   def test_constructor_description_overrides_frontmatter
     robot = RobotLab::Robot.new(
@@ -921,7 +848,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal 'My custom description', robot.description
   end
-
 
   def test_spawn_fan_out_with_same_name
     bus = TypedBus::MessageBus.new
@@ -941,7 +867,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes received, 'w2:task'
   end
 
-
   # BusPoller serialization tests
 
   def test_bus_poller_initialized
@@ -951,7 +876,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil robot.instance_variable_get(:@bus_poller)
     assert_equal :default, robot.instance_variable_get(:@bus_poller_group)
   end
-
 
   def test_bus_poller_queues_concurrent_deliveries
     bus = TypedBus::MessageBus.new
@@ -965,7 +889,7 @@ class RobotLab::RobotTest < Minitest::Test
       if message.content == "first"
         second = RobotLab::RobotMessage.build(id: 99, from: "sender", content: "second")
         bot.send(:enqueue_delivery,
-          TypedBus::Delivery.new(second, channel_name: :bot, subscriber_id: 0))
+                 TypedBus::Delivery.new(second, channel_name: :bot, subscriber_id: 0))
       end
       order << "end:#{message.content}"
     end
@@ -976,7 +900,6 @@ class RobotLab::RobotTest < Minitest::Test
     # BusPoller ensures sequential processing: first completes, then second
     assert_equal ["start:first", "end:first", "start:second", "end:second"], order
   end
-
 
   def test_bus_poller_drains_multiple_queued
     bus = TypedBus::MessageBus.new
@@ -990,7 +913,7 @@ class RobotLab::RobotTest < Minitest::Test
         %w[second third].each_with_index do |content, i|
           msg = RobotLab::RobotMessage.build(id: 90 + i, from: "sender", content: content)
           bot.send(:enqueue_delivery,
-            TypedBus::Delivery.new(msg, channel_name: :bot, subscriber_id: 0))
+                   TypedBus::Delivery.new(msg, channel_name: :bot, subscriber_id: 0))
         end
       end
     end
@@ -1000,7 +923,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal %w[first second third], order
   end
-
 
   def test_bus_poller_resets_on_error
     bus = TypedBus::MessageBus.new
@@ -1025,7 +947,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal ["after"], received
   end
 
-
   def test_bus_processing_guard_correlates_replies_when_queued
     bus = TypedBus::MessageBus.new
     alice = RobotLab::Robot.new(name: 'alice', template: :assistant, bus: bus)
@@ -1048,7 +969,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "reply to hello", alice.outbox[msg.key][:replies].first.content
   end
 
-
   # === Skills tests ===
 
   def test_skills_single_symbol_accepted
@@ -1057,13 +977,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [:skill_a_test], robot.skills
   end
 
-
   def test_skills_array_accepted
-    robot = RobotLab::Robot.new(name: 'bot', skills: [:skill_a_test, :skill_b_test])
+    robot = RobotLab::Robot.new(name: 'bot', skills: %i[skill_a_test skill_b_test])
 
-    assert_equal [:skill_a_test, :skill_b_test], robot.skills
+    assert_equal %i[skill_a_test skill_b_test], robot.skills
   end
-
 
   def test_skills_prepend_body_before_main
     robot = RobotLab::Robot.new(
@@ -1082,12 +1000,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert skill_pos < main_pos, "Skill body should appear before main template body"
   end
 
-
   def test_skills_ordering_preserved
     robot = RobotLab::Robot.new(
       name: 'bot',
       template: :assistant,
-      skills: [:skill_a_test, :skill_b_test]
+      skills: %i[skill_a_test skill_b_test]
     )
 
     instructions = system_instructions(robot)
@@ -1098,7 +1015,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert pos_b, "Skill B body not found"
     assert pos_a < pos_b, "Skill A should appear before Skill B"
   end
-
 
   def test_skills_recursive_expansion
     robot = RobotLab::Robot.new(
@@ -1116,7 +1032,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert leaf_pos < nested_pos, "Leaf should appear before nested (depth-first)"
   end
 
-
   def test_skills_cycle_detection_skips_and_warns
     # This should not raise or infinite loop
     robot = RobotLab::Robot.new(
@@ -1131,7 +1046,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "cycle B"
   end
 
-
   def test_skills_self_reference_skipped
     # Should not infinite loop
     robot = RobotLab::Robot.new(
@@ -1143,7 +1057,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_includes instructions, "self-referencing"
   end
-
 
   def test_skills_main_template_excluded_from_skills
     # skill_refs_main_test has skills: [assistant], which is the main template
@@ -1161,7 +1074,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "skill that references"
   end
 
-
   def test_skills_config_cascade
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1177,7 +1089,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 0.9, temp
   end
 
-
   def test_skills_constructor_config_overrides_all
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1191,7 +1102,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 0.3, temp
   end
 
-
   def test_skills_description_cascade
     robot = RobotLab::Robot.new(
       name: 'robot',
@@ -1204,7 +1114,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "Helpful assistant with tool access", robot.description
   end
 
-
   def test_skills_constructor_description_overrides
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1215,7 +1124,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal 'My custom description', robot.description
   end
-
 
   def test_skills_from_front_matter
     robot = RobotLab::Robot.new(
@@ -1228,7 +1136,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "Skill A"
     assert_includes instructions, "main template with skills from front matter"
   end
-
 
   def test_skills_constructor_and_frontmatter_combined
     robot = RobotLab::Robot.new(
@@ -1245,7 +1152,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "main template with skills from front matter"
   end
 
-
   def test_skills_shared_context
     robot = RobotLab::Robot.new(
       name: 'robot',
@@ -1261,7 +1167,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "Welcome to Acme Corp support"
   end
 
-
   def test_skills_without_main_template
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1273,7 +1178,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "Skill A"
     assert_nil robot.template
   end
-
 
   def test_no_skills_unchanged_behavior
     robot = RobotLab::Robot.new(
@@ -1288,19 +1192,17 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes instructions, "helpful assistant"
   end
 
-
   def test_build_factory_passes_skills
     robot = RobotLab.build(
       name: 'bot',
-      skills: [:skill_a_test, :skill_b_test]
+      skills: %i[skill_a_test skill_b_test]
     )
 
-    assert_equal [:skill_a_test, :skill_b_test], robot.skills
+    assert_equal %i[skill_a_test skill_b_test], robot.skills
     instructions = system_instructions(robot)
     assert_includes instructions, "Skill A"
     assert_includes instructions, "Skill B"
   end
-
 
   def test_to_h_includes_skills
     robot = RobotLab::Robot.new(
@@ -1312,7 +1214,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [:skill_a_test], hash[:skills]
   end
 
-
   def test_to_h_excludes_nil_skills
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1322,7 +1223,6 @@ class RobotLab::RobotTest < Minitest::Test
     hash = robot.to_h
     refute hash.key?(:skills)
   end
-
 
   # ── Streaming: on_content callback ──────────────────────────
 
@@ -1338,7 +1238,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal callback, robot.instance_variable_get(:@on_content)
   end
 
-
   def test_on_content_stored_via_config
     callback = ->(chunk) { chunk }
     config = RobotLab::RunConfig.new(on_content: callback)
@@ -1351,7 +1250,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal callback, robot.instance_variable_get(:@on_content)
   end
-
 
   def test_on_content_constructor_overrides_config
     config_cb = ->(chunk) { "config: #{chunk}" }
@@ -1368,7 +1266,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal constructor_cb, robot.instance_variable_get(:@on_content)
   end
 
-
   def test_on_content_nil_by_default
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1377,7 +1274,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_nil robot.instance_variable_get(:@on_content)
   end
-
 
   def test_on_content_via_build_factory
     callback = ->(chunk) { chunk }
@@ -1390,7 +1286,6 @@ class RobotLab::RobotTest < Minitest::Test
 
     assert_equal callback, robot.instance_variable_get(:@on_content)
   end
-
 
   def test_effective_streaming_block_stored_only
     callback = ->(chunk) { chunk }
@@ -1405,7 +1300,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal callback, result
   end
 
-
   def test_effective_streaming_block_runtime_only
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1417,7 +1311,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal runtime, result
   end
 
-
   def test_effective_streaming_block_neither
     robot = RobotLab::Robot.new(
       name: 'bot',
@@ -1427,7 +1320,6 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.send(:effective_streaming_block, nil)
     assert_nil result
   end
-
 
   def test_effective_streaming_block_both_fires_both
     stored_chunks = []
@@ -1450,7 +1342,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal %w[hello world], runtime_chunks
   end
 
-
   def test_effective_streaming_block_both_stored_fires_first
     order = []
 
@@ -1466,20 +1357,17 @@ class RobotLab::RobotTest < Minitest::Test
     combined = robot.send(:effective_streaming_block, runtime)
     combined.call("test")
 
-    assert_equal [:stored, :runtime], order
+    assert_equal %i[stored runtime], order
   end
-
 
   def test_on_content_in_run_config_fields
     assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_content
     assert_includes RobotLab::RunConfig::FIELDS, :on_content
   end
 
-
   def test_on_content_not_serializable
     assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_content
   end
-
 
   # =========================================================================
   # Token tracking
@@ -1491,7 +1379,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 0, robot.total_output_tokens
   end
 
-
   def test_reset_token_totals
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.instance_variable_set(:@total_input_tokens, 500)
@@ -1500,7 +1387,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 0, robot.total_input_tokens
     assert_equal 0, robot.total_output_tokens
   end
-
 
   def test_run_accumulates_tokens_from_response
     robot = build_robot(name: "bot", system_prompt: "test")
@@ -1516,7 +1402,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.total_input_tokens
     assert_equal 50, robot.total_output_tokens
   end
-
 
   def test_run_accumulates_tokens_across_multiple_runs
     robot = build_robot(name: "bot", system_prompt: "test")
@@ -1534,7 +1419,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.total_output_tokens
   end
 
-
   def test_result_includes_per_run_tokens
     robot = build_robot(name: "bot", system_prompt: "test")
     tokens = RubyLLM::Tokens.new(input: 75, output: 30)
@@ -1549,7 +1433,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 75, result.input_tokens
     assert_equal 30, result.output_tokens
   end
-
 
   # =========================================================================
   # Tool loop circuit breaker
@@ -1571,7 +1454,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_raises(RobotLab::ToolLoopError) { robot.run("test") }
   end
 
-
   def test_circuit_breaker_does_not_raise_at_limit
     robot = build_robot(name: "bot", system_prompt: "test", max_tool_rounds: 3)
     fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
@@ -1587,7 +1469,6 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.run("test")
     assert_equal "done", result.reply
   end
-
 
   def test_circuit_breaker_restores_original_callback_after_run
     called = []
@@ -1606,7 +1487,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal user_cb, chat.instance_variable_get(:@on)[:tool_call]
   end
 
-
   def test_no_circuit_breaker_when_max_tool_rounds_not_set
     robot = build_robot(name: "bot", system_prompt: "test")
     fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
@@ -1620,7 +1500,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "ok", result.reply
   end
 
-
   # =========================================================================
   # Learning accumulation
   # =========================================================================
@@ -1630,13 +1509,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert_empty robot.learnings
   end
 
-
   def test_learn_adds_insight
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.learn("Always check the cache first")
     assert_includes robot.learnings, "Always check the cache first"
   end
-
 
   def test_learn_returns_self_for_chaining
     robot = build_robot(name: "bot", system_prompt: "test")
@@ -1644,14 +1521,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal robot, result
   end
 
-
   def test_learn_deduplicates_exact_match
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.learn("check the cache")
     robot.learn("check the cache")
     assert_equal 1, robot.learnings.size
   end
-
 
   def test_learn_deduplicates_when_new_is_substring_of_existing
     robot = build_robot(name: "bot", system_prompt: "test")
@@ -1661,7 +1536,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes robot.learnings, "always check the cache before fetching"
   end
 
-
   def test_learn_replaces_existing_when_new_is_superset
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.learn("check the cache")
@@ -1670,14 +1544,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes robot.learnings, "always check the cache before fetching"
   end
 
-
   def test_learn_ignores_empty_string
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.learn("")
     robot.learn("   ")
     assert_empty robot.learnings
   end
-
 
   def test_learnings_injected_into_run_message
     robot = build_robot(name: "bot", system_prompt: "test")
@@ -1700,7 +1572,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_includes received_message, "do the task"
   end
 
-
   def test_no_learnings_injection_when_learnings_empty
     robot = build_robot(name: "bot", system_prompt: "test")
 
@@ -1719,14 +1590,12 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "do the task", received_message
   end
 
-
   def test_learnings_persisted_to_memory
     robot = build_robot(name: "bot", system_prompt: "test")
     robot.learn("retry on transient errors")
     stored = robot.memory.get(:learnings)
     assert_equal ["retry on transient errors"], stored
   end
-
 
   # =========================================================================
   # Robot#update method
@@ -1765,7 +1634,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 0.5, chat.instance_variable_get(:@temperature)
   end
 
-
   # =========================================================================
   # Robot#run with Memory parameter
   # =========================================================================
@@ -1799,7 +1667,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "extra_value", robot.memory.get(:extra_key)
   end
 
-
   # =========================================================================
   # Robot#with_template
   # =========================================================================
@@ -1815,7 +1682,6 @@ class RobotLab::RobotTest < Minitest::Test
     result = robot.with_template(:helper)
     assert_equal robot, result
   end
-
 
   # =========================================================================
   # RobotLab module methods
@@ -1856,7 +1722,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, network.robots.size
   end
 
-
   # =========================================================================
   # chat_provider, inject_mcp!, clear_messages, replace_messages
   # =========================================================================
@@ -1896,7 +1761,7 @@ class RobotLab::RobotTest < Minitest::Test
     robot.clear_messages
     # After clear, only system message should remain
     messages = chat.instance_variable_get(:@messages)
-    assert messages.all? { |m| m.role.to_s == "system" }
+    assert(messages.all? { |m| m.role.to_s == "system" })
   end
 
   def test_clear_messages_without_keep_system_removes_all
@@ -2012,7 +1877,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_empty result.output
   end
 
-
   # =========================================================================
   # Template with required params (rerender_template path)
   # =========================================================================
@@ -2029,7 +1893,10 @@ class RobotLab::RobotTest < Minitest::Test
       content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
     )
     chat = robot.instance_variable_get(:@chat)
-    chat.define_singleton_method(:ask) { |msg = nil, **_kw, &_b| received_message = msg; fake_response }
+    chat.define_singleton_method(:ask) do |msg = nil, **_kw, &_b|
+      received_message = msg
+      fake_response
+    end
 
     robot.run("test", company_name: "Acme Corp")
 
@@ -2037,7 +1904,6 @@ class RobotLab::RobotTest < Minitest::Test
     instructions = system_instructions(robot)
     assert_includes instructions, "Acme Corp"
   end
-
 
   def test_skills_rerender_at_run_time_with_params
     # skill_with_params_test.md has company_name param; parameterized_main_test has company_name: null
@@ -2082,10 +1948,12 @@ class RobotLab::RobotTest < Minitest::Test
 
   def test_skill_with_tools_sets_local_tools
     # accumulate_extras line 209 + apply_accumulated_extras line 231
-    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
-      description "A frontmatter test tool"
-      def execute = "ok"
-    }) unless defined?(::FrontmatterTestTool)
+    unless defined?(::FrontmatterTestTool)
+      Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
+        description "A frontmatter test tool"
+        def execute = "ok"
+      end)
+    end
 
     robot = RobotLab::Robot.new(
       name: "robot",
@@ -2108,10 +1976,12 @@ class RobotLab::RobotTest < Minitest::Test
 
   def test_resolve_frontmatter_tools_with_class
     # resolve_frontmatter_tools line 290: when Class => name.new
-    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
-      description "A frontmatter test tool"
-      def execute = "ok"
-    }) unless defined?(::FrontmatterTestTool)
+    unless defined?(::FrontmatterTestTool)
+      Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
+        description "A frontmatter test tool"
+        def execute = "ok"
+      end)
+    end
 
     robot = RobotLab::Robot.new(name: "robot", template: :assistant)
     result = robot.send(:resolve_frontmatter_tools, [::FrontmatterTestTool])
@@ -2121,10 +1991,12 @@ class RobotLab::RobotTest < Minitest::Test
 
   def test_resolve_frontmatter_tools_with_instance
     # resolve_frontmatter_tools line 292: else branch (instance passed directly)
-    Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) {
-      description "A frontmatter test tool"
-      def execute = "ok"
-    }) unless defined?(::FrontmatterTestTool)
+    unless defined?(::FrontmatterTestTool)
+      Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
+        description "A frontmatter test tool"
+        def execute = "ok"
+      end)
+    end
 
     tool_instance = ::FrontmatterTestTool.new
     robot = RobotLab::Robot.new(name: "robot", template: :assistant)
@@ -2195,12 +2067,14 @@ class RobotLab::RobotTest < Minitest::Test
     mock_client.define_singleton_method(:connect) {}
     mock_client.define_singleton_method(:connected?) { true }
     mock_client.define_singleton_method(:list_tools) { tool_defs }
-    mock_client.define_singleton_method(:server) {
-      s = Object.new; s.define_singleton_method(:name) { "ok_server" }; s
-    }
+    mock_client.define_singleton_method(:server) do
+      s = Object.new
+      s.define_singleton_method(:name) { "ok_server" }
+      s
+    end
 
     # Stub MCP::Client.new to return our mock
-    RobotLab::MCP::Client.define_singleton_method(:new) { |*args, **kwargs| mock_client }
+    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs| mock_client }
 
     robot.send(:ensure_mcp_clients, [server_config])
 
@@ -2212,7 +2086,7 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, mcp_tools.size
 
     # Call the discovered tool to cover mcp_management.rb line 122 (the call_tool block)
-    mock_client.define_singleton_method(:call_tool) { |name, args| "tool_result" }
+    mock_client.define_singleton_method(:call_tool) { |_name, _args| "tool_result" }
     result = mcp_tools.first.execute
     assert_equal "tool_result", result
   ensure
@@ -2245,9 +2119,11 @@ class RobotLab::RobotTest < Minitest::Test
     mock_client.define_singleton_method(:connect) {}
     mock_client.define_singleton_method(:connected?) { true }
     mock_client.define_singleton_method(:list_tools) { tool_defs }
-    mock_client.define_singleton_method(:server) {
-      s = Object.new; s.define_singleton_method(:name) { "retry_server" }; s
-    }
+    mock_client.define_singleton_method(:server) do
+      s = Object.new
+      s.define_singleton_method(:name) { "retry_server" }
+      s
+    end
 
     RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs| mock_client }
     # Second call: should hit retry path and succeed
@@ -2271,9 +2147,9 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal ["retry_fail_server"], robot.failed_mcp_server_names
 
     # Make MCP::Client.new raise during retry
-    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs|
+    RobotLab::MCP::Client.define_singleton_method(:new) do |*_args, **_kwargs|
       raise StandardError, "retry connection error"
-    }
+    end
 
     # Second call: retry path should rescue and log warn
     robot.send(:ensure_mcp_clients, failing_config)
@@ -2314,32 +2190,23 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil result
   end
 
-  def test_handle_message_via_llm_default_handler
-    # bus_messaging.rb lines 203, 223-225: handle_message_via_llm called when no on_message set
+  def test_default_handler_is_no_op
+    # Default @message_handler is a no-op lambda. A robot joined to a bus
+    # without on_message set should ack messages silently, not trigger LLM.
     bus = TypedBus::MessageBus.new
-    replies = []
+    llm_called = false
 
-    # alice will receive replies from bob's LLM handler
     alice = RobotLab::Robot.new(name: "alice", template: :assistant, bus: bus)
-    alice.on_message { |msg| replies << msg }
 
-    # bob has NO on_message set, so incoming messages go to handle_message_via_llm
+    # bob has NO on_message set — default handler should ack and do nothing
     bob = RobotLab::Robot.new(name: "bob", template: :assistant, bus: bus)
-
-    # Stub bob's chat.ask to return a fake LLM response
-    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
-      content: "LLM reply from bob", tool_calls: nil, stop_reason: "end_turn", tokens: nil
-    )
     bob_chat = bob.instance_variable_get(:@chat)
-    bob_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+    bob_chat.define_singleton_method(:ask) { |*| llm_called = true }
 
     Async { alice.send_message(to: :bob, content: "hello bob") }
 
-    # Wait for reply to propagate
-    wait_until(timeout: 2) { replies.size >= 1 }
-
-    assert_equal 1, replies.size
-    assert_equal "LLM reply from bob", replies.first.content
+    sleep 0.2
+    refute llm_called, "default handler must not trigger LLM"
   end
 
   # =========================================================================
@@ -2406,7 +2273,10 @@ class RobotLab::RobotTest < Minitest::Test
       content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
     )
     worker_chat = worker.instance_variable_get(:@chat)
-    worker_chat.define_singleton_method(:ask) { |msg = nil, **_kw, &_b| received = msg; resp }
+    worker_chat.define_singleton_method(:ask) do |msg = nil, **_kw, &_b|
+      received = msg
+      resp
+    end
 
     delegator.delegate(to: worker, task: "hello", company_name: "Acme")
 
@@ -2530,7 +2400,7 @@ class RobotLab::RobotTest < Minitest::Test
     worker    = build_robot(name: "worker",  template: :assistant)
 
     worker_chat = worker.instance_variable_get(:@chat)
-    worker_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise RuntimeError, "boom" }
+    worker_chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| raise "boom" }
 
     future = delegator.delegate(to: worker, task: "task", async: true)
 
@@ -2549,7 +2419,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_raises(RobotLab::DelegationFuture::DelegationTimeout) { future.value(timeout: 0.05) }
   end
 
-
   # Private method: expand_skills_with_catalog
   def test_expand_skills_stores_agent_skill_in_pending_when_catalog_hit
     fixtures = File.expand_path("../fixtures/skills", __dir__)
@@ -2557,7 +2426,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     robot = build_robot(name: "bot")
     robot.instance_variable_set(:@pending_agent_skills, [])
-    robot.instance_variable_set(:@agent_skill_store, RobotLab::DocumentStore.new)
+    robot.instance_variable_set(:@agent_skill_store, FakeSkillStore.new)
 
     robot.send(:expand_skills_with_catalog, [:test_skill], Set.new, catalog)
 
@@ -2565,7 +2434,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, pending.length
     assert_equal "test_skill", pending.first.name
   end
-
 
   # Integration tests for AgentSkills support
   def test_skills_param_handles_mixed_pm_and_agentskill_formats
@@ -2577,7 +2445,7 @@ class RobotLab::RobotTest < Minitest::Test
     RobotLab::AgentSkillCatalog.instance_variable_set(:@instance, catalog)
 
     begin
-      robot = build_robot(name: "bot", skills: [:skill_leaf_test, :test_skill])
+      robot = build_robot(name: "bot", skills: %i[skill_leaf_test test_skill])
 
       expanded = robot.instance_variable_get(:@expanded_skills)
       pending  = robot.instance_variable_get(:@pending_agent_skills)
@@ -2591,14 +2459,13 @@ class RobotLab::RobotTest < Minitest::Test
     end
   end
 
-
   def test_restore_after_agent_skills_leaves_tool_count_unchanged
     fixtures = File.expand_path("../fixtures/skills", __dir__)
     skill    = RobotLab::AgentSkill.new(File.join(fixtures, "scripted_skill", "SKILL.md"))
 
     robot = build_robot(name: "bot", system_prompt: "You are helpful.")
     robot.instance_variable_set(:@pending_agent_skills, [skill])
-    store = RobotLab::DocumentStore.new
+    store = FakeSkillStore.new
     store.store(skill.name.to_sym, skill.description)
     robot.instance_variable_set(:@agent_skill_store, store)
 
@@ -2611,7 +2478,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal initial_tool_count, robot.local_tools.length
   end
 
-
   def test_expand_skills_uses_pm_template_when_not_in_catalog
     # Use a fixture catalog that does not contain :skill_leaf_test to guarantee
     # the PM fallback path is exercised regardless of ~/.prompts/skills/ contents.
@@ -2621,5 +2487,92 @@ class RobotLab::RobotTest < Minitest::Test
     robot  = build_robot(name: "bot")
     result = robot.send(:expand_skills_with_catalog, [:skill_leaf_test], Set.new, catalog)
     assert_includes result, :skill_leaf_test
+  end
+
+  # ── auto_compact ─────────────────────────────────────────────
+
+  def test_maybe_compact_skips_when_none
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: :none))
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+  def test_maybe_compact_skips_when_nil
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi")
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+  def test_maybe_compact_skips_when_no_messages
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi",
+                         config: RobotLab::RunConfig.new(auto_compact: :context_window))
+    robot.define_singleton_method(:compress_history) { called = true }
+    robot.send(:maybe_compact)
+    refute called
+  end
+
+  def test_maybe_compact_calls_proc_with_robot
+    received = nil
+    my_proc  = ->(r) { received = r }
+    robot    = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: my_proc))
+    fake_msg = Struct.new(:content).new("hello world")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:maybe_compact)
+    assert_same robot, received
+  end
+
+  def test_maybe_compact_proc_owns_compaction_decision
+    call_count = 0
+    my_proc    = ->(_r) { call_count += 1 }
+    robot      = build_robot(name: "bot", system_prompt: "hi", config: RobotLab::RunConfig.new(auto_compact: my_proc))
+    fake_msg   = Struct.new(:content).new("hello world")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:maybe_compact)
+    robot.send(:maybe_compact)
+    assert_equal 2, call_count
+  end
+
+  def test_compact_if_over_context_window_triggers_compress_when_over_threshold
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi",
+                         config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
+    robot.define_singleton_method(:compress_history) { called = true }
+    # threshold=0.0 means any non-negative token count triggers compaction
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:compact_if_over_context_window)
+    assert called
+  end
+
+  def test_compact_if_over_context_window_skips_when_under_threshold
+    called = false
+    robot  = build_robot(name: "bot", system_prompt: "hi",
+                         config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.99))
+    robot.define_singleton_method(:compress_history) { called = true }
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+    robot.send(:compact_if_over_context_window)
+    refute called
+  end
+
+  def test_compact_if_over_context_window_logs_and_skips_on_dependency_error
+    log_output = StringIO.new
+    RobotLab.config.logger = Logger.new(log_output)
+
+    robot = build_robot(name: "dep-bot", system_prompt: "hi",
+                        config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
+    robot.define_singleton_method(:compress_history) { raise RobotLab::DependencyError, "classifier gem missing" }
+    fake_msg = Struct.new(:content).new("x")
+    robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
+
+    robot.send(:compact_if_over_context_window)
+
+    RobotLab.config.logger = Logger.new(nil)
+    assert_match(/auto_compact/, log_output.string)
   end
 end

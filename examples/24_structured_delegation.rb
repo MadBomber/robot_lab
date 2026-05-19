@@ -20,29 +20,27 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/24_structured_delegation.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
+require_relative "common"
 
-require_relative "../lib/robot_lab"
-
-puts "=" * 60
-puts "Example 24: Structured Delegation"
-puts "=" * 60
-puts
+banner "Structured Delegation"
 
 # ---------------------------------------------------------------------------
 # Build a manager and two specialist robots
 # ---------------------------------------------------------------------------
 manager = RobotLab.build(
+  model: LLM[:default].model,
   name:          "manager",
   system_prompt: "You are a project manager. Delegate tasks concisely."
 )
 
 summarizer = RobotLab.build(
+  model: LLM[:default].model,
   name:          "summarizer",
   system_prompt: "You are a concise summarizer. Produce a 1-2 sentence summary."
 )
 
 analyst = RobotLab.build(
+  model: LLM[:default].model,
   name:          "analyst",
   system_prompt: "You are a data analyst. Identify the key metric in one sentence."
 )
@@ -59,13 +57,12 @@ TEXT
 
 puts "Document:"
 puts document
-puts "-" * 60
+hr
 
 # ---------------------------------------------------------------------------
 # Synchronous delegation — sequential, blocks until each result arrives
 # ---------------------------------------------------------------------------
-puts "── Synchronous (sequential) ──────────────────────────────"
-puts
+section "Synchronous (sequential)"
 
 puts "Delegating to summarizer (blocking)..."
 summary_result = manager.delegate(to: summarizer, task: "Summarize this report:\n\n#{document}")
@@ -88,15 +85,16 @@ puts
 # ---------------------------------------------------------------------------
 # Asynchronous delegation — parallel fan-out, results collected later
 # ---------------------------------------------------------------------------
-puts "── Asynchronous (parallel fan-out) ───────────────────────"
-puts
+section "Asynchronous (parallel fan-out)"
 
 # Fresh robots — each delegate call should start from a clean slate
 async_summarizer = RobotLab.build(
+  model: LLM[:default].model,
   name:          "summarizer",
   system_prompt: "You are a concise summarizer. Produce a 1-2 sentence summary."
 )
 async_analyst = RobotLab.build(
+  model: LLM[:default].model,
   name:          "analyst",
   system_prompt: "You are a data analyst. Identify the key metric in one sentence."
 )
@@ -127,9 +125,7 @@ puts
 # ---------------------------------------------------------------------------
 # Contrast with the alternatives
 # ---------------------------------------------------------------------------
-puts "=" * 60
-puts "When to use delegate vs. the alternatives"
-puts "=" * 60
+section "When to Use delegate vs. the Alternatives"
 puts <<~TEXT
 
   bus messaging       — fire-and-forget; no return value; async

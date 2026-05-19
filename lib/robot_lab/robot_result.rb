@@ -143,8 +143,8 @@ module RobotLab
     #
     # @param args [Array] arguments passed to to_json
     # @return [String] JSON representation
-    def to_json(*args)
-      export.to_json(*args)
+    def to_json(*)
+      export.to_json(*)
     end
 
     # Get the last text content from output
@@ -152,9 +152,9 @@ module RobotLab
     # @return [String, nil] The content of the last text message
     #
     def last_text_content
-      output.reverse.find(&:text?)&.content
+      output.rfind(&:text?)&.content
     end
-    alias_method :reply, :last_text_content
+    alias reply last_text_content
 
     # Check if result contains tool calls
     #
@@ -217,7 +217,8 @@ module RobotLab
         when ToolResultMessage
           result
         when Hash
-          result[:type] == "tool_result" ? ToolResultMessage.new(**result.slice(:tool, :content, :stop_reason)) : Message.from_hash(result)
+          result[:type] == "tool_result" ? ToolResultMessage.new(**result.slice(:tool, :content,
+                                                                                :stop_reason)) : Message.from_hash(result)
         else
           raise ArgumentError, "Invalid tool result: must be ToolResultMessage or Hash"
         end

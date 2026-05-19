@@ -13,9 +13,10 @@ Gem::Specification.new do |spec|
     RobotLab is a Ruby framework for building and orchestrating multi-robot LLM workflows.
     Built on ruby_llm, it provides robots with template-based prompts, tools, and shared
     memory; networks for coordinating multiple robots with intelligent routing; MCP (Model
-    Context Protocol) integration for external tool servers; a memory system with Redis
-    backend and semantic caching; and Rails integration with generators and ActiveRecord-
-    backed conversation history.
+    Context Protocol) integration for external tool servers; and a memory system with Redis
+    backend and semantic caching. Optional gems add Rails integration (robot_lab-rails),
+    durable learning (robot_lab-durable), Ractor concurrency (robot_lab-ractor), and
+    document storage (robot_lab-document_store).
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab"
   spec.license = "MIT"
@@ -46,16 +47,13 @@ Gem::Specification.new do |spec|
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
   spec.add_dependency "ruby_llm", "~> 1.12"
-  spec.add_dependency "ruby_llm-mcp"
+  spec.add_dependency "ruby_llm-mcp", "~> 1.0"
   spec.add_dependency "prompt_manager", "~> 1.0"
-  spec.add_dependency "ruby_llm-schema"
-  spec.add_dependency "ruby_llm-semantic_cache"
-  spec.add_dependency "fastembed"
+  spec.add_dependency "ruby_llm-schema", "~> 0.3"
+  spec.add_dependency "ruby_llm-semantic_cache", "~> 0.1"
   spec.add_dependency "async", "~> 2.0"
-  spec.add_dependency "typed_bus"
-  spec.add_dependency "simple_flow", "~> 0.4.0"
-  spec.add_dependency "ractor_queue"
-  spec.add_dependency "ractor-wrapper"
+  spec.add_dependency "typed_bus", "~> 0.0.1"
+  spec.add_dependency "simple_flow", "~> 0.4"
   # Optional MCP transport dependencies (loaded on demand)
   spec.add_dependency "async-http", "~> 0.60"
   spec.add_dependency "async-websocket", "~> 0.30"

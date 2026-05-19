@@ -6,29 +6,35 @@ source "https://rubygems.org"
 gemspec
 
 group :development, :test do
-  gem 'ractor_queue'
-  gem 'ractor-wrapper'
   gem 'aigcm'
   gem 'amazing_print'
   gem 'classifier', '~> 2.3'
+  gem "debug"
   gem 'debug_me'
+  gem "flog"
   gem 'hashdiff'
-  gem "rake"
   gem "minitest"
   gem "minitest-reporters"
-  gem "webmock"
-  gem "vcr"
+  gem 'ractor_queue'
+  gem 'ractor-wrapper'
+  gem "rake"
+  gem "rouge"
+  gem "robot_lab-document_store"  #, path: "../robot_lab-document_store"
+  gem "robot_lab-durable"
+  gem "robot_lab-ractor"
+  gem "robot_lab-rails"
   gem "rubocop"
-  gem "debug"
+  gem "vcr"
+  gem "webmock"
 end
 
 group :test do
-  gem "sqlite3"
-  gem "activesupport", ">= 7.0"
   gem "activerecord", ">= 7.0"
+  gem "activesupport", ">= 7.0"
   gem "railties", ">= 7.0"
+  gem "simplecov", require: false
+  gem "sqlite3"
   gem "state_machines"
   gem "state_machines-activemodel"
   gem "state_machines-activerecord"
-  gem "simplecov", require: false
 end

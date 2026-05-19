@@ -31,8 +31,14 @@ RobotLab.config.streaming_enabled          #=> true
 RobotLab.config.development?  #=> true/false
 ```
 
-!!! warning "No configure block"
-    RobotLab does **not** use a `RobotLab.configure do |config| ... end` pattern. All configuration comes from config files, environment variables, or direct assignment on `RobotLab.config`.
+!!! tip "configure block"
+    `RobotLab.configure` yields the config object for block-style setup — useful for setting runtime-only attributes like the logger. For static settings (API keys, timeouts, model defaults) prefer config files or environment variables.
+
+    ```ruby
+    RobotLab.configure do |c|
+      c.logger = Logger.new(File::NULL)   # silence all RobotLab logging
+    end
+    ```
 
 ## Environment Variables
 
@@ -195,13 +201,20 @@ Default chat parameters applied to all robots unless overridden:
 
 ## Runtime-Only Attributes
 
-Some attributes can only be set at runtime, not through config files:
+Some attributes can only be set at runtime, not through config files. Use direct assignment on `RobotLab.config` or the `RobotLab.configure` block:
 
 ```ruby
-# Logger (defaults to Rails.logger in Rails, or Logger.new($stdout) otherwise)
-RobotLab.config.logger = Logger.new(nil)        # silence logging
-RobotLab.config.logger = Logger.new("robot.log") # log to file
+# Direct assignment
+RobotLab.config.logger = Logger.new(nil)          # silence logging
+RobotLab.config.logger = Logger.new("robot.log")  # log to file
+
+# Block-style configure (equivalent, useful when setting multiple values)
+RobotLab.configure do |c|
+  c.logger = Logger.new(File::NULL)
+end
 ```
+
+`RobotLab.configure` yields the same `Config` object returned by `RobotLab.config`.
 
 ## Reloading Configuration
 
@@ -361,7 +374,7 @@ effective.temperature  #=> 0.9 (overridden)
 | **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | **Tools** | `mcp`, `tools` |
 | **Callbacks** | `on_tool_call`, `on_tool_result` |
-| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots` |
+| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold` |
 
 ### RunConfig vs RobotLab.config
 

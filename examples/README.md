@@ -226,7 +226,7 @@ Demonstrates `robot.search_history(query, limit:)` — semantic search over accu
 
 Demonstrates `memory.store_document(key, text)` and `memory.search_documents(query, limit:)` — a lightweight RAG store using `fastembed` (BAAI/bge-small-en-v1.5). Documents are embedded once; queries are compared by cosine similarity at search time. Includes the `RobotLab::DocumentStore` standalone API and a RAG pattern sketch showing how to pass retrieved context to a robot.
 
-**Requires:** `fastembed` gem (already a core dependency); downloads the ~23 MB ONNX model on first run (cached in `~/.cache/fastembed/`)
+**Requires:** `robot_lab-document_store` gem (`gem "robot_lab-document_store"` in your Gemfile); downloads the ~23 MB ONNX model on first run (cached in `~/.cache/fastembed/`)
 
 ### 27 — Production Incident War Room
 

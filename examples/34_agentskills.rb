@@ -12,19 +12,14 @@
 #   # (create SKILL.md as shown in the example header)
 #   ANTHROPIC_API_KEY=your_key ruby examples/34_agentskills.rb
 
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 require "logger"
 log_file = File.join(__dir__, "34.log")
 RobotLab.config.logger = Logger.new(log_file)
 RubyLLM.configure { |c| c.logger = Logger.new(log_file) }
 
-puts "=" * 60
-puts "RobotLab — AgentSkills.io Integration Demo"
-puts "=" * 60
-puts
+banner "RobotLab — AgentSkills.io Integration Demo"
 
 # Check if the skill is installed
 skill_path = File.expand_path("~/.prompts/skills/code_reviewer/SKILL.md")
@@ -41,6 +36,7 @@ end
 # "Review Ruby code for quality, style, and potential bugs",
 # the skill's instructions are injected into the system prompt.
 robot = RobotLab.build(
+  model: LLM[:default].model,
   name: "assistant",
   system_prompt: "You are a helpful Ruby programming assistant.",
   skills: [:code_reviewer]
@@ -67,7 +63,7 @@ puts "Query: code review (skill should activate)"
 result = robot.run(code_question)
 puts result.reply
 puts
-puts "=" * 60
+hr
 
 # Message unrelated to code review — skill should NOT activate
 puts "Query: general question (skill should NOT activate)"

@@ -10,11 +10,7 @@
 # Usage:
 #   bundle exec ruby examples/12_message_bus.rb
 
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
+require_relative "common"
 
 MAX_ATTEMPTS = 5
 
@@ -23,7 +19,7 @@ class Comedian < RobotLab::Robot
   TEMP_STEP  = 0.2
 
   def initialize(bus:)
-    super(name: "bob", template: :comedian, bus: bus, temperature: TEMP_START)
+    super(name: "bob", model: LLM[:default].model, template: :comedian, bus: bus, temperature: TEMP_START)
     @attempts = 0
     on_message do |message|
       @attempts += 1
@@ -40,7 +36,7 @@ end
 
 class ComedyCritic < RobotLab::Robot
   def initialize(bus:)
-    super(name: "alice", template: :comedy_critic, bus: bus)
+    super(name: "alice", model: LLM[:default].model, template: :comedy_critic, bus: bus)
     @accepted = false
     @rounds   = 0
     on_message do |message|
@@ -60,15 +56,12 @@ bus   = TypedBus::MessageBus.new
 bob   = Comedian.new(bus: bus)
 alice = ComedyCritic.new(bus: bus)
 
-puts "=" * 60
-puts "Example 12: Tell Me a Funny Robot Joke"
-puts "=" * 60
-puts
+banner "Tell Me a Funny Robot Joke"
 
 puts "Alice: Tell me a funny robot joke."
 puts
 alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
 
-puts "-" * 60
+hr
 puts "Attempts: #{bob.attempts} / #{MAX_ATTEMPTS}"
 puts "Accepted: #{alice.accepted}"

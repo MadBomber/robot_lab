@@ -5,16 +5,20 @@ module RobotLab
     # Prepended module that intercepts run() to inject relevant AgentSkills.io
     # skills into the system prompt and tool list for the duration of each call.
     #
+    # Owns:    @_active_agent_skills, @_agent_skill_original_instructions, @_agent_skill_injected_tools
+    # Reads:   @pending_agent_skills, @agent_skill_store, @local_tools, @chat, @name
+    # Contract: prepended (wraps super); requires TemplateRendering to have set @pending_agent_skills
+    #
     # Skills are matched by embedding similarity between the incoming message
     # and each pending skill's description (via DocumentStore/fastembed).
     # Injected content is fully restored in an ensure block after run() returns.
     module AgentSkillMatching
       SIMILARITY_THRESHOLD = 0.70
 
-      def run(message = nil, **kwargs, &block)
+      def run(message = nil, **, &)
         matched = match_agent_skills(message.to_s)
         inject_agent_skills(matched) if matched.any?
-        super(message, **kwargs, &block)
+        super
       ensure
         restore_after_agent_skills if @_active_agent_skills&.any?
       end
@@ -70,12 +74,12 @@ module RobotLab
         @_agent_skill_original_instructions = current_agent_skill_instructions
         prepend_skill_instructions(skills)
         @_agent_skill_injected_tools = skills.flat_map(&:script_tools).compact
-        @local_tools = @local_tools + @_agent_skill_injected_tools
+        @local_tools += @_agent_skill_injected_tools
       end
 
       # Remove injected tools and restore original system prompt.
       def restore_after_agent_skills
-        @local_tools = @local_tools - (@_agent_skill_injected_tools || [])
+        @local_tools -= @_agent_skill_injected_tools || []
         @chat.with_instructions(@_agent_skill_original_instructions.to_s)
         @_active_agent_skills               = nil
         @_agent_skill_original_instructions = nil

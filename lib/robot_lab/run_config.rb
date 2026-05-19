@@ -41,13 +41,15 @@ module RobotLab
     CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content].freeze
 
     # Infrastructure fields
-    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots].freeze
+    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots
+                      doom_loop_threshold auto_compact compact_threshold].freeze
 
     # All recognized fields
     FIELDS = (LLM_FIELDS + TOOL_FIELDS + CALLBACK_FIELDS + INFRA_FIELDS).freeze
 
     # Fields that cannot be serialized to JSON (Procs, IO objects, etc.)
-    NON_SERIALIZABLE_FIELDS = (CALLBACK_FIELDS + %i[bus]).freeze
+    # auto_compact is excluded because it may be a Proc.
+    NON_SERIALIZABLE_FIELDS = (CALLBACK_FIELDS + %i[bus auto_compact]).freeze
 
     # Creates a new RunConfig.
     #
@@ -85,14 +87,12 @@ module RobotLab
       @fields.dup
     end
 
-
     # Returns a JSON-safe hash (skips Procs, IO, and other non-serializable values).
     #
     # @return [Hash]
     def to_json_hash
-      @fields.reject { |k, _| NON_SERIALIZABLE_FIELDS.include?(k) }
+      @fields.except(*NON_SERIALIZABLE_FIELDS)
     end
-
 
     # Merges another RunConfig (or Hash) on top of this one.
     # The other's non-nil values win. Returns a new RunConfig.
@@ -104,7 +104,6 @@ module RobotLab
       merged = @fields.merge(other_hash) { |_k, old_v, new_v| new_v.nil? ? old_v : new_v }
       self.class.new(**merged)
     end
-
 
     # Applies LLM fields to a chat object via its with_* methods.
     #
@@ -118,7 +117,6 @@ module RobotLab
         chat.public_send(method, value) if chat.respond_to?(method)
       end
     end
-
 
     # Build a RunConfig from prompt_manager front matter metadata.
     #
@@ -141,12 +139,10 @@ module RobotLab
       new(**fields)
     end
 
-
     # @return [Boolean] true if no fields have been set
     def empty?
       @fields.empty?
     end
-
 
     # @param field [Symbol] the field name
     # @return [Boolean] true if the field has been explicitly set
@@ -154,13 +150,11 @@ module RobotLab
       @fields.key?(field)
     end
 
-
     # @param other [RunConfig] the other RunConfig to compare
     # @return [Boolean]
     def ==(other)
       other.is_a?(RunConfig) && to_h == other.to_h
     end
-
 
     # @return [String]
     def inspect

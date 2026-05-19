@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'open3'
-require 'pathname'
 require 'shellwords'
 
 module RobotLab
@@ -47,7 +46,6 @@ module RobotLab
       end
     end
 
-
     # @param path [Pathname]
     # @return [String] snake_case tool name derived from filename
     def self.derive_name(path)
@@ -56,7 +54,6 @@ module RobotLab
           .gsub(/[^a-zA-Z0-9]+/, '_')
           .gsub(/^_+|_+$/, '')
     end
-
 
     # Extract tool description from the first non-shebang comment line.
     #

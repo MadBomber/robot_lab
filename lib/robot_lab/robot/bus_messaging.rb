@@ -16,6 +16,9 @@ module RobotLab
     # inline. The BusPoller drains each group's queue sequentially on
     # a dedicated OS thread, so robot.run() calls never interleave.
     #
+    # Owns:    @bus, @bus_poller, @private_bus_poller, @bus_poller_group, @bus_subscriber_id, @message_counter, @outbox, @message_handler
+    # Reads:   @name
+    # Contract: ivars initialized by initialize_runtime_state before first bus operation
     module BusMessaging
       # Send a message to another robot via the bus.
       #
@@ -33,7 +36,6 @@ module RobotLab
         message
       end
 
-
       # Send a reply to a specific message via the bus.
       #
       # @param to [String, Symbol] target robot's channel name
@@ -50,7 +52,6 @@ module RobotLab
         reply
       end
 
-
       # Register a custom handler for incoming bus messages.
       #
       # Block arity controls delivery handling:
@@ -63,7 +64,6 @@ module RobotLab
         @message_handler = block
         self
       end
-
 
       # Spawn a new robot on a shared bus.
       #
@@ -79,7 +79,7 @@ module RobotLab
       # @param options [Hash] additional options passed to RobotLab.build
       # @return [Robot] the newly created robot
       #
-      def spawn(name: "robot", system_prompt: nil, template: nil, local_tools: [], **options)
+      def spawn(name: "robot", system_prompt: nil, template: nil, local_tools: [], **)
         ensure_bus
 
         RobotLab.build(
@@ -88,10 +88,9 @@ module RobotLab
           template: template,
           local_tools: local_tools,
           bus: @bus,
-          **options
+          **
         )
       end
-
 
       # Connect this robot to a message bus.
       #
@@ -134,7 +133,6 @@ module RobotLab
         with_bus unless @bus
       end
 
-
       # Create a typed channel on the bus and subscribe to it.
       # Auto-creates a private BusPoller if none has been assigned.
       def setup_bus_channel
@@ -149,7 +147,6 @@ module RobotLab
         @bus_subscriber_id = @bus.subscribe(channel_name) { |delivery| enqueue_delivery(delivery) }
       end
 
-
       # Unsubscribe from the bus channel and stop the private poller if any.
       def teardown_bus_channel
         channel_name = @name.to_sym
@@ -162,12 +159,10 @@ module RobotLab
         @bus_poller_group   = :default
       end
 
-
       # Enqueue a delivery to the robot's assigned poller.
       def enqueue_delivery(delivery)
         @bus_poller.enqueue(robot: self, delivery: delivery, group: @bus_poller_group)
       end
-
 
       # Process a single delivery (called by BusPoller drain thread).
       def process_delivery(delivery)
@@ -180,29 +175,16 @@ module RobotLab
           entry[:replies] << message
         end
 
-        if @message_handler
-          if @message_handler.arity == 1
-            delivery.ack!
-            @message_handler.call(message)
-          else
-            @message_handler.call(delivery, message)
-          end
+        if @message_handler.arity == 1
+          delivery.ack!
+          @message_handler.call(message)
         else
-          handle_message_via_llm(delivery, message)
+          @message_handler.call(delivery, message)
         end
       rescue => e
         delivery.nack! if delivery.pending?
         raise BusError, "Error handling bus message on robot '#{@name}': #{e.message}"
       end
-
-
-      # Default handler: interpret message via LLM and reply
-      def handle_message_via_llm(delivery, message)
-        delivery.ack!
-        result = run(message.content.to_s)
-        send_reply(to: message.from.to_sym, content: result.last_text_content, in_reply_to: message.key)
-      end
-
 
       # Publish a RobotMessage to a bus channel
       def publish_to_bus(channel_name, message)

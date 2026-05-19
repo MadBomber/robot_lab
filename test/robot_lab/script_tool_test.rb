@@ -14,25 +14,21 @@ module RobotLab
       assert_respond_to tool, :name
     end
 
-
     def test_tool_name_derived_from_filename
       tool = ScriptTool.from_path(FIXTURE_SCRIPT)
       assert_equal 'hello', tool.name
     end
-
 
     def test_tool_description_from_first_comment
       tool = ScriptTool.from_path(FIXTURE_SCRIPT)
       assert_equal 'Say hello to the world', tool.description
     end
 
-
     def test_tool_execution_returns_script_output
       tool = ScriptTool.from_path(FIXTURE_SCRIPT)
       output = tool.call({})
       assert_includes output, 'Hello from AgentSkills script!'
     end
-
 
     def test_from_path_returns_nil_for_nonexecutable_script
       Tempfile.create(['nonexec', '.sh']) do |f|
@@ -43,7 +39,6 @@ module RobotLab
         assert_nil result
       end
     end
-
 
     def test_tool_name_with_hyphens_converted_to_underscores
       Dir.mktmpdir do |tmpdir|

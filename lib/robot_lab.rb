@@ -6,9 +6,6 @@ require 'securerandom'
 require 'digest'
 
 # Core dependencies
-# ActiveSupport delegation is required by ruby_llm (RubyLLM::Agent uses delegate)
-# but not declared in ruby_llm's gemspec. Load it before ruby_llm.
-require 'active_support/core_ext/module/delegation'
 require 'ruby_llm'
 require 'prompt_manager'
 require 'async'
@@ -49,8 +46,6 @@ module RobotLab
 end
 
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
-loader.ignore("#{__dir__}/generators")
-loader.ignore("#{__dir__}/robot_lab/rails_integration")
 loader.ignore("#{__dir__}/robot_lab/robot")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
@@ -71,7 +66,6 @@ loader.setup
 require_relative 'robot_lab/error'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
-require_relative 'robot_lab/ractor_job'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
@@ -80,7 +74,41 @@ loader.eager_load if defined?(Rails::Engine) || ENV["ROBOT_LAB_EAGER_LOAD"]
 module RobotLab
   # Error classes are defined in lib/robot_lab/error.rb
 
+  @extensions = {}
+
   class << self
+    # Registers an extension gem so core can detect it without depending on it.
+    #
+    # Extension gems call this at load time to announce themselves. Core uses
+    # extension_loaded? to guard optional behavior instead of defined?/respond_to?.
+    #
+    # @param name [Symbol] identifier for the extension (e.g. :durable, :ractor)
+    # @param mod [Module, Object] the extension's primary module or a sentinel value
+    def register_extension(name, mod)
+      @extensions[name] = mod
+    end
+
+    # Returns true if the named extension gem has been loaded.
+    #
+    # @param name [Symbol] extension identifier
+    def extension_loaded?(name)
+      @extensions.key?(name)
+    end
+
+    # Returns the module registered for the named extension, or nil.
+    #
+    # @param name [Symbol] extension identifier
+    def extension(name)
+      @extensions[name]
+    end
+
+    # Returns the list of registered extension names.
+    #
+    # @return [Array<Symbol>]
+    def loaded_extensions
+      @extensions.keys
+    end
+
     # Returns the Config object (MywayConfig-based).
     #
     # Configuration is automatically loaded from:
@@ -100,7 +128,6 @@ module RobotLab
       @config ||= Config.new.tap(&:after_load)
     end
 
-
     # Yields the Config object for block-style configuration.
     #
     # @yield [Config] the config instance
@@ -114,7 +141,6 @@ module RobotLab
       yield config
     end
 
-
     # Reload configuration from all sources.
     #
     # Clears the cached Config instance, forcing it to be
@@ -125,7 +151,6 @@ module RobotLab
       @config = nil
       config
     end
-
 
     # Factory method to create a new Robot instance.
     #
@@ -153,7 +178,8 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
-    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil, config: nil, **options)
+    def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil,
+              config: nil, **)
       Robot.new(
         name: name,
         template: template,
@@ -163,10 +189,9 @@ module RobotLab
         bus: bus,
         skills: skills,
         config: config,
-        **options
+        **
       )
     end
-
 
     # Factory method to create a new Network of robots.
     #
@@ -195,10 +220,9 @@ module RobotLab
     #     step :entities, entity_bot, depends_on: [:fetch]
     #     step :merge, merger, depends_on: [:sentiment, :entities]
     #   end
-    def create_network(name:, concurrency: :auto, config: nil, &block)
-      Network.new(name: name, concurrency: concurrency, config: config, &block)
+    def create_network(name:, concurrency: :auto, config: nil, &)
+      Network.new(name: name, concurrency: concurrency, config: config, &)
     end
-
 
     # Factory method to create a new Memory object.
     #
@@ -216,43 +240,8 @@ module RobotLab
     #
     # @example Memory with caching disabled
     #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
-    def create_memory(data: {}, enable_cache: true, **options)
-      Memory.new(data: data, enable_cache: enable_cache, **options)
-    end
-
-
-    # Returns the shared RactorWorkerPool, lazily initialized.
-    #
-    # Pool size is determined by RobotLab.config.ractor_pool_size or
-    # defaults to Etc.nprocessors (:auto). The pool lives for the lifetime
-    # of the process. Call RobotLab.shutdown_ractor_pool to drain and
-    # close it explicitly.
-    #
-    # @return [RactorWorkerPool]
-    def ractor_pool
-      @ractor_pool ||= begin
-        size = config.respond_to?(:ractor_pool_size) ? (config.ractor_pool_size || :auto) : :auto
-        RactorWorkerPool.new(size: size)
-      end
-    end
-
-    # Shut down the shared Ractor worker pool, draining in-flight jobs.
-    #
-    # @return [void]
-    def shutdown_ractor_pool
-      @ractor_pool&.shutdown
-      @ractor_pool = nil
+    def create_memory(data: {}, enable_cache: true, **)
+      Memory.new(data: data, enable_cache: enable_cache, **)
     end
   end
-end
-
-# Load Rails integration if Rails is defined
-if defined?(Rails::Engine)
-  require 'robot_lab/rails_integration/engine'
-  require 'robot_lab/rails_integration/railtie'
-  require 'robot_lab/rails_integration/turbo_stream_callbacks'
-  require 'robot_lab/rails_integration/job'
-
-  # Convenience alias so job subclasses can inherit from RobotLab::Job
-  RobotLab::Job = RobotLab::RailsIntegration::Job
 end

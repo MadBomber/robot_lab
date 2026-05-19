@@ -116,15 +116,42 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     [:octicons-arrow-right-24: Configuration](getting-started/configuration.md)
 
--   :material-train-car-container:{ .lg .middle } **Rails Integration**
+-   :material-shield-check:{ .lg .middle } **Observability & Safety**
 
     ---
 
-    Generators, background jobs, and Turbo Stream token broadcasting for real-time streaming to the browser.
+    Token tracking, `max_tool_rounds` circuit breaker, `doom_loop_threshold` pattern detection, and `auto_compact` context window management keep robots reliable in production.
 
-    [:octicons-arrow-right-24: Rails Guide](guides/rails-integration.md)
+    [:octicons-arrow-right-24: Observability Guide](guides/observability.md)
+
+-   :material-brain:{ .lg .middle } **Runtime Skill Matching**
+
+    ---
+
+    `AgentSkillMatching` selects the most relevant `AgentSkill` files from a catalog directory via semantic similarity before each `run()`, injecting only what the robot needs.
+
+    [:octicons-arrow-right-24: Using Tools](guides/using-tools.md)
+
+-   :material-book-open-outline:{ .lg .middle } **Knowledge & Retrieval**
+
+    ---
+
+    `robot.search_history` for semantic search over conversation turns, and `memory.store_document` / `memory.search_documents` for embedding-based RAG.
+
+    [:octicons-arrow-right-24: Knowledge Guide](guides/knowledge.md)
 
 </div>
+
+## Extension Gems
+
+These optional gems extend RobotLab with additional capabilities:
+
+| Gem | What it adds |
+|-----|-------------|
+| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` base class, Turbo Stream broadcasting |
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism for `ractor_safe` tools and robot networks via Ruby Ractors |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence — robots accumulate and recall learned facts |
+| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | Embedding-based semantic document search powered by fastembed |
 
 ## Quick Example
 

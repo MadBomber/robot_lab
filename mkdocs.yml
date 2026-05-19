@@ -169,8 +169,8 @@ nav:
       - MCP Integration: guides/mcp-integration.md
       - Streaming Responses: guides/streaming.md
       - Memory System: guides/memory.md
-      - Rails Integration: guides/rails-integration.md
-      - Ractor Parallelism: guides/ractor-parallelism.md
+      - Observability & Safety: guides/observability.md
+      - Knowledge Search: guides/knowledge.md
   - API Reference:
       - api/index.md
       - Core Classes:
@@ -201,4 +201,3 @@ nav:
       - Multi-Robot Network: examples/multi-robot-network.md
       - Tool Usage: examples/tool-usage.md
       - MCP Server: examples/mcp-server.md
-      - Rails Application: examples/rails-application.md

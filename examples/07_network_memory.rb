@@ -41,16 +41,10 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/07_network_memory.rb
 
-# Configure template path before loading (MywayConfig reads env vars on init)
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 require "json"
 
-puts "=" * 60
-puts "Example 7: Network Memory with Concurrent Robots"
-puts "=" * 60
-puts
+banner "Network Memory with Concurrent Robots"
 
 # -----------------------------------------------------------------------------
 # Custom Robot Classes that Write to Shared Memory
@@ -153,27 +147,27 @@ sentiment_robot = AnalysisRobot.new(
   name: "sentiment_analyzer",
   template: :sentiment_analyzer,
   memory_key: :sentiment,
-  model: "claude-3-haiku-20240307"
+  model: LLM[:default].model
 )
 
 entity_robot = AnalysisRobot.new(
   name: "entity_extractor",
   template: :entity_extractor,
   memory_key: :entities,
-  model: "claude-3-haiku-20240307"
+  model: LLM[:default].model
 )
 
 keyword_robot = AnalysisRobot.new(
   name: "keyword_extractor",
   template: :keyword_extractor,
   memory_key: :keywords,
-  model: "claude-3-haiku-20240307"
+  model: LLM[:default].model
 )
 
 synthesizer = SynthesizerRobot.new(
   name: "synthesizer",
   template: :synthesizer,
-  model: "claude-3-haiku-20240307"
+  model: LLM[:default].model
 )
 
 # -----------------------------------------------------------------------------
@@ -231,10 +225,10 @@ TEXT
 puts "Network structure:"
 puts network.visualize
 puts
-puts "-" * 60
+hr
 puts "Input text:"
 puts sample_text.strip
-puts "-" * 60
+hr
 puts
 
 # Send a broadcast before starting
@@ -248,9 +242,9 @@ result = network.run(message: sample_text)
 
 elapsed = Time.now - start_time
 puts
-puts "-" * 60
+hr
 puts "Analysis complete in #{elapsed.round(2)} seconds"
-puts "-" * 60
+hr
 
 # Send completion broadcast
 network.broadcast(event: "analysis_complete", details: "All robots finished")
@@ -259,21 +253,15 @@ network.broadcast(event: "analysis_complete", details: "All robots finished")
 # Display Results
 # -----------------------------------------------------------------------------
 
-puts
-puts "=" * 60
-puts "FINAL SYNTHESIS"
-puts "=" * 60
-puts
+
+section "Final Synthesis"
 
 if result.value.is_a?(RobotLab::RobotResult)
   puts result.value.reply
 end
 
-puts
-puts "=" * 60
-puts "MEMORY STATE"
-puts "=" * 60
-puts
+
+section "Memory State"
 
 # Show what's in shared memory
 memory = network.memory
@@ -287,11 +275,8 @@ puts "Keywords: #{memory.get(:keywords)&.to_json}"
 # Demonstrate Blocking Wait (without pipeline dependencies)
 # -----------------------------------------------------------------------------
 
-puts
-puts "=" * 60
-puts "DEMONSTRATING BLOCKING WAIT"
-puts "=" * 60
-puts
+
+section "Demonstrating Blocking Wait"
 
 # Create a fresh memory for this demo
 demo_memory = RobotLab::Memory.new(network_name: "wait_demo")

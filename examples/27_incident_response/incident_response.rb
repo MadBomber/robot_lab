@@ -38,10 +38,8 @@
 
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "../prompts")
 
-require_relative "../../lib/robot_lab"
+require_relative "../common"
 require "fileutils"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
 
 OUTPUT_DIR = File.join(__dir__, "output")
 FileUtils.mkdir_p(OUTPUT_DIR)
@@ -62,6 +60,7 @@ class SREScout < RobotLab::Robot
   def initialize(name:, subsystem:, memory_key:, bus: nil)
     super(
       name: name,
+      model: LLM[:default].model,
       system_prompt: "You are a senior SRE responding to a production outage. " \
                      "Diagnose one infrastructure layer in 2 sentences: " \
                      "first sentence is root cause, second is customer impact.",
@@ -112,7 +111,7 @@ class WarRoom < RobotLab::Robot
   attr_reader :updates
 
   def initialize(bus:)
-    super(name: "war_room", system_prompt: "SRE war-room coordinator.", bus: bus)
+    super(name: "war_room", model: LLM[:default].model, system_prompt: "SRE war-room coordinator.", bus: bus)
     @updates        = []
     @delivery_mutex = Mutex.new  # only for reading @updates outside Async
 
@@ -178,7 +177,7 @@ db_scout  = SREScout.new(name: "db_scout",  subsystem: "database",    memory_key
 net_scout = SREScout.new(name: "net_scout", subsystem: "network",     memory_key: :net_finding, bus: bus)
 app_scout = SREScout.new(name: "app_scout", subsystem: "application", memory_key: :app_finding, bus: bus)
 war_room  = WarRoom.new(bus: bus)
-commander = IncidentCommander.new(name: "commander", system_prompt: "SRE incident commander.")
+commander = IncidentCommander.new(name: "commander", model: LLM[:default].model, system_prompt: "SRE incident commander.")
 
 # Build the investigation network
 # poller_group: labels are registered on the network's shared BusPoller.

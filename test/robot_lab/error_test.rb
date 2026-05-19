@@ -90,7 +90,7 @@ class RobotLab::ErrorTest < Minitest::Test
 
   # ToolLoopError tests
   def test_tool_loop_error_exists
-    assert defined?(RobotLab::ToolLoopError)
+    assert(defined?(RobotLab::ToolLoopError))
   end
 
   def test_tool_loop_error_inherits_inference_error

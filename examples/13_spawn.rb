@@ -13,11 +13,7 @@
 # Usage:
 #   bundle exec ruby examples/13_spawn.rb
 
-ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
-
-RubyLLM.configure { |c| c.logger = Logger.new(File::NULL) }
+require_relative "common"
 
 QUESTIONS = [
   "Why did the Roman Empire fall?",
@@ -29,7 +25,7 @@ class Dispatcher < RobotLab::Robot
   attr_reader :spawned
 
   def initialize(bus: nil)
-    super(name: "dispatcher", template: :dispatcher, bus: bus)
+    super(name: "dispatcher", model: LLM[:default].model, template: :dispatcher, bus: bus)
     @spawned = {}
     @pending = {}
 
@@ -53,6 +49,7 @@ class Dispatcher < RobotLab::Robot
     # Spawn the specialist (reuse if already spawned)
     specialist = @spawned[role] ||= spawn(
       name: role,
+      model: LLM[:default].model,
       system_prompt: instruction
     )
 
@@ -74,9 +71,7 @@ end
 
 dispatcher = Dispatcher.new
 
-puts "=" * 60
-puts "Example 13: Spawning Specialist Robots"
-puts "=" * 60
+banner "Spawning Specialist Robots"
 
 QUESTIONS.each_with_index do |question, i|
   puts
@@ -85,6 +80,6 @@ QUESTIONS.each_with_index do |question, i|
 end
 
 puts
-puts "-" * 60
+hr
 puts "Specialists spawned: #{dispatcher.spawned.keys.join(', ')}"
 puts "Total robots on bus: #{dispatcher.spawned.size + 1}"

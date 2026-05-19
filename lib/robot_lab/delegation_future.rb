@@ -70,7 +70,7 @@ module RobotLab
         @result
       end
     end
-    alias_method :wait, :value
+    alias wait value
 
     # @api private — called by Robot#delegate from the worker thread
     def resolve!(result)

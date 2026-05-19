@@ -22,9 +22,7 @@
 # Usage:
 #   ANTHROPIC_API_KEY=your_key ruby examples/22_context_compression.rb
 
-ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
-
-require_relative "../lib/robot_lab"
+require_relative "common"
 
 # ---------------------------------------------------------------------------
 # Check optional dependency
@@ -47,15 +45,13 @@ def approx_tokens(messages)
   end
 end
 
-puts "=" * 60
-puts "Example 22: Context Window Compression"
-puts "=" * 60
-puts
+banner "Context Window Compression"
 
 # ---------------------------------------------------------------------------
 # Build a robot and simulate a long conversation on two topics
 # ---------------------------------------------------------------------------
 bot = RobotLab.build(
+  model: LLM[:default].model,
   name:          "assistant",
   system_prompt: "You are a concise Ruby expert. Reply in 2-3 sentences."
 )
@@ -157,12 +153,10 @@ puts
 # ---------------------------------------------------------------------------
 # Show the LLM summarizer pattern (not executed — requires API key)
 # ---------------------------------------------------------------------------
-puts "=" * 60
-puts "LLM summarizer pattern (requires API key):"
-puts "=" * 60
-puts <<~RUBY
-
+section "LLM Summarizer Pattern (requires API key)"
+show_code <<~RUBY
   summarizer_bot = RobotLab.build(
+    model: "gpt-5.4",
     name:          "summarizer",
     system_prompt: "Summarize the following text in one sentence."
   )
@@ -173,7 +167,6 @@ puts <<~RUBY
     drop_threshold:  0.2,
     summarizer:      ->(text) { summarizer_bot.run("Summarize: \#{text}").reply }
   )
-
 RUBY
 
 puts "Done."

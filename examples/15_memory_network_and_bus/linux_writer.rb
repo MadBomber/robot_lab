@@ -57,7 +57,7 @@ class LinuxWriter < OsWriter
 
     distros.each do |distro|
       puts "  [#{@name}] Spawning #{distro[:label]} specialist..."
-      specialist = spawn(name: distro[:name], system_prompt: distro[:prompt])
+      specialist = spawn(name: distro[:name], model: LLM[:default].model, system_prompt: distro[:prompt])
       @specialists << specialist
 
       analysis = specialist.run(

@@ -145,15 +145,15 @@ module RobotLab
         loop do
           ios = @mutex.synchronize { @clients.keys.reject(&:closed?) }
 
-          unless ios.empty?
+          if ios.empty?
+            sleep POLL_INTERVAL
+          else
             begin
               ready, = IO.select(ios, nil, nil, POLL_INTERVAL)
               dispatch(ready) if ready
             rescue Errno::EBADF
               # A pipe was closed between the reject and IO.select — harmless, loop again
             end
-          else
-            sleep POLL_INTERVAL
           end
 
           break unless @mutex.synchronize { @running }

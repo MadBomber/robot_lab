@@ -12,10 +12,12 @@ module RobotLab
         AgentSkill.new(path)
       end
 
+      # Uses FakeSkillStore (defined in test_helper) — no extension gem needed.
+      # Semantic score quality tests live in robot_lab-document_store gem.
       def robot_with_pending_skills(*skill_names)
         robot = build_robot(name: "test_bot")
         skills = skill_names.map { |n| skill_for(n) }
-        store  = DocumentStore.new
+        store  = FakeSkillStore.new
         skills.each { |s| store.store(s.name.to_sym, s.description) }
         robot.instance_variable_set(:@pending_agent_skills, skills)
         robot.instance_variable_set(:@agent_skill_store, store)
@@ -28,20 +30,17 @@ module RobotLab
         assert_equal [], result
       end
 
+      # FakeSkillStore always returns score 0.9, so threshold: 0.5 hits, threshold: 0.95 misses.
       def test_match_returns_skills_above_threshold
         robot = robot_with_pending_skills(:test_skill)
-        result = robot.send(:match_agent_skills,
-                            "I need to verify the AgentSkills integration works",
-                            threshold: 0.3)
+        result = robot.send(:match_agent_skills, "any message", threshold: 0.5)
         assert_equal 1, result.length
         assert_equal "test_skill", result.first.name
       end
 
       def test_match_returns_empty_below_threshold
         robot = robot_with_pending_skills(:test_skill)
-        result = robot.send(:match_agent_skills,
-                            "I need to verify the AgentSkills integration works",
-                            threshold: 0.999)
+        result = robot.send(:match_agent_skills, "any message", threshold: 0.95)
         assert_equal [], result
       end
 
@@ -97,7 +96,7 @@ module RobotLab
 
         instructions = system_instructions(robot)
         assert_includes instructions, skill.instructions,
-          "Expected skill instructions to survive rerender_template"
+                        "Expected skill instructions to survive rerender_template"
       end
 
       def test_match_degrades_gracefully_on_embedding_failure

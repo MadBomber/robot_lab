@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module RobotLab
   class Robot < RubyLLM::Agent
     # Template loading, rendering, and front-matter extraction.
     #
-    # Expects the including class to provide:
-    #   @chat, @template, @build_context, @name, @name_from_constructor,
-    #   @description, @local_tools, @mcp_config
+    # Owns:    @expanded_skills, @pending_agent_skills, @agent_skill_store
+    # Reads:   @chat, @template, @build_context, @name, @name_from_constructor, @description, @local_tools, @mcp_config, @config
+    # Contract: called during initialize after assign_identity_ivars and build_effective_config
     module TemplateRendering
       # Front matter keys that map to chat configuration methods
       FRONT_MATTER_CONFIG_KEYS = %i[
@@ -64,7 +62,6 @@ module RobotLab
         end
       end
 
-
       # Re-render the template with run-time context merged into build-time context.
       # prompt_manager parameters may be required (null) and only available at run time.
       def rerender_template(run_context)
@@ -93,56 +90,63 @@ module RobotLab
         end
       end
 
-
       # Orchestrate skill expansion and template application.
       #
       # @param skill_ids [Array<Symbol>] skill IDs from constructor + front matter
       # @param context [Hash, Proc] variables to pass to all templates
       def apply_skills_and_template_to_chat(skill_ids, context)
-        visited = Set.new
-        # Prevent skills from pulling in the main template
-        visited.add(@template) if @template
+        bodies, accumulated_config, extras = collect_prompt_content(skill_ids, context)
+        apply_prompt_to_chat(bodies, accumulated_config, extras)
+      end
 
+      # Expand skills and render all bodies, configs, and extras into plain data.
+      # Pure computation — reads ivars but does not mutate @chat.
+      #
+      # @return [Array(Array<String>, RunConfig, Hash)] bodies, merged config, extras hash
+      def collect_prompt_content(skill_ids, context)
+        visited = Set.new
+        visited.add(@template) if @template
         @expanded_skills = expand_skills(skill_ids, visited)
 
         extras = {}
         accumulated_config = RunConfig.new
         bodies = []
-
         resolved_ctx = resolve_context(context, network: nil)
 
-        # Process each expanded skill
         @expanded_skills.each do |skill_id|
           parsed = PM.parse(skill_id)
           accumulate_extras(parsed.metadata, extras)
-          fm_config = RunConfig.from_front_matter(parsed.metadata)
-          accumulated_config = accumulated_config.merge(fm_config)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
 
-        # Process main template if present
         if @template
           parsed = PM.parse(@template)
           accumulate_extras(parsed.metadata, extras)
-          fm_config = RunConfig.from_front_matter(parsed.metadata)
-          accumulated_config = accumulated_config.merge(fm_config)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
 
-        # Apply accumulated extras (respects constructor precedence)
+        [bodies, accumulated_config, extras]
+      end
+
+      # Apply collected prompt content to @chat.
+      # Pure mutation — takes plain data and writes to @chat.
+      #
+      # @param bodies [Array<String>] rendered template bodies
+      # @param accumulated_config [RunConfig] merged skill + template config
+      # @param extras [Hash] accumulated front-matter extras (name, description, tools, mcp)
+      def apply_prompt_to_chat(bodies, accumulated_config, extras)
         apply_accumulated_extras(extras)
 
-        # Constructor config overrides skill + template config
         effective = accumulated_config.merge(@config)
         effective.apply_to(@chat)
 
-        # Set instructions once with all bodies joined
         combined = bodies.join("\n\n")
         @chat.with_instructions(combined) unless combined.empty?
       end
-
 
       # Recursively expand skill IDs depth-first.
       # Checks AgentSkillCatalog first; falls back to PM template lookup.
@@ -154,7 +158,6 @@ module RobotLab
       def expand_skills(skill_ids, visited = Set.new)
         expand_skills_with_catalog(skill_ids, visited, AgentSkillCatalog.instance)
       end
-
 
       # Recursively expand skill IDs depth-first, using the given catalog.
       # AgentSkills folder format takes priority over PM template lookup.
@@ -183,7 +186,12 @@ module RobotLab
           # Check catalog first: AgentSkills folder format takes priority
           if (agent_skill = catalog.find(skill_id))
             @pending_agent_skills ||= []
-            @agent_skill_store    ||= DocumentStore.new
+            unless defined?(RobotLab::DocumentStore)
+              raise LoadError,
+                    "robot_lab-document_store is required to use AgentSkill catalogs. " \
+                    "Add `gem 'robot_lab-document_store'` to your Gemfile."
+            end
+            @agent_skill_store ||= RobotLab::DocumentStore.new
             @pending_agent_skills << agent_skill
             @agent_skill_store.store(agent_skill.name.to_sym, agent_skill.description)
             next
@@ -201,7 +209,6 @@ module RobotLab
         result
       end
 
-
       # Extract skills array from metadata.
       #
       # @param metadata [PM::Metadata] front matter metadata
@@ -211,7 +218,6 @@ module RobotLab
 
         Array(metadata.skills).map(&:to_sym)
       end
-
 
       # Accumulate extras from metadata into a hash.
       # Later calls overwrite earlier values (last-write-wins).
@@ -231,11 +237,9 @@ module RobotLab
           extras[:tools] = metadata.tools
         end
 
-        if metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array)
-          extras[:mcp] = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
-        end
+        return unless metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array)
+        extras[:mcp] = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
       end
-
 
       # Apply accumulated extras to the robot, respecting constructor precedence.
       #
@@ -253,11 +257,9 @@ module RobotLab
           @local_tools = resolve_frontmatter_tools(extras[:tools])
         end
 
-        if extras[:mcp] && ToolConfig.none_value?(@mcp_config)
-          @mcp_config = extras[:mcp]
-        end
+        return unless extras[:mcp] && ToolConfig.none_value?(@mcp_config)
+        @mcp_config = extras[:mcp]
       end
-
 
       # Extract identity and capability keys from front matter metadata.
       # Constructor-provided values take precedence over frontmatter.
@@ -274,11 +276,9 @@ module RobotLab
           @local_tools = resolve_frontmatter_tools(metadata.tools)
         end
 
-        if metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array) && ToolConfig.none_value?(@mcp_config)
-          @mcp_config = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
-        end
+        return unless metadata.respond_to?(:mcp) && metadata.mcp.is_a?(Array) && ToolConfig.none_value?(@mcp_config)
+        @mcp_config = metadata.mcp.map { |m| m.is_a?(Hash) ? m.transform_keys(&:to_sym) : m }
       end
-
 
       # Render a parsed template body, returning nil if required params are missing.
       #
@@ -292,7 +292,6 @@ module RobotLab
 
         nil
       end
-
 
       # Resolve string tool names from frontmatter to Ruby constants.
       # Tool subclasses are instantiated; instances are used as-is.
@@ -315,7 +314,6 @@ module RobotLab
           end
         end
       end
-
 
       def resolve_context(context, network:)
         case context

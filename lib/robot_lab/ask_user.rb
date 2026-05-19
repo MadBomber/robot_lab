@@ -65,11 +65,11 @@ module RobotLab
     private
 
     def input_io
-      robot&.respond_to?(:input) && robot.input ? robot.input : $stdin
+      robot.respond_to?(:input) && robot.input ? robot.input : $stdin
     end
 
     def output_io
-      robot&.respond_to?(:output) && robot.output ? robot.output : $stdout
+      robot.respond_to?(:output) && robot.output ? robot.output : $stdout
     end
   end
 end

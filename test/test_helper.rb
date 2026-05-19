@@ -11,7 +11,8 @@ SimpleCov.start do
   add_group 'Streaming', 'lib/robot_lab/streaming'
   add_group 'Rails', 'lib/robot_lab/rails'
 
-  enable_coverage :branch if ENV['CI']
+  enable_coverage :branch
+  minimum_coverage line: 95, branch: 75
 end
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
@@ -22,6 +23,24 @@ ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.expand_path('../examples/prompts', __dir
 
 require 'robot_lab'
 require 'simple_flow'   # ensure SimpleFlow is loaded regardless of test order
+require 'robot_lab/document_store' rescue LoadError  # optional extension gem
+
+# Minimal in-memory store that satisfies the DocumentStore interface used by
+# AgentSkillMatching without requiring the extension gem or fastembed.
+# Use this in core tests that exercise inject/restore/expand logic but don't
+# need real semantic scores — semantic scoring tests belong in robot_lab-document_store.
+class FakeSkillStore
+  def initialize = (@docs = {})
+  def store(key, text)
+    @docs[key.to_sym] = text
+  end and self
+  def search(_query, limit: 5)
+    @docs.first(limit).map { |key, text| { key: key, text: text, score: 0.9 } }
+  end
+
+  def size = @docs.size
+  def empty? = @docs.empty?
+end
 require 'minitest/autorun'
 
 # Set dummy API key so RubyLLM model resolution doesn't fail in unit tests
@@ -34,26 +53,23 @@ RobotLab.config.logger = Logger.new(nil)
 # Test helpers
 module RobotLabTestHelpers
   # Create a real Robot instance for testing
-  def build_robot(name:, template: :assistant, **options)
+  def build_robot(name:, template: :assistant, **)
     RobotLab::Robot.new(
       name: name,
       template: template,
-      **options
+      **
     )
   end
 
-
   # Create a real Network instance for testing
-  def build_network(name:, **options, &block)
-    RobotLab::Network.new(name: name, **options, &block)
+  def build_network(name:, **, &)
+    RobotLab::Network.new(name: name, **, &)
   end
-
 
   # Create a RunConfig for testing
-  def build_config(**options, &block)
-    RobotLab::RunConfig.new(**options, &block)
+  def build_config(**, &)
+    RobotLab::RunConfig.new(**, &)
   end
-
 
   # Extract the system instructions from a robot's chat
   def system_instructions(robot)
@@ -63,17 +79,15 @@ module RobotLabTestHelpers
     sys&.content
   end
 
-
   # Create a Tool for testing
-  def build_tool(name:, description: 'Test tool', &block)
+  def build_tool(name:, description: 'Test tool', &)
     RobotLab::Tool.create(
       name: name,
       description: description,
-      &block
+      &
     )
   end
 end
-
 
 class Minitest::Test
   include RobotLabTestHelpers
