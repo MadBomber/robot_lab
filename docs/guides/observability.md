@@ -608,11 +608,11 @@ puts "#{analysis.robot_name} (#{analysis.duration.round(2)}s): #{analysis.reply}
 
 ## See Also
 
-- [Robot API](../api/core/robot.md#token--cost-tracking)
-- [Example 19 — Token & Cost Tracking](../../examples/19_token_tracking.rb)
-- [Example 20 — Tool Loop Circuit Breaker](../../examples/20_circuit_breaker.rb)
-- [Example 21 — Learning Accumulation Loop](../../examples/21_learning_loop.rb)
-- [Example 22 — Context Window Compression](../../examples/22_context_compression.rb)
-- [Example 23 — Convergence Detection](../../examples/23_convergence.rb)
-- [Example 24 — Structured Delegation](../../examples/24_structured_delegation.rb)
+- [Robot API](../api/core/robot.md#token-cost-tracking)
+- [examples/19_token_tracking.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/19_token_tracking.rb) — Token & Cost Tracking
+- [examples/20_circuit_breaker.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/20_circuit_breaker.rb) — Tool Loop Circuit Breaker
+- [examples/21_learning_loop.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/21_learning_loop.rb) — Learning Accumulation Loop
+- [examples/22_context_compression.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/22_context_compression.rb) — Context Window Compression
+- [examples/23_convergence.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/23_convergence.rb) — Convergence Detection
+- [examples/24_structured_delegation.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/24_structured_delegation.rb) — Structured Delegation
 - [RunConfig reference](../getting-started/configuration.md#runconfig-shared-operational-defaults)

@@ -184,5 +184,5 @@ This gem bundles `fastembed` for ONNX-based embeddings. The `BAAI/bge-small-en-v
 ## See Also
 
 - [Observability Guide](observability.md)
-- [Example 25 — Chat History Search](../../examples/25_history_search.rb)
-- [Example 26 — Embedding-Based Document Store](../../examples/26_document_store.rb)
+- [examples/25_history_search.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/25_history_search.rb) — Chat History Search
+- [examples/26_document_store.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/26_document_store.rb) — Embedding-Based Document Store

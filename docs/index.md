@@ -50,7 +50,7 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
     Mix reusable prompt behaviors into any robot. Skills expand depth-first with automatic cycle detection and config cascading.
 
-    [:octicons-arrow-right-24: Skills Guide](guides/building-robots.md#skills)
+    [:octicons-arrow-right-24: Skills Guide](guides/building-robots.md#composable-skills)
 
 -   :material-tools:{ .lg .middle } **Extensible Tools**
 

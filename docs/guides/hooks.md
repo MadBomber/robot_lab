@@ -114,7 +114,7 @@ This is the intended pattern for extensions to declare their required state with
 
 ## Around Hooks
 
-Around hooks receive the context and a block. They must call `block.call` and must return its return value — that is how the actual LLM call, tool invocation, or network step is executed:
+Around hooks receive the context and a block. They must call `block.call` and must return its return value — that is how the actual LLM call, network step, or task is executed:
 
 ```ruby
 robot.on(:around_run, namespace: :timer) do |ctx, &block|
@@ -129,6 +129,34 @@ end
 > **Important:** If an around hook does not return the block's return value, the run returns `nil`. This is a silent failure — there is no exception.
 
 Around hooks registered across different namespaces are chained: each wraps the next, with the actual operation at the innermost layer.
+
+### `around_tool_call` is different
+
+Tool call hooks use `ctx.tool_result` as the result carrier, not the block's return value. `Tool#call` always returns `context.tool_result` regardless of what the around hook returns.
+
+To **let the tool execute normally**, call `block.call` — it sets `ctx.tool_result` — and then do any post-processing:
+
+```ruby
+RobotLab.on(:around_tool_call, namespace: :timing) do |ctx, &block|
+  t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  block.call   # executes the tool and populates ctx.tool_result
+  ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
+  $stderr.puts "[tool] #{ctx.tool_name} — #{ms}ms"
+end
+```
+
+To **short-circuit the tool** (skip execution entirely), skip `block.call` and set `ctx.tool_result` directly:
+
+```ruby
+RobotLab.on(:around_tool_call, namespace: :guard) do |ctx, &block|
+  if AllowList.permitted?(ctx.tool_name, ctx.robot&.name)
+    block.call
+  else
+    # not permitted — set result directly without calling block
+    ctx.tool_result = "Operation not permitted: #{ctx.tool_name}"
+  end
+end
+```
 
 ---
 
@@ -311,7 +339,7 @@ MyExtension.attach_hooks(registry: robot)
 
 - Always declare a `namespace:` constant so state is isolated from other extensions.
 - Use `context:` to declare default state rather than guarding against `nil` inside the block.
-- Around hooks must call `block.call` and return its value — every time, without exception.
+- Around hooks (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`) must call `block.call` and return its value — omitting either causes the run to return `nil`. `around_tool_call` is the exception: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run or set `ctx.tool_result` directly to short-circuit.
 - Keep error hooks non-raising. Exceptions from hook callbacks propagate and can mask the original error.
 - Test each hook callback in isolation by constructing a context object directly and calling the proc.
 
@@ -345,17 +373,19 @@ end
 
 ### LLM Response Cache
 
+Use `around_llm_generation` to skip the LLM call entirely when a cached response exists. A `before_llm_generation` hook cannot short-circuit the call — it must be an `around_` hook:
+
 ```ruby
-robot.on(:before_llm_generation, namespace: :cache, context: { hits: 0 }) do |ctx|
+robot.on(:around_llm_generation, namespace: :cache, context: { hits: 0 }) do |ctx, &block|
   cached = ResponseCache.get(ctx.request)
   if cached
     ctx.local.hits += 1
-    ctx.local.cached_response = cached
+    cached              # return cached value — block.call (LLM) is skipped
+  else
+    result = block.call # LLM call happens here
+    ResponseCache.set(ctx.request, result)
+    result
   end
-end
-
-robot.on(:after_llm_generation, namespace: :cache) do |ctx|
-  ResponseCache.set(ctx.request, ctx.generation_response) unless ctx.local.cached_response
 end
 ```
 
@@ -384,9 +414,169 @@ end
 
 ---
 
+## Application Use Cases
+
+Hooks are the primary extension point in RobotLab. Below are concrete patterns that production applications commonly build on top of them.
+
+### Observability and Distributed Tracing
+
+Instrument every LLM call with a trace ID and structured log entry for ingestion into OpenTelemetry, Datadog, or a custom logging pipeline:
+
+```ruby
+RobotLab.on(:before_run, namespace: :trace) do |ctx|
+  ctx.local.trace_id   = SecureRandom.hex(8)
+  ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+end
+
+RobotLab.on(:after_run, namespace: :trace) do |ctx|
+  elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
+  Logger.info(
+    event:      "robot.run.completed",
+    trace_id:   ctx.local.trace_id,
+    robot:      ctx.robot.name,
+    elapsed_ms: elapsed_ms,
+    reply:      ctx.response&.reply.to_s[0, 120]
+  )
+end
+
+RobotLab.on(:on_error, namespace: :trace) do |ctx|
+  Logger.error(
+    event:    "robot.run.failed",
+    trace_id: ctx.local.trace_id,
+    robot:    ctx.robot.name,
+    error:    ctx.error.class.to_s,
+    message:  ctx.error.message
+  )
+end
+```
+
+### Cost Enforcement
+
+Cap total spending across all robots in a session and raise before an expensive run would push you over budget:
+
+```ruby
+COST_PER_INPUT_TOKEN  = 0.80 / 1_000_000   # example: Haiku pricing
+COST_PER_OUTPUT_TOKEN = 4.00 / 1_000_000
+
+SESSION_BUDGET_USD = 0.50
+
+RobotLab.on(:before_run, namespace: :budget, context: { total_cost: 0.0 }) do |ctx|
+  if ctx.local.total_cost >= SESSION_BUDGET_USD
+    raise RobotLab::Error, "Session budget of $#{SESSION_BUDGET_USD} exceeded"
+  end
+end
+
+RobotLab.on(:after_run, namespace: :budget) do |ctx|
+  r = ctx.response
+  ctx.local.total_cost +=
+    r.input_tokens  * COST_PER_INPUT_TOKEN +
+    r.output_tokens * COST_PER_OUTPUT_TOKEN
+end
+```
+
+### Tool Access Control
+
+Allow only approved tools to execute for a given robot or network, without hard-coding restrictions in the tool itself:
+
+```ruby
+ALLOWED_TOOLS = %w[web_search calculator].freeze
+
+network.on(:around_tool_call, namespace: :access_control) do |ctx, &block|
+  if ALLOWED_TOOLS.include?(ctx.tool_name)
+    block.call
+  else
+    ctx.tool_result = "[blocked] Tool '#{ctx.tool_name}' is not permitted in this network."
+  end
+end
+```
+
+### Audit Logging for Compliance
+
+Record every tool invocation with its arguments and result for security audits or regulatory compliance:
+
+```ruby
+RobotLab.on(:after_tool_call, namespace: :audit) do |ctx|
+  AuditLog.append(
+    robot:     ctx.robot&.name,
+    tool:      ctx.tool_name,
+    args:      ctx.tool_args,
+    result:    ctx.tool_result.to_s[0, 500],
+    timestamp: Time.now.utc.iso8601
+  )
+end
+```
+
+### Retry with Exponential Backoff
+
+Wrap `around_run` to retry on transient LLM failures without changing any robot code:
+
+```ruby
+MAX_RETRIES  = 3
+BACKOFF_BASE = 0.5  # seconds
+
+RobotLab.on(:around_run, namespace: :retry) do |ctx, &block|
+  attempts = 0
+  begin
+    attempts += 1
+    block.call
+  rescue RobotLab::InferenceError => e
+    raise if attempts >= MAX_RETRIES
+
+    sleep(BACKOFF_BASE * (2**(attempts - 1)))
+    retry
+  end
+end
+```
+
+### Test Doubles Without Network Calls
+
+Inject canned LLM responses in tests by short-circuiting `around_llm_generation`. No VCR cassettes, no HTTP mocks:
+
+```ruby
+# In test setup:
+CANNED_RESPONSES = {
+  "classify this" => FakeResponse.new(content: "positive"),
+  "summarize"     => FakeResponse.new(content: "short summary")
+}.freeze
+
+RobotLab.on(:around_llm_generation, namespace: :test_double) do |ctx, &block|
+  canned = CANNED_RESPONSES[ctx.request]
+  canned ? canned : block.call
+end
+```
+
+### Per-Network Latency Metrics
+
+Collect timing data scoped to a specific network without touching global hooks:
+
+```ruby
+network.on(:before_network_run, namespace: :metrics) do |ctx|
+  ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+end
+
+network.on(:after_network_run, namespace: :metrics) do |ctx|
+  elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
+  Metrics.histogram("network.run.duration_ms", elapsed_ms, tags: { network: ctx.network.name })
+end
+```
+
+### Sensitive Data Redaction
+
+Scrub PII from requests before they are logged or sent to the LLM:
+
+```ruby
+PII_PATTERN = /\b[A-Z]{2}\d{6,9}\b/  # example: passport numbers
+
+RobotLab.on(:before_run, namespace: :redaction) do |ctx|
+  ctx.request = ctx.request&.gsub(PII_PATTERN, "[REDACTED]")
+end
+```
+
+---
+
 ## See Also
 
-- [Example 35 — Hooks Architecture](../../examples/35_hooks.rb) — full demo with xyzzy extension, perf timer, LLM response cache, and tracer hooks
-- [examples/xyzzy.rb](../../examples/xyzzy.rb) — single-file reference extension that registers for every hook family
+- [examples/35_hooks.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/35_hooks.rb) — full demo with xyzzy extension, perf timer, LLM response cache, and tracer hooks
+- [examples/xyzzy.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/xyzzy.rb) — single-file reference extension that registers for every hook family
 - [Robot Execution](../architecture/robot-execution.md)
 - [Observability & Safety](observability.md)

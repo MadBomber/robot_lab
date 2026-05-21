@@ -105,7 +105,7 @@ network = RobotLab.create_network(name: "launch_assessment", config: config) do
 end
 ```
 
-`nil` (the default) means unlimited — identical to pre-existing behavior. For Rails deployments, size the cap to match your database connection pool and API rate tier. See [Example 31](../../examples/31_launch_assessment.rb) for a working demo.
+`nil` (the default) means unlimited — identical to pre-existing behavior. For Rails deployments, size the cap to match your database connection pool and API rate tier. See [examples/31_launch_assessment.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/31_launch_assessment.rb) for a working demo.
 
 ### Optional Tasks
 

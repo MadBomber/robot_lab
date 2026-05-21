@@ -13,3 +13,4 @@ Gemfile.lock
 examples/27_incident_response/output/
 .worktrees/
 _notes/
+site/

@@ -181,5 +181,5 @@ end
 ## Related
 
 - [Building Robots](../guides/building-robots.md) — Tool loop circuit breaker, delegation
-- [Ractor Parallelism](../guides/ractor-parallelism.md) — Ractor boundary and tool errors
+- [Observability & Safety](../guides/observability.md) — circuit breaker and tool loop errors
 - [MCP Integration](../guides/mcp-integration.md) — MCP connection errors
