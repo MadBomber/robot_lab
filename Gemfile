@@ -13,16 +13,17 @@ group :development, :test do
   gem 'debug_me'
   gem "flog"
   gem 'hashdiff'
+  gem "lumberjack"
   gem "minitest"
   gem "minitest-reporters"
   gem 'ractor_queue'
   gem 'ractor-wrapper'
   gem "rake"
-  gem "rouge"
-  gem "robot_lab-document_store"  #, path: "../robot_lab-document_store"
+  gem "robot_lab-document_store" # , path: "../robot_lab-document_store"
   gem "robot_lab-durable"
   gem "robot_lab-ractor"
   gem "robot_lab-rails"
+  gem "rouge"
   gem "rubocop"
   gem "vcr"
   gem "webmock"

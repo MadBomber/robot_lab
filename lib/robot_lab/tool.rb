@@ -94,19 +94,17 @@ module RobotLab
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     def call(args)
-      if self.class.ractor_safe? && !self.class.name.nil? && RobotLab.extension_loaded?(:ractor)
-        RobotLab.ractor_pool.submit(self.class.name, args)
-      else
-        super
-      end
-    rescue RobotLab::ToolError => e
-      raise if self.class.raise_on_error?
-      "Error (#{name}): #{e.message}"
-    rescue StandardError => e
-      raise if self.class.raise_on_error?
+      context = ToolCallHookContext.new(tool: self, tool_args: args, robot: @robot)
 
-      RobotLab.config.logger.warn("Tool '#{name}' error: #{e.class}: #{e.message}")
-      "Error (#{name}): #{e.message}"
+      RobotLab::Hooks.run(:tool_call, context, **tool_hook_options) do
+        context.tool_result = use_ractor_pool? ? execute_ractor_tool_call(args) : super
+      rescue RobotLab::ToolError => e
+        handle_tool_error(context, e)
+      rescue StandardError => e
+        handle_standard_error(context, e)
+      end
+
+      context.tool_result
     end
 
     # Override name to support explicit names for dynamic/MCP tools.
@@ -209,6 +207,48 @@ module RobotLab
     end
 
     private
+
+    def tool_hook_options
+      hook_scope = RobotLab.current_hook_scope
+
+      {
+        registries: tool_hook_registries(hook_scope),
+        per_run_hooks: hook_scope && hook_scope[:per_run_hooks]
+      }
+    end
+
+    def tool_hook_registries(hook_scope)
+      return hook_scope[:registries] if hook_scope
+
+      [RobotLab.hooks, robot_hook_registry]
+    end
+
+    def robot_hook_registry
+      @robot.hooks if @robot.respond_to?(:hooks)
+    end
+
+    def execute_ractor_tool_call(args)
+      RobotLab.ractor_pool.submit(self.class.name, args)
+    end
+
+    def use_ractor_pool?
+      self.class.ractor_safe? && !self.class.name.nil? && RobotLab.extension_loaded?(:ractor)
+    end
+
+    def handle_tool_error(context, error)
+      context.tool_error = error
+      raise if self.class.raise_on_error?
+
+      context.tool_result = "Error (#{name}): #{error.message}"
+    end
+
+    def handle_standard_error(context, error)
+      context.tool_error = error
+      raise if self.class.raise_on_error?
+
+      RobotLab.config.logger.warn("Tool '#{name}' error: #{error.class}: #{error.message}")
+      context.tool_result = "Error (#{name}): #{error.message}"
+    end
 
     def deep_symbolize_keys(obj)
       case obj

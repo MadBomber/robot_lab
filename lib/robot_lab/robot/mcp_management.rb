@@ -12,16 +12,22 @@ module RobotLab
 
       # Resolve MCP hierarchy: runtime -> robot build -> network -> config
       def resolve_mcp_hierarchy(runtime_value, network: nil, network_config: nil)
-        parent_value = network_config&.mcp || network&.network&.mcp || RobotLab.config.mcp
+        parent_value = network_config&.mcp || network_parent_config(network)&.mcp || RobotLab.config.mcp
         build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
         ToolConfig.resolve_mcp(runtime_value, parent_value: build_resolved)
       end
 
       # Resolve tools hierarchy: runtime -> robot build -> network -> config
       def resolve_tools_hierarchy(runtime_value, network: nil, network_config: nil)
-        parent_value = network_config&.tools || network&.network&.tools || RobotLab.config.tools
+        parent_value = network_config&.tools || network_parent_config(network)&.tools || RobotLab.config.tools
         build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
         ToolConfig.resolve_tools(runtime_value, parent_value: build_resolved)
+      end
+
+      def network_parent_config(network)
+        return network.config if network.respond_to?(:config)
+
+        network&.network
       end
 
       # Ensure MCP clients are initialized for the given server configs.

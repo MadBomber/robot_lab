@@ -11,6 +11,8 @@
 
 require_relative "common"
 
+SPECIALIST_TASKS = %i[billing technical general].freeze
+
 # Classifier robot that activates the appropriate specialist
 class ClassifierRobot < RobotLab::Robot
   def call(result)
@@ -76,8 +78,13 @@ network = RobotLab.create_network(name: "support_network", config: shared_config
 end
 
 banner "Multi-Robot Network"
-puts "Network structure:"
-puts network.visualize
+puts "Routing plan:"
+puts "  Entry task: classifier"
+puts "  Optional specialists: #{SPECIALIST_TASKS.join(', ')}"
+puts "  Runtime behavior: classifier activates exactly one specialist"
+puts
+puts "Underlying SimpleFlow structure:"
+puts "  Optional tasks: #{network.to_h[:optional_tasks].join(', ')}"
 hr
 
 # Run the network with a billing question
@@ -85,6 +92,8 @@ result = network.run(message: "I was charged twice for my subscription last mont
 
 # Display results
 puts "Network: #{network.name}"
+puts "Executed tasks: #{result.context.keys.grep_v(:run_params).join(', ')}"
+puts "Skipped specialists: #{(SPECIALIST_TASKS - result.context.keys).join(', ')}"
 puts "\nConversation flow:"
 
 # Show classifier result

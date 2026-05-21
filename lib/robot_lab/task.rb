@@ -39,7 +39,7 @@ module RobotLab
     # @param tools [Symbol, Array] tools config (:none, :inherit, or array)
     # @param memory [Memory, Hash, nil] task-specific memory
     #
-    def initialize(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil, config: nil)
+    def initialize(name:, robot:, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, network: nil)
       @name = name.to_sym
       @robot = robot
       @context = context
@@ -47,6 +47,7 @@ module RobotLab
       @tools = tools
       @memory = memory
       @config = config
+      @network = network
     end
 
     # SimpleFlow step interface
@@ -58,28 +59,17 @@ module RobotLab
     # @return [SimpleFlow::Result] result with robot output
     #
     def call(result)
-      # Get current run params and deep merge with task context
-      run_params = deep_merge(
-        result.context[:run_params] || {},
-        @context
+      context = TaskHookContext.new(
+        network: @network,
+        task: self,
+        robot: @robot,
+        memory: @memory || @network&.memory,
+        config: @config
       )
 
-      # Add task-specific robot config
-      run_params[:mcp] = @mcp unless @mcp == :none
-      run_params[:tools] = @tools unless @tools == :none
-      run_params[:memory] = @memory if @memory
-
-      # Merge task's config on top of network's config
-      if @config
-        network_rc = run_params[:network_config]
-        run_params[:network_config] = network_rc ? network_rc.merge(@config) : @config
+      RobotLab::Hooks.run(:task, context, registries: [RobotLab.hooks, @network&.hooks]) do
+        @robot.call(enhanced_result(result))
       end
-
-      # Create enhanced result with merged params
-      enhanced_result = result.with_context(:run_params, run_params)
-
-      # Delegate to robot
-      @robot.call(enhanced_result)
     end
 
     # Converts the task to a hash representation.
@@ -98,6 +88,22 @@ module RobotLab
     end
 
     private
+
+    def enhanced_result(result)
+      run_params = deep_merge(result.context[:run_params] || {}, @context)
+      run_params[:mcp] = @mcp unless @mcp == :none
+      run_params[:tools] = @tools unless @tools == :none
+      run_params[:memory] = @memory if @memory
+      run_params[:task] = self
+      run_params[:network] = @network if @network
+
+      if @config
+        network_rc = run_params[:network_config]
+        run_params[:network_config] = network_rc ? network_rc.merge(@config) : @config
+      end
+
+      result.with_context(:run_params, run_params)
+    end
 
     # Deep merge two hashes
     #

@@ -3,6 +3,8 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
 
+RUBOCOP_ENV = { "RUBOCOP_CACHE_ROOT" => "tmp/rubocop_cache" }.freeze
+
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
   t.libs << "lib"
@@ -36,12 +38,12 @@ end
 
 desc "Check code style with RuboCop"
 task :rubocop do
-  sh "bundle exec rubocop"
+  sh RUBOCOP_ENV, "bundle exec rubocop"
 end
 
 desc "Auto-correct RuboCop offenses"
 task :rubocop_fix do
-  sh "bundle exec rubocop -a"
+  sh RUBOCOP_ENV, "bundle exec rubocop -a"
 end
 
 desc "Check code complexity with Flog (warn ≥20, fail ≥50)"
@@ -94,7 +96,7 @@ task :quality do
   puts "\n#{'=' * 60}"
   puts "Quality Gate: RuboCop"
   puts '=' * 60
-  results[:rubocop] = system("bundle exec rubocop") ? :pass : :fail
+  results[:rubocop] = system(RUBOCOP_ENV, "bundle exec rubocop") ? :pass : :fail
 
   puts "\n#{'=' * 60}"
   puts "Quality Gate: Flog Complexity"
@@ -140,7 +142,7 @@ namespace :examples do
     failed = []
 
     # Single-file examples
-    Dir.glob("examples/*.rb").sort.each do |example|
+    Dir.glob("examples/*.rb").each do |example|
       base = File.basename(example)
 
       if EXTERNAL_SERVICE_EXAMPLES.key?(base)

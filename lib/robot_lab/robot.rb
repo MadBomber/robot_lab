@@ -5,6 +5,7 @@ require_relative 'robot/mcp_management'
 require_relative 'robot/bus_messaging'
 require_relative 'robot/history_search'
 require_relative 'robot/agent_skill_matching'
+require_relative 'robot/hooking'
 
 module RobotLab
   # LLM-powered robot built on RubyLLM::Agent
@@ -44,6 +45,7 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
+    include Robot::Hooking
     prepend Robot::AgentSkillMatching
 
     # @!attribute [r] name
@@ -70,7 +72,7 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox, :config, :skills, :provider,
+                :bus, :outbox, :config, :skills, :provider, :hooks,
                 :total_input_tokens, :total_output_tokens, :learnings,
                 :durable_store, :learn_domain
 
@@ -217,39 +219,6 @@ module RobotLab
 
       m = @chat.model
       m.respond_to?(:id) ? m.id : m.to_s
-    end
-
-    # Send a message and get a response, with Robot's extended capabilities
-    #
-    # @param message [String] the user message
-    # @param network [NetworkRun, nil] network context (legacy)
-    # @param network_memory [Memory, nil] shared network memory
-    # @param memory [Memory, Hash, nil] runtime memory to merge
-    # @param mcp [Symbol, Array, nil] runtime MCP override
-    # @param tools [Symbol, Array, nil] runtime tools override
-    # @yield [chunk] optional streaming block called with each content chunk
-    # @return [RobotResult]
-    def run(message = nil, network: nil, network_memory: nil, network_config: nil,
-            memory: nil, mcp: :none, tools: :none, **kwargs, &block)
-      run_memory = resolve_run_memory(memory, network: network, network_memory: network_memory)
-      previous_writer = run_memory.current_writer
-      run_memory.current_writer = @name
-
-      begin
-        run_context = kwargs.except(:with)
-        prepare_tools(message: message, mcp: mcp, tools: tools,
-                      network: network, network_config: network_config)
-        rerender_template(run_context) if @template && run_context.any?
-        response = invoke_ask(message: message, kwargs: kwargs, block: block)
-        result = build_result(response, run_memory)
-        enforce_token_budget!
-        result
-      ensure
-        remove_doom_loop_detection
-        restore_tool_call_callback if @config.max_tool_rounds
-        run_reflector if @durable_store
-        run_memory.current_writer = previous_writer
-      end
     end
 
     # Reconfigure the robot for a new context
@@ -630,6 +599,7 @@ module RobotLab
       @total_input_tokens  = 0
       @total_output_tokens = 0
       @learnings           = []
+      @hooks               = HookRegistry.new
     end
 
     def initialize_memory
@@ -729,14 +699,31 @@ module RobotLab
       @chat.with_tools(*filtered) if filtered.any?
     end
 
-    def invoke_ask(message:, kwargs:, block:)
-      effective_message = inject_learnings(message)
-      maybe_compact
-      install_circuit_breaker if @config.max_tool_rounds
-      install_doom_loop_detection
-      ask_kwargs = kwargs.slice(:with)
-      streaming  = effective_streaming_block(block)
-      ask(effective_message, **ask_kwargs, &streaming)
+    def invoke_ask(context:, kwargs:, hooks:, block:)
+      generation_context = LlmGenerationHookContext.new(
+        robot: self,
+        network: context.network,
+        task: context.task,
+        memory: context.memory,
+        config: context.config,
+        request: context.request,
+        metadata: context.metadata
+      )
+
+      RobotLab::Hooks.run(:llm_generation, generation_context,
+                          registries: hook_registries(context.network), per_run_hooks: hooks) do
+        effective_message = inject_learnings(generation_context.request)
+        maybe_compact
+        install_circuit_breaker if @config.max_tool_rounds
+        install_doom_loop_detection
+        ask_kwargs = kwargs.slice(:with)
+        streaming  = effective_streaming_block(block)
+        ask(effective_message, **ask_kwargs, &streaming)
+      end
+    end
+
+    def hook_registries(network = nil)
+      [RobotLab.hooks, network&.hooks, @hooks]
     end
 
     def enforce_token_budget!
@@ -757,6 +744,8 @@ module RobotLab
       memory = run_params.delete(:memory)
       network_memory = run_params.delete(:network_memory)
       network_config = run_params.delete(:network_config)
+      network = run_params.delete(:network)
+      task = run_params.delete(:task)
 
       # Build base context from remaining run params
       base = run_params.dup
@@ -779,6 +768,8 @@ module RobotLab
       merged[:memory] = memory if memory
       merged[:network_memory] = network_memory if network_memory
       merged[:network_config] = network_config if network_config
+      merged[:network] = network if network
+      merged[:task] = task if task
 
       merged
     end

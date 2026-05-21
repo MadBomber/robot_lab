@@ -71,7 +71,7 @@ module RobotLab
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
     # @!attribute [r] memory
     #   @return [Memory] shared memory for all robots in the network
-    attr_reader :name, :pipeline, :robots, :memory, :config, :parallel_mode
+    attr_reader :name, :pipeline, :robots, :memory, :config, :parallel_mode, :hooks
 
     # Creates a new Network instance.
     #
@@ -94,6 +94,7 @@ module RobotLab
       @memory = memory || Memory.new(network_name: @name)
       @config = config || RunConfig.new
       @parallel_mode = parallel_mode
+      @hooks = HookRegistry.new
       @broadcast_handlers = []
       @bus_poller = BusPoller.new.start
 
@@ -132,7 +133,8 @@ module RobotLab
         mcp: mcp,
         tools: tools,
         memory: memory,
-        config: config
+        config: config,
+        network: self
       )
 
       # Register the group and assign the shared poller to the robot
@@ -180,19 +182,33 @@ module RobotLab
     def run(**run_context)
       # Include shared memory in run params so robots can access it
       run_context[:network_memory] = @memory
+      run_context[:network] = self
 
       # Pass network's config so robots can inherit it
       run_context[:network_config] = @config unless @config.empty?
 
-      if @parallel_mode == :ractor
-        run_with_ractor_scheduler(run_context)
-      else
-        initial_result = SimpleFlow::Result.new(
-          run_context,
-          context: { run_params: run_context }
-        )
-        @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
+      context = NetworkRunHookContext.new(
+        network: self,
+        context: run_context,
+        memory: @memory,
+        config: @config
+      )
+
+      RobotLab::Hooks.run(:network_run, context, registries: [RobotLab.hooks, @hooks]) do
+        if @parallel_mode == :ractor
+          run_with_ractor_scheduler(context.context)
+        else
+          initial_result = SimpleFlow::Result.new(
+            context.context,
+            context: { run_params: context.context }
+          )
+          @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
+        end
       end
+    end
+
+    def on(hook_name, namespace: nil, context: nil, &callback)
+      @hooks.on(hook_name, namespace: namespace, context: context, &callback)
     end
 
     # Broadcast a message to all robots in the network.

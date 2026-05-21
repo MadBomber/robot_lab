@@ -10,14 +10,18 @@ require_relative "../lib/robot_lab"
 LlmConfig = Data.define(:provider, :model)
 
 LLM = {
-  default:   LlmConfig.new(provider: "openai",    model: "gpt-5.4"),
+  default:   LlmConfig.new(provider: "openai",    model: "gpt-4.1-mini"),
   local:     LlmConfig.new(provider: "ollama",    model: "llama3.2"),
   anthropic: LlmConfig.new(provider: "anthropic", model: "claude-opus-4-7")
 }.freeze
 
 RubyLLM.configure do |c|
-  c.logger        = Logger.new(File::NULL)
-  c.default_model = LLM[:default].model
+  c.logger                  = Logger.new(File::NULL)
+  c.default_model           = LLM[:default].model
+  c.openai_api_key          = ENV['OPENAI_API_KEY']
+  c.openai_organization_id  = ENV['OPENAI_ORGANIZATION_ID']
+  c.openai_project_id       = ENV['OPENAI_PROJECT_ID']
+  c.anthropic_api_key       = ENV['ANTHROPIC_API_KEY']
 end
 
 RobotLab.configure do |c|

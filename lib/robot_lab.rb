@@ -64,6 +64,9 @@ loader.setup
 # individually (e.g. TextMessage lives in message.rb, not text_message.rb).
 # Require them explicitly so their constants are available without eager loading.
 require_relative 'robot_lab/error'
+require_relative 'robot_lab/hook_context'
+require_relative 'robot_lab/hook_registry'
+require_relative 'robot_lab/hooks'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
 
@@ -107,6 +110,33 @@ module RobotLab
     # @return [Array<Symbol>]
     def loaded_extensions
       @extensions.keys
+    end
+
+    def hooks
+      @hooks ||= HookRegistry.new
+    end
+
+    def on(hook_name, namespace: nil, context: nil, &callback)
+      hooks.on(hook_name, namespace: namespace, context: context, &callback)
+    end
+
+    def clear_hooks!
+      @hooks = HookRegistry.new
+    end
+
+    def with_hook_scope(registries, per_run_hooks)
+      previous = Thread.current[:robot_lab_hook_scope]
+      Thread.current[:robot_lab_hook_scope] = {
+        registries: registries,
+        per_run_hooks: per_run_hooks
+      }
+      yield
+    ensure
+      Thread.current[:robot_lab_hook_scope] = previous
+    end
+
+    def current_hook_scope
+      Thread.current[:robot_lab_hook_scope]
     end
 
     # Returns the Config object (MywayConfig-based).
