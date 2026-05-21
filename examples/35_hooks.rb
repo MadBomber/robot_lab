@@ -11,11 +11,7 @@
 #   bundle exec ruby examples/35_hooks.rb
 
 require_relative "common"
-
-xyzzy_lib = File.expand_path("../../robot_lab-xyzzy/lib", __dir__)
-$LOAD_PATH.unshift(xyzzy_lib) unless $LOAD_PATH.include?(xyzzy_lib)
-
-require "robot_lab/xyzzy"
+require_relative "xyzzy"
 
 class CompactHookLogger
   def info(message)
@@ -151,8 +147,7 @@ class HookDemo
     def explain_setup
       section "Extension Registration"
       puts <<~TEXT
-        robot_lab-xyzzy has been loaded from:
-          #{xyzzy_lib}
+        xyzzy.rb is a single-file hook extension loaded from examples/.
 
         It registers namespace :#{RobotLab::Xyzzy::NAMESPACE} for every hook.
         Each callback logs the hook name and the dot-access context snapshot.
@@ -314,10 +309,6 @@ class HookDemo
       yield
     ensure
       RobotLab::Xyzzy.logger = original
-    end
-
-    def xyzzy_lib
-      File.expand_path("../../robot_lab-xyzzy/lib", __dir__)
     end
 end
 
