@@ -25,6 +25,7 @@
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
+- <strong>Hook System</strong> - Lifecycle hooks across every execution boundary for instrumentation, caching, and extensions<br>
 - <strong>Layered Configuration</strong> - Cascading YAML, env vars, and RunConfig<br>
 - <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting (via <a href="https://github.com/MadBomber/robot_lab-rails">robot_lab-rails</a>)<br>
 - <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>

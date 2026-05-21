@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Hook system** — lifecycle hooks across all execution boundaries. Register callbacks with `RobotLab.on`, `network.on`, or `robot.on` using `before_*`, `around_*`, `after_*`, and `on_error` hooks for five families: `:run`, `:llm_generation`, `:tool_call`, `:network_run`, and `:task`.
+  - `HookRegistry` — stores named callbacks keyed by hook name and optional namespace
+  - `HookContext` and five typed subclasses: `RunHookContext`, `LlmGenerationHookContext`, `ToolCallHookContext`, `NetworkRunHookContext`, `TaskHookContext`
+  - `DotState` / `ExtensionState` — namespace-isolated dot-access state carried on every context object; `ctx.local` reads/writes state for the active namespace
+  - `context:` parameter on `on(...)` — extensions declare namespace-scoped default state that is merged into the context's `DotState` before each callback fires
+  - Around hooks chain correctly: each wraps the next with the actual operation at the innermost layer; return value is propagated up the chain
+  - Per-run hooks via `robot.run("msg", hooks: { namespace: :ns, after_run: proc { |ctx| ... } })`
+  - `on_error` fires for `:run`, `:network_run`, and `:task` families; exception is re-raised after all error handlers complete
+- **`examples/xyzzy.rb`** — single-file reference extension that registers for every hook under the `:xyzzy` namespace and logs each callback with its context snapshot; demonstrates the extension authoring pattern
+- **Example 35** (`examples/35_hooks.rb`) — full hook pipeline demo: xyzzy extension tracing all hooks, `around_run` perf timer, `around_llm_generation` response cache (cache hits skip the LLM entirely), `before/after_llm_generation` tracer, tool call hooks, network/task hooks, and `on_error`
+- **`examples/common.rb`** — added explicit `openai_api_key`, `openai_organization_id`, and `openai_project_id` to `RubyLLM.configure` to match provider configurator expectations; updated default model to `gpt-4.1-mini`
+
 ## [0.2.1] - 2026-05-19
 
 ### Added

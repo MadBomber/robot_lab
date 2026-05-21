@@ -42,6 +42,10 @@ If you're new to RobotLab, start here:
 
     Token tracking, circuit breakers, doom loop detection, auto compaction, and learning accumulation
 
+-   [:octicons-zap-24: **Hook System**](hooks.md)
+
+    Lifecycle hooks for instrumentation, response caching, extensions, and cross-cutting concerns
+
 -   [:octicons-search-24: **Knowledge & Retrieval**](knowledge.md)
 
     Chat history search and embedding-based document store for RAG workflows
@@ -59,6 +63,7 @@ If you're new to RobotLab, start here:
 | [Streaming](streaming.md) | Real-time responses | 5 min |
 | [Memory](memory.md) | Shared data store | 5 min |
 | [Observability & Safety](observability.md) | Token tracking, circuit breaker, doom loop detection, auto compaction, learning loop | 10 min |
+| [Hook System](hooks.md) | Lifecycle hooks, extensions, response caching, instrumentation | 15 min |
 | [Knowledge & Retrieval](knowledge.md) | Chat history search and embedding-based document store (RAG) | 10 min |
 
 ## Extension Gems
