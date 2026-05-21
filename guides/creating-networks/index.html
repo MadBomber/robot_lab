@@ -928,6 +928,8 @@
       
         
       
+        
+      
     
     
     
@@ -1736,6 +1738,34 @@
     
   
     Observability & Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hook System
   
 
     
@@ -3431,7 +3461,7 @@
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">                                               </span><span class="ss">:risk</span><span class="p">,</span><span class="w"> </span><span class="ss">:financial</span><span class="p">,</span><span class="w"> </span><span class="ss">:legal</span><span class="o">]</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="k">end</span>
 </span></code></pre></div>
-<p><code>nil</code> (the default) means unlimited — identical to pre-existing behavior. For Rails deployments, size the cap to match your database connection pool and API rate tier. See <a href="../../examples/31_launch_assessment.rb">Example 31</a> for a working demo.</p>
+<p><code>nil</code> (the default) means unlimited — identical to pre-existing behavior. For Rails deployments, size the cap to match your database connection pool and API rate tier. See <a href="https://github.com/MadBomber/robot_lab/blob/main/examples/31_launch_assessment.rb">examples/31_launch_assessment.rb</a> for a working demo.</p>
 <h3 id="optional-tasks">Optional Tasks<a class="headerlink" href="#optional-tasks" title="Permanent link">&para;</a></h3>
 <p>Optional tasks only run when explicitly activated by a preceding robot:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;router&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
