@@ -7,25 +7,26 @@
 # context snapshot. Useful as a live trace of the full hook pipeline during
 # development.
 #
+# Fully Ractor-safe: no class-level mutable state. LOG_PATH is a frozen
+# string constant (shareable); each call opens its own file handle.
+#
 # stdout : one tagline per hook call  →  [xyzzy] HH:MM:SS.mmm hook_name
-# logfile: full context snapshot for each call (set via Xyzzy.logger=)
+# logfile: full context snapshot written to LOG_PATH via PP.pp
 #
 # Usage (from any example that requires common):
 #   require_relative "xyzzy"
 
-require "logger"
+require "pp"
+require "fileutils"
 
 module RobotLab
   class Xyzzy < Hook
     self.namespace = :xyzzy
 
+    LOG_PATH = File.expand_path("~/.robot_lab/xyzzy_hooks.log").freeze
+    FileUtils.mkdir_p(File.dirname(LOG_PATH))
+
     class << self
-      attr_writer :logger
-
-      def logger
-        @logger ||= Logger.new($stdout)
-      end
-
       def before_run(ctx)               = log_hook(:before_run, ctx)
       def after_run(ctx)                = log_hook(:after_run, ctx)
       def on_error(ctx)                 = log_hook(:on_error, ctx)
@@ -66,9 +67,10 @@ module RobotLab
       private
 
       def log_hook(hook_name, ctx)
-        ts = Time.now.strftime('%H:%M:%S.%3N')
-        puts "  [xyzzy] #{ts} #{hook_name}"
-        logger.info("#{ts} #{hook_name} #{context_snapshot(ctx)}")
+        ts       = Time.now.strftime('%H:%M:%S.%3N')
+        snapshot = context_snapshot(ctx)
+        $stdout.puts "  [xyzzy] #{ts} #{hook_name}"
+        File.open(LOG_PATH, "a") { |f| f.puts "#{ts} #{hook_name} | #{PP.pp(snapshot, +"").chomp}" }
       end
 
       def context_snapshot(ctx)

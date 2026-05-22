@@ -400,7 +400,7 @@ module RobotLab
     end
 
     def ractor_hook_classes_for(robot)
-      [RobotLab.hooks, robot.hooks]
+      [RobotLab.hooks, @hooks, robot.hooks]
         .flat_map { |registry| registry.registrations.map(&:handler_class) }
         .uniq
         .freeze
