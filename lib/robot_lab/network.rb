@@ -207,8 +207,8 @@ module RobotLab
       end
     end
 
-    def on(hook_name, namespace: nil, context: nil, &callback)
-      @hooks.on(hook_name, namespace: namespace, context: context, &callback)
+    def on(handler_class, context: nil)
+      @hooks.on(handler_class, context: context)
     end
 
     # Broadcast a message to all robots in the network.
@@ -379,21 +379,31 @@ module RobotLab
       specs_with_deps = @tasks.map do |task_name, task_wrapper|
         deps = dep_graph[task_name.to_sym] || []
         deps = deps.empty? ? :none : deps.map(&:to_s)
-
-        spec = RobotSpec.new(
-          name:          task_wrapper.robot.name.freeze,
-          template:      task_wrapper.robot.template&.to_s&.freeze,
-          system_prompt: task_wrapper.robot.system_prompt&.freeze,
-          config_hash:   RactorBoundary.freeze_deep(task_wrapper.robot.config.to_json_hash)
-        )
-
-        { spec: spec, depends_on: deps }
+        { spec: build_robot_spec(task_wrapper), depends_on: deps }
       end
 
       scheduler = RactorNetworkScheduler.new(memory: @memory)
       results   = scheduler.run_pipeline(specs_with_deps, message: message)
       scheduler.shutdown
       results
+    end
+
+    def build_robot_spec(task_wrapper)
+      robot = task_wrapper.robot
+      RobotSpec.new(
+        name:          robot.name.freeze,
+        template:      robot.template&.to_s&.freeze,
+        system_prompt: robot.system_prompt&.freeze,
+        config_hash:   RactorBoundary.freeze_deep(robot.config.to_json_hash),
+        hook_classes:  ractor_hook_classes_for(robot)
+      )
+    end
+
+    def ractor_hook_classes_for(robot)
+      [RobotLab.hooks, robot.hooks]
+        .flat_map { |registry| registry.registrations.map(&:handler_class) }
+        .uniq
+        .freeze
     end
   end
 end

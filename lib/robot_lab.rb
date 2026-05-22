@@ -65,6 +65,7 @@ loader.setup
 # Require them explicitly so their constants are available without eager loading.
 require_relative 'robot_lab/error'
 require_relative 'robot_lab/hook_context'
+require_relative 'robot_lab/hook'
 require_relative 'robot_lab/hook_registry'
 require_relative 'robot_lab/hooks'
 require_relative 'robot_lab/message'
@@ -116,8 +117,8 @@ module RobotLab
       @hooks ||= HookRegistry.new
     end
 
-    def on(hook_name, namespace: nil, context: nil, &callback)
-      hooks.on(hook_name, namespace: namespace, context: context, &callback)
+    def on(handler_class, context: nil)
+      hooks.on(handler_class, context: context)
     end
 
     def clear_hooks!

@@ -1,6 +1,6 @@
 # Hook System
 
-RobotLab's hook system lets you intercept any point in a robot's execution pipeline — before, around, or after every LLM call, tool invocation, network run, or task — without modifying core framework code. Hooks are the intended mechanism for building extensions, middleware, instrumentation, and any other cross-cutting concern. They compose safely: multiple registrations at different levels all fire in order, and each registration owns its own isolated state.
+RobotLab's hook system lets you intercept any point in a robot's execution pipeline — before, around, or after every LLM call, tool invocation, network run, or task — without modifying core framework code. Hooks are implemented as handler classes: subclasses of `RobotLab::Hook` that define lifecycle callbacks as class methods. Hooks are the intended mechanism for building extensions, middleware, instrumentation, and any other cross-cutting concern. They compose safely: multiple registrations at different levels all fire in order, and each handler class owns its own isolated state.
 
 ---
 
@@ -36,6 +36,76 @@ after_run
 
 ---
 
+## Handler Classes
+
+All hook logic is implemented as a subclass of `RobotLab::Hook`. Lifecycle callbacks are defined as `class << self` methods — one method per hook name. Any method that is not defined is silently skipped when that hook fires.
+
+```ruby
+class MyHook < RobotLab::Hook
+  class << self
+    def before_run(ctx)
+      # fires before every robot.run call
+    end
+
+    def after_run(ctx)
+      # fires after every robot.run call
+    end
+
+    def on_error(ctx)
+      # fires when an unhandled exception escapes a run
+    end
+  end
+end
+```
+
+### Namespace auto-derivation
+
+Every handler class has a namespace that isolates its `ctx.local` state from other handlers. The namespace is derived automatically from the class name by snake_casing the final segment:
+
+| Class name | Auto namespace |
+|-----------|---------------|
+| `TimerHook` | `:timer_hook` |
+| `AuditHook` | `:audit_hook` |
+| `PerfMonitor` | `:perf_monitor` |
+| `MyExt::Tracer` | `:tracer` |
+
+Override the auto-derived namespace at the class level:
+
+```ruby
+class TimerHook < RobotLab::Hook
+  self.namespace = :timer   # use :timer instead of :timer_hook
+end
+```
+
+### `RobotLab::Hook` base class
+
+```ruby
+class Hook
+  class << self
+    attr_writer :namespace
+
+    def namespace
+      return @namespace if @namespace
+      return nil if self == Hook
+      name.split('::').last
+          .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
+          .gsub(/([a-z\d])([A-Z])/, '\1_\2')
+          .downcase.to_sym
+    end
+
+    def call(hook_name, context, &block)
+      if singleton_class.public_method_defined?(hook_name)
+        block ? public_send(hook_name, context, &block) : public_send(hook_name, context)
+      elsif block
+        block.call
+      end
+    end
+  end
+end
+```
+
+---
+
 ## Registration Levels
 
 Hooks are registered on three objects and can optionally be scoped to a single call:
@@ -45,7 +115,7 @@ Hooks are registered on three objects and can optionally be scoped to a single c
 | **Global** | `RobotLab.on(...)` | Every robot, every network |
 | **Network** | `network.on(...)` | Only robots inside that network |
 | **Robot** | `robot.on(...)` | Only that robot |
-| **Per-run** | `robot.run("msg", hooks: { ... })` | A single `run` call |
+| **Per-run** | `robot.run("msg", hooks: ...)` | A single `run` call |
 
 All four levels are additive. When a run fires, every matching registration executes in order: global → network → robot → per-run. There is no way to suppress an outer registration from an inner one.
 
@@ -56,56 +126,71 @@ All four levels are additive. When a run fires, every matching registration exec
 All three registration objects share the same signature:
 
 ```ruby
-RobotLab.on(hook_name, namespace: nil, context: nil) { |ctx| ... }
-network.on(hook_name, namespace: nil, context: nil)  { |ctx| ... }
-robot.on(hook_name,   namespace: nil, context: nil)  { |ctx| ... }
+RobotLab.on(handler_class, context: nil)
+network.on(handler_class, context: nil)
+robot.on(handler_class,   context: nil)
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `hook_name` | Symbol | One of the hook names listed in the families table above |
-| `namespace:` | Symbol | Isolates this registration's state inside `ctx.local` (strongly recommended) |
-| `context:` | Hash\|nil | Default state pre-populated into the namespace's `DotState` before each callback fires |
+| `handler_class` | Class | A subclass of `RobotLab::Hook` |
+| `context:` | Hash\|nil | Default state pre-populated into the handler's namespace `DotState` before each callback fires |
+
+`handler_class` must be a subclass of `RobotLab::Hook`. The namespace is read from `handler_class.namespace` — there is no `namespace:` parameter on `on`.
 
 ---
 
 ## Namespaces and `ctx.local`
 
-Every registration should declare a `namespace:`. The namespace gives each extension its own isolated key-value store — a `DotState` — accessible via `ctx.local`. State set in `before_run` is visible in `around_run`, `after_run`, and `on_error` for the same run.
+Each handler class's namespace gives it an isolated key-value store — a `DotState` — accessible via `ctx.local`. State set in `before_run` is visible in `around_run`, `after_run`, and `on_error` for the same run.
 
 ```ruby
-robot.on(:before_run, namespace: :timer) do |ctx|
-  ctx.local.start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-end
+class TimerHook < RobotLab::Hook
+  self.namespace = :timer
 
-robot.on(:after_run, namespace: :timer) do |ctx|
-  elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.start_time
-  puts "run took #{elapsed.round(3)}s"
+  def self.before_run(ctx)
+    ctx.local.start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
+  def self.after_run(ctx)
+    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.start_time
+    puts "run took #{elapsed.round(3)}s"
+  end
 end
 ```
 
 `DotState` is an open struct-like object. Keys are written and read with dot notation. Any key can be set; there is no schema.
 
-To read another extension's state from within a hook, use `ctx.ext(:other_namespace)`:
+To read another handler's state from within a hook, use `ctx.ext(:other_namespace)`:
 
 ```ruby
-robot.on(:after_run, namespace: :reporter) do |ctx|
-  timer_data = ctx.ext(:timer)
-  puts "elapsed: #{timer_data.start_time}"
+class ReporterHook < RobotLab::Hook
+  self.namespace = :reporter
+
+  def self.after_run(ctx)
+    timer_data = ctx.ext(:timer)
+    puts "elapsed since start: #{timer_data.start_time}"
+  end
 end
 ```
 
 ---
 
-## The `context:` Parameter — Extension Default State
+## The `context:` Parameter — Default State
 
-Pass `context: { key: value }` to pre-populate the namespace's `DotState` before each callback fires. Keys are only written if they are not already present, making them defaults that earlier hooks at the same level can override:
+Pass `context: { key: value }` to pre-populate the handler's namespace `DotState` before each callback fires. Keys are only written if they are not already present, making them defaults that earlier hooks at the same level can override:
 
 ```ruby
-robot.on(:before_run, namespace: :counter, context: { count: 0 }) do |ctx|
-  ctx.local.count += 1
-  puts "run ##{ctx.local.count}"
+class CounterHook < RobotLab::Hook
+  self.namespace = :counter
+
+  def self.before_run(ctx)
+    ctx.local.count += 1
+    puts "run ##{ctx.local.count}"
+  end
 end
+
+RobotLab.on(CounterHook, context: { count: 0 })
 ```
 
 This is the intended pattern for extensions to declare their required state without asking callers to initialize it. Without `context:`, accessing an unset key on `DotState` returns `nil`.
@@ -114,21 +199,25 @@ This is the intended pattern for extensions to declare their required state with
 
 ## Around Hooks
 
-Around hooks receive the context and a block. They must call `block.call` and must return its return value — that is how the actual LLM call, network step, or task is executed:
+Around hooks are class methods that accept the context and a block. They must call `block.call` and must return its return value — that is how the actual LLM call, network step, or task is executed:
 
 ```ruby
-robot.on(:around_run, namespace: :timer) do |ctx, &block|
-  t0     = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  result = block.call   # MUST call — this is the actual run
-  elapsed = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
-  puts "#{ctx.request.inspect} — #{elapsed}ms"
-  result               # MUST return — callers expect the real result
+class PerfHook < RobotLab::Hook
+  self.namespace = :perf
+
+  def self.around_run(ctx, &block)
+    t0     = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result = block.call   # MUST call — this is the actual run
+    elapsed = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
+    puts "#{ctx.request.inspect} — #{elapsed}ms"
+    result               # MUST return — callers expect the real result
+  end
 end
 ```
 
 > **Important:** If an around hook does not return the block's return value, the run returns `nil`. This is a silent failure — there is no exception.
 
-Around hooks registered across different namespaces are chained: each wraps the next, with the actual operation at the innermost layer.
+Around hooks registered across different handler classes are chained: each wraps the next, with the actual operation at the innermost layer.
 
 ### `around_tool_call` is different
 
@@ -137,23 +226,32 @@ Tool call hooks use `ctx.tool_result` as the result carrier, not the block's ret
 To **let the tool execute normally**, call `block.call` — it sets `ctx.tool_result` — and then do any post-processing:
 
 ```ruby
-RobotLab.on(:around_tool_call, namespace: :timing) do |ctx, &block|
-  t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  block.call   # executes the tool and populates ctx.tool_result
-  ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
-  $stderr.puts "[tool] #{ctx.tool_name} — #{ms}ms"
+class ToolTimingHook < RobotLab::Hook
+  self.namespace = :timing
+
+  def self.around_tool_call(ctx, &block)
+    t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    block.call   # executes the tool and populates ctx.tool_result
+    ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
+    $stderr.puts "[tool] #{ctx.tool_name} — #{ms}ms"
+  end
 end
 ```
 
 To **short-circuit the tool** (skip execution entirely), skip `block.call` and set `ctx.tool_result` directly:
 
 ```ruby
-RobotLab.on(:around_tool_call, namespace: :guard) do |ctx, &block|
-  if AllowList.permitted?(ctx.tool_name, ctx.robot&.name)
-    block.call
-  else
-    # not permitted — set result directly without calling block
-    ctx.tool_result = "Operation not permitted: #{ctx.tool_name}"
+class ToolGuardHook < RobotLab::Hook
+  self.namespace = :guard
+
+  ALLOWED_TOOLS = %w[web_search calculator].freeze
+
+  def self.around_tool_call(ctx, &block)
+    if ALLOWED_TOOLS.include?(ctx.tool_name)
+      block.call
+    else
+      ctx.tool_result = "Operation not permitted: #{ctx.tool_name}"
+    end
   end
 end
 ```
@@ -162,7 +260,7 @@ end
 
 ## Context Objects
 
-Each hook family receives a typed context object. All context objects provide access to `ctx.local` (the namespace's `DotState`) and `ctx.ext(:name)` (cross-namespace reads).
+Each hook family receives a typed context object. All context objects provide access to `ctx.local` (the handler's namespace `DotState`) and `ctx.ext(:name)` (cross-namespace reads).
 
 ### RunHookContext
 
@@ -234,32 +332,14 @@ Passed to `:task` hooks (`before_task`, `around_task`, `after_task`, `on_error`)
 
 ## Per-Run Hooks
 
-For one-off instrumentation tied to a single call, pass a `hooks:` hash to `robot.run`. The hash must include `namespace:` and any hook name keys mapping to a `Proc` or an array of procs:
+For one-off instrumentation tied to a single call, pass a `hooks:` argument to `robot.run`. Supply a single handler class or an array of handler classes:
 
 ```ruby
-result = robot.run(
-  "summarize this",
-  hooks: {
-    namespace:  :trace,
-    before_run: proc { |ctx| puts "starting: #{ctx.request.inspect}" },
-    after_run:  proc { |ctx| puts "done: #{ctx.response.reply}" }
-  }
-)
+result = robot.run("summarize this", hooks: TraceHook)
 ```
 
-To register multiple callbacks for the same hook name at the per-run level, pass an array of procs:
-
 ```ruby
-result = robot.run(
-  "run with multiple after hooks",
-  hooks: {
-    namespace: :multi,
-    after_run: [
-      proc { |ctx| log_result(ctx.response) },
-      proc { |ctx| metrics.increment("robot.run") }
-    ]
-  }
-)
+result = robot.run("summarize this", hooks: [TraceHook, MetricsHook])
 ```
 
 Per-run hooks fire after robot-level hooks, in the order supplied.
@@ -271,14 +351,20 @@ Per-run hooks fire after robot-level hooks, in the order supplied.
 The `on_error` hook fires when an unhandled exception escapes a run, network run, or task. It receives the same context object as its family's `after_*` hook, with the `error` attribute set:
 
 ```ruby
-robot.on(:on_error, namespace: :alerting) do |ctx|
-  puts "ERROR in #{ctx.robot.name}: #{ctx.error.class} — #{ctx.error.message}"
-  Alerting.notify(ctx.error, robot: ctx.robot.name, request: ctx.request)
+class AlertingHook < RobotLab::Hook
+  self.namespace = :alerting
+
+  def self.on_error(ctx)
+    if ctx.respond_to?(:robot)
+      puts "ERROR in #{ctx.robot.name}: #{ctx.error.class} — #{ctx.error.message}"
+      Alerting.notify(ctx.error, robot: ctx.robot.name, request: ctx.request)
+    else
+      puts "Network error: #{ctx.error.message}"
+    end
+  end
 end
 
-network.on(:on_error, namespace: :alerting) do |ctx|
-  puts "Network error: #{ctx.error.message}"
-end
+RobotLab.on(AlertingHook)
 ```
 
 `on_error` does not suppress the exception. The error continues to propagate after all `on_error` hooks finish.
@@ -287,11 +373,11 @@ end
 
 ## Writing an Extension
 
-The recommended pattern is a module with a class-level `attach_hooks` method. Keeping all registrations in one method makes the extension easy to attach to different registries (global, a specific network, or a specific robot) and easy to test in isolation.
+The recommended pattern is a subclass of `RobotLab::Hook` with all lifecycle callbacks defined in a `class << self` block. Keeping all callbacks in one class makes the extension easy to attach to different registries (global, a specific network, or a specific robot) and easy to test in isolation.
 
 ```ruby
-module MyExtension
-  NAMESPACE = :my_ext
+class MyExtension < RobotLab::Hook
+  self.namespace = :my_ext
 
   class << self
     attr_writer :logger
@@ -299,19 +385,17 @@ module MyExtension
       @logger ||= Logger.new($stdout)
     end
 
-    def attach_hooks(registry: RobotLab)
-      registry.on(:before_run, namespace: NAMESPACE, context: { call_count: 0 }) do |ctx|
-        ctx.local.call_count += 1
-        logger.info("run ##{ctx.local.call_count} starting: #{ctx.request.inspect}")
-      end
+    def before_run(ctx)
+      ctx.local.call_count = (ctx.local.call_count || 0) + 1
+      logger.info("run ##{ctx.local.call_count} starting: #{ctx.request.inspect}")
+    end
 
-      registry.on(:after_run, namespace: NAMESPACE) do |ctx|
-        logger.info("run done: #{ctx.response&.reply.to_s[0, 80]}")
-      end
+    def after_run(ctx)
+      logger.info("run done: #{ctx.response&.reply.to_s[0, 80]}")
+    end
 
-      registry.on(:on_error, namespace: NAMESPACE) do |ctx|
-        logger.error("run failed: #{ctx.error.class} — #{ctx.error.message}")
-      end
+    def on_error(ctx)
+      logger.error("run failed: #{ctx.error.class} — #{ctx.error.message}")
     end
   end
 end
@@ -320,28 +404,34 @@ end
 To attach globally:
 
 ```ruby
-MyExtension.attach_hooks
+RobotLab.on(MyExtension)
 ```
 
 To attach only to a specific network:
 
 ```ruby
-MyExtension.attach_hooks(registry: network)
+network.on(MyExtension)
 ```
 
 To attach only to a specific robot:
 
 ```ruby
-MyExtension.attach_hooks(registry: robot)
+robot.on(MyExtension)
+```
+
+With per-registration default state:
+
+```ruby
+RobotLab.on(MyExtension, context: { call_count: 0 })
 ```
 
 ### Extension Guidelines
 
-- Always declare a `namespace:` constant so state is isolated from other extensions.
-- Use `context:` to declare default state rather than guarding against `nil` inside the block.
+- Set `self.namespace = :my_name` explicitly so callers can read the namespace without relying on class naming conventions.
+- Use `context:` on the `on(...)` call to declare default state rather than guarding against `nil` inside callbacks.
 - Around hooks (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`) must call `block.call` and return its value — omitting either causes the run to return `nil`. `around_tool_call` is the exception: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run or set `ctx.tool_result` directly to short-circuit.
 - Keep error hooks non-raising. Exceptions from hook callbacks propagate and can mask the original error.
-- Test each hook callback in isolation by constructing a context object directly and calling the proc.
+- Test each callback method in isolation by constructing a context object directly and calling the class method.
 
 ---
 
@@ -350,25 +440,37 @@ MyExtension.attach_hooks(registry: robot)
 ### Performance Timer
 
 ```ruby
-RobotLab.on(:around_run, namespace: :perf) do |ctx, &block|
-  t0     = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-  result = block.call
-  ms     = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
-  $stderr.puts "[perf] #{ctx.robot.name} #{ms}ms"
-  result
+class PerfHook < RobotLab::Hook
+  self.namespace = :perf
+
+  def self.around_run(ctx, &block)
+    t0     = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result = block.call
+    ms     = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
+    $stderr.puts "[perf] #{ctx.robot.name} #{ms}ms"
+    result
+  end
 end
+
+RobotLab.on(PerfHook)
 ```
 
 ### Request/Response Tracer
 
 ```ruby
-robot.on(:before_run, namespace: :trace) do |ctx|
-  puts "→ #{ctx.robot.name}: #{ctx.request.inspect}"
+class TraceHook < RobotLab::Hook
+  self.namespace = :trace
+
+  def self.before_run(ctx)
+    puts "→ #{ctx.robot.name}: #{ctx.request.inspect}"
+  end
+
+  def self.after_run(ctx)
+    puts "← #{ctx.robot.name}: #{ctx.response&.reply.to_s[0, 120]}"
+  end
 end
 
-robot.on(:after_run, namespace: :trace) do |ctx|
-  puts "← #{ctx.robot.name}: #{ctx.response&.reply.to_s[0, 120]}"
-end
+robot.on(TraceHook)
 ```
 
 ### LLM Response Cache
@@ -376,40 +478,59 @@ end
 Use `around_llm_generation` to skip the LLM call entirely when a cached response exists. A `before_llm_generation` hook cannot short-circuit the call — it must be an `around_` hook:
 
 ```ruby
-robot.on(:around_llm_generation, namespace: :cache, context: { hits: 0 }) do |ctx, &block|
-  cached = ResponseCache.get(ctx.request)
-  if cached
-    ctx.local.hits += 1
-    cached              # return cached value — block.call (LLM) is skipped
-  else
-    result = block.call # LLM call happens here
-    ResponseCache.set(ctx.request, result)
-    result
+class LlmCacheHook < RobotLab::Hook
+  self.namespace = :cache
+
+  def self.around_llm_generation(ctx, &block)
+    ctx.local.hits ||= 0
+    cached = ResponseCache.get(ctx.request)
+    if cached
+      ctx.local.hits += 1
+      cached              # return cached value — block.call (LLM) is skipped
+    else
+      result = block.call # LLM call happens here
+      ResponseCache.set(ctx.request, result)
+      result
+    end
   end
 end
+
+robot.on(LlmCacheHook, context: { hits: 0 })
 ```
 
 ### Tool Call Audit Log
 
 ```ruby
-RobotLab.on(:before_tool_call, namespace: :audit) do |ctx|
-  AuditLog.write(
-    robot:     ctx.robot&.name,
-    tool:      ctx.tool_name,
-    args:      ctx.tool_args,
-    timestamp: Time.now.utc
-  )
+class ToolAuditHook < RobotLab::Hook
+  self.namespace = :audit
+
+  def self.before_tool_call(ctx)
+    AuditLog.write(
+      robot:     ctx.robot&.name,
+      tool:      ctx.tool_name,
+      args:      ctx.tool_args,
+      timestamp: Time.now.utc
+    )
+  end
 end
+
+RobotLab.on(ToolAuditHook)
 ```
 
 ### Run Counter Per Robot
 
 ```ruby
-RobotLab.on(:before_run, namespace: :metrics, context: { counts: {} }) do |ctx|
-  counts = ctx.local.counts
-  name   = ctx.robot.name
-  counts[name] = (counts[name] || 0) + 1
+class MetricsHook < RobotLab::Hook
+  self.namespace = :metrics
+
+  def self.before_run(ctx)
+    ctx.local.counts ||= {}
+    name = ctx.robot.name
+    ctx.local.counts[name] = (ctx.local.counts[name] || 0) + 1
+  end
 end
+
+RobotLab.on(MetricsHook, context: { counts: {} })
 ```
 
 ---
@@ -423,31 +544,37 @@ Hooks are the primary extension point in RobotLab. Below are concrete patterns t
 Instrument every LLM call with a trace ID and structured log entry for ingestion into OpenTelemetry, Datadog, or a custom logging pipeline:
 
 ```ruby
-RobotLab.on(:before_run, namespace: :trace) do |ctx|
-  ctx.local.trace_id   = SecureRandom.hex(8)
-  ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+class ObservabilityHook < RobotLab::Hook
+  self.namespace = :trace
+
+  def self.before_run(ctx)
+    ctx.local.trace_id   = SecureRandom.hex(8)
+    ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
+  def self.after_run(ctx)
+    elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
+    Logger.info(
+      event:      "robot.run.completed",
+      trace_id:   ctx.local.trace_id,
+      robot:      ctx.robot.name,
+      elapsed_ms: elapsed_ms,
+      reply:      ctx.response&.reply.to_s[0, 120]
+    )
+  end
+
+  def self.on_error(ctx)
+    Logger.error(
+      event:    "robot.run.failed",
+      trace_id: ctx.local.trace_id,
+      robot:    ctx.robot.name,
+      error:    ctx.error.class.to_s,
+      message:  ctx.error.message
+    )
+  end
 end
 
-RobotLab.on(:after_run, namespace: :trace) do |ctx|
-  elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
-  Logger.info(
-    event:      "robot.run.completed",
-    trace_id:   ctx.local.trace_id,
-    robot:      ctx.robot.name,
-    elapsed_ms: elapsed_ms,
-    reply:      ctx.response&.reply.to_s[0, 120]
-  )
-end
-
-RobotLab.on(:on_error, namespace: :trace) do |ctx|
-  Logger.error(
-    event:    "robot.run.failed",
-    trace_id: ctx.local.trace_id,
-    robot:    ctx.robot.name,
-    error:    ctx.error.class.to_s,
-    message:  ctx.error.message
-  )
-end
+RobotLab.on(ObservabilityHook)
 ```
 
 ### Cost Enforcement
@@ -455,39 +582,51 @@ end
 Cap total spending across all robots in a session and raise before an expensive run would push you over budget:
 
 ```ruby
-COST_PER_INPUT_TOKEN  = 0.80 / 1_000_000   # example: Haiku pricing
-COST_PER_OUTPUT_TOKEN = 4.00 / 1_000_000
+class BudgetHook < RobotLab::Hook
+  self.namespace = :budget
 
-SESSION_BUDGET_USD = 0.50
+  COST_PER_INPUT_TOKEN  = 0.80 / 1_000_000
+  COST_PER_OUTPUT_TOKEN = 4.00 / 1_000_000
+  SESSION_BUDGET_USD    = 0.50
 
-RobotLab.on(:before_run, namespace: :budget, context: { total_cost: 0.0 }) do |ctx|
-  if ctx.local.total_cost >= SESSION_BUDGET_USD
-    raise RobotLab::Error, "Session budget of $#{SESSION_BUDGET_USD} exceeded"
+  def self.before_run(ctx)
+    ctx.local.total_cost ||= 0.0
+    if ctx.local.total_cost >= SESSION_BUDGET_USD
+      raise RobotLab::Error, "Session budget of $#{SESSION_BUDGET_USD} exceeded"
+    end
+  end
+
+  def self.after_run(ctx)
+    r = ctx.response
+    ctx.local.total_cost +=
+      r.input_tokens  * COST_PER_INPUT_TOKEN +
+      r.output_tokens * COST_PER_OUTPUT_TOKEN
   end
 end
 
-RobotLab.on(:after_run, namespace: :budget) do |ctx|
-  r = ctx.response
-  ctx.local.total_cost +=
-    r.input_tokens  * COST_PER_INPUT_TOKEN +
-    r.output_tokens * COST_PER_OUTPUT_TOKEN
-end
+RobotLab.on(BudgetHook, context: { total_cost: 0.0 })
 ```
 
 ### Tool Access Control
 
-Allow only approved tools to execute for a given robot or network, without hard-coding restrictions in the tool itself:
+Allow only approved tools to execute for a given network, without hard-coding restrictions in the tool itself:
 
 ```ruby
-ALLOWED_TOOLS = %w[web_search calculator].freeze
+class AccessControlHook < RobotLab::Hook
+  self.namespace = :access_control
 
-network.on(:around_tool_call, namespace: :access_control) do |ctx, &block|
-  if ALLOWED_TOOLS.include?(ctx.tool_name)
-    block.call
-  else
-    ctx.tool_result = "[blocked] Tool '#{ctx.tool_name}' is not permitted in this network."
+  ALLOWED_TOOLS = %w[web_search calculator].freeze
+
+  def self.around_tool_call(ctx, &block)
+    if ALLOWED_TOOLS.include?(ctx.tool_name)
+      block.call
+    else
+      ctx.tool_result = "[blocked] Tool '#{ctx.tool_name}' is not permitted in this network."
+    end
   end
 end
+
+network.on(AccessControlHook)
 ```
 
 ### Audit Logging for Compliance
@@ -495,15 +634,21 @@ end
 Record every tool invocation with its arguments and result for security audits or regulatory compliance:
 
 ```ruby
-RobotLab.on(:after_tool_call, namespace: :audit) do |ctx|
-  AuditLog.append(
-    robot:     ctx.robot&.name,
-    tool:      ctx.tool_name,
-    args:      ctx.tool_args,
-    result:    ctx.tool_result.to_s[0, 500],
-    timestamp: Time.now.utc.iso8601
-  )
+class ComplianceAuditHook < RobotLab::Hook
+  self.namespace = :audit
+
+  def self.after_tool_call(ctx)
+    AuditLog.append(
+      robot:     ctx.robot&.name,
+      tool:      ctx.tool_name,
+      args:      ctx.tool_args,
+      result:    ctx.tool_result.to_s[0, 500],
+      timestamp: Time.now.utc.iso8601
+    )
+  end
 end
+
+RobotLab.on(ComplianceAuditHook)
 ```
 
 ### Retry with Exponential Backoff
@@ -511,21 +656,27 @@ end
 Wrap `around_run` to retry on transient LLM failures without changing any robot code:
 
 ```ruby
-MAX_RETRIES  = 3
-BACKOFF_BASE = 0.5  # seconds
+class RetryHook < RobotLab::Hook
+  self.namespace = :retry
 
-RobotLab.on(:around_run, namespace: :retry) do |ctx, &block|
-  attempts = 0
-  begin
-    attempts += 1
-    block.call
-  rescue RobotLab::InferenceError => e
-    raise if attempts >= MAX_RETRIES
+  MAX_RETRIES  = 3
+  BACKOFF_BASE = 0.5
 
-    sleep(BACKOFF_BASE * (2**(attempts - 1)))
-    retry
+  def self.around_run(ctx, &block)
+    attempts = 0
+    begin
+      attempts += 1
+      block.call
+    rescue RobotLab::InferenceError
+      raise if attempts >= MAX_RETRIES
+
+      sleep(BACKOFF_BASE * (2**(attempts - 1)))
+      retry
+    end
   end
 end
+
+RobotLab.on(RetryHook)
 ```
 
 ### Test Doubles Without Network Calls
@@ -533,16 +684,22 @@ end
 Inject canned LLM responses in tests by short-circuiting `around_llm_generation`. No VCR cassettes, no HTTP mocks:
 
 ```ruby
-# In test setup:
-CANNED_RESPONSES = {
-  "classify this" => FakeResponse.new(content: "positive"),
-  "summarize"     => FakeResponse.new(content: "short summary")
-}.freeze
+class TestDoubleHook < RobotLab::Hook
+  self.namespace = :test_double
 
-RobotLab.on(:around_llm_generation, namespace: :test_double) do |ctx, &block|
-  canned = CANNED_RESPONSES[ctx.request]
-  canned ? canned : block.call
+  CANNED_RESPONSES = {
+    "classify this" => FakeResponse.new(content: "positive"),
+    "summarize"     => FakeResponse.new(content: "short summary")
+  }.freeze
+
+  def self.around_llm_generation(ctx, &block)
+    canned = CANNED_RESPONSES[ctx.request]
+    canned ? canned : block.call
+  end
 end
+
+# In test setup:
+RobotLab.on(TestDoubleHook)
 ```
 
 ### Per-Network Latency Metrics
@@ -550,14 +707,20 @@ end
 Collect timing data scoped to a specific network without touching global hooks:
 
 ```ruby
-network.on(:before_network_run, namespace: :metrics) do |ctx|
-  ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+class NetworkMetricsHook < RobotLab::Hook
+  self.namespace = :metrics
+
+  def self.before_network_run(ctx)
+    ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
+  def self.after_network_run(ctx)
+    elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
+    Metrics.histogram("network.run.duration_ms", elapsed_ms, tags: { network: ctx.network.name })
+  end
 end
 
-network.on(:after_network_run, namespace: :metrics) do |ctx|
-  elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
-  Metrics.histogram("network.run.duration_ms", elapsed_ms, tags: { network: ctx.network.name })
-end
+network.on(NetworkMetricsHook)
 ```
 
 ### Sensitive Data Redaction
@@ -565,11 +728,17 @@ end
 Scrub PII from requests before they are logged or sent to the LLM:
 
 ```ruby
-PII_PATTERN = /\b[A-Z]{2}\d{6,9}\b/  # example: passport numbers
+class RedactionHook < RobotLab::Hook
+  self.namespace = :redaction
 
-RobotLab.on(:before_run, namespace: :redaction) do |ctx|
-  ctx.request = ctx.request&.gsub(PII_PATTERN, "[REDACTED]")
+  PII_PATTERN = /\b[A-Z]{2}\d{6,9}\b/  # example: passport numbers
+
+  def self.before_run(ctx)
+    ctx.request = ctx.request&.gsub(PII_PATTERN, "[REDACTED]")
+  end
 end
+
+RobotLab.on(RedactionHook)
 ```
 
 ---
@@ -577,6 +746,6 @@ end
 ## See Also
 
 - [examples/35_hooks.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/35_hooks.rb) — full demo with xyzzy extension, perf timer, LLM response cache, and tracer hooks
-- [examples/xyzzy.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/xyzzy.rb) — single-file reference extension that registers for every hook family
+- [examples/xyzzy.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/xyzzy.rb) — single-file reference extension (`RobotLab::Xyzzy < RobotLab::Hook`) that registers for every hook family
 - [Robot Execution](../architecture/robot-execution.md)
 - [Observability & Safety](observability.md)

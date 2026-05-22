@@ -40,8 +40,8 @@ module RobotLab
         end
       end
 
-      def on(hook_name, namespace: nil, context: nil, &callback)
-        @hooks.on(hook_name, namespace: namespace, context: context, &callback)
+      def on(handler_class)
+        @hooks.on(handler_class)
       end
 
       private

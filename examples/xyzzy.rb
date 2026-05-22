@@ -2,9 +2,13 @@
 
 # xyzzy.rb — single-file RobotLab hook extension demo
 #
-# Demonstrates the extension pattern: register for every hook under a
-# dedicated namespace and log each callback with its context snapshot.
-# Useful as a live trace of the full hook pipeline during development.
+# Demonstrates the Hook handler class pattern: implement class methods for
+# every hook under a dedicated namespace and log each callback with its
+# context snapshot. Useful as a live trace of the full hook pipeline during
+# development.
+#
+# stdout : one tagline per hook call  →  [xyzzy] HH:MM:SS.mmm hook_name
+# logfile: full context snapshot for each call (set via Xyzzy.logger=)
 #
 # Usage (from any example that requires common):
 #   require_relative "xyzzy"
@@ -12,27 +16,8 @@
 require "logger"
 
 module RobotLab
-  module Xyzzy
-    NAMESPACE = :xyzzy
-
-    HOOK_NAMES = %i[
-      before_run
-      around_run
-      after_run
-      on_error
-      before_llm_generation
-      around_llm_generation
-      after_llm_generation
-      before_tool_call
-      around_tool_call
-      after_tool_call
-      before_network_run
-      around_network_run
-      after_network_run
-      before_task
-      around_task
-      after_task
-    ].freeze
+  class Xyzzy < Hook
+    self.namespace = :xyzzy
 
     class << self
       attr_writer :logger
@@ -41,62 +26,63 @@ module RobotLab
         @logger ||= Logger.new($stdout)
       end
 
-      def attach_hooks(registry: RobotLab)
-        return unless registry.respond_to?(:on)
+      def before_run(ctx)               = log_hook(:before_run, ctx)
+      def after_run(ctx)                = log_hook(:after_run, ctx)
+      def on_error(ctx)                 = log_hook(:on_error, ctx)
+      def before_llm_generation(ctx)    = log_hook(:before_llm_generation, ctx)
+      def after_llm_generation(ctx)     = log_hook(:after_llm_generation, ctx)
+      def before_tool_call(ctx)         = log_hook(:before_tool_call, ctx)
+      def after_tool_call(ctx)          = log_hook(:after_tool_call, ctx)
+      def before_network_run(ctx)       = log_hook(:before_network_run, ctx)
+      def after_network_run(ctx)        = log_hook(:after_network_run, ctx)
+      def before_task(ctx)              = log_hook(:before_task, ctx)
+      def after_task(ctx)               = log_hook(:after_task, ctx)
 
-        HOOK_NAMES.each { |hook_name| register_hook(registry, hook_name) }
-        HOOK_NAMES
+      def around_run(ctx, &block)
+        log_hook(:around_run, ctx)
+        block.call
       end
 
-      def callback_for(hook_name)
-        if hook_name.to_s.start_with?("around_")
-          proc { |context, &block| call_around_hook(hook_name, context, &block) }
-        else
-          proc { |context| log_hook(hook_name, context) }
-        end
+      def around_llm_generation(ctx, &block)
+        log_hook(:around_llm_generation, ctx)
+        block.call
       end
 
-      def log_hook(hook_name, context)
-        logger.info(log_message(hook_name, context))
+      def around_tool_call(ctx, &block)
+        log_hook(:around_tool_call, ctx)
+        block.call
       end
 
-      def log_message(hook_name, context)
-        "robot_lab-xyzzy hook=#{hook_name} namespace=#{NAMESPACE} context=#{context_snapshot(context).inspect}"
+      def around_network_run(ctx, &block)
+        log_hook(:around_network_run, ctx)
+        block.call
       end
 
-      def context_snapshot(context)
-        if context.respond_to?(:to_h)
-          context.to_h
-        else
-          public_context_methods(context).to_h { |m| [m, context.public_send(m)] }
-        end
+      def around_task(ctx, &block)
+        log_hook(:around_task, ctx)
+        block.call
       end
 
       private
 
-      def register_hook(registry, hook_name)
-        if namespace_supported?(registry)
-          registry.on(hook_name, namespace: NAMESPACE, &callback_for(hook_name))
-        else
-          registry.on(hook_name, &callback_for(hook_name))
-        end
+      def log_hook(hook_name, ctx)
+        ts = Time.now.strftime('%H:%M:%S.%3N')
+        puts "  [xyzzy] #{ts} #{hook_name}"
+        logger.info("#{ts} #{hook_name} #{context_snapshot(ctx)}")
       end
 
-      def namespace_supported?(registry)
-        registry.method(:on).parameters.any? { |type, _| %i[key keyreq keyrest].include?(type) }
-      end
-
-      def call_around_hook(hook_name, context)
-        log_hook(hook_name, context)
-        yield if block_given?
-      end
-
-      def public_context_methods(context)
-        context.public_methods(false).sort.grep_v(/=\z/)
+      def context_snapshot(ctx)
+        {
+          robot:   ctx.respond_to?(:robot)   ? ctx.robot&.name    : nil,
+          request: ctx.respond_to?(:request) ? ctx.request        : nil,
+          network: ctx.respond_to?(:network) ? ctx.network&.name  : nil,
+          task:    ctx.respond_to?(:task)    ? ctx.task           : nil,
+          error:   ctx.respond_to?(:error)   ? ctx.error&.message : nil
+        }.compact
       end
     end
   end
 end
 
-RobotLab.register_extension(RobotLab::Xyzzy::NAMESPACE, RobotLab::Xyzzy) if RobotLab.respond_to?(:register_extension)
-RobotLab::Xyzzy.attach_hooks
+RobotLab.register_extension(:xyzzy, RobotLab::Xyzzy) if RobotLab.respond_to?(:register_extension)
+RobotLab.on(RobotLab::Xyzzy)

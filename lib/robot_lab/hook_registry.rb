@@ -2,32 +2,50 @@
 
 module RobotLab
   class HookRegistry
-    Registration = Data.define(:hook_name, :namespace, :callback, :context) do
-      def initialize(hook_name:, namespace:, callback:, context: nil)
+    Registration = Data.define(:handler_class, :context) do
+      def initialize(handler_class:, context: nil)
         super
+      end
+
+      def namespace
+        handler_class.namespace
       end
     end
 
     def initialize
-      @registrations = Hash.new { |h, key| h[key] = [] }
+      @registrations = []
     end
 
-    def on(hook_name, namespace: nil, context: nil, &callback)
-      raise ArgumentError, "Hook registration requires a block" unless callback
+    # Register a hook handler class.
+    #
+    # @param handler_class [Class] a RobotLab::Hook subclass
+    # @param context [Hash, nil] optional default values merged into ctx.local on each call
+    # @return [Registration]
+    def on(handler_class, context: nil)
+      unless handler_class.is_a?(Class) && handler_class < RobotLab::Hook
+        raise ArgumentError, "#{handler_class.inspect} must be a RobotLab::Hook subclass"
+      end
+      raise ArgumentError, "#{handler_class} has no namespace" if handler_class.namespace.nil?
 
-      registration = Registration.new(
-        hook_name: hook_name.to_sym,
-        namespace: namespace&.to_sym,
-        callback: callback,
-        context: context
-      )
-
-      @registrations[registration.hook_name] << registration
+      registration = Registration.new(handler_class: handler_class, context: context)
+      @registrations << registration
       registration
     end
 
+    # Returns registrations whose handler implements the given hook method.
+    #
+    # @param hook_name [Symbol]
+    # @return [Array<Registration>]
     def registrations_for(hook_name)
-      @registrations[hook_name.to_sym]
+      hook_sym = hook_name.to_sym
+      @registrations.select { |reg| reg.handler_class.singleton_class.public_method_defined?(hook_sym) }
+    end
+
+    # Returns all registrations (defensive copy).
+    #
+    # @return [Array<Registration>]
+    def registrations
+      @registrations.dup
     end
 
     def clear

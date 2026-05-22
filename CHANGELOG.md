@@ -10,16 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Hook system** — lifecycle hooks across all execution boundaries. Register callbacks with `RobotLab.on`, `network.on`, or `robot.on` using `before_*`, `around_*`, `after_*`, and `on_error` hooks for five families: `:run`, `:llm_generation`, `:tool_call`, `:network_run`, and `:task`.
-  - `HookRegistry` — stores named callbacks keyed by hook name and optional namespace
-  - `HookContext` and five typed subclasses: `RunHookContext`, `LlmGenerationHookContext`, `ToolCallHookContext`, `NetworkRunHookContext`, `TaskHookContext`
-  - `DotState` / `ExtensionState` — namespace-isolated dot-access state carried on every context object; `ctx.local` reads/writes state for the active namespace
-  - `context:` parameter on `on(...)` — extensions declare namespace-scoped default state that is merged into the context's `DotState` before each callback fires
-  - Around hooks chain correctly: each wraps the next with the actual operation at the innermost layer; return value is propagated up the chain
-  - Per-run hooks via `robot.run("msg", hooks: { namespace: :ns, after_run: proc { |ctx| ... } })`
+- **`RobotLab::Hook` base class** (`lib/robot_lab/hook.rb`) — all hook handlers inherit from this class. Subclasses define lifecycle callbacks as `class << self` methods (`before_run`, `after_run`, etc.). Namespace is auto-derived from the class name via snake_case conversion of the final class name segment (e.g. `AuditHook` → `:audit_hook`); override with `self.namespace = :custom`. Ractor-safe by design: handler classes are Ruby constants, not Procs, so registrations are natively serializable across Ractor boundaries.
+- **Hook system** — lifecycle hooks across all execution boundaries. Register handler classes with `RobotLab.on`, `network.on`, or `robot.on` for five families: `:run`, `:llm_generation`, `:tool_call`, `:network_run`, and `:task`, each with `before_*`, `around_*`, `after_*`, and (where applicable) `on_error` variants.
+  - `HookRegistry::Registration` — `Data.define(:handler_class, :context)`; stores a handler class reference and optional per-registration default `DotState` values. No Proc, no namespace field — namespace is read from the handler class.
+  - `HookContext` and five typed subclasses: `RunHookContext`, `LlmGenerationHookContext`, `ToolCallHookContext`, `NetworkRunHookContext`, `TaskHookContext` — unchanged
+  - `DotState` / `ExtensionState` — namespace-isolated dot-access state carried on every context object; `ctx.local` reads/writes state for the active handler's namespace
+  - `context:` parameter on `on(handler_class, context: {...})` — sets per-registration default `DotState` values merged in before each callback fires
+  - Around hooks chain correctly across handler class registrations; return value is propagated up the chain
+  - Per-run hooks via `robot.run("msg", hooks: MyHook)` or `robot.run("msg", hooks: [MyHook, OtherHook])`
   - `on_error` fires for `:run`, `:network_run`, and `:task` families; exception is re-raised after all error handlers complete
-- **`examples/xyzzy.rb`** — single-file reference extension that registers for every hook under the `:xyzzy` namespace and logs each callback with its context snapshot; demonstrates the extension authoring pattern
-- **Example 35** (`examples/35_hooks.rb`) — full hook pipeline demo: xyzzy extension tracing all hooks, `around_run` perf timer, `around_llm_generation` response cache (cache hits skip the LLM entirely), `before/after_llm_generation` tracer, tool call hooks, network/task hooks, and `on_error`
+- **`examples/xyzzy.rb`** — updated reference extension: `RobotLab::Xyzzy < RobotLab::Hook` with `class << self` methods for every hook family; logs each callback with a timestamped stdout tagline and a structured logger context snapshot; registered globally with `RobotLab.on(RobotLab::Xyzzy)`
+- **Example 35** (`examples/35_hooks.rb`) — updated full hook pipeline demo: xyzzy extension tracing all hooks, `around_run` perf timer handler class, `around_llm_generation` response cache handler class (cache hits skip the LLM entirely), `before/after_llm_generation` tracer, tool call hooks, network/task hooks, and `on_error`
 - **`examples/common.rb`** — added explicit `openai_api_key`, `openai_organization_id`, and `openai_project_id` to `RubyLLM.configure` to match provider configurator expectations; updated default model to `gpt-4.1-mini`
 
 ## [0.2.1] - 2026-05-19
