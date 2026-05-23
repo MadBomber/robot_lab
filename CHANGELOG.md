@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-05-23
+
+### Added
+
+- **`:compaction` hook family** — fires when `maybe_compact` determines that conversation history should be compressed. Provides `before_compaction`, `around_compaction`, `after_compaction`, and `on_compaction` callbacks.
+  - `on_compaction` allows an extension to supply a complete replacement message set via `ctx.compacted_messages`; when set, the core skips its own compaction strategy entirely (`ctx.handled?` returns true).
+  - `CompactionHookContext` — carries `robot`, `messages_before` (frozen snapshot), `config`, `strategy` (`:context_window`, `:custom`, or other symbol), `compacted_messages`, and `handled?`.
+- **`:learn` hook family** — fires on every `robot.learn(text)` call with non-empty text. Provides `before_learn`, `around_learn`, `after_learn`, and `on_learn` callbacks.
+  - `on_learn` fires after the text has been stored and `ctx.stored = true`, giving extensions a reliable hook point for cross-session persistence.
+  - `LearnHookContext` — carries `robot`, `text`, `learnings_before` (frozen snapshot), and `stored`.
+- **`over_compact_threshold?`** private predicate extracted from `compact_if_over_context_window` for independent testability.
+- Hook tests for both new families added to `test/robot_lab/hooks_test.rb` (18 new tests across `RobotLabCompactionHooksTest` and `RobotLabLearnHooksTest`).
+- Documentation for `:compaction` and `:learn` hook families added to `docs/guides/hooks.md`.
+
+### Changed
+
+- **`Robot#on`** now accepts and forwards `context:` to `HookRegistry#on`, allowing extensions to pass per-registration domain config at registration time (e.g. `robot.on(MyHook, context: { domain: "finance" })`). Previously `context:` was silently dropped.
+- **`maybe_compact`** refactored to dispatch through the `:compaction` hook family and delegate to `on_compaction` before falling back to the built-in strategy.
+- **`Robot#learn`** refactored to dispatch through the `:learn` hook family; `on_learn` fires after deduplication with `ctx.stored` reflecting whether the text was actually added.
+
 ### Added
 
 - **`RobotLab::Hook` base class** (`lib/robot_lab/hook.rb`) — all hook handlers inherit from this class. Subclasses define lifecycle callbacks as `class << self` methods (`before_run`, `after_run`, etc.). Namespace is auto-derived from the class name via snake_case conversion of the final class name segment (e.g. `AuditHook` → `:audit_hook`); override with `self.namespace = :custom`. Ractor-safe by design: handler classes are Ruby constants, not Procs, so registrations are natively serializable across Ractor boundaries.
