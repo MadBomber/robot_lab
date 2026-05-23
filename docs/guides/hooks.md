@@ -6,7 +6,7 @@ RobotLab's hook system lets you intercept any point in a robot's execution pipel
 
 ## Hook Families
 
-There are five hook families. Each family has `before_*`, `around_*`, and `after_*` variants. The `:run`, `:network_run`, and `:task` families additionally have `on_error`.
+There are seven hook families. Each family has `before_*`, `around_*`, and `after_*` variants. The `:run`, `:network_run`, and `:task` families additionally have `on_error`. The `:compaction` and `:learn` families additionally have point hooks (`on_compaction` and `on_learn`) that allow extensions to replace or augment the core behaviour.
 
 | Family | Hook names | Fires during |
 |--------|-----------|-------------|
@@ -15,14 +15,24 @@ There are five hook families. Each family has `before_*`, `around_*`, and `after
 | `:tool_call` | `before_tool_call`, `around_tool_call`, `after_tool_call` | each tool invocation |
 | `:network_run` | `before_network_run`, `around_network_run`, `after_network_run`, `on_error` | every `network.run(...)` call |
 | `:task` | `before_task`, `around_task`, `after_task`, `on_error` | each robot task within a network run |
+| `:compaction` | `before_compaction`, `around_compaction`, `after_compaction`, `on_compaction` | when conversation history is about to be compressed |
+| `:learn` | `before_learn`, `around_learn`, `after_learn`, `on_learn` | every `robot.learn(text)` call that carries non-empty text |
 
-Within a single `robot.run(...)` that triggers two tool calls, the firing order is:
+Within a single `robot.run(...)` that triggers two tool calls and one compaction, the firing order is:
 
 ```
 before_run
   around_run {
     before_llm_generation
-    around_llm_generation { [LLM call 1] }
+    around_llm_generation {
+      before_compaction
+      around_compaction {
+        on_compaction          # only fires if a handler is registered
+        [compress history]
+      }
+      after_compaction
+      [LLM call 1]
+    }
     after_llm_generation
     before_tool_call
     around_tool_call { [tool invocation] }
@@ -33,6 +43,10 @@ before_run
   }
 after_run
 ```
+
+Compaction hooks fire at most once per LLM call, only when the compaction threshold is actually exceeded (or a custom `Proc` strategy is configured). They do not fire on every `run` invocation.
+
+The `:learn` family fires synchronously inside `robot.learn(text)`, once per call. Hooks do not fire when `text` is blank.
 
 ---
 
@@ -256,6 +270,56 @@ class ToolGuardHook < RobotLab::Hook
 end
 ```
 
+### `on_compaction` — Replacing the Core Strategy
+
+`on_compaction` is a point hook inside the `around_compaction` block. Unlike the other hooks in this family, it is not a lifecycle observer — it is an escape hatch that lets an extension supply its own message array in place of the built-in `HistoryCompressor`.
+
+To replace the core algorithm, assign `ctx.compacted_messages` in an `on_compaction` handler. Once assigned, `ctx.handled?` returns `true` and the core skips `compress_history`, using the handler's message array instead:
+
+```ruby
+class SemanticCompressor < RobotLab::Hook
+  self.namespace = :semantic_compressor
+
+  def self.on_compaction(ctx)
+    ctx.compacted_messages = MyCompressor.run(ctx.messages_before, ctx.robot)
+  end
+end
+
+robot.on(SemanticCompressor)
+```
+
+If `on_compaction` does not assign `ctx.compacted_messages`, the core algorithm runs as normal. Multiple `on_compaction` handlers can be registered; the first one that sets `ctx.compacted_messages` wins — subsequent handlers still fire but their assignment is ignored once `handled?` is true.
+
+> **Note:** `on_compaction` fires inside the core block of `Hooks.run(:compaction)`. It is not a standard `before_*/around_*/after_*` hook — it does not compose with around handlers or produce a chainable result. Use `around_compaction` if you need to wrap the entire process including observation of the final result.
+
+### `on_learn` — Implementing Long-Term Persistence
+
+`on_learn` is a point hook that fires inside the core block of `Hooks.run(:learn)`, after the session-level deduplication and storage have already run. Its purpose is to give extensions the opportunity to persist a learning to long-term storage without the core knowing anything about how or where.
+
+The hook receives a `LearnHookContext` with `ctx.stored` already set, so an extension can decide whether to persist based on whether the learning was genuinely new to this session:
+
+```ruby
+class DurableMemoryHook < RobotLab::Hook
+  self.namespace = :durable
+
+  def self.on_learn(ctx)
+    return unless ctx.stored   # skip deduplicated-away learnings
+
+    LongTermStore.write(
+      text:   ctx.text,
+      robot:  ctx.robot.name,
+      domain: ctx.local.domain
+    )
+  end
+end
+
+robot.on(DurableMemoryHook, context: { domain: "customer_support" })
+```
+
+Unlike `on_compaction`, `on_learn` does not use a `handled?` flag — there is no "default persistence" in the core to replace. Every registered `on_learn` handler fires; each extension independently decides what to do with the learning.
+
+`on_learn` fires even when `ctx.stored` is `false` (the text was deduplicated away). This allows extensions to apply their own deduplication policy for long-term storage, which may differ from the session-level substring logic. Check `ctx.stored` explicitly if you only want to act on genuinely new learnings.
+
 ---
 
 ## Context Objects
@@ -327,6 +391,43 @@ Passed to `:task` hooks (`before_task`, `around_task`, `after_task`, `on_error`)
 | `result` | Object\|nil | Set after the task completes |
 | `error` | Exception\|nil | Set when `on_error` fires |
 | `metadata` | ExtensionState | |
+
+### CompactionHookContext
+
+Passed to `:compaction` hooks (`before_compaction`, `around_compaction`, `after_compaction`, `on_compaction`).
+
+| Attribute | Type | Notes |
+|-----------|------|-------|
+| `event` | Symbol | `:compaction` |
+| `robot` | Robot | The robot whose history is being compacted |
+| `messages_before` | Array (frozen) | Snapshot of `@chat.messages` at the moment compaction was triggered |
+| `config` | RunConfig | The robot's active configuration |
+| `strategy` | Symbol | `:context_window` when triggered by the threshold check; `:custom` when triggered by a `Proc` |
+| `compacted_messages` | Array\|nil | Set by the core algorithm after compaction, or set by an `on_compaction` handler to replace the core algorithm |
+| `error` | Exception\|nil | Set if compaction raises |
+| `metadata` | ExtensionState | |
+
+#### `ctx.handled?`
+
+Returns `true` once `ctx.compacted_messages` has been assigned. The core compaction algorithm checks `handled?` after `on_compaction` fires — if `true`, it skips `compress_history` and calls `replace_messages` with the handler's result instead. See [on_compaction](#on_compaction) below.
+
+### LearnHookContext
+
+Passed to `:learn` hooks (`before_learn`, `around_learn`, `after_learn`, `on_learn`).
+
+| Attribute | Type | Notes |
+|-----------|------|-------|
+| `event` | Symbol | `:learn` |
+| `robot` | Robot | The robot learning |
+| `text` | String | The stripped, non-empty learning text passed to `robot.learn` |
+| `learnings_before` | Array (frozen) | Snapshot of `robot.learnings` at the moment `learn` was called |
+| `stored` | Boolean | `true` if the text was added to session learnings; `false` if it was skipped because an existing learning already covers it. Set during the core block — readable in `on_learn` and `after_learn`. |
+| `error` | Exception\|nil | Set if the learn block raises |
+| `metadata` | ExtensionState | |
+
+#### `ctx.stored`
+
+`false` means the text was deduplicated away at the session level — an existing learning already contains or supersedes it. Extensions implementing `on_learn` should check this flag when their own deduplication policy matches the session-level policy. Extensions with a different policy (for example, treating every explicit instruction as authoritative regardless of overlap) may ignore it.
 
 ---
 
@@ -429,7 +530,7 @@ RobotLab.on(MyExtension, context: { call_count: 0 })
 
 - Set `self.namespace = :my_name` explicitly so callers can read the namespace without relying on class naming conventions.
 - Use `context:` on the `on(...)` call to declare default state rather than guarding against `nil` inside callbacks.
-- Around hooks (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`) must call `block.call` and return its value — omitting either causes the run to return `nil`. `around_tool_call` is the exception: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run or set `ctx.tool_result` directly to short-circuit.
+- Around hooks (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`, `around_compaction`) must call `block.call` and return its value — omitting either causes the run to return `nil`. `around_tool_call` is the exception: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run or set `ctx.tool_result` directly to short-circuit.
 - Keep error hooks non-raising. Exceptions from hook callbacks propagate and can mask the original error.
 - Test each callback method in isolation by constructing a context object directly and calling the class method.
 
@@ -517,6 +618,149 @@ end
 RobotLab.on(ToolAuditHook)
 ```
 
+### Learn Audit Log
+
+Record every learning attempt — including the ones that were deduplicated away — for debugging or analytics:
+
+```ruby
+class LearnAuditHook < RobotLab::Hook
+  self.namespace = :learn_audit
+
+  def self.after_learn(ctx)
+    status = ctx.stored ? "stored" : "skipped (covered)"
+    $stderr.puts "[learn] #{ctx.robot.name}: #{status} — #{ctx.text.inspect}"
+  end
+end
+
+RobotLab.on(LearnAuditHook)
+```
+
+### Long-Term Memory Promotion via `on_learn`
+
+Persist new learnings to durable storage. `on_learn` fires after session storage so the session state is already updated when the extension runs:
+
+```ruby
+class DurableLearnHook < RobotLab::Hook
+  self.namespace = :durable
+
+  def self.on_learn(ctx)
+    return unless ctx.stored
+
+    DurableStore.promote(
+      text:      ctx.text,
+      robot:     ctx.robot.name,
+      domain:    ctx.local.domain,
+      timestamp: Time.now.utc
+    )
+  end
+end
+
+robot.on(DurableLearnHook, context: { domain: "finance" })
+```
+
+### Blocking Unauthorised Learnings
+
+Use `around_learn` to gate what a robot is allowed to learn — useful when the robot's system prompt comes from untrusted input:
+
+```ruby
+class LearnGuardHook < RobotLab::Hook
+  self.namespace = :learn_guard
+
+  BLOCKED_PATTERN = /ignore previous instructions|forget everything/i
+
+  def self.around_learn(ctx, &block)
+    if BLOCKED_PATTERN.match?(ctx.text)
+      $stderr.puts "[learn_guard] Blocked: #{ctx.text.inspect}"
+      # Do not call block.call — the learning is silently dropped
+    else
+      block.call
+    end
+  end
+end
+
+RobotLab.on(LearnGuardHook)
+```
+
+### Compaction Observability
+
+Log when and why history compression fires, and how much it reduced the message count:
+
+```ruby
+class CompactionLoggerHook < RobotLab::Hook
+  self.namespace = :compaction_logger
+
+  def self.before_compaction(ctx)
+    ctx.local.before_count = ctx.messages_before.size
+    ctx.local.started_at   = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
+  def self.after_compaction(ctx)
+    after_count = ctx.compacted_messages&.size || ctx.local.before_count
+    elapsed_ms  = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.started_at) * 1000).round(1)
+    dropped     = ctx.local.before_count - after_count
+    $stderr.puts "[compaction] #{ctx.robot.name} #{ctx.strategy}: " \
+                 "#{ctx.local.before_count} → #{after_count} messages " \
+                 "(-#{dropped}) in #{elapsed_ms}ms"
+  end
+end
+
+RobotLab.on(CompactionLoggerHook)
+```
+
+### Promote Session Learnings Before Compaction
+
+When conversation history is about to be compressed, an extension can inspect the messages about to be dropped and promote important information to long-term storage before it is lost:
+
+```ruby
+class LearningPromotionHook < RobotLab::Hook
+  self.namespace = :learning_promotion
+
+  def self.before_compaction(ctx)
+    ctx.local.message_ids_before = ctx.messages_before.map(&:object_id).to_set
+  end
+
+  def self.after_compaction(ctx)
+    return unless ctx.compacted_messages
+    surviving_ids = ctx.compacted_messages.map(&:object_id).to_set
+    dropped = ctx.messages_before.reject { |m| surviving_ids.include?(m.object_id) }
+    LongTermStore.promote(dropped, domain: ctx.robot.name) if dropped.any?
+  end
+end
+
+robot.on(LearningPromotionHook)
+```
+
+### Custom Compaction Strategy
+
+Replace the built-in TF-IDF compressor with a domain-specific algorithm using `on_compaction`:
+
+```ruby
+class SummarizerCompactor < RobotLab::Hook
+  self.namespace = :summarizer_compactor
+
+  KEEP_RECENT = 4  # always keep the last N user+assistant pairs verbatim
+
+  def self.on_compaction(ctx)
+    messages  = ctx.messages_before
+    pinned    = messages.select { |m| %i[system tool tool_result].include?(m.role) }
+    scoreable = messages.reject { |m| %i[system tool tool_result].include?(m.role) }
+
+    recent    = scoreable.last(KEEP_RECENT * 2)
+    older     = scoreable.first([scoreable.size - KEEP_RECENT * 2, 0].max)
+
+    summary_text = ctx.robot.run("Summarize in two sentences: #{older.map(&:content).join(' ')}")
+                          .reply
+
+    summary_msg  = OpenStruct.new(role: :assistant, content: summary_text,
+                                  tool_calls: nil, stop_reason: :stop)
+
+    ctx.compacted_messages = pinned + [summary_msg] + recent
+  end
+end
+
+robot.on(SummarizerCompactor)
+```
+
 ### Run Counter Per Robot
 
 ```ruby
@@ -537,7 +781,7 @@ RobotLab.on(MetricsHook, context: { counts: {} })
 
 ## Application Use Cases
 
-Hooks are the primary extension point in RobotLab. Below are concrete patterns that production applications commonly build on top of them.
+Hooks are the primary extension point in RobotLab. Below are concrete patterns that production applications commonly build on top of them. The `:compaction` family is particularly important for long-term memory extensions: it provides the earliest possible signal that conversation history is about to be lost, giving extensions the opportunity to promote valuable content before it is compressed away.
 
 ### Observability and Distributed Tracing
 

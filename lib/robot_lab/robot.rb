@@ -73,8 +73,7 @@ module RobotLab
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
                 :bus, :outbox, :config, :skills, :provider, :hooks,
-                :total_input_tokens, :total_output_tokens, :learnings,
-                :durable_store, :learn_domain
+                :total_input_tokens, :total_output_tokens, :learnings
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -167,10 +166,7 @@ module RobotLab
       token_budget: nil,
       doom_loop_threshold: nil,
       mcp_discovery: false,
-      config: nil,
-      learn: false,
-      learn_domain: nil,
-      store_path: nil
+      config: nil
     )
       assign_identity_ivars(name: name, template: template, system_prompt: system_prompt,
                             context: context, description: description, local_tools: local_tools,
@@ -190,7 +186,6 @@ module RobotLab
       extract_config_ivars
       initialize_runtime_state
       initialize_memory
-      configure_learning(learn: learn, learn_domain: learn_domain, store_path: store_path)
 
       lab_config = RobotLab.config
       resolved_model = @config.model || lab_config.ruby_llm.model
@@ -492,13 +487,19 @@ module RobotLab
       text = text.to_s.strip
       return self if text.empty?
 
-      # Remove any existing learning that is a substring of the new one
-      @learnings.reject! { |existing| text.include?(existing) }
+      ctx        = LearnHookContext.new(robot: self, text: text, learnings_before: @learnings.dup)
+      registries = [RobotLab.hooks, @hooks]
 
-      # Skip if any existing learning already covers the new one
-      unless @learnings.any? { |existing| existing.include?(text) }
-        @learnings << text
-        @memory.set(:learnings, @learnings.dup)
+      RobotLab::Hooks.run(:learn, ctx, registries: registries) do
+        @learnings.reject! { |existing| text.include?(existing) }
+
+        unless @learnings.any? { |existing| existing.include?(text) }
+          @learnings << text
+          @memory.set(:learnings, @learnings.dup)
+          ctx.stored = true
+        end
+
+        RobotLab::Hooks.call(:on_learn, ctx, registries: registries)
       end
 
       self
@@ -609,16 +610,6 @@ module RobotLab
       @learnings = Array(persisted) if persisted
     end
 
-    def configure_learning(learn:, learn_domain:, store_path:)
-      return unless learn && RobotLab.extension_loaded?(:durable)
-
-      if learn_domain
-        setup_durable_learning(domain: learn_domain, store_path: store_path)
-      else
-        warn "[RobotLab] Robot '#{@name}': learn: true requires learn_domain: to be set. Durable learning disabled."
-      end
-    end
-
     def apply_template
       define_chat_delegators
 
@@ -713,7 +704,7 @@ module RobotLab
       RobotLab::Hooks.run(:llm_generation, generation_context,
                           registries: hook_registries(context.network), per_run_hooks: hooks) do
         effective_message = inject_learnings(generation_context.request)
-        maybe_compact
+        maybe_compact(network: context.network)
         install_circuit_breaker if @config.max_tool_rounds
         install_doom_loop_detection
         ask_kwargs = kwargs.slice(:with)
@@ -898,21 +889,47 @@ module RobotLab
     # :context_window — compress when estimated tokens exceed compact_threshold
     #                   fraction of the model's context window (default 80%)
     # Proc            — called with self; application owns the decision and strategy
-    def maybe_compact
+    #
+    # Fires the :compaction hook family (before/around/after_compaction).
+    # An on_compaction handler can replace the default strategy entirely by
+    # setting ctx.compacted_messages; the core algorithm is skipped when handled.
+    def maybe_compact(network: nil)
       return if @chat.messages.empty?
 
       compact = @config.auto_compact
       return if compact.nil? || compact == :none
+      return if compact == :context_window && !over_compact_threshold?
 
-      case compact
-      when :context_window
-        compact_if_over_context_window
-      when Proc
-        compact.call(self)
+      strategy = compact.is_a?(Proc) ? :custom : compact
+      ctx = CompactionHookContext.new(
+        robot:           self,
+        messages_before: @chat.messages.dup,
+        config:          @config,
+        strategy:        strategy
+      )
+
+      RobotLab::Hooks.run(:compaction, ctx, registries: hook_registries(network)) do
+        RobotLab::Hooks.call(:on_compaction, ctx, registries: hook_registries(network))
+
+        if ctx.handled?
+          replace_messages(ctx.compacted_messages)
+        else
+          case compact
+          when :context_window
+            begin
+              compress_history
+            rescue DependencyError => e
+              RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
+            end
+          when Proc
+            compact.call(self)
+          end
+          ctx.compacted_messages = @chat.messages.dup
+        end
       end
     end
 
-    def compact_if_over_context_window
+    def over_compact_threshold?
       threshold     = (@config.compact_threshold || 0.80).to_f
       estimated_tok = @chat.messages.sum { |m| m.content.to_s.length } / 4
 
@@ -922,7 +939,11 @@ module RobotLab
         200_000
       end
 
-      return if estimated_tok < window * threshold
+      estimated_tok >= window * threshold
+    end
+
+    def compact_if_over_context_window
+      return unless over_compact_threshold?
 
       begin
         compress_history

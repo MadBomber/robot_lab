@@ -35,13 +35,12 @@ module RobotLab
         ensure
           remove_doom_loop_detection
           restore_tool_call_callback if @config.max_tool_rounds
-          run_reflector if @durable_store
           run_memory.current_writer = previous_writer
         end
       end
 
-      def on(handler_class)
-        @hooks.on(handler_class)
+      def on(handler_class, context: nil)
+        @hooks.on(handler_class, context: context)
       end
 
       private

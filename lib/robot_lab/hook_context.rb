@@ -117,6 +117,38 @@ module RobotLab
     end
   end
 
+  class LearnHookContext < HookContext
+    attr_reader :robot, :text, :learnings_before
+    attr_accessor :stored, :error
+
+    def initialize(robot:, text:, learnings_before:, **)
+      super(event: :learn, **)
+      @robot            = robot
+      @text             = text
+      @learnings_before = learnings_before.freeze
+      @stored           = false
+    end
+  end
+
+  class CompactionHookContext < HookContext
+    attr_reader :robot, :messages_before, :config, :strategy
+    attr_accessor :compacted_messages, :error
+
+    def initialize(robot:, messages_before:, config:, strategy:, **)
+      super(event: :compaction, **)
+      @robot            = robot
+      @messages_before  = messages_before.freeze
+      @config           = config
+      @strategy         = strategy
+      @compacted_messages = nil
+    end
+
+    # True once an on_compaction handler has supplied a replacement message set.
+    def handled?
+      !@compacted_messages.nil?
+    end
+  end
+
   class ExtensionState
     def initialize
       @states = Hash.new { |h, key| h[key] = DotState.new }
