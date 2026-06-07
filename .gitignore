@@ -14,3 +14,8 @@ examples/27_incident_response/output/
 .worktrees/
 _notes/
 site/
+test_output.txt
+
+flay_output.txt
+flog_output.txt
+rubocop_output.txt
