@@ -16,7 +16,6 @@ group :development, :test do
   gem 'hashdiff'
   gem "lumberjack"
   gem "minitest"
-  gem "minitest-mock" # minitest 6.0 removed minitest/mock; this is the official extraction
   gem "minitest-reporters"
   gem 'ractor_queue'
   gem 'ractor-wrapper'
