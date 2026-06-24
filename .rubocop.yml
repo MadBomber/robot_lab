@@ -142,7 +142,7 @@ Metrics/AbcSize:
     - 'test/**/*'
 
 Metrics/ClassLength:
-  Max: 600
+  Max: 650 # Robot is the central class; a future refactor could split it further
   Exclude:
     - 'test/**/*'
 

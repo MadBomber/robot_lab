@@ -1877,6 +1877,41 @@ class RobotLab::RobotTest < Minitest::Test
     assert_empty result.output
   end
 
+  def test_result_text_prefers_response_content
+    robot = build_robot(name: "bot", template: :assistant)
+    response = Data.define(:content).new(content: "direct reply")
+    assert_equal "direct reply", robot.send(:result_text, response)
+  end
+
+  def test_result_text_falls_back_to_last_assistant_text_on_tool_call_finish
+    robot = build_robot(name: "bot", template: :assistant)
+    msg = Struct.new(:role, :content).new(:assistant, "remembered reply")
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [msg] }
+    response = Data.define(:content).new(content: nil)
+    assert_equal "remembered reply", robot.send(:result_text, response)
+  end
+
+  def test_result_text_returns_nil_when_no_text_anywhere
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [] }
+    response = Data.define(:content).new(content: nil)
+    assert_nil robot.send(:result_text, response)
+  end
+
+  def test_tools_filter_rejects_tool_instances
+    error = assert_raises(ArgumentError) do
+      RobotLab::Robot.new(name: "bot", template: :assistant, tools: [RobotLab::Tool.new])
+    end
+    assert_match(/local_tools:/, error.message)
+  end
+
+  def test_tools_filter_accepts_names_symbols_and_none
+    RobotLab::Robot.new(name: "n1", template: :assistant, tools: %w[read write])
+    RobotLab::Robot.new(name: "n2", template: :assistant, tools: [:read])
+    RobotLab::Robot.new(name: "n3", template: :assistant, tools: :none)
+    pass
+  end
+
   # =========================================================================
   # Template with required params (rerender_template path)
   # =========================================================================

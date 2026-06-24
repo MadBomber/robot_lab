@@ -168,6 +168,8 @@ module RobotLab
       mcp_discovery: false,
       config: nil
     )
+      validate_tools_filter!(tools)
+
       assign_identity_ivars(name: name, template: template, system_prompt: system_prompt,
                             context: context, description: description, local_tools: local_tools,
                             skills: skills, mcp_discovery: mcp_discovery)
@@ -537,6 +539,22 @@ module RobotLab
 
     private
 
+    # `tools:` is a NAME allowlist (a filter over available tools), not a place
+    # to attach tool instances — passing instances there silently attaches
+    # nothing. Catch the mistake with a clear, actionable error.
+    def validate_tools_filter!(tools)
+      return unless tools.is_a?(Array)
+
+      offenders = tools.reject { |t| t.is_a?(String) || t.is_a?(Symbol) }
+      return if offenders.empty?
+
+      classes = offenders.map { |t| t.is_a?(Class) ? t.name : t.class.name }.uniq.join(", ")
+      raise ArgumentError,
+            "`tools:` expects tool names (String/Symbol) to allow, but received #{classes}. " \
+            "To attach tool instances or classes, pass them as `local_tools:` " \
+            "(e.g. RobotLab.build(local_tools: [MyTool.new]))."
+    end
+
     def assign_identity_ivars(name:, template:, system_prompt:, context:, description:,
                               local_tools:, skills:, mcp_discovery:)
       @name = name.to_s
@@ -766,11 +784,8 @@ module RobotLab
     end
 
     def build_result(response, _memory)
-      output = if response.respond_to?(:content) && response.content
-                 [TextMessage.new(role: 'assistant', content: response.content)]
-               else
-                 []
-               end
+      text = result_text(response)
+      output = text ? [TextMessage.new(role: 'assistant', content: text)] : []
 
       tool_calls = response.respond_to?(:tool_calls) ? (response.tool_calls || []) : []
 
@@ -797,6 +812,20 @@ module RobotLab
         input_tokens: input_toks,
         output_tokens: output_toks
       )
+    end
+
+    # Text for the result's output. Prefers the final response's content, but
+    # when the model's last turn was a tool call (no trailing text — common with
+    # eager/small models), falls back to the most recent assistant text in the
+    # chat so the run's reply (and network hand-off) isn't silently lost.
+    def result_text(response)
+      content = response.content if response.respond_to?(:content)
+      return content if content && !content.to_s.empty?
+
+      return nil unless @chat.respond_to?(:messages)
+
+      last = @chat.messages.rfind { |m| m.role == :assistant && m.content && !m.content.to_s.empty? }
+      last&.content
     end
 
     def normalize_tool_calls(tool_calls)

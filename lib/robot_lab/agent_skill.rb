@@ -8,7 +8,7 @@ module RobotLab
   # A skill is a directory containing SKILL.md with required front matter
   # fields (name, description) and optional scripts/, references/, assets/.
   class AgentSkill
-    attr_reader :name, :description, :path
+    attr_reader :name, :description, :path, :capabilities
 
     # @param skill_md_path [String, Pathname] path to the SKILL.md file
     # @raise [ConfigurationError] if name or description is missing
@@ -17,8 +17,9 @@ module RobotLab
       content = File.read(skill_md_path)
       front_matter, @_body = parse_skill_md(content)
 
-      @name        = front_matter["name"]
-      @description = front_matter["description"]
+      @name         = front_matter["name"]
+      @description  = front_matter["description"]
+      @capabilities = Capabilities.from_front_matter(front_matter)
 
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'name'"        if @name.to_s.strip.empty?
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'description'" if @description.to_s.strip.empty?
@@ -41,7 +42,7 @@ module RobotLab
     # Non-executable scripts are skipped with a warning.
     def script_tools
       @script_tools ||= scripts.filter_map do |script_path|
-        ScriptTool.from_path(script_path)
+        ScriptTool.from_path(script_path, capabilities: @capabilities, skill_dir: @path.to_s)
       end
     end
 

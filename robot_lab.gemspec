@@ -54,6 +54,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus", "~> 0.0.1"
   spec.add_dependency "simple_flow", "~> 0.4"
+  # Required by Network's BusPoller (lib/robot_lab/bus_poller.rb requires it).
+  spec.add_dependency "ractor_queue", "~> 0.2"
   # Optional MCP transport dependencies (loaded on demand)
   spec.add_dependency "async-http", "~> 0.60"
   spec.add_dependency "async-websocket", "~> 0.30"

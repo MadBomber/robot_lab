@@ -41,8 +41,8 @@ class Tasks
       sh "bundle exec rake examples:all"
     end
 
-    desc "run N", "Run a specific example by number (e.g. asgard examples run 3)"
-    def run(num)
+    desc "exec N", "Run a specific example by number (e.g. asgard examples exec 3)"
+    def exec(num)
       sh "bundle exec rake examples:run[#{num}]"
     end
 
@@ -55,6 +55,6 @@ class Tasks
   desc "docs SUBCOMMAND", "Documentation tasks (build, serve, yard)"
   subcommand "docs", DocsCommands
 
-  desc "examples SUBCOMMAND", "Example tasks (all, run N, rails)"
+  desc "examples SUBCOMMAND", "Example tasks (all, exec N, rails)"
   subcommand "examples", ExamplesCommands
 end
