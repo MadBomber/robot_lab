@@ -46,6 +46,7 @@ module RobotLab
     include Robot::BusMessaging
     include Robot::HistorySearch
     include Robot::Hooking
+    include Runnable
     prepend Robot::AgentSkillMatching
 
     # @!attribute [r] name
@@ -80,6 +81,14 @@ module RobotLab
     # @!attribute [r] tools_config
     #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
     attr_reader :mcp_config, :tools_config
+
+    # Runnable protocol: a single robot is a crew of one. (network? defaults to
+    # false from RobotLab::Runnable.)
+    #
+    # @return [Array<Robot>]
+    def crew
+      [self]
+    end
 
     # Returns the fully-merged configuration for this robot at runtime.
     #

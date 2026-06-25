@@ -59,6 +59,7 @@ module RobotLab
   #
   class Network
     include Utils
+    include Runnable
 
     # Reserved key for broadcast messages in memory
     BROADCAST_KEY = :_network_broadcast
@@ -179,7 +180,11 @@ module RobotLab
     #   result.value  # => RobotResult from last robot
     #   result.context[:classifier]  # => RobotResult from classifier
     #
-    def run(**run_context)
+    def run(message = nil, **run_context)
+      # Runnable protocol: accept a positional message like Robot#run does, so
+      # callers can `run(msg, ...)` uniformly. `run(message: msg)` still works.
+      run_context[:message] = message unless message.nil?
+
       # Include shared memory in run params so robots can access it
       run_context[:network_memory] = @memory
       run_context[:network] = self
@@ -205,6 +210,19 @@ module RobotLab
           @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
         end
       end
+    end
+
+    # Runnable protocol: the network's robots as an Array (in pipeline order),
+    # and the network? predicate. (`robots` itself stays a name=>robot Hash.)
+    #
+    # @return [Array<Robot>]
+    def crew
+      robots.values
+    end
+
+    # @return [Boolean] always true for a Network
+    def network?
+      true
     end
 
     def on(handler_class, context: nil)
