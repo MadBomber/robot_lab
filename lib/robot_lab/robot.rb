@@ -719,7 +719,11 @@ module RobotLab
       ensure_mcp_clients(resolved_mcp)
 
       filtered = cap_tools(filtered_tools(resolved_tools))
-      @chat.with_tools(*filtered) if filtered.any?
+      # replace: true so the chat holds EXACTLY this turn's resolved+capped set.
+      # RubyLLM's with_tools appends by default; on a persistent chat that lets
+      # tools accumulate across turns, so a capped per-turn addition could still
+      # push the chat's total past the provider limit.
+      @chat.with_tools(*filtered, replace: true) if filtered.any?
     end
 
     # Clamp the resolved tool list to the provider's hard maximum. Most LLM
