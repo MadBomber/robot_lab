@@ -49,6 +49,11 @@ module RobotLab
     include Runnable
     prepend Robot::AgentSkillMatching
 
+    # Default ceiling on tools handed to the provider per turn. OpenAI and
+    # Anthropic both reject tool arrays longer than 128. Override per robot via
+    # RunConfig#max_tools.
+    DEFAULT_MAX_TOOLS = 128
+
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
     # @!attribute [r] description
@@ -713,8 +718,37 @@ module RobotLab
 
       ensure_mcp_clients(resolved_mcp)
 
-      filtered = filtered_tools(resolved_tools)
+      filtered = cap_tools(filtered_tools(resolved_tools))
       @chat.with_tools(*filtered) if filtered.any?
+    end
+
+    # Clamp the resolved tool list to the provider's hard maximum. Most LLM
+    # providers reject tool arrays longer than 128 and fail the whole turn. This
+    # is the definitive choke point: tools are fully resolved (MCP connected)
+    # and about to be handed to the chat, so the cap holds no matter how the
+    # tools were configured, filtered, or connected. Cap value comes from
+    # RunConfig#max_tools, defaulting to DEFAULT_MAX_TOOLS; nil/<=0 disables it.
+    #
+    # @param tools [Array<Tool>] the resolved tools
+    # @return [Array<Tool>] at most `max_tools` tools
+    def cap_tools(tools)
+      max = effective_max_tools
+      return tools if max.nil? || tools.size <= max
+
+      RobotLab.config.logger.warn(
+        "[#{@name}] tool list (#{tools.size}) exceeds max_tools (#{max}); " \
+        "sending #{max}, dropping #{tools.size - max}"
+      )
+      tools.first(max)
+    end
+
+    # The provider tool cap: RunConfig#max_tools when set positive, else the
+    # default. Returns nil only if the default itself is disabled.
+    #
+    # @return [Integer, nil]
+    def effective_max_tools
+      configured = @config.respond_to?(:max_tools) ? @config.max_tools : nil
+      configured&.positive? ? configured : DEFAULT_MAX_TOOLS
     end
 
     def invoke_ask(context:, kwargs:, hooks:, block:)

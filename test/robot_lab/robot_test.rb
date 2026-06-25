@@ -603,6 +603,35 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'search', result.first.name
   end
 
+  # Private method: cap_tools
+  def test_cap_tools_returns_all_when_under_max
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    tools = Array.new(5) { |i| build_tool(name: "t#{i}") { |x| x } }
+    assert_equal 5, robot.send(:cap_tools, tools).size
+  end
+
+  def test_cap_tools_trims_to_default_max
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    tools = Array.new(RobotLab::Robot::DEFAULT_MAX_TOOLS + 10) { |i| build_tool(name: "t#{i}") { |x| x } }
+    result = robot.send(:cap_tools, tools)
+    assert_equal RobotLab::Robot::DEFAULT_MAX_TOOLS, result.size
+    assert_equal tools.first(RobotLab::Robot::DEFAULT_MAX_TOOLS), result
+  end
+
+  def test_cap_tools_respects_config_max_tools
+    robot = RobotLab::Robot.new(
+      name: 'test', template: :assistant,
+      config: RobotLab::RunConfig.new(max_tools: 2)
+    )
+    tools = Array.new(5) { |i| build_tool(name: "t#{i}") { |x| x } }
+    assert_equal 2, robot.send(:cap_tools, tools).size
+  end
+
+  def test_effective_max_tools_defaults_when_unset
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    assert_equal RobotLab::Robot::DEFAULT_MAX_TOOLS, robot.send(:effective_max_tools)
+  end
+
   # Private method: ensure_mcp_clients
   def test_ensure_mcp_clients_with_empty_servers
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)

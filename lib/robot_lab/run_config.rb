@@ -42,7 +42,7 @@ module RobotLab
 
     # Infrastructure fields
     INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots
-                      doom_loop_threshold auto_compact compact_threshold].freeze
+                      doom_loop_threshold auto_compact compact_threshold max_tools].freeze
 
     # All recognized fields
     FIELDS = (LLM_FIELDS + TOOL_FIELDS + CALLBACK_FIELDS + INFRA_FIELDS).freeze
