@@ -773,6 +773,31 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'robot', bot2.name
   end
 
+  def test_spawn_inherits_parent_model
+    parent = RobotLab.build(name: 'parent')
+    child  = parent.spawn(name: 'child', system_prompt: 'test')
+
+    refute_nil parent.model
+    assert_equal parent.model, child.model
+  end
+
+  def test_inherited_llm_settings_includes_model_and_provider
+    parent = RobotLab.build(name: 'parent')
+    parent.define_singleton_method(:model) { 'qwen3.6:latest' }
+    parent.define_singleton_method(:provider) { 'ollama' }
+
+    assert_equal(
+      { model: 'qwen3.6:latest', provider: 'ollama' },
+      parent.send(:inherited_llm_settings)
+    )
+  end
+
+  def test_inherited_llm_settings_omits_provider_when_absent
+    parent = RobotLab.build(name: 'parent') # default robot has no provider
+
+    refute parent.send(:inherited_llm_settings).key?(:provider)
+  end
+
   # Frontmatter extras tests
 
   def test_frontmatter_tools_are_resolved

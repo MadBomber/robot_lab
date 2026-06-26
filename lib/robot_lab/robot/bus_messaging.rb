@@ -88,8 +88,22 @@ module RobotLab
           template: template,
           local_tools: local_tools,
           bus: @bus,
+          **inherited_llm_settings,
           **
         )
+      end
+
+      # Model/provider a spawned robot inherits from its parent so a specialist
+      # runs on the SAME LLM as the robot that spawned it (e.g. a local Ollama
+      # model) instead of falling back to the global default. Caller-supplied
+      # opts override these.
+      #
+      # @return [Hash]
+      def inherited_llm_settings
+        settings = {}
+        settings[:model]    = model    if model
+        settings[:provider] = provider if provider
+        settings
       end
 
       # Connect this robot to a message bus.
