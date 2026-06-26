@@ -337,6 +337,19 @@ module RobotLab
       self
     end
 
+    # Remove a dynamically-added robot from the network by name. Returns the
+    # removed robot, or nil if no robot by that name was present.
+    #
+    # Only removes the robot from the crew (`@robots`); it does not rewrite the
+    # pipeline, so callers should not remove a robot that is a pipeline task.
+    #
+    # @param name [String, Symbol] the robot's name
+    # @return [Robot, nil]
+    #
+    def remove_robot(name)
+      @robots.delete(name.to_s)
+    end
+
     # Visualize the pipeline as ASCII
     #
     # @return [String, nil]
