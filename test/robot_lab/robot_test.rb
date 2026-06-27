@@ -1995,6 +1995,24 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil robot.send(:result_text, response)
   end
 
+  def test_result_text_does_not_return_previous_turn_content
+    # Regression: thinking-mode models (e.g. qwen3 via Ollama) can produce an
+    # empty response.content when all generated text lands in <think> tags.
+    # Without the current-turn scope, rfind returns the PREVIOUS turn's assistant
+    # message, causing every subsequent turn to echo turn 1's answer.
+    robot = build_robot(name: "bot", template: :assistant)
+    msg_class = Struct.new(:role, :content)
+    prior_user = msg_class.new(:user, "turn 1 question")
+    prior_asst = msg_class.new(:assistant, "turn 1 answer")
+    cur_user   = msg_class.new(:user, "turn 2 question")
+    cur_asst   = msg_class.new(:assistant, nil) # thinking-mode: content is nil
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) do
+      [prior_user, prior_asst, cur_user, cur_asst]
+    end
+    response = Data.define(:content).new(content: nil)
+    assert_nil robot.send(:result_text, response)
+  end
+
   def test_tools_filter_rejects_tool_instances
     error = assert_raises(ArgumentError) do
       RobotLab::Robot.new(name: "bot", template: :assistant, tools: [RobotLab::Tool.new])

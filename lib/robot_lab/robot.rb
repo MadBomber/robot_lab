@@ -883,14 +883,23 @@ module RobotLab
     # Text for the result's output. Prefers the final response's content, but
     # when the model's last turn was a tool call (no trailing text — common with
     # eager/small models), falls back to the most recent assistant text in the
-    # chat so the run's reply (and network hand-off) isn't silently lost.
+    # current turn so the run's reply (and network hand-off) isn't silently lost.
+    #
+    # The fallback is scoped to messages generated AFTER the last user message
+    # (the current turn). Scanning the full history would return stale content
+    # from a previous turn when a thinking-mode model (e.g. qwen3) emits all its
+    # text inside <think> tags, leaving response.content nil.
     def result_text(response)
       content = response.content if response.respond_to?(:content)
       return content if content && !content.to_s.empty?
 
       return nil unless @chat.respond_to?(:messages)
 
-      last = @chat.messages.rfind { |m| m.role == :assistant && m.content && !m.content.to_s.empty? }
+      messages = @chat.messages
+      last_user_idx = messages.rindex { |m| m.role == :user } || -1
+      current_turn = messages[(last_user_idx + 1)..]
+
+      last = current_turn.rfind { |m| m.role == :assistant && m.content && !m.content.to_s.empty? }
       last&.content
     end
 
