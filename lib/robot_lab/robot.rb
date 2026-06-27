@@ -880,18 +880,26 @@ module RobotLab
       )
     end
 
-    # Text for the result's output. Prefers the final response's content, but
-    # when the model's last turn was a tool call (no trailing text — common with
-    # eager/small models), falls back to the most recent assistant text in the
-    # current turn so the run's reply (and network hand-off) isn't silently lost.
+    # Text for the result's output. Prefers the final response's content, then
+    # falls back in order to: (1) thinking text for models that route all output
+    # through reasoning_content (e.g. qwen3 on Ollama), (2) the most recent
+    # assistant text within the current turn for models that end on a tool call
+    # with no trailing text.
     #
-    # The fallback is scoped to messages generated AFTER the last user message
-    # (the current turn). Scanning the full history would return stale content
-    # from a previous turn when a thinking-mode model (e.g. qwen3) emits all its
-    # text inside <think> tags, leaving response.content nil.
+    # The chat-history fallback is scoped to messages AFTER the last user message
+    # (the current turn) to prevent a previous turn's response from being returned
+    # when a thinking-mode model emits nothing in response.content.
     def result_text(response)
       content = response.content if response.respond_to?(:content)
       return content if content && !content.to_s.empty?
+
+      # Ollama routes qwen3's reasoning to reasoning_content, which ruby_llm
+      # surfaces as response.thinking (a RubyLLM::Thinking object). When content
+      # is nil and thinking is present, the thinking IS the response for that turn.
+      if response.respond_to?(:thinking) && (thinking = response.thinking)
+        thinking_text = thinking.respond_to?(:text) ? thinking.text.to_s : thinking.to_s
+        return thinking_text unless thinking_text.empty?
+      end
 
       return nil unless @chat.respond_to?(:messages)
 

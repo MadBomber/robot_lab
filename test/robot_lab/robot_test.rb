@@ -2013,6 +2013,18 @@ class RobotLab::RobotTest < Minitest::Test
     assert_nil robot.send(:result_text, response)
   end
 
+  def test_result_text_falls_back_to_thinking_when_content_nil
+    # qwen3 on Ollama routes all output to reasoning_content (chunk.thinking),
+    # leaving response.content nil. response.thinking is a RubyLLM::Thinking
+    # object with a .text method. result_text must surface .text so the user
+    # sees a response instead of a blank or the object's inspect string.
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [] }
+    thinking_obj = Struct.new(:text).new("my reasoning")
+    response = Data.define(:content, :thinking).new(content: nil, thinking: thinking_obj)
+    assert_equal "my reasoning", robot.send(:result_text, response)
+  end
+
   def test_tools_filter_rejects_tool_instances
     error = assert_raises(ArgumentError) do
       RobotLab::Robot.new(name: "bot", template: :assistant, tools: [RobotLab::Tool.new])
