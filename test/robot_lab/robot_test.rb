@@ -603,6 +603,49 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'search', result.first.name
   end
 
+  # Private method: explicit_none_tools?
+  def test_explicit_none_tools_detects_none_and_empty_array
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+
+    assert robot.send(:explicit_none_tools?, :none)
+    assert robot.send(:explicit_none_tools?, [])
+    refute robot.send(:explicit_none_tools?, :inherit)
+    refute robot.send(:explicit_none_tools?, nil)
+    refute robot.send(:explicit_none_tools?, %w[search])
+  end
+
+  # Private method: prepare_tools — an explicit :none sends ZERO tools, even
+  # though :none resolves to an empty allowlist (which filtered_tools treats as
+  # "all"). This is what lets a relevance filter suppress the whole tool set.
+  def test_prepare_tools_with_explicit_none_clears_the_chat_tools
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :none, network: nil, network_config: nil)
+
+    assert_empty robot.chat.tools, 'an explicit :none must send zero tools'
+  end
+
+  def test_prepare_tools_with_inherit_uses_all_attached_tools
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :inherit, network: nil, network_config: nil)
+
+    assert_equal %i[search], robot.chat.tools.keys
+  end
+
+  def test_prepare_tools_none_clears_tools_set_by_a_prior_turn
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'use search', mcp: :none, tools: :inherit, network: nil, network_config: nil)
+    refute_empty robot.chat.tools
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :none, network: nil, network_config: nil)
+    assert_empty robot.chat.tools, 'a later :none turn must clear tools a prior turn attached'
+  end
+
   # Private method: cap_tools
   def test_cap_tools_returns_all_when_under_max
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)

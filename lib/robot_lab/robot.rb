@@ -718,12 +718,31 @@ module RobotLab
 
       ensure_mcp_clients(resolved_mcp)
 
-      filtered = cap_tools(filtered_tools(resolved_tools))
+      # An EXPLICIT `:none` (or literal `[]`) means "send zero tools this turn" —
+      # e.g. a relevance filter judged no tool useful for the prompt. That is
+      # distinct from `:inherit`/unset, which means "no filter, use every attached
+      # tool". Both collapse to `[]` once resolved, and `filtered_tools([])`
+      # treats an empty allowlist as "all tools", so we must branch on the raw
+      # runtime value before resolution to honor the zero-tools intent.
+      filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(resolved_tools))
+
       # replace: true so the chat holds EXACTLY this turn's resolved+capped set.
       # RubyLLM's with_tools appends by default; on a persistent chat that lets
       # tools accumulate across turns, so a capped per-turn addition could still
-      # push the chat's total past the provider limit.
-      @chat.with_tools(*filtered, replace: true) if filtered.any?
+      # push the chat's total past the provider limit. An explicit none clears
+      # the chat's tools to zero (with_tools(replace: true) with no tools).
+      @chat.with_tools(*filtered, replace: true) if filtered.any? || explicit_none_tools?(tools)
+    end
+
+    # True when the runtime tools value explicitly requests zero tools — `:none`
+    # or a literal empty array — as opposed to `:inherit`/`nil`, which mean "no
+    # filter, use all attached tools". Lets a per-turn filter that found nothing
+    # relevant actually send no tools instead of the whole set.
+    #
+    # @param tools [Symbol, Array, nil]
+    # @return [Boolean]
+    def explicit_none_tools?(tools)
+      tools == :none || (tools.is_a?(Array) && tools.empty?)
     end
 
     # Clamp the resolved tool list to the provider's hard maximum. Most LLM
