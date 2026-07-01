@@ -1,3 +1,6 @@
+inherit_from:
+  - .rubocop_strict.yml
+
 AllCops:
   NewCops: enable
   SuggestExtensions: false
