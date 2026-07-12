@@ -1516,6 +1516,41 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.total_output_tokens
   end
 
+  # =========================================================================
+  # Budget ledger
+  # =========================================================================
+
+  def test_budget_ledger_nil_when_no_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test")
+    assert_nil robot.budget_ledger
+  end
+
+  def test_budget_ledger_present_when_token_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    assert_instance_of RobotLab::Budget::Ledger, robot.budget_ledger
+    assert_equal 1_000, robot.budget_ledger.limits[:tokens]
+  end
+
+  def test_budget_ledger_present_when_cost_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test", cost_budget: 0.5)
+    assert_instance_of RobotLab::Budget::Ledger, robot.budget_ledger
+    assert_in_delta 0.5, robot.budget_ledger.limits[:cost]
+  end
+
+  def test_budget_ledger_reconciles_tokens_after_run
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    tokens = RubyLLM::Tokens.new(input: 60, output: 40)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("test")
+
+    assert_equal 100, robot.budget_ledger.consumed[:tokens]
+  end
+
   def test_result_includes_per_run_tokens
     robot = build_robot(name: "bot", system_prompt: "test")
     tokens = RubyLLM::Tokens.new(input: 75, output: 30)

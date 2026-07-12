@@ -239,7 +239,8 @@ module RobotLab
       context.tool_error = error
       raise if self.class.raise_on_error?
 
-      context.tool_result = "Error (#{name}): #{error.message}"
+      suffix = RobotLab::Errors.retryable?(error) ? " (retryable)" : ""
+      context.tool_result = "Error (#{name}): #{error.message}#{suffix}"
     end
 
     def handle_standard_error(context, error)

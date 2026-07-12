@@ -227,6 +227,55 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     assert_equal "all good", result.value.reply
   end
 
+  def fake_response_with_cost(content:, cost_total:, input: 1, output: 1)
+    Data.define(:content, :tool_calls, :stop_reason, :tokens, :cost).new(
+      content: content, tool_calls: nil, stop_reason: "end_turn",
+      tokens: RubyLLM::Tokens.new(input: input, output: output),
+      cost: Struct.new(:total).new(cost_total)
+    )
+  end
+
+  def test_cost_budget_raises_inference_error_when_exceeded
+    robot = build_robot(name: "cost_bot", system_prompt: "test", cost_budget: 0.01)
+
+    chat = robot.instance_variable_get(:@chat)
+    fake_response = fake_response_with_cost(content: "reply", cost_total: 0.05)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    error = assert_raises(RobotLab::InferenceError) { robot.run("test") }
+    assert_match(/Cost budget exceeded/, error.message)
+  end
+
+  def test_cost_budget_not_exceeded_when_under_budget
+    robot = build_robot(name: "cost_bot2", system_prompt: "test", cost_budget: 1.0)
+
+    chat = robot.instance_variable_get(:@chat)
+    fake_response = fake_response_with_cost(content: "all good", cost_total: 0.05)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    result = robot.run("test")
+    assert_equal "all good", result.reply
+  end
+
+  def test_budget_exceeded_blocks_second_call_before_hitting_the_llm
+    robot = build_robot(name: "cost_bot3", system_prompt: "test", cost_budget: 0.01)
+
+    call_count = 0
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
+      call_count += 1
+      Data.define(:content, :tool_calls, :stop_reason, :tokens, :cost).new(
+        content: "reply", tool_calls: nil, stop_reason: "end_turn",
+        tokens: RubyLLM::Tokens.new(input: 1, output: 1),
+        cost: Struct.new(:total).new(0.05)
+      )
+    end
+
+    assert_raises(RobotLab::InferenceError) { robot.run("first") }
+    assert_raises(RobotLab::BudgetExceeded) { robot.run("second") }
+    assert_equal 1, call_count
+  end
+
   def test_circuit_breaker_fires_user_callback_within_limit
     call_count = 0
     on_tool_call_cb = ->(_tc) { call_count += 1 }

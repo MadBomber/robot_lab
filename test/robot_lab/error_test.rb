@@ -144,4 +144,51 @@ class RobotLab::ErrorTest < Minitest::Test
 
     assert_match(/Timeout/, error.message)
   end
+
+  # retryable classification
+
+  def test_mcp_error_retryable_defaults_to_nil
+    error = RobotLab::MCPError.new("connection refused")
+    assert_nil error.retryable
+  end
+
+  def test_mcp_error_retryable_can_be_set_true
+    error = RobotLab::MCPError.new("connection lost", retryable: true)
+    assert error.retryable
+  end
+
+  def test_mcp_error_still_raisable_with_message_only
+    error = assert_raises(RobotLab::MCPError) { raise RobotLab::MCPError, "Connection to MCP server refused" }
+    assert_equal "Connection to MCP server refused", error.message
+    assert_nil error.retryable
+  end
+
+  def test_tool_error_retryable_defaults_to_nil
+    error = RobotLab::ToolError.new("bad input")
+    assert_nil error.retryable
+  end
+
+  def test_tool_error_retryable_can_be_set_true
+    error = RobotLab::ToolError.new("transient failure", retryable: true)
+    assert error.retryable
+  end
+
+  def test_tool_error_still_raisable_with_message_only
+    error = assert_raises(RobotLab::ToolError) { raise RobotLab::ToolError, "division by zero" }
+    assert_equal "division by zero", error.message
+  end
+
+  # BudgetExceeded
+
+  def test_budget_exceeded_inherits_from_error
+    assert RobotLab::BudgetExceeded < RobotLab::Error
+  end
+
+  def test_budget_exceeded_can_be_raised
+    error = assert_raises(RobotLab::BudgetExceeded) do
+      raise RobotLab::BudgetExceeded, "budget exceeded for cost: 0.62 > 0.5"
+    end
+
+    assert_match(/budget exceeded/, error.message)
+  end
 end

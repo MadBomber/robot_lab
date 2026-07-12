@@ -5,6 +5,7 @@ require_relative 'robot/mcp_management'
 require_relative 'robot/bus_messaging'
 require_relative 'robot/history_search'
 require_relative 'robot/agent_skill_matching'
+require_relative 'robot/budget'
 require_relative 'robot/hooking'
 
 module RobotLab
@@ -45,6 +46,7 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
+    include Robot::Budget
     include Robot::Hooking
     include Runnable
     prepend Robot::AgentSkillMatching
@@ -79,7 +81,8 @@ module RobotLab
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
                 :bus, :outbox, :config, :skills, :provider, :hooks,
-                :total_input_tokens, :total_output_tokens, :learnings
+                :total_input_tokens, :total_output_tokens, :learnings,
+                :budget_ledger
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
@@ -121,7 +124,8 @@ module RobotLab
         doom_loop_threshold: @config.doom_loop_threshold,
         auto_compact:        @config.auto_compact,
         compact_threshold:   @config.compact_threshold,
-        token_budget:        @config.token_budget
+        token_budget:        @config.token_budget,
+        cost_budget:         @config.cost_budget
       }.compact
     end
 
@@ -178,6 +182,7 @@ module RobotLab
       stop: nil,
       max_tool_rounds: nil,
       token_budget: nil,
+      cost_budget: nil,
       doom_loop_threshold: nil,
       mcp_discovery: false,
       config: nil
@@ -194,7 +199,7 @@ module RobotLab
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
-        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
         doom_loop_threshold: doom_loop_threshold, mcp_servers: mcp_servers,
         mcp: mcp, tools: tools, config: config
       )
@@ -590,7 +595,7 @@ module RobotLab
     def build_effective_config(model:, temperature:, top_p:, top_k:, max_tokens:,
                                presence_penalty:, frequency_penalty:, stop:,
                                on_tool_call:, on_tool_result:, on_content:,
-                               bus:, enable_cache:, max_tool_rounds:, token_budget:,
+                               bus:, enable_cache:, max_tool_rounds:, token_budget:, cost_budget:,
                                doom_loop_threshold:, mcp_servers:, mcp:, tools:, config:)
       explicit_fields = {
         model: model, temperature: temperature, top_p: top_p, top_k: top_k,
@@ -598,7 +603,7 @@ module RobotLab
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
-        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
         doom_loop_threshold: doom_loop_threshold
       }.compact
 
@@ -633,6 +638,7 @@ module RobotLab
       @total_output_tokens = 0
       @learnings           = []
       @hooks               = HookRegistry.new
+      @budget_ledger       = build_budget_ledger
     end
 
     def initialize_memory
@@ -799,14 +805,6 @@ module RobotLab
 
     def hook_registries(network = nil)
       [RobotLab.hooks, network&.hooks, @hooks]
-    end
-
-    def enforce_token_budget!
-      budget = @config.token_budget
-      return unless budget && @total_input_tokens + @total_output_tokens > budget
-
-      raise InferenceError,
-            "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
     end
 
     # Extract run context from SimpleFlow::Result

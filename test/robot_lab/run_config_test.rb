@@ -133,11 +133,18 @@ class RobotLab::RunConfigTest < Minitest::Test
     assert_equal 10_000, config.token_budget
   end
 
+  def test_cost_budget_field
+    config = RobotLab::RunConfig.new(cost_budget: 0.5)
+    assert_in_delta 0.5, config.cost_budget
+  end
+
   def test_new_infra_fields_are_in_fields_constant
     assert_includes RobotLab::RunConfig::INFRA_FIELDS, :max_tool_rounds
     assert_includes RobotLab::RunConfig::INFRA_FIELDS, :token_budget
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :cost_budget
     assert_includes RobotLab::RunConfig::FIELDS, :max_tool_rounds
     assert_includes RobotLab::RunConfig::FIELDS, :token_budget
+    assert_includes RobotLab::RunConfig::FIELDS, :cost_budget
   end
 
   def test_new_infra_fields_merge_correctly

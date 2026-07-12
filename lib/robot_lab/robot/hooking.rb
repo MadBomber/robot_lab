@@ -26,9 +26,12 @@ module RobotLab
               prepare_tools(message: context.request, mcp: mcp, tools: tools,
                             network: network, network_config: network_config)
               rerender_template(run_context) if @template && run_context.any?
+              reservation = reserve_budget!
               response = invoke_ask(context: context, kwargs: kwargs, hooks: hooks, block: block)
               result = build_result(response, run_memory)
+              reconcile_budget!(reservation, response: response, result: result)
               enforce_token_budget!
+              enforce_cost_budget!
               result
             end
           end
