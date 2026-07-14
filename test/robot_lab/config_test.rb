@@ -198,4 +198,19 @@ class RobotLab::ConfigTest < Minitest::Test
   ensure
     Object.send(:remove_const, :Rails) if defined?(Rails) rescue nil
   end
+
+  # test_helper points ROBOT_LAB_TEMPLATE_PATH at examples/prompts.
+  def test_render_template_returns_rendered_body
+    rendered = RobotLab.render_template(:helper)
+    assert_kind_of String, rendered
+    assert_includes rendered, "helpful assistant"
+  end
+
+  def test_render_template_substitutes_parameters
+    assert_includes RobotLab.render_template(:configurable, task_type: "summarization"), "summarization"
+  end
+
+  def test_render_template_uses_parameter_defaults
+    assert_includes RobotLab.render_template(:configurable), "general"
+  end
 end

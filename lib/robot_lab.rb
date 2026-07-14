@@ -183,6 +183,24 @@ module RobotLab
       config
     end
 
+    # Render a named prompt template to a String using the configured template
+    # library (the prompts_dir from config / ROBOT_LAB_TEMPLATE_PATH). Front
+    # matter parameters are supplied as keyword arguments.
+    #
+    # Unlike #build (which renders a template as a robot's *system prompt*), this
+    # returns the plain text, so callers can use it as a task, a message, or a
+    # grading rubric.
+    #
+    # @param name [Symbol, String] template id (filename without extension)
+    # @param context [Hash] values for the template's parameters
+    # @return [String] the rendered prompt text
+    #
+    # @example
+    #   RobotLab.render_template(:objective, topic: "commit messages")
+    def render_template(name, **context)
+      PM.parse(name.to_sym).to_s(**context)
+    end
+
     # Factory method to create a new Robot instance.
     #
     # @param name [String, nil] the unique identifier for the robot (auto-generated if nil)
