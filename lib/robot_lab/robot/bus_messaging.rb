@@ -29,9 +29,15 @@ module RobotLab
       def send_message(to:, content:)
         raise BusError, "No bus configured on robot '#{@name}'" unless @bus
 
-        @message_counter += 1
-        message = RobotMessage.build(id: @message_counter, from: @name, content: content)
-        @outbox[message.key] = { message: message, status: :sent, replies: [] }
+        # Counter + outbox are shared with the poller thread (reply correlation)
+        # and with other senders; mutate them under the bus mutex. Publish (which
+        # does I/O) stays outside the lock.
+        message = @bus_mutex.synchronize do
+          @message_counter += 1
+          msg = RobotMessage.build(id: @message_counter, from: @name, content: content)
+          @outbox[msg.key] = { message: msg, status: :sent, replies: [] }
+          msg
+        end
         publish_to_bus(to.to_sym, message)
         message
       end
@@ -46,8 +52,10 @@ module RobotLab
       def send_reply(to:, content:, in_reply_to:)
         raise BusError, "No bus configured on robot '#{@name}'" unless @bus
 
-        @message_counter += 1
-        reply = RobotMessage.build(id: @message_counter, from: @name, content: content, in_reply_to: in_reply_to)
+        reply = @bus_mutex.synchronize do
+          @message_counter += 1
+          RobotMessage.build(id: @message_counter, from: @name, content: content, in_reply_to: in_reply_to)
+        end
         publish_to_bus(to.to_sym, reply)
         reply
       end
@@ -63,6 +71,37 @@ module RobotLab
       def on_message(&block)
         @message_handler = block
         self
+      end
+
+      # Automatically respond to inbound (non-reply) bus tasks: run +responder+ to
+      # produce a reply, and send it back to the sender. This is the symmetric
+      # counterpart to how a Cyborg answers its human — one call makes any bus
+      # member a first-class responder instead of hand-wiring {#on_message}.
+      #
+      # The responder runs on the poller drain thread, so deliveries to this member
+      # are handled one at a time (a long turn delays the next inbound message).
+      #
+      # @param auto_reply [Boolean] send the responder's result back to the sender
+      # @yield [message] the inbound task; return the reply content (nil => no reply)
+      # @return [self]
+      def respond_to_tasks(auto_reply: true, &responder)
+        on_message do |message|
+          next if message.reply?
+
+          reply = responder.call(message)
+          send_reply(to: message.from, content: reply, in_reply_to: message.key) if auto_reply && reply
+        end
+        self
+      end
+
+      # Serve inbound bus tasks by running each through this member's #run and
+      # replying with the result — the one-call way to make a Robot cooperate on
+      # the bus the way a Cyborg already does out of the box.
+      #
+      # @param auto_reply [Boolean]
+      # @return [self]
+      def serve(auto_reply: true)
+        respond_to_tasks(auto_reply: auto_reply) { |message| run(bus_task_content(message)).reply }
       end
 
       # Spawn a new robot on a shared bus.
@@ -173,6 +212,12 @@ module RobotLab
         @bus_poller_group   = :default
       end
 
+      # Flatten a task message's content to text for #run.
+      def bus_task_content(message)
+        content = message.content
+        content.is_a?(Hash) ? content.map { |k, v| "#{k}: #{v}" }.join("\n") : content.to_s
+      end
+
       # Enqueue a delivery to the robot's assigned poller.
       def enqueue_delivery(delivery)
         @bus_poller.enqueue(robot: self, delivery: delivery, group: @bus_poller_group)
@@ -181,13 +226,7 @@ module RobotLab
       # Process a single delivery (called by BusPoller drain thread).
       def process_delivery(delivery)
         message = delivery.message
-
-        # Correlate replies with outbox entries
-        if message.reply? && @outbox.key?(message.in_reply_to)
-          entry = @outbox[message.in_reply_to]
-          entry[:status] = :replied
-          entry[:replies] << message
-        end
+        correlate_reply(message) if message.reply?
 
         if @message_handler.arity == 1
           delivery.ack!
@@ -198,6 +237,17 @@ module RobotLab
       rescue => e
         delivery.nack! if delivery.pending?
         raise BusError, "Error handling bus message on robot '#{@name}': #{e.message}"
+      end
+
+      # Mark the sender's outbox entry replied. Shared with senders on other
+      # threads, so guard with the bus mutex.
+      def correlate_reply(message)
+        @bus_mutex.synchronize do
+          entry = @outbox[message.in_reply_to] or return
+
+          entry[:status] = :replied
+          entry[:replies] << message
+        end
       end
 
       # Publish a RobotMessage to a bus channel

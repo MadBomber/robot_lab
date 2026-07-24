@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `BusMessaging#respond_to_tasks` and `#serve` — a member auto-answers inbound
+  (non-reply) bus tasks and replies to the sender. `serve` runs each task through
+  `#run`; `respond_to_tasks { |m| ... }` is the generic form. Makes a Robot a
+  first-class bus responder (symmetric with how a Cyborg answers its human)
+  without hand-wiring `on_message`.
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
+
+### Fixed
+- `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
+  concurrent sends and poller-thread reply correlation can't clobber each other.
 - `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
 - `flay` gem added to development dependencies
 - `test_output.txt`, `flay_output.txt`, `flog_output.txt`, and `rubocop_output.txt` added to `.gitignore`

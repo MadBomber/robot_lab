@@ -630,6 +630,7 @@ module RobotLab
       @bus                 = @config.bus
       @message_counter     = 0
       @outbox              = {}
+      @bus_mutex           = Mutex.new
       @message_handler     = ->(_msg) {}
       @bus_poller          = nil
       @private_bus_poller  = nil
