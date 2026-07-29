@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -3746,7 +3746,11 @@
 </span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="n">network</span><span class="o">.</span><span class="n">available_robots</span><span class="w">  </span><span class="c1"># =&gt; Array of Robot instances</span>
 </span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="n">network</span><span class="o">.</span><span class="n">memory</span><span class="w">            </span><span class="c1"># =&gt; Memory instance (shared)</span>
 </span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="n">network</span><span class="o">.</span><span class="n">to_h</span><span class="w">              </span><span class="c1"># =&gt; Hash representation</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="n">network</span><span class="o">.</span><span class="n">add_robot</span><span class="p">(</span><span class="n">extra_robot</span><span class="p">)</span><span class="w">      </span><span class="c1"># add without a pipeline task -&gt; self</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="n">network</span><span class="o">.</span><span class="n">remove_robot</span><span class="p">(</span><span class="ss">:extra_robot</span><span class="p">)</span><span class="w">  </span><span class="c1"># remove by name -&gt; the removed Robot, or nil</span>
 </span></code></pre></div>
+<p><code>remove_robot</code> only drops the robot from the crew — it doesn't touch the pipeline, so don't remove a robot that's still a <code>depends_on</code> target of a task.</p>
 <h2 id="configuration-inheritance">Configuration Inheritance<a class="headerlink" href="#configuration-inheritance" title="Permanent link">&para;</a></h2>
 <p>Networks accept a <code>config:</code> parameter that establishes default LLM settings for all member robots. This is useful when you want consistent behavior across a pipeline without configuring each robot individually.</p>
 <h3 id="network-wide-defaults">Network-Wide Defaults<a class="headerlink" href="#network-wide-defaults" title="Permanent link">&para;</a></h3>
@@ -3996,7 +4000,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -885,6 +885,17 @@
     <span class="md-ellipsis">
       
         Chat Configuration (chat: section)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skill-script-sandboxing-sandbox-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill-Script Sandboxing (sandbox: section)
       
     </span>
   </a>
@@ -2815,6 +2826,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#skill-script-sandboxing-sandbox-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill-Script Sandboxing (sandbox: section)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3374,6 +3396,45 @@
 </tr>
 </tbody>
 </table>
+<h3 id="skill-script-sandboxing-sandbox-section">Skill-Script Sandboxing (<code>sandbox:</code> section)<a class="headerlink" href="#skill-script-sandboxing-sandbox-section" title="Permanent link">&para;</a></h3>
+<p>Opt-in confinement for the scripts a <a href="../../guides/using-tools/#skill-scripts-and-sandboxing">skill bundle</a> exposes as tools. Disabled by default — scripts run exactly as before until you turn it on:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sandbox.enabled</code></td>
+<td><code>false</code></td>
+<td>Turn on OS-level confinement for skill scripts</td>
+</tr>
+<tr>
+<td><code>sandbox.fs_read</code></td>
+<td><code>["."]</code></td>
+<td>Ceiling: paths any skill script may read (relative to cwd)</td>
+</tr>
+<tr>
+<td><code>sandbox.fs_write</code></td>
+<td><code>[]</code></td>
+<td>Ceiling: paths any skill script may write</td>
+</tr>
+<tr>
+<td><code>sandbox.network</code></td>
+<td><code>false</code></td>
+<td>Ceiling: whether any skill script may use the network</td>
+</tr>
+<tr>
+<td><code>sandbox.timeout</code></td>
+<td><code>60</code></td>
+<td>Ceiling: max seconds a skill script may run</td>
+</tr>
+</tbody>
+</table>
+<p>These are a <strong>ceiling</strong>, not a grant — the actual permissions a script runs with are the intersection of this ceiling and what the individual SKILL.md declares for itself. See <a href="../../guides/using-tools/#skill-scripts-and-sandboxing">Skill Scripts and Sandboxing</a> for how the two combine and which platforms actually enforce confinement.</p>
 <h2 id="runtime-only-attributes">Runtime-Only Attributes<a class="headerlink" href="#runtime-only-attributes" title="Permanent link">&para;</a></h2>
 <p>Some attributes can only be set at runtime, not through config files. Use direct assignment on <code>RobotLab.config</code> or the <code>RobotLab.configure</code> block:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Direct assignment</span>
@@ -3522,10 +3583,11 @@
 </tr>
 <tr>
 <td><strong>Infrastructure</strong></td>
-<td><code>bus</code>, <code>enable_cache</code>, <code>max_tool_rounds</code>, <code>token_budget</code>, <code>ractor_pool_size</code>, <code>max_concurrent_robots</code>, <code>doom_loop_threshold</code>, <code>auto_compact</code>, <code>compact_threshold</code></td>
+<td><code>bus</code>, <code>enable_cache</code>, <code>max_tool_rounds</code>, <code>token_budget</code>, <code>cost_budget</code>, <code>max_tools</code>, <code>ractor_pool_size</code>, <code>max_concurrent_robots</code>, <code>doom_loop_threshold</code>, <code>auto_compact</code>, <code>compact_threshold</code></td>
 </tr>
 </tbody>
 </table>
+<p><code>cost_budget</code> mirrors <code>token_budget</code> for cumulative dollar spend — see <a href="../../guides/observability/#budgets-token--cost">Budgets</a>. <code>max_tools</code> overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see <a href="../../guides/using-tools/#tool-capping-and-per-turn-filtering">Tool Capping</a>.</p>
 <h3 id="runconfig-vs-robotlabconfig">RunConfig vs RobotLab.config<a class="headerlink" href="#runconfig-vs-robotlabconfig" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3592,9 +3654,13 @@
 </span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;calculator&quot;</span><span class="p">,</span>
 </span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You solve math problems.&quot;</span><span class="p">,</span>
 </span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span><span class="p">,</span>
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
-</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="p">)</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w">          </span><span class="c1"># required: without this, local_tools below is never sent</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
+</span><span id="__span-20-16"><a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="p">)</span>
 </span></code></pre></div>
+<blockquote>
+<p><strong><code>tools:</code> defaults to <code>:none</code> at every level</strong>, including <code>run()</code> itself. Attaching tools via <code>local_tools:</code> does not by itself make them available — an explicit <code>:none</code> (or an unset runtime override, which is equivalent) now sends <strong>zero</strong> tools for that call. Pass <code>tools: :inherit</code> wherever you want a robot's attached tools to actually be used. See <a href="../../guides/using-tools/#runtime-tool-filtering">Runtime Tool Filtering</a> for the full <code>:inherit</code>/<code>:none</code>/array semantics.</p>
+</blockquote>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../guides/building-robots/">Building Robots</a> - Create custom robots</li>
@@ -3778,7 +3844,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

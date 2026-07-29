@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -884,6 +884,17 @@
     <span class="md-ellipsis">
       
         Network Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runnable-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runnable Protocol
       
     </span>
   </a>
@@ -2595,6 +2606,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#runnable-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runnable Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#creating-networks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2916,6 +2938,8 @@
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:technical</span><span class="p">,</span><span class="w"> </span><span class="n">technical_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">end</span>
 </span></code></pre></div>
+<h2 id="runnable-protocol">Runnable Protocol<a class="headerlink" href="#runnable-protocol" title="Permanent link">&para;</a></h2>
+<p><code>Network</code> implements <code>RobotLab::Runnable</code> — the same interface <code>Robot</code> implements — so code that needs to run "a robot or a network" doesn't have to branch on <code>is_a?(RobotLab::Network)</code>. For a <code>Network</code>: <code>crew</code> returns <code>robots.values</code> (pipeline order), <code>chief</code> is <code>crew.first</code>, <code>robot_count</code> is <code>crew.size</code>, and <code>network?</code> is <code>true</code>. <code>run(message = nil, **opts)</code> accepts a positional message the same way <code>Robot#run</code> does — it's folded into <code>message:</code> — while the existing <code>run(message: ...)</code> keyword form still works unchanged. See <a href="../core-concepts/#runnable-protocol">Runnable Protocol</a> in Core Concepts for the full comparison against <code>Robot</code>.</p>
 <h2 id="creating-networks">Creating Networks<a class="headerlink" href="#creating-networks" title="Permanent link">&para;</a></h2>
 <p>Networks are created via <code>RobotLab.create_network</code> with a block DSL:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">analyst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Analyze the input.&quot;</span><span class="p">)</span>
@@ -3270,9 +3294,13 @@
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="c1"># Add a robot without a task</span>
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">network</span><span class="o">.</span><span class="n">add_robot</span><span class="p">(</span><span class="n">extra_robot</span><span class="p">)</span>
 </span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1"># Convert to hash</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="n">network</span><span class="o">.</span><span class="n">to_h</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="c1">#=&gt; { name: &quot;support&quot;, robots: [&quot;classifier&quot;, &quot;billing&quot;], tasks: [...], optional_tasks: [...] }</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1"># Remove a dynamically-added robot (returns it, or nil if absent).</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="c1"># Only affects the crew (@robots) -- does not rewrite the pipeline.</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="n">network</span><span class="o">.</span><span class="n">remove_robot</span><span class="p">(</span><span class="ss">:extra_robot</span><span class="p">)</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="c1"># Convert to hash</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="n">network</span><span class="o">.</span><span class="n">to_h</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="c1">#=&gt; { name: &quot;support&quot;, robots: [&quot;classifier&quot;, &quot;billing&quot;], tasks: [...], optional_tasks: [...] }</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3456,7 +3484,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
