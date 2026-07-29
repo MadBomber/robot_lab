@@ -75,6 +75,7 @@ classDiagram
 | [AskUser](tool.md#built-in-askuser) | Built-in tool for terminal-based user interaction |
 | [Memory](memory.md) | Reactive key-value store for sharing data |
 | RobotMessage | Typed envelope for bus-based inter-robot communication |
+| `RobotLab::Runnable` | Shared interface (`crew`, `chief`, `run`) implemented by both `Robot` and `Network` — see [Runnable Protocol](../../architecture/core-concepts.md#runnable-protocol) |
 
 ## Quick Examples
 

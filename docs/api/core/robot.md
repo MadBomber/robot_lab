@@ -35,6 +35,7 @@ Robot.new(
   skills: nil,
   max_tool_rounds: nil,
   token_budget: nil,
+  cost_budget: nil,
   temperature: nil,
   top_p: nil,
   top_k: nil,
@@ -60,7 +61,7 @@ Robot.new(
 | `provider` | `String`, `Symbol`, `nil` | `nil` | LLM provider for local providers (e.g., `:ollama`, `:gpustack`). Automatically sets `assume_model_exists: true` |
 | `mcp_servers` | `Array` | `[]` | Legacy MCP server configurations |
 | `mcp` | `Symbol`, `Array` | `:none` | Hierarchical MCP config (`:none`, `:inherit`, or server array) |
-| `tools` | `Symbol`, `Array` | `:none` | Hierarchical tools config (`:none`, `:inherit`, or tool name array) |
+| `tools` | `Symbol`, `Array` | `:none` | Hierarchical tools config (`:none`, `:inherit`, or tool name **array**). Must be tool *names* (String/Symbol) — passing an instance or class raises `ArgumentError` telling you to use `local_tools:` instead. See [Runtime Tool Filtering](../../guides/using-tools.md#runtime-tool-filtering) |
 | `on_tool_call` | `Proc`, `nil` | `nil` | Callback invoked when a tool is called |
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
 | `on_content` | `Proc`, `nil` | `nil` | Stored streaming callback invoked with each content chunk (see [Streaming](#streaming)) |
@@ -68,7 +69,8 @@ Robot.new(
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
 | `max_tool_rounds` | `Integer`, `nil` | `nil` | Circuit breaker: raise `ToolLoopError` after this many tool calls in one `run()` (see [Tool Loop Circuit Breaker](#tool-loop-circuit-breaker)) |
-| `token_budget` | `Integer`, `nil` | `nil` | Raise `InferenceError` if cumulative input tokens exceed this limit |
+| `token_budget` | `Integer`, `nil` | `nil` | Raise `InferenceError` if cumulative tokens exceed this limit after a call; raise `BudgetExceeded` up front if already exhausted (see [Budgets](#budgets)) |
+| `cost_budget` | `Float`, `nil` | `nil` | Same enforcement as `token_budget`, tracked in cumulative dollar cost instead of tokens (requires provider pricing data) |
 | `config` | `RunConfig`, `nil` | `nil` | Shared config merged with explicit kwargs (see [RunConfig](#runconfig)) |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness (0.0-1.0) |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold |
@@ -120,6 +122,7 @@ If `name` is omitted, it defaults to `"robot"`.
 | `total_input_tokens` | `Integer` | Cumulative input tokens sent across all `run()` calls |
 | `total_output_tokens` | `Integer` | Cumulative output tokens received across all `run()` calls |
 | `learnings` | `Array<String>` | Accumulated cross-run observations (see [Learning Accumulation](#learning-accumulation)) |
+| `budget_ledger` | `RobotLab::Budget::Ledger`, `nil` | Reserve/reconcile ledger backing `token_budget`/`cost_budget`; `nil` when neither is configured (see [Budgets](#budgets)) |
 
 ## Attributes (Read-Write)
 
@@ -149,12 +152,14 @@ Primary execution method. Sends a message to the LLM with memory/MCP/tools resol
 | `network` | `NetworkRun`, `nil` | `nil` | Network context (passed internally) |
 | `network_memory` | `Memory`, `nil` | `nil` | Shared network memory |
 | `memory` | `Memory`, `Hash`, `nil` | `nil` | Runtime memory to merge |
-| `mcp` | `Symbol`, `Array` | `:none` | Runtime MCP override |
-| `tools` | `Symbol`, `Array` | `:none` | Runtime tools override |
+| `mcp` | `Symbol`, `Array` | `:none` | Runtime MCP override — `:inherit` (all attached servers), `:none`/`[]` (zero this turn), or an explicit array |
+| `tools` | `Symbol`, `Array` | `:none` | Runtime tools override — `:inherit` (all attached tools), `:none`/`[]` (zero this turn), or an explicit name array. See [Runtime Tool Filtering](../../guides/using-tools.md#runtime-tool-filtering) |
 | `**kwargs` | `Hash` | `{}` | Additional keyword arguments passed to `Agent#ask` |
 | `&block` | `Proc` | `nil` | Per-call streaming block, receives each content chunk |
 
 When both a stored `on_content` callback and a runtime block are provided, both fire (stored first, then runtime block).
+
+Because `tools`/`mcp` default to `:none` here too, a bare `robot.run(message)` with no override sends **zero** tools/MCP servers for that call — pass `tools: :inherit` (and/or `mcp: :inherit`) explicitly to use what's attached. Each call's resolved tool set *replaces* the chat's tools rather than accumulating, so a subsequent `:none` call correctly clears whatever a prior call attached, and the fully-resolved set is clamped to `max_tools` (128 by default) right before being handed to the provider — see [Tool Capping](../../guides/using-tools.md#tool-capping-and-per-turn-filtering).
 
 **Returns:** `RobotResult`
 
@@ -271,7 +276,7 @@ message = robot.send_message(to: :bob, content: "Tell me a joke.")
 # => RobotMessage
 ```
 
-Publish a message to another robot's bus channel. Increments the internal message counter, creates a `RobotMessage`, tracks it in the outbox, and publishes to the target channel.
+Publish a message to another robot's bus channel. Increments the internal message counter, creates a `RobotMessage`, tracks it in the outbox, and publishes to the target channel. The counter and outbox mutation are synchronized with an internal mutex, so concurrent `send_message`/`send_reply` calls from multiple threads and reply correlation on the poller thread never clobber each other.
 
 **Parameters:**
 
@@ -337,6 +342,49 @@ robot.on_message do |delivery, message|
 end
 ```
 
+### respond_to_tasks
+
+```ruby
+robot.respond_to_tasks(auto_reply: true) { |message| "the reply content" }
+# => self
+```
+
+Auto-answer inbound (non-reply) bus tasks: run the block to produce a reply, and send it back to the sender. This is the symmetric counterpart to how a `robot_lab-cyborg` Cyborg answers its human — one call makes any bus member a first-class responder without hand-wiring `on_message` yourself.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `auto_reply` | `Boolean` | `true` | Send the block's result back to the sender via `send_reply` |
+| `&responder` | `Proc` | **required** | Receives the inbound `message`; return the reply content (`nil` means no reply) |
+
+**Returns:** `self`
+
+Messages that are themselves replies (`message.reply?`) are ignored, so a two-way `respond_to_tasks` conversation between robots does not loop. The responder runs on the bus poller's drain thread, so deliveries to this robot are handled one at a time — a long-running responder delays the next inbound message.
+
+```ruby
+bob.respond_to_tasks { |message| "handled: #{message.content}" }
+alice.send_message(to: :bob, content: "ping")
+# bob replies "handled: ping" back to alice automatically
+```
+
+### serve
+
+```ruby
+robot.serve(auto_reply: true)
+# => self
+```
+
+The common case of `respond_to_tasks`: run every inbound task through this robot's own `#run` and reply with the result — the one-call way to make a Robot cooperate on the bus the way a Cyborg already does out of the box.
+
+```ruby
+bob.serve
+alice.send_message(to: :bob, content: "Tell me a joke.")
+# bob runs "Tell me a joke." through its LLM and replies with the result
+```
+
+Equivalent to `respond_to_tasks(auto_reply: auto_reply) { |message| run(message.content).reply }` (with Hash-content messages flattened to `"key: value"` lines first).
+
 ### spawn
 
 ```ruby
@@ -348,6 +396,8 @@ child = robot.spawn(
 ```
 
 Create a new robot on the same message bus. If the parent has no bus, one is created automatically and the parent is connected to it.
+
+The spawned robot inherits its parent's `model` and `provider` (via `robot.model`/`robot.provider`) so a specialist runs on the same LLM as the robot that spawned it — a robot running on a local Ollama model, for instance, spawns specialists that also target that model rather than falling back to `RobotLab.config.ruby_llm.model` (the global default, typically a cloud model that would fail without credentials). Caller-supplied `model:`/`provider:` in `**options` still override.
 
 **Parameters:**
 
@@ -813,6 +863,10 @@ robot = RobotLab.build(
 result = robot.run("Hello!")
 ```
 
+`provider:` is threaded through on every re-application of the effective `RunConfig` — including when a template's front matter is re-rendered mid-run — so a local-provider robot (Ollama, GPUStack, LM Studio) doesn't fall back to RubyLLM's static model registry lookup on later turns and raise a spurious "model not found" error.
+
+Some local/thinking-mode models (e.g. `qwen3` on Ollama) route all of their output through reasoning content rather than the normal response text. When `response.content` is `nil`, `result.reply` falls back first to `response.thinking.text` (RubyLLM's extended-thinking text), then to the most recent assistant text from later in *the current turn only* — never a stale reply left over from a previous turn.
+
 ### Robot with MCP
 
 ```ruby
@@ -958,6 +1012,26 @@ robot.reset_token_totals
 puts robot.total_input_tokens   # => 0
 ```
 
+### Budgets
+
+`token_budget:` and `cost_budget:` turn the counters above into enforceable ceilings, backed by a thread-safe `RobotLab::Budget::Ledger` (`robot.budget_ledger`, `nil` when neither is configured):
+
+```ruby
+robot = RobotLab.build(
+  name: "capped",
+  system_prompt: "...",
+  token_budget: 10_000,
+  cost_budget: 0.50
+)
+```
+
+Each `run()` reserves the remaining budget for every configured dimension before the LLM call, and reconciles the reservation with actual usage after:
+
+- **`RobotLab::BudgetExceeded`** — raised up front when a *prior* call already exhausted a dimension; the new call is refused before it spends anything.
+- **`RobotLab::InferenceError`** — raised after the call when *this* call's actual usage (from `RobotResult#input_tokens`/`output_tokens`, and the response's reported cost when the provider supports pricing) pushes cumulative usage over budget. This is the same error `token_budget` alone has always raised; `cost_budget` uses the analogous message (`"Cost budget exceeded: $X used, budget is $Y"`).
+
+See [Budgets](../../guides/observability.md#budgets-token--cost) for the full walkthrough.
+
 ## Tool Loop Circuit Breaker
 
 Set `max_tool_rounds:` to guard against a robot looping indefinitely through tool calls. After the limit is reached, `RobotLab::ToolLoopError` is raised.
@@ -1083,6 +1157,18 @@ robot.learn("avoid using puts")
 robot.learn("avoid using puts and p in production code")
 # => broader learning replaces narrower; robot.learnings.size == 1
 ```
+
+## Runnable Protocol
+
+`Robot` includes `RobotLab::Runnable`, the shared interface it has in common with `Network` — see [Runnable Protocol](../../architecture/core-concepts.md#runnable-protocol) for the full picture. For a single robot:
+
+| Method | Returns |
+|--------|---------|
+| `crew` | `[self]` — a robot is a crew of one |
+| `chief` | `self` |
+| `robot_count` | `1` |
+| `network?` | `false` |
+| `single?` | `true` |
 
 ## See Also
 

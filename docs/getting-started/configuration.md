@@ -199,6 +199,20 @@ Default chat parameters applied to all robots unless overridden:
 | `chat.with_params.frequency_penalty` | `null` | Frequency penalty (-2.0 to 2.0) |
 | `chat.with_params.stop` | `null` | Stop sequences |
 
+### Skill-Script Sandboxing (`sandbox:` section)
+
+Opt-in confinement for the scripts a [skill bundle](../guides/using-tools.md#skill-scripts-and-sandboxing) exposes as tools. Disabled by default — scripts run exactly as before until you turn it on:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `sandbox.enabled` | `false` | Turn on OS-level confinement for skill scripts |
+| `sandbox.fs_read` | `["."]` | Ceiling: paths any skill script may read (relative to cwd) |
+| `sandbox.fs_write` | `[]` | Ceiling: paths any skill script may write |
+| `sandbox.network` | `false` | Ceiling: whether any skill script may use the network |
+| `sandbox.timeout` | `60` | Ceiling: max seconds a skill script may run |
+
+These are a **ceiling**, not a grant — the actual permissions a script runs with are the intersection of this ceiling and what the individual SKILL.md declares for itself. See [Skill Scripts and Sandboxing](../guides/using-tools.md#skill-scripts-and-sandboxing) for how the two combine and which platforms actually enforce confinement.
+
 ## Runtime-Only Attributes
 
 Some attributes can only be set at runtime, not through config files. Use direct assignment on `RobotLab.config` or the `RobotLab.configure` block:
@@ -374,7 +388,9 @@ effective.temperature  #=> 0.9 (overridden)
 | **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | **Tools** | `mcp`, `tools` |
 | **Callbacks** | `on_tool_call`, `on_tool_result` |
-| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold` |
+| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `max_tools`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold` |
+
+`cost_budget` mirrors `token_budget` for cumulative dollar spend — see [Budgets](../guides/observability.md#budgets-token--cost). `max_tools` overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see [Tool Capping](../guides/using-tools.md#tool-capping-and-per-turn-filtering).
 
 ### RunConfig vs RobotLab.config
 
@@ -425,9 +441,12 @@ robot = RobotLab.build(
   name: "calculator",
   system_prompt: "You solve math problems.",
   mcp: :none,
+  tools: :inherit,          # required: without this, local_tools below is never sent
   local_tools: [Calculator]
 )
 ```
+
+> **`tools:` defaults to `:none` at every level**, including `run()` itself. Attaching tools via `local_tools:` does not by itself make them available — an explicit `:none` (or an unset runtime override, which is equivalent) now sends **zero** tools for that call. Pass `tools: :inherit` wherever you want a robot's attached tools to actually be used. See [Runtime Tool Filtering](../guides/using-tools.md#runtime-tool-filtering) for the full `:inherit`/`:none`/array semantics.
 
 ## Next Steps
 

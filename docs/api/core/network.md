@@ -56,6 +56,9 @@ result = network.run(
   **context
 )
 # => SimpleFlow::Result
+
+# Runnable protocol: a positional message works too, just like Robot#run
+result = network.run("Help me", customer_id: 123)
 ```
 
 Execute the network pipeline.
@@ -64,7 +67,7 @@ Execute the network pipeline.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `message` | `String` | The input message |
+| `message` | `String`, `nil` | The input message — as the `message:` keyword, or positionally (folded into `message:` when given) |
 | `**context` | `Hash` | Additional context passed to all robots |
 
 **Returns:** `SimpleFlow::Result`
@@ -107,6 +110,15 @@ network.add_robot(robot)
 ```
 
 Add a robot without creating a pipeline task. Useful for robots referenced by other tasks.
+
+### remove_robot
+
+```ruby
+network.remove_robot("billing")
+# => Robot, or nil if no robot by that name was present
+```
+
+Remove a dynamically-added robot from the crew by name. Complements `add_robot`. Only removes the robot from `@robots` — it does **not** rewrite the pipeline, so don't remove a robot that is a pipeline task (a `depends_on` reference to a removed robot's task name would then fail).
 
 ### robot / []
 
@@ -292,6 +304,24 @@ if result.context[:billing]
 elsif result.context[:technical]
   puts "Technical handled the request"
 end
+```
+
+## Runnable Protocol
+
+`Network` includes `RobotLab::Runnable`, the shared interface it has in common with `Robot` — see [Runnable Protocol](../../architecture/network-orchestration.md#runnable-protocol) for the full picture.
+
+| Method | Returns |
+|--------|---------|
+| `crew` | `robots.values` — the constituent robots, as an `Array`, in pipeline order |
+| `chief` | `crew.first` — the lead robot |
+| `robot_count` | `crew.size` |
+| `network?` | `true` |
+| `single?` | `false` |
+
+```ruby
+network.crew.map(&:name)  # => ["classifier", "billing", "technical"]
+network.chief             # => the first robot
+network.network?          # => true
 ```
 
 ## See Also

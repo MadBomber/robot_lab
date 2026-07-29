@@ -10,6 +10,7 @@ Facilities that help you monitor, control, improve, and scale robot behaviour:
 - **Context Window Compression** — prune irrelevant history to stay within token budgets
 - **Convergence Detection** — detect when independent agents reach the same conclusion
 - **Structured Delegation** — synchronous inter-robot calls with duration and token metadata
+- **Live Narration** — an opt-in console feed of what a robot is doing as it happens
 
 ---
 
@@ -90,6 +91,38 @@ fresh = RobotLab.build(
 result = fresh.run("Explain memoization.")
 puts result.input_tokens  # smallest possible — no prior history
 ```
+
+### Budgets (Token & Cost)
+
+Where token/cost tracking above is purely observational, `token_budget:` and `cost_budget:` make it enforceable — a `Robot` refuses to keep spending once a configured limit is reached:
+
+```ruby
+robot = RobotLab.build(
+  name: "capped",
+  system_prompt: "You are a concise assistant.",
+  token_budget: 10_000,  # cumulative input + output tokens
+  cost_budget: 0.50      # cumulative $ across all runs
+)
+```
+
+Enforcement happens in two layers, backed by a thread-safe `RobotLab::Budget::Ledger`:
+
+- **Before the call** — `run()` reserves whatever remains of each configured dimension. If a *prior* call already exhausted the budget, the reservation raises `RobotLab::BudgetExceeded` immediately, refusing the call outright before spending anything on it.
+- **After the call** — actual usage (tokens from the result, cost from the response, when the provider reports pricing) replaces the reservation. If *this* call's actual usage pushes cumulative usage over budget, `RobotLab::InferenceError` is raised (unavoidable for the call that causes the overage, since totals aren't known until the response comes back) — the same error `token_budget` alone has always raised.
+
+```ruby
+begin
+  robot.run("Another expensive task")
+rescue RobotLab::BudgetExceeded => e
+  puts e.message  # "budget exceeded for cost: 0.51 > 0.5" — refused before spending
+rescue RobotLab::InferenceError => e
+  puts e.message  # "Cost budget exceeded: $0.5231 used, budget is $0.5" — this call pushed it over
+end
+```
+
+A dimension with no configured limit (e.g. `cost_budget` when only `token_budget` is set) is treated as unlimited and never raises. Both fields are also available on `RunConfig` and cascade through the same global → network → robot hierarchy as other infrastructure fields (see [RunConfig](../getting-started/configuration.md#runconfig-shared-operational-defaults)).
+
+This is a native alternative to the hand-rolled `BudgetHook` pattern in the [Hooks guide](hooks.md#cost-enforcement) for the common case of a per-robot token or dollar ceiling; reach for a hook instead when you need cross-robot session totals or custom accounting.
 
 ---
 
@@ -603,6 +636,40 @@ analysis = f2.value(timeout: 60)
 puts "#{summary.robot_name} (#{summary.duration.round(2)}s): #{summary.reply}"
 puts "#{analysis.robot_name} (#{analysis.duration.round(2)}s): #{analysis.reply}"
 ```
+
+---
+
+## Live Narration (`RobotLab::Narrator`)
+
+`RobotLab::Narrator` is an opt-in [Hook](hooks.md) that narrates what a robot is doing as it happens, to `$stderr` (or any `IO`), so a run is never silent between events. It complements `RobotLab::Audit` (the `robot_lab-audit` gem, which records a persistent history for post-mortem analysis) with a live, human-facing console feed — the two are independent hooks and can both be registered at once.
+
+Enable it globally (applies to every robot run, including networks):
+
+```ruby
+RobotLab::Narrator.enable!                       # narrate to $stderr
+RobotLab::Narrator.enable!(output: $stdout)       # or any IO
+```
+
+Or register it like any hook for a narrower scope:
+
+```ruby
+robot.on(RobotLab::Narrator)
+network.on(RobotLab::Narrator)
+```
+
+Once registered, a run prints a line per event:
+
+```
+  · math_bot: thinking…
+  · → calculate operation="add"
+  · math_bot: thinking…
+```
+
+- Before each LLM call: `"<robot name>: thinking…"`
+- Before each tool call: `"→ <tool name> <first arg>=<value>"` — only the *first* argument is shown, truncated to 80 characters
+- After a tool call: `"  ✗ <error message>"` — printed only when the tool raised; silent on success
+
+Narrator uses `IO#puts` rather than `Kernel#warn`, since `warn` is silenced whenever Ruby warnings are disabled (`$VERBOSE` is `nil`, the common case under `bundle exec`). All three hooks rescue internally, so a narration failure never breaks the underlying run.
 
 ---
 

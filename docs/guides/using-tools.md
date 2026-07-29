@@ -133,6 +133,15 @@ robot = RobotLab.build(
 )
 ```
 
+`local_tools:` and `tools:` are different mechanisms — don't confuse them. `local_tools:` attaches tool **instances or classes**; `tools:` (see [Runtime Tool Filtering](#runtime-tool-filtering) below) is a **name allowlist** that filters which of the already-attached tools are sent for a given turn. Passing an instance or class to `tools:` raises `ArgumentError` immediately, naming the offending class and pointing you at `local_tools:` instead:
+
+```ruby
+RobotLab.build(name: "bot", tools: [GetWeather.new])
+# => ArgumentError: `tools:` expects tool names (String/Symbol) to allow, but
+#    received GetWeather. To attach tool instances or classes, pass them as
+#    `local_tools:` (e.g. RobotLab.build(local_tools: [MyTool.new])).
+```
+
 ### Via Template Front Matter
 
 Declare tool class names in the template's YAML front matter. RobotLab resolves each string to a Ruby constant via `Object.const_get` and instantiates it:
@@ -162,6 +171,66 @@ You can also add tools dynamically with chaining:
 robot = RobotLab.build(name: "assistant", system_prompt: "...")
 robot.with_tools(GetWeather, CalculatorTool)
 ```
+
+## Runtime Tool Filtering
+
+`tools:` (and `mcp:`) also work as a **per-run** override, passed to `run()` itself, on top of the build-time/network/global hierarchy described in [Hierarchical MCP and Tools](../getting-started/configuration.md#hierarchical-mcp-and-tools):
+
+```ruby
+robot.run("What's the weather?", tools: :inherit)        # every attached tool
+robot.run("Just chat, no tools needed.", tools: :none)    # zero tools this turn
+robot.run("Only use the calculator.", tools: %w[calculator])  # allowlist by name
+```
+
+| Value | Meaning |
+|-------|---------|
+| `:inherit` | No filter — use every tool attached at the robot/network/global level |
+| `:none`, `[]`, `nil` | Send **zero** tools this turn |
+| `["name", ...]` | Only these tool names, by exact match |
+
+An explicit `:none`/`[]` is useful for a relevance filter that decided no tool is useful for the current message — it now genuinely sends zero tools for that turn (previously an empty allowlist was silently treated as "all tools," which could overflow small-context local models with the full tool set). Each turn's resolved tool set fully **replaces** the chat's tools rather than accumulating, so a later `:none` turn correctly clears whatever a prior turn attached.
+
+> **Watch the default.** Both `Robot.new`'s and `run()`'s `tools:`/`mcp:` parameters default to `:none`, not `:inherit`. If you build a robot with `local_tools:` and then call `robot.run(message)` with no `tools:` override at all, the current runtime default takes the explicit-`:none` path above — sending no tools for that turn. Pass `tools: :inherit` explicitly (at build time, per network task, or per `run()` call — wherever fits your call site) anywhere you need the robot's attached tools available.
+
+### Tool Capping and Per-Turn Filtering
+
+Most LLM providers reject a tool array longer than 128 entries and fail the whole turn. RobotLab clamps the fully-resolved tool list to a ceiling right before handing it to the chat provider — the definitive choke point regardless of how the tools were configured, filtered, or MCP-connected:
+
+```ruby
+robot = RobotLab.build(
+  name: "power_user",
+  system_prompt: "...",
+  local_tools: many_tools,       # say, 150 tools
+  config: RobotLab::RunConfig.new(max_tools: 50)  # override the default ceiling
+)
+```
+
+- Default ceiling: **128** tools per turn (`RobotLab::Robot::DEFAULT_MAX_TOOLS`)
+- Override with `max_tools:` on `RunConfig` (or the `max_tools:` cascade field — see [Available Fields](../getting-started/configuration.md#available-fields)); `nil` or `<= 0` disables the cap
+- When a turn's resolved tools exceed the cap, RobotLab logs a warning naming how many were dropped and sends the first `max_tools` entries
+
+## Skill Scripts and Sandboxing
+
+A skill bundle (a directory with a `SKILL.md` plus `scripts/`, discovered via `AgentSkill`) can expose its scripts as tools (`ScriptTool`). Because those scripts run as real OS processes, each `SKILL.md` can declare the capabilities its scripts need directly in front matter, alongside `name`/`description`:
+
+```markdown title="skills/deploy-checker/SKILL.md"
+---
+name: deploy-checker
+description: Verifies a deployment's health before promoting it.
+fs_read: ["./data", "/etc/hosts"]
+fs_write: ["./out"]
+network: true
+timeout: 30
+trust: external   # or "core" for trusted, always-unconfined skills
+---
+```
+
+Sandboxing itself is **opt-in and off by default** — see the [`sandbox:` config section](../getting-started/configuration.md#skill-script-sandboxing-sandbox-section). When disabled, scripts run exactly as they always have, unconfined. When enabled:
+
+- The global `sandbox:` config is a **ceiling** (`fs_read`, `fs_write`, `network`, `timeout`); each skill's front matter is its **declared** request. The script actually runs under the **intersection** of the two — a path outside the ceiling's roots is dropped even if the skill declares it, `network` requires both sides to allow it, and `timeout` is the smaller of the two.
+- On macOS, confinement is enforced with a generated `sandbox-exec` (Seatbelt) profile: deny-by-default, with narrow allowances for the interpreter to boot, the granted read/write paths, and (optionally) the network. Notably, `$HOME` is never implicitly readable — SSH keys and cloud credentials stay out of reach unless a path under `$HOME` is explicitly granted.
+- Off macOS, or for any skill declaring `trust: core`, sandboxing is a passthrough — confinement is currently macOS-only and is always skipped for trusted "core" skills regardless of platform.
+- A script that runs past its `timeout` is killed (its whole process group) and reported back to the LLM as a timed-out error rather than hanging the turn.
 
 ## Parameter Types
 

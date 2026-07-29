@@ -56,6 +56,9 @@ RobotLab.reload_config!      # => reload from all sources
 RobotLab.build(name:, template:, system_prompt:, context:, **options)
 RobotLab.create_network(name:, concurrency:) { ... }
 RobotLab.create_memory(data:, enable_cache:, **options)
+
+# Rendering a template to a String (not a robot) -- see Building Robots guide
+RobotLab.render_template(name, **context)  # => String
 ```
 
 See individual class documentation for detailed method references.

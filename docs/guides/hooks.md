@@ -851,6 +851,8 @@ end
 RobotLab.on(BudgetHook, context: { total_cost: 0.0 })
 ```
 
+For a single robot's own token/dollar ceiling (rather than a cross-robot session total), `token_budget:`/`cost_budget:` on `Robot.new` give you this natively — see [Budgets](observability.md#budgets-token--cost) — including a `RobotLab::BudgetExceeded` raised up front once a prior call already exhausted the budget, so the next call is refused before it spends anything.
+
 ### Tool Access Control
 
 Allow only approved tools to execute for a given network, without hard-coding restrictions in the tool itself:

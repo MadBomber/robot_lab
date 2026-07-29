@@ -441,7 +441,12 @@ network["billing"]        # => Robot instance (alias)
 network.available_robots  # => Array of Robot instances
 network.memory            # => Memory instance (shared)
 network.to_h              # => Hash representation
+
+network.add_robot(extra_robot)      # add without a pipeline task -> self
+network.remove_robot(:extra_robot)  # remove by name -> the removed Robot, or nil
 ```
+
+`remove_robot` only drops the robot from the crew — it doesn't touch the pipeline, so don't remove a robot that's still a `depends_on` target of a task.
 
 ## Configuration Inheritance
 

@@ -19,6 +19,10 @@ network = RobotLab.create_network(name: "customer_service") do
 end
 ```
 
+## Runnable Protocol
+
+`Network` implements `RobotLab::Runnable` — the same interface `Robot` implements — so code that needs to run "a robot or a network" doesn't have to branch on `is_a?(RobotLab::Network)`. For a `Network`: `crew` returns `robots.values` (pipeline order), `chief` is `crew.first`, `robot_count` is `crew.size`, and `network?` is `true`. `run(message = nil, **opts)` accepts a positional message the same way `Robot#run` does — it's folded into `message:` — while the existing `run(message: ...)` keyword form still works unchanged. See [Runnable Protocol](../architecture/core-concepts.md#runnable-protocol) in Core Concepts for the full comparison against `Robot`.
+
 ## Creating Networks
 
 Networks are created via `RobotLab.create_network` with a block DSL:
@@ -351,6 +355,10 @@ network.available_robots      #=> [Robot, Robot, ...]
 
 # Add a robot without a task
 network.add_robot(extra_robot)
+
+# Remove a dynamically-added robot (returns it, or nil if absent).
+# Only affects the crew (@robots) -- does not rewrite the pipeline.
+network.remove_robot(:extra_robot)
 
 # Convert to hash
 network.to_h
