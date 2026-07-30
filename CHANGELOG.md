@@ -8,6 +8,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `BusMessaging#respond_to_tasks` and `#serve` — a member auto-answers inbound
+  (non-reply) bus tasks and replies to the sender. `serve` runs each task through
+  `#run`; `respond_to_tasks { |m| ... }` is the generic form. Makes a Robot a
+  first-class bus responder (symmetric with how a Cyborg answers its human)
+  without hand-wiring `on_message`.
+- `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
+
+### Fixed
+- `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
+  concurrent sends and poller-thread reply correlation can't clobber each other.
+- `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
+- `flay` gem added to development dependencies
+- `test_output.txt`, `flay_output.txt`, `flog_output.txt`, and `rubocop_output.txt` added to `.gitignore`
+
+### Changed
+- `test/test_helper.rb`: test output redirected to `test_output.txt` via `$stdout` reassignment; `TerminalSummaryReporter` prints a single PASS/FAIL summary line to the terminal
+- `Rakefile`: `rubocop` and `rubocop_fix` tasks removed (now owned by Asgard); `flay_check` integrated into the `quality` gate
+
+## [0.2.6] - 2026-05-23
+
+### Added
+
+- **`:compaction` hook family** — fires when `maybe_compact` determines that conversation history should be compressed. Provides `before_compaction`, `around_compaction`, `after_compaction`, and `on_compaction` callbacks.
+  - `on_compaction` allows an extension to supply a complete replacement message set via `ctx.compacted_messages`; when set, the core skips its own compaction strategy entirely (`ctx.handled?` returns true).
+  - `CompactionHookContext` — carries `robot`, `messages_before` (frozen snapshot), `config`, `strategy` (`:context_window`, `:custom`, or other symbol), `compacted_messages`, and `handled?`.
+- **`:learn` hook family** — fires on every `robot.learn(text)` call with non-empty text. Provides `before_learn`, `around_learn`, `after_learn`, and `on_learn` callbacks.
+  - `on_learn` fires after the text has been stored and `ctx.stored = true`, giving extensions a reliable hook point for cross-session persistence.
+  - `LearnHookContext` — carries `robot`, `text`, `learnings_before` (frozen snapshot), and `stored`.
+- **`over_compact_threshold?`** private predicate extracted from `compact_if_over_context_window` for independent testability.
+- Hook tests for both new families added to `test/robot_lab/hooks_test.rb` (18 new tests across `RobotLabCompactionHooksTest` and `RobotLabLearnHooksTest`).
+- Documentation for `:compaction` and `:learn` hook families added to `docs/guides/hooks.md`.
+
+### Changed
+
+- **`Robot#on`** now accepts and forwards `context:` to `HookRegistry#on`, allowing extensions to pass per-registration domain config at registration time (e.g. `robot.on(MyHook, context: { domain: "finance" })`). Previously `context:` was silently dropped.
+- **`maybe_compact`** refactored to dispatch through the `:compaction` hook family and delegate to `on_compaction` before falling back to the built-in strategy.
+- **`Robot#learn`** refactored to dispatch through the `:learn` hook family; `on_learn` fires after deduplication with `ctx.stored` reflecting whether the text was actually added.
+
+### Added
+
+- **`RobotLab::Hook` base class** (`lib/robot_lab/hook.rb`) — all hook handlers inherit from this class. Subclasses define lifecycle callbacks as `class << self` methods (`before_run`, `after_run`, etc.). Namespace is auto-derived from the class name via snake_case conversion of the final class name segment (e.g. `AuditHook` → `:audit_hook`); override with `self.namespace = :custom`. Ractor-safe by design: handler classes are Ruby constants, not Procs, so registrations are natively serializable across Ractor boundaries.
+- **Hook system** — lifecycle hooks across all execution boundaries. Register handler classes with `RobotLab.on`, `network.on`, or `robot.on` for five families: `:run`, `:llm_generation`, `:tool_call`, `:network_run`, and `:task`, each with `before_*`, `around_*`, `after_*`, and (where applicable) `on_error` variants.
+  - `HookRegistry::Registration` — `Data.define(:handler_class, :context)`; stores a handler class reference and optional per-registration default `DotState` values. No Proc, no namespace field — namespace is read from the handler class.
+  - `HookContext` and five typed subclasses: `RunHookContext`, `LlmGenerationHookContext`, `ToolCallHookContext`, `NetworkRunHookContext`, `TaskHookContext` — unchanged
+  - `DotState` / `ExtensionState` — namespace-isolated dot-access state carried on every context object; `ctx.local` reads/writes state for the active handler's namespace
+  - `context:` parameter on `on(handler_class, context: {...})` — sets per-registration default `DotState` values merged in before each callback fires
+  - Around hooks chain correctly across handler class registrations; return value is propagated up the chain
+  - Per-run hooks via `robot.run("msg", hooks: MyHook)` or `robot.run("msg", hooks: [MyHook, OtherHook])`
+  - `on_error` fires for `:run`, `:network_run`, and `:task` families; exception is re-raised after all error handlers complete
+- **`examples/xyzzy.rb`** — updated reference extension: `RobotLab::Xyzzy < RobotLab::Hook` with `class << self` methods for every hook family; logs each callback with a timestamped stdout tagline and a structured logger context snapshot; registered globally with `RobotLab.on(RobotLab::Xyzzy)`
+- **Example 35** (`examples/35_hooks.rb`) — updated full hook pipeline demo: xyzzy extension tracing all hooks, `around_run` perf timer handler class, `around_llm_generation` response cache handler class (cache hits skip the LLM entirely), `before/after_llm_generation` tracer, tool call hooks, network/task hooks, and `on_error`
+- **`examples/common.rb`** — added explicit `openai_api_key`, `openai_organization_id`, and `openai_project_id` to `RubyLLM.configure` to match provider configurator expectations; updated default model to `gpt-4.1-mini`
+
 ## [0.2.1] - 2026-05-19
 
 ### Added

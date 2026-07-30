@@ -170,6 +170,23 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal network, result
   end
 
+  def test_remove_robot_removes_and_returns_it
+    network = RobotLab::Network.new(name: "test")
+    network.add_robot(@robot1)
+
+    removed = network.remove_robot("robot1")
+
+    assert_equal @robot1, removed
+    assert_equal 0, network.robots.size
+    assert_nil network.robot("robot1")
+  end
+
+  def test_remove_robot_returns_nil_when_absent
+    network = RobotLab::Network.new(name: "test")
+
+    assert_nil network.remove_robot("nope")
+  end
+
   def test_add_robot_raises_if_name_exists
     network = RobotLab::Network.new(name: "test")
     network.add_robot(@robot1)

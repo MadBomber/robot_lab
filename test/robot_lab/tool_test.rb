@@ -352,6 +352,24 @@ class RobotLab::ToolTest < Minitest::Test
     assert_equal 'Error (error_tool): Something went wrong', result
   end
 
+  def test_tool_error_without_retryable_flag_has_no_suffix
+    tool = RobotLab::Tool.create(name: "tool_error_tool") do |_args|
+      raise RobotLab::ToolError, "bad input"
+    end
+
+    result = tool.call({})
+    assert_equal "Error (tool_error_tool): bad input", result
+  end
+
+  def test_tool_error_with_retryable_flag_is_marked_in_result
+    tool = RobotLab::Tool.create(name: "retryable_tool_error_tool") do |_args|
+      raise RobotLab::ToolError.new("timeout", retryable: true)
+    end
+
+    result = tool.call({})
+    assert_equal "Error (retryable_tool_error_tool): timeout (retryable)", result
+  end
+
   def test_execute_error_is_logged
     tool = RobotLab::Tool.create(name: "log_tool") do |_args|
       raise "disk full"

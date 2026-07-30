@@ -41,8 +41,8 @@ module RobotLab
     CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content].freeze
 
     # Infrastructure fields
-    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget ractor_pool_size max_concurrent_robots
-                      doom_loop_threshold auto_compact compact_threshold].freeze
+    INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget cost_budget ractor_pool_size
+                      max_concurrent_robots doom_loop_threshold auto_compact compact_threshold max_tools].freeze
 
     # All recognized fields
     FIELDS = (LLM_FIELDS + TOOL_FIELDS + CALLBACK_FIELDS + INFRA_FIELDS).freeze
@@ -107,14 +107,33 @@ module RobotLab
 
     # Applies LLM fields to a chat object via its with_* methods.
     #
+    # +provider+/+assume_model_exists+ are threaded through to +with_model+
+    # specifically (RunConfig itself has no provider field -- provider lives
+    # on the Robot). Without this, re-applying a RunConfig after the chat's
+    # provider/model were already set via Robot#initialize (e.g. during
+    # template front-matter merging) drops that context on the floor and
+    # `with_model` falls back to the static model registry lookup, which
+    # raises ModelNotFoundError for any local-provider model (Ollama, etc.)
+    # not in RubyLLM's bundled registry.
+    #
     # @param chat [Object] a RubyLLM::Chat (or similar) that responds to with_model, with_temperature, etc.
-    def apply_to(chat)
+    # @param provider [String, Symbol, nil] passed through to chat.with_model's provider: kwarg
+    # @param assume_model_exists [Boolean] passed through to chat.with_model's assume_exists: kwarg
+    def apply_to(chat, provider: nil, assume_model_exists: false)
       LLM_FIELDS.each do |field|
         value = @fields[field]
         next unless value
 
-        method = :"with_#{field}"
-        chat.public_send(method, value) if chat.respond_to?(method)
+        if field == :model && provider
+          # Only take the provider-aware path when a provider was actually
+          # given -- preserves the original single-arg call (and thus
+          # compatibility with any chat-like object exposing only
+          # `with_model(value)`) for the common case.
+          chat.with_model(value, provider:, assume_exists: assume_model_exists) if chat.respond_to?(:with_model)
+        else
+          method = :"with_#{field}"
+          chat.public_send(method, value) if chat.respond_to?(method)
+        end
       end
     end
 

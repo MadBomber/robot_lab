@@ -603,6 +603,78 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'search', result.first.name
   end
 
+  # Private method: explicit_none_tools?
+  def test_explicit_none_tools_detects_none_and_empty_array
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+
+    assert robot.send(:explicit_none_tools?, :none)
+    assert robot.send(:explicit_none_tools?, [])
+    refute robot.send(:explicit_none_tools?, :inherit)
+    refute robot.send(:explicit_none_tools?, nil)
+    refute robot.send(:explicit_none_tools?, %w[search])
+  end
+
+  # Private method: prepare_tools — an explicit :none sends ZERO tools, even
+  # though :none resolves to an empty allowlist (which filtered_tools treats as
+  # "all"). This is what lets a relevance filter suppress the whole tool set.
+  def test_prepare_tools_with_explicit_none_clears_the_chat_tools
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :none, network: nil, network_config: nil)
+
+    assert_empty robot.chat.tools, 'an explicit :none must send zero tools'
+  end
+
+  def test_prepare_tools_with_inherit_uses_all_attached_tools
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :inherit, network: nil, network_config: nil)
+
+    assert_equal %i[search], robot.chat.tools.keys
+  end
+
+  def test_prepare_tools_none_clears_tools_set_by_a_prior_turn
+    tool  = build_tool(name: 'search') { |i| i }
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant, local_tools: [tool])
+
+    robot.send(:prepare_tools, message: 'use search', mcp: :none, tools: :inherit, network: nil, network_config: nil)
+    refute_empty robot.chat.tools
+
+    robot.send(:prepare_tools, message: 'hi', mcp: :none, tools: :none, network: nil, network_config: nil)
+    assert_empty robot.chat.tools, 'a later :none turn must clear tools a prior turn attached'
+  end
+
+  # Private method: cap_tools
+  def test_cap_tools_returns_all_when_under_max
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    tools = Array.new(5) { |i| build_tool(name: "t#{i}") { |x| x } }
+    assert_equal 5, robot.send(:cap_tools, tools).size
+  end
+
+  def test_cap_tools_trims_to_default_max
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    tools = Array.new(RobotLab::Robot::DEFAULT_MAX_TOOLS + 10) { |i| build_tool(name: "t#{i}") { |x| x } }
+    result = robot.send(:cap_tools, tools)
+    assert_equal RobotLab::Robot::DEFAULT_MAX_TOOLS, result.size
+    assert_equal tools.first(RobotLab::Robot::DEFAULT_MAX_TOOLS), result
+  end
+
+  def test_cap_tools_respects_config_max_tools
+    robot = RobotLab::Robot.new(
+      name: 'test', template: :assistant,
+      config: RobotLab::RunConfig.new(max_tools: 2)
+    )
+    tools = Array.new(5) { |i| build_tool(name: "t#{i}") { |x| x } }
+    assert_equal 2, robot.send(:cap_tools, tools).size
+  end
+
+  def test_effective_max_tools_defaults_when_unset
+    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
+    assert_equal RobotLab::Robot::DEFAULT_MAX_TOOLS, robot.send(:effective_max_tools)
+  end
+
   # Private method: ensure_mcp_clients
   def test_ensure_mcp_clients_with_empty_servers
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
@@ -742,6 +814,31 @@ class RobotLab::RobotTest < Minitest::Test
     bot2 = bot.spawn(system_prompt: 'test')
 
     assert_equal 'robot', bot2.name
+  end
+
+  def test_spawn_inherits_parent_model
+    parent = RobotLab.build(name: 'parent')
+    child  = parent.spawn(name: 'child', system_prompt: 'test')
+
+    refute_nil parent.model
+    assert_equal parent.model, child.model
+  end
+
+  def test_inherited_llm_settings_includes_model_and_provider
+    parent = RobotLab.build(name: 'parent')
+    parent.define_singleton_method(:model) { 'qwen3.6:latest' }
+    parent.define_singleton_method(:provider) { 'ollama' }
+
+    assert_equal(
+      { model: 'qwen3.6:latest', provider: 'ollama' },
+      parent.send(:inherited_llm_settings)
+    )
+  end
+
+  def test_inherited_llm_settings_omits_provider_when_absent
+    parent = RobotLab.build(name: 'parent') # default robot has no provider
+
+    refute parent.send(:inherited_llm_settings).key?(:provider)
   end
 
   # Frontmatter extras tests
@@ -1419,6 +1516,41 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.total_output_tokens
   end
 
+  # =========================================================================
+  # Budget ledger
+  # =========================================================================
+
+  def test_budget_ledger_nil_when_no_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test")
+    assert_nil robot.budget_ledger
+  end
+
+  def test_budget_ledger_present_when_token_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    assert_instance_of RobotLab::Budget::Ledger, robot.budget_ledger
+    assert_equal 1_000, robot.budget_ledger.limits[:tokens]
+  end
+
+  def test_budget_ledger_present_when_cost_budget_configured
+    robot = build_robot(name: "bot", system_prompt: "test", cost_budget: 0.5)
+    assert_instance_of RobotLab::Budget::Ledger, robot.budget_ledger
+    assert_in_delta 0.5, robot.budget_ledger.limits[:cost]
+  end
+
+  def test_budget_ledger_reconciles_tokens_after_run
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    tokens = RubyLLM::Tokens.new(input: 60, output: 40)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("test")
+
+    assert_equal 100, robot.budget_ledger.consumed[:tokens]
+  end
+
   def test_result_includes_per_run_tokens
     robot = build_robot(name: "bot", system_prompt: "test")
     tokens = RubyLLM::Tokens.new(input: 75, output: 30)
@@ -1875,6 +2007,71 @@ class RobotLab::RobotTest < Minitest::Test
 
     result = robot.run("test")
     assert_empty result.output
+  end
+
+  def test_result_text_prefers_response_content
+    robot = build_robot(name: "bot", template: :assistant)
+    response = Data.define(:content).new(content: "direct reply")
+    assert_equal "direct reply", robot.send(:result_text, response)
+  end
+
+  def test_result_text_falls_back_to_last_assistant_text_on_tool_call_finish
+    robot = build_robot(name: "bot", template: :assistant)
+    msg = Struct.new(:role, :content).new(:assistant, "remembered reply")
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [msg] }
+    response = Data.define(:content).new(content: nil)
+    assert_equal "remembered reply", robot.send(:result_text, response)
+  end
+
+  def test_result_text_returns_nil_when_no_text_anywhere
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [] }
+    response = Data.define(:content).new(content: nil)
+    assert_nil robot.send(:result_text, response)
+  end
+
+  def test_result_text_does_not_return_previous_turn_content
+    # Regression: thinking-mode models (e.g. qwen3 via Ollama) can produce an
+    # empty response.content when all generated text lands in <think> tags.
+    # Without the current-turn scope, rfind returns the PREVIOUS turn's assistant
+    # message, causing every subsequent turn to echo turn 1's answer.
+    robot = build_robot(name: "bot", template: :assistant)
+    msg_class = Struct.new(:role, :content)
+    prior_user = msg_class.new(:user, "turn 1 question")
+    prior_asst = msg_class.new(:assistant, "turn 1 answer")
+    cur_user   = msg_class.new(:user, "turn 2 question")
+    cur_asst   = msg_class.new(:assistant, nil) # thinking-mode: content is nil
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) do
+      [prior_user, prior_asst, cur_user, cur_asst]
+    end
+    response = Data.define(:content).new(content: nil)
+    assert_nil robot.send(:result_text, response)
+  end
+
+  def test_result_text_falls_back_to_thinking_when_content_nil
+    # qwen3 on Ollama routes all output to reasoning_content (chunk.thinking),
+    # leaving response.content nil. response.thinking is a RubyLLM::Thinking
+    # object with a .text method. result_text must surface .text so the user
+    # sees a response instead of a blank or the object's inspect string.
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.instance_variable_get(:@chat).define_singleton_method(:messages) { [] }
+    thinking_obj = Struct.new(:text).new("my reasoning")
+    response = Data.define(:content, :thinking).new(content: nil, thinking: thinking_obj)
+    assert_equal "my reasoning", robot.send(:result_text, response)
+  end
+
+  def test_tools_filter_rejects_tool_instances
+    error = assert_raises(ArgumentError) do
+      RobotLab::Robot.new(name: "bot", template: :assistant, tools: [RobotLab::Tool.new])
+    end
+    assert_match(/local_tools:/, error.message)
+  end
+
+  def test_tools_filter_accepts_names_symbols_and_none
+    RobotLab::Robot.new(name: "n1", template: :assistant, tools: %w[read write])
+    RobotLab::Robot.new(name: "n2", template: :assistant, tools: [:read])
+    RobotLab::Robot.new(name: "n3", template: :assistant, tools: :none)
+    pass
   end
 
   # =========================================================================

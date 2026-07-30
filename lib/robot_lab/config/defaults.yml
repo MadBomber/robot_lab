@@ -25,6 +25,16 @@ defaults:
   mcp: :none
   tools: :none
 
+  # Skill-script sandboxing (opt-in). When enabled, skill scripts run confined
+  # to the effective grant (their SKILL.md declaration ∩ this ceiling). macOS
+  # uses sandbox-exec; other platforms run unconfined with a warning.
+  sandbox:
+    enabled: false        # opt-in; off = scripts run exactly as before
+    fs_read: ["."]        # ceiling: paths any skill may read (relative to cwd)
+    fs_write: []          # ceiling: paths any skill may write
+    network: false        # ceiling: may any skill use the network
+    timeout: 60           # ceiling: max seconds a skill script may run
+
   # Chat Configuration (passed to RubyLLM.chat)
   # These are global defaults that can be overridden per-robot or per-run
   chat:

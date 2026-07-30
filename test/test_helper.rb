@@ -42,6 +42,26 @@ class FakeSkillStore
   def empty? = @docs.empty?
 end
 require 'minitest/autorun'
+require 'minitest/reporters'
+
+# rubocop:disable Style/FileOpen, Style/GlobalStdStream, Layout/LineLength
+$stdout = File.open('test_output.txt', 'w').tap { |f| f.sync = true }
+
+class TerminalSummaryReporter < Minitest::Reporters::BaseReporter
+  def report
+    super
+    ok    = failures.zero? && errors.zero?
+    badge = ok ? "\e[32mPASS\e[0m" : "\e[31mFAIL\e[0m"
+    STDOUT.puts "[#{badge}] #{count} tests, #{failures} failures, #{errors} errors, #{skips} skips (#{format('%.2f', total_time)}s) — see test_output.txt"
+    STDOUT.flush
+  end
+end
+# rubocop:enable Style/FileOpen, Style/GlobalStdStream, Layout/LineLength
+
+Minitest::Reporters.use! [
+  Minitest::Reporters::DefaultReporter.new(color: false, slow_count: 5),
+  TerminalSummaryReporter.new
+]
 
 # Set dummy API key so RubyLLM model resolution doesn't fail in unit tests
 # (Robot now creates a persistent chat in initialize via Agent)

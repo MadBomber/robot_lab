@@ -58,6 +58,7 @@ examples/
   29_ractor_tools.rb          # Ractor-safe tools: worker pool, freeze_deep, parallel batch
   30_ractor_network.rb        # Ractor network scheduler: dependency waves, parallel_mode
   31_launch_assessment.rb     # 6 parallel analysts, max_concurrent_robots: 4 semaphore cap
+  35_hooks.rb                 # Hook architecture demo using robot_lab-xyzzy
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -305,6 +306,12 @@ Six specialist robots evaluate a product launch simultaneously: market, competit
 Demonstrates: `max_concurrent_robots:` on `RunConfig`, `Async::Semaphore` back-pressure via `simple_flow`, six parallel `depends_on: :none` tasks, shared memory writes and blocking reads.
 
 **Requires:** LLM API key
+
+### 35 — Hooks Architecture
+
+Loads the local `robot_lab-xyzzy` extension, which registers for every hook and logs each callback with the context it receives. Demonstrates robot run, LLM generation, tool call, network run, task, and error hooks with deterministic stubbed responses.
+
+**Requires:** None (no LLM calls)
 
 ### 18 — Rails Integration Demo
 

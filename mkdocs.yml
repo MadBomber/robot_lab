@@ -170,6 +170,7 @@ nav:
       - Streaming Responses: guides/streaming.md
       - Memory System: guides/memory.md
       - Observability & Safety: guides/observability.md
+      - Hook System: guides/hooks.md
       - Knowledge Search: guides/knowledge.md
   - API Reference:
       - api/index.md

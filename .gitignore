@@ -1,6 +1,7 @@
 .aigcm_msg
 *.log
 Gemfile.lock
+Gemfile.local.lock
 /site/
 /.bundle/
 /.yardoc
@@ -13,3 +14,5 @@ Gemfile.lock
 examples/27_incident_response/output/
 .worktrees/
 _notes/
+site/
+*_output.txt

@@ -25,6 +25,7 @@
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
+- <strong>Hook System</strong> - Lifecycle hooks across every execution boundary for instrumentation, caching, and extensions<br>
 - <strong>Layered Configuration</strong> - Cascading YAML, env vars, and RunConfig<br>
 - <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting (via <a href="https://github.com/MadBomber/robot_lab-rails">robot_lab-rails</a>)<br>
 - <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>
@@ -875,6 +876,66 @@ future.resolved?      # => true/false (non-blocking poll)
 future.robot_name     # => "analyst"
 future.delegated_by   # => "manager"
 ```
+
+## Hook System
+
+RobotLab's hook system lets you intercept any point in a robot's execution pipeline without modifying framework code. Hooks use handler classes — subclasses of `RobotLab::Hook` that define lifecycle callbacks as class methods.
+
+```ruby
+class TimerHook < RobotLab::Hook
+  # namespace is auto-derived: TimerHook → :timer_hook
+  # override with: self.namespace = :timer
+
+  def self.before_run(ctx)
+    ctx.local.start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
+  def self.after_run(ctx)
+    elapsed = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - ctx.local.start) * 1000).round(1)
+    puts "[timer] #{ctx.robot.name} #{elapsed}ms"
+  end
+
+  def self.on_error(ctx)
+    puts "[timer] #{ctx.robot.name} failed: #{ctx.error.message}"
+  end
+end
+```
+
+Register at the global, network, or robot level — or for a single call:
+
+```ruby
+RobotLab.on(TimerHook)              # every robot in this process
+network.on(TimerHook)               # robots inside this network only
+robot.on(TimerHook)                 # this robot only
+robot.run("msg", hooks: TimerHook)  # this call only
+robot.run("msg", hooks: [TimerHook, OtherHook])
+```
+
+Pass `context:` to set default `DotState` values for the handler's namespace before each callback fires:
+
+```ruby
+RobotLab.on(TimerHook, context: { threshold_ms: 500 })
+```
+
+Around hooks receive a block and must call it — and return its value — so the actual work executes:
+
+```ruby
+class PerfHook < RobotLab::Hook
+  self.namespace = :perf
+
+  def self.around_run(ctx, &block)
+    t0     = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    result = block.call   # executes the run
+    ms     = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round(1)
+    $stderr.puts "[perf] #{ctx.robot.name} #{ms}ms"
+    result                # must return the result
+  end
+end
+```
+
+Because handler classes are Ruby constants (not Procs), all hook registrations are natively Ractor-serializable.
+
+See the [full Hook System guide](docs/guides/hooks.md) for all hook families, context objects, and extension patterns.
 
 ## Extension Gems
 

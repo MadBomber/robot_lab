@@ -115,9 +115,10 @@ class RobotLab::MCP::ConnectionPollerTest < Minitest::Test
     @poller.instance_variable_get(:@clients)[stdout_r] = { client: client, queue: nil }
 
     # Nothing written to stdout_w — should time out
-    assert_raises(RobotLab::MCPError) do
+    error = assert_raises(RobotLab::MCPError) do
       @poller.send_request(client, { jsonrpc: "2.0", id: 1, method: "tools/list" }, timeout: 0.05)
     end
+    assert error.retryable, "a timeout is transient and should be marked retryable"
   ensure
     [stdin_r, stdin_w, stdout_r, stdout_w].each { |io| io.close rescue nil }
   end

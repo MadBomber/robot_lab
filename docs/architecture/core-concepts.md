@@ -415,6 +415,16 @@ end
 
 Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over `delivery.ack!`/`delivery.nack!`.
 
+`send_message`/`send_reply` synchronize the per-robot message counter and outbox with an internal mutex, so concurrent sends from multiple threads and reply correlation on the poller thread can't clobber each other — the bus is safe to send on from more than one thread at a time.
+
+For the common case of a robot that should simply answer whatever tasks arrive on the bus, `respond_to_tasks`/`serve` do the `on_message` wiring above in one call:
+
+```ruby
+bob.serve  # equivalent to the on_message block above, running bob.run and replying automatically
+```
+
+`respond_to_tasks` takes a block instead when the reply needs post-processing, and both ignore inbound messages that are themselves replies, so two robots calling `serve` on each other don't loop. See [Auto-Responding to Bus Tasks](../guides/building-robots.md#auto-responding-to-bus-tasks).
+
 ### Dynamic Spawning
 
 Robots can create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
@@ -429,6 +439,8 @@ helper = dispatcher.spawn(name: "helper", system_prompt: "You answer questions."
 answer = helper.run("What is 2+2?").last_text_content
 helper.send_message(to: :dispatcher, content: answer)
 ```
+
+The spawned robot inherits its parent's `model`/`provider`, so a dispatcher running on a local provider (e.g. Ollama) spawns specialists targeting that same model instead of falling back to the global default (which would fail without cloud credentials). Explicit `model:`/`provider:` passed to `spawn` still override.
 
 Robots can also join a bus after creation using `with_bus`:
 
@@ -479,6 +491,34 @@ Networks provide:
 - **Shared memory** for inter-robot communication
 - **Per-task configuration** via the `Task` wrapper
 - **Broadcast messaging** for network-wide announcements
+
+Robots can be added to a network without a pipeline task via `add_robot`, and removed again with `remove_robot(name)` (returns the removed robot, or `nil` if absent). `remove_robot` only drops the robot from the crew — it doesn't rewrite the pipeline, so avoid removing a robot that's still referenced by a task's `depends_on`.
+
+## Runnable Protocol
+
+`RobotLab::Runnable` is a shared interface implemented by both `Robot` and `Network`, so callers can treat either uniformly instead of branching on `is_a?(RobotLab::Network)`:
+
+```ruby
+def summarize(runnable)
+  runnable.crew.each { |r| puts r.name }
+  puts "chief: #{runnable.chief.name}"
+  puts runnable.network? ? "network of #{runnable.robot_count}" : "single robot"
+end
+
+summarize(robot)    # crew: [robot], chief: robot, "single robot"
+summarize(network)  # crew: network.robots.values, chief: crew.first, "network of N"
+```
+
+| Method | Robot | Network |
+|--------|-------|---------|
+| `crew` | `[self]` | `robots.values` (pipeline order) |
+| `chief` | `self` | `crew.first` |
+| `robot_count` | `1` | `crew.size` |
+| `network?` | `false` | `true` |
+| `single?` | `true` | `false` |
+| `run(message = nil, **opts)` | accepts a positional message (already did) | now also accepts a positional message, folded into `message:` — the keyword form still works |
+
+`crew` is the only method implementers must define themselves; `chief`, `robot_count`, and `single?` all derive from it, and `network?` defaults to `false` unless overridden (as `Network` does).
 
 ## Next Steps
 

@@ -5,6 +5,8 @@ require_relative 'robot/mcp_management'
 require_relative 'robot/bus_messaging'
 require_relative 'robot/history_search'
 require_relative 'robot/agent_skill_matching'
+require_relative 'robot/budget'
+require_relative 'robot/hooking'
 
 module RobotLab
   # LLM-powered robot built on RubyLLM::Agent
@@ -44,7 +46,15 @@ module RobotLab
     include Robot::MCPManagement
     include Robot::BusMessaging
     include Robot::HistorySearch
+    include Robot::Budget
+    include Robot::Hooking
+    include Runnable
     prepend Robot::AgentSkillMatching
+
+    # Default ceiling on tools handed to the provider per turn. OpenAI and
+    # Anthropic both reject tool arrays longer than 128. Override per robot via
+    # RunConfig#max_tools.
+    DEFAULT_MAX_TOOLS = 128
 
     # @!attribute [r] name
     #   @return [String] the unique identifier for the robot
@@ -70,15 +80,23 @@ module RobotLab
 
     attr_reader :name, :description, :template, :system_prompt,
                 :local_tools, :mcp_clients, :mcp_tools, :memory,
-                :bus, :outbox, :config, :skills, :provider,
+                :bus, :outbox, :config, :skills, :provider, :hooks,
                 :total_input_tokens, :total_output_tokens, :learnings,
-                :durable_store, :learn_domain
+                :budget_ledger
 
     # @!attribute [r] mcp_config
     #   @return [Symbol, Array] build-time MCP configuration (raw, unresolved)
     # @!attribute [r] tools_config
     #   @return [Symbol, Array] build-time tools configuration (raw, unresolved)
     attr_reader :mcp_config, :tools_config
+
+    # Runnable protocol: a single robot is a crew of one. (network? defaults to
+    # false from RobotLab::Runnable.)
+    #
+    # @return [Array<Robot>]
+    def crew
+      [self]
+    end
 
     # Returns the fully-merged configuration for this robot at runtime.
     #
@@ -106,7 +124,8 @@ module RobotLab
         doom_loop_threshold: @config.doom_loop_threshold,
         auto_compact:        @config.auto_compact,
         compact_threshold:   @config.compact_threshold,
-        token_budget:        @config.token_budget
+        token_budget:        @config.token_budget,
+        cost_budget:         @config.cost_budget
       }.compact
     end
 
@@ -163,13 +182,13 @@ module RobotLab
       stop: nil,
       max_tool_rounds: nil,
       token_budget: nil,
+      cost_budget: nil,
       doom_loop_threshold: nil,
       mcp_discovery: false,
-      config: nil,
-      learn: false,
-      learn_domain: nil,
-      store_path: nil
+      config: nil
     )
+      validate_tools_filter!(tools)
+
       assign_identity_ivars(name: name, template: template, system_prompt: system_prompt,
                             context: context, description: description, local_tools: local_tools,
                             skills: skills, mcp_discovery: mcp_discovery)
@@ -180,7 +199,7 @@ module RobotLab
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
-        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
         doom_loop_threshold: doom_loop_threshold, mcp_servers: mcp_servers,
         mcp: mcp, tools: tools, config: config
       )
@@ -188,7 +207,6 @@ module RobotLab
       extract_config_ivars
       initialize_runtime_state
       initialize_memory
-      configure_learning(learn: learn, learn_domain: learn_domain, store_path: store_path)
 
       lab_config = RobotLab.config
       resolved_model = @config.model || lab_config.ruby_llm.model
@@ -217,39 +235,6 @@ module RobotLab
 
       m = @chat.model
       m.respond_to?(:id) ? m.id : m.to_s
-    end
-
-    # Send a message and get a response, with Robot's extended capabilities
-    #
-    # @param message [String] the user message
-    # @param network [NetworkRun, nil] network context (legacy)
-    # @param network_memory [Memory, nil] shared network memory
-    # @param memory [Memory, Hash, nil] runtime memory to merge
-    # @param mcp [Symbol, Array, nil] runtime MCP override
-    # @param tools [Symbol, Array, nil] runtime tools override
-    # @yield [chunk] optional streaming block called with each content chunk
-    # @return [RobotResult]
-    def run(message = nil, network: nil, network_memory: nil, network_config: nil,
-            memory: nil, mcp: :none, tools: :none, **kwargs, &block)
-      run_memory = resolve_run_memory(memory, network: network, network_memory: network_memory)
-      previous_writer = run_memory.current_writer
-      run_memory.current_writer = @name
-
-      begin
-        run_context = kwargs.except(:with)
-        prepare_tools(message: message, mcp: mcp, tools: tools,
-                      network: network, network_config: network_config)
-        rerender_template(run_context) if @template && run_context.any?
-        response = invoke_ask(message: message, kwargs: kwargs, block: block)
-        result = build_result(response, run_memory)
-        enforce_token_budget!
-        result
-      ensure
-        remove_doom_loop_detection
-        restore_tool_call_callback if @config.max_tool_rounds
-        run_reflector if @durable_store
-        run_memory.current_writer = previous_writer
-      end
     end
 
     # Reconfigure the robot for a new context
@@ -523,13 +508,19 @@ module RobotLab
       text = text.to_s.strip
       return self if text.empty?
 
-      # Remove any existing learning that is a substring of the new one
-      @learnings.reject! { |existing| text.include?(existing) }
+      ctx        = LearnHookContext.new(robot: self, text: text, learnings_before: @learnings.dup)
+      registries = [RobotLab.hooks, @hooks]
 
-      # Skip if any existing learning already covers the new one
-      unless @learnings.any? { |existing| existing.include?(text) }
-        @learnings << text
-        @memory.set(:learnings, @learnings.dup)
+      RobotLab::Hooks.run(:learn, ctx, registries: registries) do
+        @learnings.reject! { |existing| text.include?(existing) }
+
+        unless @learnings.any? { |existing| existing.include?(text) }
+          @learnings << text
+          @memory.set(:learnings, @learnings.dup)
+          ctx.stored = true
+        end
+
+        RobotLab::Hooks.call(:on_learn, ctx, registries: registries)
       end
 
       self
@@ -567,6 +558,22 @@ module RobotLab
 
     private
 
+    # `tools:` is a NAME allowlist (a filter over available tools), not a place
+    # to attach tool instances — passing instances there silently attaches
+    # nothing. Catch the mistake with a clear, actionable error.
+    def validate_tools_filter!(tools)
+      return unless tools.is_a?(Array)
+
+      offenders = tools.reject { |t| t.is_a?(String) || t.is_a?(Symbol) }
+      return if offenders.empty?
+
+      classes = offenders.map { |t| t.is_a?(Class) ? t.name : t.class.name }.uniq.join(", ")
+      raise ArgumentError,
+            "`tools:` expects tool names (String/Symbol) to allow, but received #{classes}. " \
+            "To attach tool instances or classes, pass them as `local_tools:` " \
+            "(e.g. RobotLab.build(local_tools: [MyTool.new]))."
+    end
+
     def assign_identity_ivars(name:, template:, system_prompt:, context:, description:,
                               local_tools:, skills:, mcp_discovery:)
       @name = name.to_s
@@ -588,7 +595,7 @@ module RobotLab
     def build_effective_config(model:, temperature:, top_p:, top_k:, max_tokens:,
                                presence_penalty:, frequency_penalty:, stop:,
                                on_tool_call:, on_tool_result:, on_content:,
-                               bus:, enable_cache:, max_tool_rounds:, token_budget:,
+                               bus:, enable_cache:, max_tool_rounds:, token_budget:, cost_budget:,
                                doom_loop_threshold:, mcp_servers:, mcp:, tools:, config:)
       explicit_fields = {
         model: model, temperature: temperature, top_p: top_p, top_k: top_k,
@@ -596,7 +603,7 @@ module RobotLab
         frequency_penalty: frequency_penalty, stop: stop,
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
-        max_tool_rounds: max_tool_rounds, token_budget: token_budget,
+        max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
         doom_loop_threshold: doom_loop_threshold
       }.compact
 
@@ -623,6 +630,7 @@ module RobotLab
       @bus                 = @config.bus
       @message_counter     = 0
       @outbox              = {}
+      @bus_mutex           = Mutex.new
       @message_handler     = ->(_msg) {}
       @bus_poller          = nil
       @private_bus_poller  = nil
@@ -630,6 +638,8 @@ module RobotLab
       @total_input_tokens  = 0
       @total_output_tokens = 0
       @learnings           = []
+      @hooks               = HookRegistry.new
+      @budget_ledger       = build_budget_ledger
     end
 
     def initialize_memory
@@ -637,16 +647,6 @@ module RobotLab
       @memory = Memory.new(enable_cache: cache_enabled)
       persisted = @memory.get(:learnings)
       @learnings = Array(persisted) if persisted
-    end
-
-    def configure_learning(learn:, learn_domain:, store_path:)
-      return unless learn && RobotLab.extension_loaded?(:durable)
-
-      if learn_domain
-        setup_durable_learning(domain: learn_domain, store_path: store_path)
-      else
-        warn "[RobotLab] Robot '#{@name}': learn: true requires learn_domain: to be set. Durable learning disabled."
-      end
     end
 
     def apply_template
@@ -725,26 +725,87 @@ module RobotLab
 
       ensure_mcp_clients(resolved_mcp)
 
-      filtered = filtered_tools(resolved_tools)
-      @chat.with_tools(*filtered) if filtered.any?
+      # An EXPLICIT `:none` (or literal `[]`) means "send zero tools this turn" —
+      # e.g. a relevance filter judged no tool useful for the prompt. That is
+      # distinct from `:inherit`/unset, which means "no filter, use every attached
+      # tool". Both collapse to `[]` once resolved, and `filtered_tools([])`
+      # treats an empty allowlist as "all tools", so we must branch on the raw
+      # runtime value before resolution to honor the zero-tools intent.
+      filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(resolved_tools))
+
+      # replace: true so the chat holds EXACTLY this turn's resolved+capped set.
+      # RubyLLM's with_tools appends by default; on a persistent chat that lets
+      # tools accumulate across turns, so a capped per-turn addition could still
+      # push the chat's total past the provider limit. An explicit none clears
+      # the chat's tools to zero (with_tools(replace: true) with no tools).
+      @chat.with_tools(*filtered, replace: true) if filtered.any? || explicit_none_tools?(tools)
     end
 
-    def invoke_ask(message:, kwargs:, block:)
-      effective_message = inject_learnings(message)
-      maybe_compact
-      install_circuit_breaker if @config.max_tool_rounds
-      install_doom_loop_detection
-      ask_kwargs = kwargs.slice(:with)
-      streaming  = effective_streaming_block(block)
-      ask(effective_message, **ask_kwargs, &streaming)
+    # True when the runtime tools value explicitly requests zero tools — `:none`
+    # or a literal empty array — as opposed to `:inherit`/`nil`, which mean "no
+    # filter, use all attached tools". Lets a per-turn filter that found nothing
+    # relevant actually send no tools instead of the whole set.
+    #
+    # @param tools [Symbol, Array, nil]
+    # @return [Boolean]
+    def explicit_none_tools?(tools)
+      tools == :none || (tools.is_a?(Array) && tools.empty?)
     end
 
-    def enforce_token_budget!
-      budget = @config.token_budget
-      return unless budget && @total_input_tokens + @total_output_tokens > budget
+    # Clamp the resolved tool list to the provider's hard maximum. Most LLM
+    # providers reject tool arrays longer than 128 and fail the whole turn. This
+    # is the definitive choke point: tools are fully resolved (MCP connected)
+    # and about to be handed to the chat, so the cap holds no matter how the
+    # tools were configured, filtered, or connected. Cap value comes from
+    # RunConfig#max_tools, defaulting to DEFAULT_MAX_TOOLS; nil/<=0 disables it.
+    #
+    # @param tools [Array<Tool>] the resolved tools
+    # @return [Array<Tool>] at most `max_tools` tools
+    def cap_tools(tools)
+      max = effective_max_tools
+      return tools if max.nil? || tools.size <= max
 
-      raise InferenceError,
-            "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
+      RobotLab.config.logger.warn(
+        "[#{@name}] tool list (#{tools.size}) exceeds max_tools (#{max}); " \
+        "sending #{max}, dropping #{tools.size - max}"
+      )
+      tools.first(max)
+    end
+
+    # The provider tool cap: RunConfig#max_tools when set positive, else the
+    # default. Returns nil only if the default itself is disabled.
+    #
+    # @return [Integer, nil]
+    def effective_max_tools
+      configured = @config.respond_to?(:max_tools) ? @config.max_tools : nil
+      configured&.positive? ? configured : DEFAULT_MAX_TOOLS
+    end
+
+    def invoke_ask(context:, kwargs:, hooks:, block:)
+      generation_context = LlmGenerationHookContext.new(
+        robot: self,
+        network: context.network,
+        task: context.task,
+        memory: context.memory,
+        config: context.config,
+        request: context.request,
+        metadata: context.metadata
+      )
+
+      RobotLab::Hooks.run(:llm_generation, generation_context,
+                          registries: hook_registries(context.network), per_run_hooks: hooks) do
+        effective_message = inject_learnings(generation_context.request)
+        maybe_compact(network: context.network)
+        install_circuit_breaker if @config.max_tool_rounds
+        install_doom_loop_detection
+        ask_kwargs = kwargs.slice(:with)
+        streaming  = effective_streaming_block(block)
+        ask(effective_message, **ask_kwargs, &streaming)
+      end
+    end
+
+    def hook_registries(network = nil)
+      [RobotLab.hooks, network&.hooks, @hooks]
     end
 
     # Extract run context from SimpleFlow::Result
@@ -757,6 +818,8 @@ module RobotLab
       memory = run_params.delete(:memory)
       network_memory = run_params.delete(:network_memory)
       network_config = run_params.delete(:network_config)
+      network = run_params.delete(:network)
+      task = run_params.delete(:task)
 
       # Build base context from remaining run params
       base = run_params.dup
@@ -779,16 +842,15 @@ module RobotLab
       merged[:memory] = memory if memory
       merged[:network_memory] = network_memory if network_memory
       merged[:network_config] = network_config if network_config
+      merged[:network] = network if network
+      merged[:task] = task if task
 
       merged
     end
 
     def build_result(response, _memory)
-      output = if response.respond_to?(:content) && response.content
-                 [TextMessage.new(role: 'assistant', content: response.content)]
-               else
-                 []
-               end
+      text = result_text(response)
+      output = text ? [TextMessage.new(role: 'assistant', content: text)] : []
 
       tool_calls = response.respond_to?(:tool_calls) ? (response.tool_calls || []) : []
 
@@ -815,6 +877,37 @@ module RobotLab
         input_tokens: input_toks,
         output_tokens: output_toks
       )
+    end
+
+    # Text for the result's output. Prefers the final response's content, then
+    # falls back in order to: (1) thinking text for models that route all output
+    # through reasoning_content (e.g. qwen3 on Ollama), (2) the most recent
+    # assistant text within the current turn for models that end on a tool call
+    # with no trailing text.
+    #
+    # The chat-history fallback is scoped to messages AFTER the last user message
+    # (the current turn) to prevent a previous turn's response from being returned
+    # when a thinking-mode model emits nothing in response.content.
+    def result_text(response)
+      content = response.content if response.respond_to?(:content)
+      return content if content && !content.to_s.empty?
+
+      # Ollama routes qwen3's reasoning to reasoning_content, which ruby_llm
+      # surfaces as response.thinking (a RubyLLM::Thinking object). When content
+      # is nil and thinking is present, the thinking IS the response for that turn.
+      if response.respond_to?(:thinking) && (thinking = response.thinking)
+        thinking_text = thinking.respond_to?(:text) ? thinking.text.to_s : thinking.to_s
+        return thinking_text unless thinking_text.empty?
+      end
+
+      return nil unless @chat.respond_to?(:messages)
+
+      messages = @chat.messages
+      last_user_idx = messages.rindex { |m| m.role == :user } || -1
+      current_turn = messages[(last_user_idx + 1)..]
+
+      last = current_turn.rfind { |m| m.role == :assistant && m.content && !m.content.to_s.empty? }
+      last&.content
     end
 
     def normalize_tool_calls(tool_calls)
@@ -907,21 +1000,47 @@ module RobotLab
     # :context_window — compress when estimated tokens exceed compact_threshold
     #                   fraction of the model's context window (default 80%)
     # Proc            — called with self; application owns the decision and strategy
-    def maybe_compact
+    #
+    # Fires the :compaction hook family (before/around/after_compaction).
+    # An on_compaction handler can replace the default strategy entirely by
+    # setting ctx.compacted_messages; the core algorithm is skipped when handled.
+    def maybe_compact(network: nil)
       return if @chat.messages.empty?
 
       compact = @config.auto_compact
       return if compact.nil? || compact == :none
+      return if compact == :context_window && !over_compact_threshold?
 
-      case compact
-      when :context_window
-        compact_if_over_context_window
-      when Proc
-        compact.call(self)
+      strategy = compact.is_a?(Proc) ? :custom : compact
+      ctx = CompactionHookContext.new(
+        robot:           self,
+        messages_before: @chat.messages.dup,
+        config:          @config,
+        strategy:        strategy
+      )
+
+      RobotLab::Hooks.run(:compaction, ctx, registries: hook_registries(network)) do
+        RobotLab::Hooks.call(:on_compaction, ctx, registries: hook_registries(network))
+
+        if ctx.handled?
+          replace_messages(ctx.compacted_messages)
+        else
+          case compact
+          when :context_window
+            begin
+              compress_history
+            rescue DependencyError => e
+              RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
+            end
+          when Proc
+            compact.call(self)
+          end
+          ctx.compacted_messages = @chat.messages.dup
+        end
       end
     end
 
-    def compact_if_over_context_window
+    def over_compact_threshold?
       threshold     = (@config.compact_threshold || 0.80).to_f
       estimated_tok = @chat.messages.sum { |m| m.content.to_s.length } / 4
 
@@ -931,7 +1050,11 @@ module RobotLab
         200_000
       end
 
-      return if estimated_tok < window * threshold
+      estimated_tok >= window * threshold
+    end
+
+    def compact_if_over_context_window
+      return unless over_compact_threshold?
 
       begin
         compress_history

@@ -11,8 +11,10 @@ group :development, :test do
   gem 'classifier', '~> 2.3'
   gem "debug"
   gem 'debug_me'
+  gem "flay"
   gem "flog"
   gem 'hashdiff'
+  gem "lumberjack"
   gem "minitest"
   gem "minitest-reporters"
   gem 'ractor_queue'

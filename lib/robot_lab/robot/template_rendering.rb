@@ -45,7 +45,7 @@ module RobotLab
         # Front matter is the base; @config (from constructor kwargs) overrides.
         fm_config = RunConfig.from_front_matter(parsed.metadata)
         effective = fm_config.merge(@config)
-        effective.apply_to(@chat)
+        effective.apply_to(@chat, provider: @provider, assume_model_exists: !@provider.nil?)
 
         # Resolve context (could be a Proc)
         resolved_ctx = resolve_context(context, network: nil)
@@ -142,7 +142,7 @@ module RobotLab
         apply_accumulated_extras(extras)
 
         effective = accumulated_config.merge(@config)
-        effective.apply_to(@chat)
+        effective.apply_to(@chat, provider: @provider, assume_model_exists: !@provider.nil?)
 
         combined = bodies.join("\n\n")
         @chat.with_instructions(combined) unless combined.empty?

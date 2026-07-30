@@ -115,7 +115,7 @@ module RobotLab
           client.transport.stdin.flush
         rescue Errno::EPIPE, IOError => e
           @mutex.synchronize { @clients[io][:queue] = nil }
-          raise MCPError, "MCP connection lost: #{e.message}"
+          raise MCPError.new("MCP connection lost: #{e.message}", retryable: true)
         end
 
         response = Timeout.timeout(timeout) { queue.pop }
@@ -127,7 +127,7 @@ module RobotLab
         response
       rescue Timeout::Error
         @mutex.synchronize { @clients[io]&.[]= :queue, nil }
-        raise MCPError, "MCP server did not respond within #{timeout}s"
+        raise MCPError.new("MCP server did not respond within #{timeout}s", retryable: true)
       ensure
         @mutex.synchronize { @clients[io]&.[]= :queue, nil }
       end

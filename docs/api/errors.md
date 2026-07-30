@@ -15,7 +15,8 @@ StandardError
     ├── RobotLab::MCPError
     ├── RobotLab::BusError
     ├── RobotLab::RactorBoundaryError
-    └── RobotLab::ToolError
+    ├── RobotLab::ToolError
+    └── RobotLab::BudgetExceeded
 ```
 
 Additionally, `DelegationFuture` defines its own scoped error:
@@ -118,6 +119,8 @@ rescue RobotLab::MCPError => e
 end
 ```
 
+`MCPError.new(message, retryable: true)` marks a specific instance as safe to retry (see [Retryable Errors](#retryable-errors) below). The connection-lost and timeout errors raised internally by `MCP::ConnectionPoller` are always constructed with `retryable: true`.
+
 ---
 
 ## RobotLab::BusError
@@ -160,6 +163,48 @@ rescue RobotLab::ToolError => e
 end
 ```
 
+Like `MCPError`, `ToolError.new(message, retryable: true)` marks a specific instance as retryable. When a tool raises inside `Tool#call`, RobotLab appends `" (retryable)"` to the formatted error text returned to the LLM whenever `RobotLab::Errors.retryable?(error)` is true, so the model itself can see that another attempt is worth trying.
+
+---
+
+## RobotLab::BudgetExceeded
+
+Raised when a Robot's configured `token_budget` or `cost_budget` is already exhausted **before** an LLM call is attempted (see [Budgets](../guides/observability.md#budgets-token--cost) and `RobotLab::Budget::Ledger`). This is distinct from the pre-existing `InferenceError` "Token budget exceeded" message, which covers a call that *completed* but pushed cumulative usage over budget — `BudgetExceeded` means the call was refused outright, before any tokens were spent.
+
+```ruby
+robot = RobotLab.build(name: "capped", system_prompt: "...", cost_budget: 0.50)
+
+begin
+  robot.run("Do the expensive thing")
+rescue RobotLab::BudgetExceeded => e
+  puts e.message  # "budget exceeded for cost: 0.62 > 0.5"
+end
+```
+
+---
+
+## Retryable Errors
+
+`RobotLab::Errors.retryable?(error)` classifies whether a host (an ActiveJob `retry_on` list, `robot_lab-to`'s takeover loop, a custom retry wrapper) should retry the operation that raised `error`:
+
+| Error | Retryable? |
+|-------|------------|
+| `InferenceError` (and subclasses, except `ToolLoopError`) | Always |
+| `ToolLoopError` | Never — it's a circuit breaker; retrying immediately re-triggers the same loop |
+| `MCPError` / `ToolError` | Only when raised with `retryable: true` at the raise site |
+| Everything else (`ConfigurationError`, `ToolNotFoundError`, `DependencyError`, `RactorBoundaryError`, `BusError`, `BudgetExceeded`, non-RobotLab errors) | Never |
+
+```ruby
+begin
+  robot.run(task)
+rescue RobotLab::Error => e
+  retry if RobotLab::Errors.retryable?(e)
+  raise
+end
+```
+
+`RobotLab::Errors.retryable_classes` returns `[RobotLab::InferenceError]` — an always-retryable allow-list for explicit ActiveJob-style `retry_on` declarations. It excludes `MCPError`/`ToolError` because their retryability is per-raise (via `retryable:`), not per-class.
+
 ---
 
 ## RobotLab::DelegationFuture::DelegationTimeout
@@ -181,5 +226,5 @@ end
 ## Related
 
 - [Building Robots](../guides/building-robots.md) — Tool loop circuit breaker, delegation
-- [Ractor Parallelism](../guides/ractor-parallelism.md) — Ractor boundary and tool errors
+- [Observability & Safety](../guides/observability.md) — circuit breaker and tool loop errors
 - [MCP Integration](../guides/mcp-integration.md) — MCP connection errors

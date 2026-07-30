@@ -59,6 +59,7 @@ module RobotLab
   #
   class Network
     include Utils
+    include Runnable
 
     # Reserved key for broadcast messages in memory
     BROADCAST_KEY = :_network_broadcast
@@ -71,7 +72,7 @@ module RobotLab
     #   @return [Hash<String, Robot>] robots in this network, keyed by name
     # @!attribute [r] memory
     #   @return [Memory] shared memory for all robots in the network
-    attr_reader :name, :pipeline, :robots, :memory, :config, :parallel_mode
+    attr_reader :name, :pipeline, :robots, :memory, :config, :parallel_mode, :hooks
 
     # Creates a new Network instance.
     #
@@ -94,6 +95,7 @@ module RobotLab
       @memory = memory || Memory.new(network_name: @name)
       @config = config || RunConfig.new
       @parallel_mode = parallel_mode
+      @hooks = HookRegistry.new
       @broadcast_handlers = []
       @bus_poller = BusPoller.new.start
 
@@ -132,7 +134,8 @@ module RobotLab
         mcp: mcp,
         tools: tools,
         memory: memory,
-        config: config
+        config: config,
+        network: self
       )
 
       # Register the group and assign the shared poller to the robot
@@ -177,22 +180,53 @@ module RobotLab
     #   result.value  # => RobotResult from last robot
     #   result.context[:classifier]  # => RobotResult from classifier
     #
-    def run(**run_context)
+    def run(message = nil, **run_context)
+      # Runnable protocol: accept a positional message like Robot#run does, so
+      # callers can `run(msg, ...)` uniformly. `run(message: msg)` still works.
+      run_context[:message] = message unless message.nil?
+
       # Include shared memory in run params so robots can access it
       run_context[:network_memory] = @memory
+      run_context[:network] = self
 
       # Pass network's config so robots can inherit it
       run_context[:network_config] = @config unless @config.empty?
 
-      if @parallel_mode == :ractor
-        run_with_ractor_scheduler(run_context)
-      else
-        initial_result = SimpleFlow::Result.new(
-          run_context,
-          context: { run_params: run_context }
-        )
-        @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
+      context = NetworkRunHookContext.new(
+        network: self,
+        context: run_context,
+        memory: @memory,
+        config: @config
+      )
+
+      RobotLab::Hooks.run(:network_run, context, registries: [RobotLab.hooks, @hooks]) do
+        if @parallel_mode == :ractor
+          run_with_ractor_scheduler(context.context)
+        else
+          initial_result = SimpleFlow::Result.new(
+            context.context,
+            context: { run_params: context.context }
+          )
+          @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
+        end
       end
+    end
+
+    # Runnable protocol: the network's robots as an Array (in pipeline order),
+    # and the network? predicate. (`robots` itself stays a name=>robot Hash.)
+    #
+    # @return [Array<Robot>]
+    def crew
+      robots.values
+    end
+
+    # @return [Boolean] always true for a Network
+    def network?
+      true
+    end
+
+    def on(handler_class, context: nil)
+      @hooks.on(handler_class, context: context)
     end
 
     # Broadcast a message to all robots in the network.
@@ -303,6 +337,19 @@ module RobotLab
       self
     end
 
+    # Remove a dynamically-added robot from the network by name. Returns the
+    # removed robot, or nil if no robot by that name was present.
+    #
+    # Only removes the robot from the crew (`@robots`); it does not rewrite the
+    # pipeline, so callers should not remove a robot that is a pipeline task.
+    #
+    # @param name [String, Symbol] the robot's name
+    # @return [Robot, nil]
+    #
+    def remove_robot(name)
+      @robots.delete(name.to_s)
+    end
+
     # Visualize the pipeline as ASCII
     #
     # @return [String, nil]
@@ -363,21 +410,31 @@ module RobotLab
       specs_with_deps = @tasks.map do |task_name, task_wrapper|
         deps = dep_graph[task_name.to_sym] || []
         deps = deps.empty? ? :none : deps.map(&:to_s)
-
-        spec = RobotSpec.new(
-          name:          task_wrapper.robot.name.freeze,
-          template:      task_wrapper.robot.template&.to_s&.freeze,
-          system_prompt: task_wrapper.robot.system_prompt&.freeze,
-          config_hash:   RactorBoundary.freeze_deep(task_wrapper.robot.config.to_json_hash)
-        )
-
-        { spec: spec, depends_on: deps }
+        { spec: build_robot_spec(task_wrapper), depends_on: deps }
       end
 
       scheduler = RactorNetworkScheduler.new(memory: @memory)
       results   = scheduler.run_pipeline(specs_with_deps, message: message)
       scheduler.shutdown
       results
+    end
+
+    def build_robot_spec(task_wrapper)
+      robot = task_wrapper.robot
+      RobotSpec.new(
+        name:          robot.name.freeze,
+        template:      robot.template&.to_s&.freeze,
+        system_prompt: robot.system_prompt&.freeze,
+        config_hash:   RactorBoundary.freeze_deep(robot.config.to_json_hash),
+        hook_classes:  ractor_hook_classes_for(robot)
+      )
+    end
+
+    def ractor_hook_classes_for(robot)
+      [RobotLab.hooks, @hooks, robot.hooks]
+        .flat_map { |registry| registry.registrations.map(&:handler_class) }
+        .uniq
+        .freeze
     end
   end
 end

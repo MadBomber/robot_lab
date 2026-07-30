@@ -63,7 +63,9 @@ robot = RobotLab.build(
 )
 ```
 
-When `provider:` is set, `assume_model_exists: true` is automatically applied. The provider is available via `robot.provider`.
+When `provider:` is set, `assume_model_exists: true` is automatically applied. The provider is available via `robot.provider`. This context is preserved across every re-application of the robot's config — including when a template's front matter re-renders mid-run — so a local-provider robot doesn't fall back to RubyLLM's static model registry (and raise a "model not found" error) on later turns.
+
+Some local models route their entire response through reasoning/thinking content instead of the normal response text (e.g. `qwen3` on Ollama). When that happens, `result.reply` falls back to the thinking text automatically — see [Robot with Local Provider](../api/core/robot.md#robot-with-local-provider) for details.
 
 ### System Prompt
 
@@ -143,6 +145,17 @@ The following YAML front matter keys are applied to the robot's chat automatical
 | `skills` | Array of skill template symbols to prepend (see [Composable Skills](#composable-skills)) |
 
 Constructor-provided values always take precedence over frontmatter values.
+
+### Rendering a Template to a String
+
+`RobotLab.render_template` renders a named template directly to a `String` — using the same configured template library (`prompts_dir` / `ROBOT_LAB_TEMPLATE_PATH`) as `template:` on `RobotLab.build` — without constructing a robot. Front-matter parameters are supplied as keyword arguments:
+
+```ruby
+RobotLab.render_template(:objective, topic: "commit messages")
+# => "<rendered body of prompts/objective.md, with topic substituted>"
+```
+
+Unlike `template:` on `build` (which renders a template as a robot's *system prompt*), this returns the plain text — useful as a one-off task message, an evaluation rubric, or any other place you want a parameterized `.md` template's body without the overhead of a robot.
 
 ### Self-Contained Templates
 
@@ -686,6 +699,30 @@ The `on_message` block arity controls delivery handling:
 
 See [Message Bus](../architecture/core-concepts.md#message-bus) for details.
 
+### Auto-Responding to Bus Tasks
+
+The `Comedian`/`ComedyCritic` example above hand-wires `on_message` to run and reply. For the common case — run every inbound task through the robot and reply with the result — `respond_to_tasks`/`serve` do it in one call:
+
+```ruby
+bob = RobotLab.build(name: "bob", template: :comedian, bus: bus)
+bob.serve  # every inbound task runs through bob.run and replies automatically
+
+alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
+```
+
+`serve` is shorthand for `respond_to_tasks(auto_reply: true) { |message| run(message.content).reply }`. Use `respond_to_tasks` directly when the reply shouldn't just be `run(...).reply` — e.g. post-processing the result first:
+
+```ruby
+bob.respond_to_tasks do |message|
+  joke = run(message.content.to_s).reply.strip
+  joke.end_with?("!") ? joke : "#{joke}!"
+end
+```
+
+Both ignore messages that are themselves replies (`message.reply?`), so two robots calling `serve`/`respond_to_tasks` on each other don't loop.
+
+See [Message Bus](../architecture/core-concepts.md#message-bus) for details.
+
 ### Spawning Robots Dynamically
 
 Create new robots at runtime using `spawn`. The bus is created lazily — no upfront wiring required:
@@ -728,6 +765,7 @@ Key features of `spawn`:
 - Creates a bus lazily if the parent doesn't have one
 - Spawned robots can immediately send and receive messages
 - Multiple robots with the same name enable fan-out messaging
+- The child inherits the parent's `model`/`provider` (caller-supplied `model:`/`provider:` still override) — a dispatcher running on a local Ollama model spawns specialists that also target that model, instead of falling back to the global default model/provider
 
 Robots can also join a bus after creation:
 

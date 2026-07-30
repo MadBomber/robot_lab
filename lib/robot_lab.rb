@@ -64,6 +64,10 @@ loader.setup
 # individually (e.g. TextMessage lives in message.rb, not text_message.rb).
 # Require them explicitly so their constants are available without eager loading.
 require_relative 'robot_lab/error'
+require_relative 'robot_lab/hook_context'
+require_relative 'robot_lab/hook'
+require_relative 'robot_lab/hook_registry'
+require_relative 'robot_lab/hooks'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
 
@@ -109,6 +113,33 @@ module RobotLab
       @extensions.keys
     end
 
+    def hooks
+      @hooks ||= HookRegistry.new
+    end
+
+    def on(handler_class, context: nil)
+      hooks.on(handler_class, context: context)
+    end
+
+    def clear_hooks!
+      @hooks = HookRegistry.new
+    end
+
+    def with_hook_scope(registries, per_run_hooks)
+      previous = Thread.current[:robot_lab_hook_scope]
+      Thread.current[:robot_lab_hook_scope] = {
+        registries: registries,
+        per_run_hooks: per_run_hooks
+      }
+      yield
+    ensure
+      Thread.current[:robot_lab_hook_scope] = previous
+    end
+
+    def current_hook_scope
+      Thread.current[:robot_lab_hook_scope]
+    end
+
     # Returns the Config object (MywayConfig-based).
     #
     # Configuration is automatically loaded from:
@@ -150,6 +181,24 @@ module RobotLab
     def reload_config!
       @config = nil
       config
+    end
+
+    # Render a named prompt template to a String using the configured template
+    # library (the prompts_dir from config / ROBOT_LAB_TEMPLATE_PATH). Front
+    # matter parameters are supplied as keyword arguments.
+    #
+    # Unlike #build (which renders a template as a robot's *system prompt*), this
+    # returns the plain text, so callers can use it as a task, a message, or a
+    # grading rubric.
+    #
+    # @param name [Symbol, String] template id (filename without extension)
+    # @param context [Hash] values for the template's parameters
+    # @return [String] the rendered prompt text
+    #
+    # @example
+    #   RobotLab.render_template(:objective, topic: "commit messages")
+    def render_template(name, **context)
+      PM.parse(name.to_sym).to_s(**context)
     end
 
     # Factory method to create a new Robot instance.

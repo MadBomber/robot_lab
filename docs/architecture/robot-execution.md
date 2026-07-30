@@ -294,7 +294,7 @@ def call(result)
     .with_context(@name.to_sym, robot_result)
     .continue(robot_result)
 rescue Exception => e
-  # Error is wrapped in a RobotResult with the elapsed duration
+  elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
   error_result = RobotResult.new(
     robot_name: @name,
     output: [TextMessage.new(role: 'assistant', content: "Error: #{e.class}: #{e.message}")]

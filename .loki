@@ -1,0 +1,60 @@
+# frozen_string_literal: true
+# robot_lab core — development tasks.
+
+import_up "repo_dev.loki"
+
+class Tasks
+  @@gem_name ||= "robot_lab".freeze
+
+  header "robot_lab v#{gem_version} — core multi-robot LLM framework"
+
+  desc "Run integration tests only"
+  def integration
+    sh "bundle exec rake integration"
+  end
+
+  desc "Run a single test file (e.g. asgard test_file test/robot_test.rb)"
+  def test_file(path)
+    sh "ruby -Ilib:test \"#{path}\""
+  end
+
+  class DocsCommands < Tasks
+    desc "Build YARD + MkDocs documentation"
+    def build
+      sh "bundle exec rake docs:build"
+    end
+
+    desc "Serve MkDocs documentation at http://localhost:8000"
+    def serve
+      sh "mkdocs serve"
+    end
+
+    desc "Serve YARD documentation locally"
+    def yard
+      sh "yard server --reload"
+    end
+  end
+
+  class ExamplesCommands < Tasks
+    desc "Run all examples (skips standalone apps and external-service examples)"
+    def all
+      sh "bundle exec rake examples:all"
+    end
+
+    desc "exec N", "Run a specific example by number (e.g. asgard examples exec 3)"
+    def exec(num)
+      sh "bundle exec rake examples:run[#{num}]"
+    end
+
+    desc "Start the Rails demo app (example 18)"
+    def rails
+      sh "bundle exec rake examples:rails"
+    end
+  end
+
+  desc "docs SUBCOMMAND", "Documentation tasks (build, serve, yard)"
+  subcommand "docs", DocsCommands
+
+  desc "examples SUBCOMMAND", "Example tasks (all, exec N, rails)"
+  subcommand "examples", ExamplesCommands
+end
