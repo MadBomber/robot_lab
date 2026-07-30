@@ -74,7 +74,10 @@ class BusCoordinationIntegrationTest < Minitest::Test
     bob   = RobotLab::Robot.new(name: "bob",   template: :assistant, bus: bus)
 
     bob_hits = 0
-    bob.respond_to_tasks { |msg| bob_hits += 1; "re: #{msg.content}" }
+    bob.respond_to_tasks do |msg|
+      bob_hits += 1
+      "re: #{msg.content}"
+    end
     alice.respond_to_tasks { |msg| "ack: #{msg.content}" } # would loop if replies counted as tasks
 
     Async { alice.send_message(to: :bob, content: "one") }
@@ -88,7 +91,10 @@ class BusCoordinationIntegrationTest < Minitest::Test
     bob   = RobotLab::Robot.new(name: "bob",   template: :assistant, bus: bus)
 
     seen = []
-    bob.respond_to_tasks(auto_reply: false) { |msg| seen << msg.content; "silent" }
+    bob.respond_to_tasks(auto_reply: false) do |msg|
+      seen << msg.content
+      "silent"
+    end
     sent = nil
     Async { sent = alice.send_message(to: :bob, content: "fyi") }
     wait_until(timeout: 2) { seen.any? }
