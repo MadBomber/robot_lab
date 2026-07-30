@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "robot_lab"
   spec.version = RobotLab::VERSION
   spec.authors = ["Dewayne VanHoozer"]
-  spec.email = ["dewayne@vanhoozer.me"]
+  spec.email = ["dvanhoozer@gmail.com"]
 
   spec.summary = "Ruby framework for building and orchestrating multi-robot LLM workflows"
   spec.description = <<~DESC
