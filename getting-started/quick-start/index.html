@@ -1430,6 +1430,8 @@
       
         
       
+        
+      
     
     
     
@@ -1493,6 +1495,8 @@
       
         
           
+        
+      
         
       
         
@@ -1592,14 +1596,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/network/" class="md-nav__link">
+      <a href="../../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1620,14 +1624,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/state/" class="md-nav__link">
+      <a href="../../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1697,9 +1701,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1737,7 +1797,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1759,14 +1819,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1928,7 +1988,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1950,14 +2010,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2089,7 +2149,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2111,14 +2171,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2583,10 +2643,15 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-ant-...&quot;</span>
 </span></code></pre></div>
 <p>Or create a config file at <code>./config/robot_lab.yml</code>:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">defaults</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">ruby_llm</span><span class="p">:</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">anthropic_api_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;%= ENV[&#39;ANTHROPIC_API_KEY&#39;] %&gt;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">ruby_llm</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">anthropic_api_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;%= ENV[&#39;ANTHROPIC_API_KEY&#39;] %&gt;</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+Config files are <strong>flat</strong> — put the keys at the top level. Wrapping them in a
+<code>defaults:</code> key (as the gem's own bundled <code>defaults.yml</code> does) makes the whole
+file silently ignored.</p>
+</blockquote>
 <p>See <a href="../configuration/">Configuration</a> for all configuration options.</p>
 <h2 id="step-2-create-a-robot">Step 2: Create a Robot<a class="headerlink" href="#step-2-create-a-robot" title="Permanent link">&para;</a></h2>
 <p>Build a simple assistant robot using keyword arguments:</p>
@@ -2681,10 +2746,27 @@
 </span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">CurrentTime</span><span class="o">]</span>
 </span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="p">)</span>
 </span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>
-</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">assistant</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What time is it right now?&quot;</span><span class="p">)</span>
-</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="c1"># tools: :inherit is REQUIRED -- run() sends no tools without it</span>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">assistant</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What time is it right now?&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
 </span></code></pre></div>
 <p>Tools are passed to the robot via the <code>local_tools:</code> keyword argument as an array of <code>RubyLLM::Tool</code> subclasses.</p>
+<blockquote>
+<p>[!WARNING]
+<strong>Attaching a tool is not the same as sending it.</strong> <code>Robot#run</code> defaults to
+<code>tools: :none</code>, which means "send zero tools this turn". Without
+<code>tools: :inherit</code> on the run, the example above builds fine, calls the LLM
+fine, and the model simply never sees <code>CurrentTime</code> — it will guess or say it
+cannot check the time. The same applies to MCP: pass
+<code>mcp: :inherit, tools: :inherit</code> to connect MCP servers and expose their tools.</p>
+<p>Do <strong>not</strong> try to fix this by passing <code>tools: :inherit</code> to <code>RobotLab.build</code> for
+a standalone robot like this one — at build time it resolves against the global
+<code>:none</code> and yields an allowlist matching nothing, suppressing the tools even
+when the run asks for them. Put it on the <code>run</code> call.</p>
+<p>(The one place build-time <code>:inherit</code> <em>is</em> correct is a robot in a network, where
+it opts into the network <code>config:</code>'s list — see
+<a href="../../guides/creating-networks/">Creating Networks</a>.)</p>
+</blockquote>
 <h2 id="method-chaining">Method Chaining<a class="headerlink" href="#method-chaining" title="Permanent link">&para;</a></h2>
 <p>Robots support a chaining API for runtime adjustments:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;writer&quot;</span><span class="p">)</span>
@@ -2697,50 +2779,73 @@
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
 </span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
 </span></code></pre></div>
-<p>Available chaining methods include <code>with_instructions</code>, <code>with_temperature</code>, <code>with_model</code>, <code>with_max_tokens</code>, <code>with_top_p</code>, <code>with_tools</code>, and more.</p>
+<p>The complete set of chaining methods is <code>with_context</code>, <code>with_headers</code>,
+<code>with_instructions</code>, <code>with_model</code>, <code>with_params</code>, <code>with_schema</code>,
+<code>with_temperature</code>, <code>with_thinking</code>, <code>with_tool</code>, <code>with_tools</code>, plus RobotLab's
+own <code>with_template</code> and <code>with_bus</code>.</p>
+<blockquote>
+<p>[!NOTE]
+There is no <code>with_max_tokens</code>, <code>with_top_p</code>, <code>with_top_k</code>, <code>with_stop</code>,
+<code>with_presence_penalty</code>, or <code>with_frequency_penalty</code> — those raise
+<code>NoMethodError</code>. Set them as constructor keyword arguments
+(<code>RobotLab.build(..., max_tokens: 2000)</code>) or through <code>with_params</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">with_params</span><span class="p">(</span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="ss">top_p</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+</blockquote>
 <h2 id="multi-robot-network">Multi-Robot Network<a class="headerlink" href="#multi-robot-network" title="Permanent link">&para;</a></h2>
 <p>Create a pipeline of robots using <code>RobotLab.create_network</code>. Networks use <code>SimpleFlow::Pipeline</code> under the hood with <code>task</code> definitions and dependency tracking:</p>
-<div class="language-ruby highlight"><span class="filename">hello_network.rb</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Build specialized robots</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">analyst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="sh">    You are a text analyst. Analyze the given text and provide a brief</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="sh">    summary of its key themes and sentiment. Be concise -- 2-3 sentences max.</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="dl">  PROMPT</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">)</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;writer&quot;</span><span class="p">,</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="sh">    You are a professional copywriter. Based on the analysis you receive,</span>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="sh">    write a short, engaging summary suitable for a newsletter. Keep it</span>
-</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="sh">    to one paragraph.</span>
-</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="dl">  PROMPT</span>
-</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="p">)</span>
-</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>
-</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="c1"># Create a sequential pipeline</span>
-</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;content_pipeline&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyst</span><span class="p">,</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
-</span><span id="__span-10-24"><a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyst</span><span class="o">]</span>
-</span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="k">end</span>
-</span><span id="__span-10-26"><a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>
-</span><span id="__span-10-27"><a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a><span class="c1"># Run the network</span>
-</span><span id="__span-10-28"><a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span id="__span-10-29"><a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a><span class="w">  </span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ruby 3.4 was released with significant performance improvements...&quot;</span>
-</span><span id="__span-10-30"><a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a><span class="p">)</span>
-</span><span id="__span-10-31"><a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a>
-</span><span id="__span-10-32"><a id="__codelineno-10-32" name="__codelineno-10-32" href="#__codelineno-10-32"></a><span class="c1"># The final result is from the last robot in the pipeline</span>
-</span><span id="__span-10-33"><a id="__codelineno-10-33" name="__codelineno-10-33" href="#__codelineno-10-33"></a><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RobotResult</span><span class="p">)</span>
-</span><span id="__span-10-34"><a id="__codelineno-10-34" name="__codelineno-10-34" href="#__codelineno-10-34"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">last_text_content</span>
-</span><span id="__span-10-35"><a id="__codelineno-10-35" name="__codelineno-10-35" href="#__codelineno-10-35"></a><span class="k">end</span>
-</span><span id="__span-10-36"><a id="__codelineno-10-36" name="__codelineno-10-36" href="#__codelineno-10-36"></a>
-</span><span id="__span-10-37"><a id="__codelineno-10-37" name="__codelineno-10-37" href="#__codelineno-10-37"></a><span class="c1"># Access intermediate results by task name</span>
-</span><span id="__span-10-38"><a id="__codelineno-10-38" name="__codelineno-10-38" href="#__codelineno-10-38"></a><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:analyst</span><span class="o">]</span>
-</span><span id="__span-10-39"><a id="__codelineno-10-39" name="__codelineno-10-39" href="#__codelineno-10-39"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Analysis: </span><span class="si">#{</span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:analyst</span><span class="o">].</span><span class="n">last_text_content</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-10-40"><a id="__codelineno-10-40" name="__codelineno-10-40" href="#__codelineno-10-40"></a><span class="k">end</span>
+<div class="language-ruby highlight"><span class="filename">hello_network.rb</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Build specialized robots</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">analyst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;analyst&quot;</span><span class="p">,</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="sh">    You are a text analyst. Analyze the given text and provide a brief</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="sh">    summary of its key themes and sentiment. Be concise -- 2-3 sentences max.</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="dl">  PROMPT</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p">)</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="n">writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;writer&quot;</span><span class="p">,</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="o">&lt;&lt;~</span><span class="dl">PROMPT</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="sh">    You are a professional copywriter. Based on the analysis you receive,</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="sh">    write a short, engaging summary suitable for a newsletter. Keep it</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="sh">    to one paragraph.</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="dl">  PROMPT</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="p">)</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="c1"># Create a sequential pipeline</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;content_pipeline&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyst</span><span class="p">,</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyst</span><span class="o">]</span>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="k">end</span>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>
+</span><span id="__span-11-27"><a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a><span class="c1"># Run the network</span>
+</span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="w">  </span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ruby 3.4 was released with significant performance improvements...&quot;</span>
+</span><span id="__span-11-30"><a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a><span class="p">)</span>
+</span><span id="__span-11-31"><a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a>
+</span><span id="__span-11-32"><a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a><span class="c1"># The final result is from the last robot in the pipeline</span>
+</span><span id="__span-11-33"><a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RobotResult</span><span class="p">)</span>
+</span><span id="__span-11-34"><a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">last_text_content</span>
+</span><span id="__span-11-35"><a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a><span class="k">end</span>
+</span><span id="__span-11-36"><a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>
+</span><span id="__span-11-37"><a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a><span class="c1"># Access intermediate results by ROBOT name (see note below)</span>
+</span><span id="__span-11-38"><a id="__codelineno-11-38" name="__codelineno-11-38" href="#__codelineno-11-38"></a><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:analyst</span><span class="o">]</span>
+</span><span id="__span-11-39"><a id="__codelineno-11-39" name="__codelineno-11-39" href="#__codelineno-11-39"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Analysis: </span><span class="si">#{</span><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="o">[</span><span class="ss">:analyst</span><span class="o">].</span><span class="n">last_text_content</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-11-40"><a id="__codelineno-11-40" name="__codelineno-11-40" href="#__codelineno-11-40"></a><span class="k">end</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+<code>result.context</code> is keyed by the <strong>robot's</strong> <code>name:</code>, not by the task name.
+Internally each robot writes <code>result.with_context(@name.to_sym, robot_result)</code>.
+The lookup above works only because the robot is named <code>"analyst"</code> <em>and</em> its
+task is named <code>:analyst</code>. If you register a robot under a different task name —
+<code>task :first_pass, analyst</code> — the result is still at
+<code>result.context[:analyst]</code>, not <code>result.context[:first_pass]</code>. Keeping the two
+names identical, as in this example, is the simplest way to avoid the
+surprise.</p>
+</blockquote>
 <h3 id="network-task-dependencies">Network Task Dependencies<a class="headerlink" href="#network-task-dependencies" title="Permanent link">&para;</a></h3>
 <p>Tasks declare their dependencies to control execution order:</p>
 <table>

@@ -1262,6 +1262,8 @@
       
         
       
+        
+      
     
     
     
@@ -1328,6 +1330,8 @@
       
         
           
+        
+      
         
       
         
@@ -1427,14 +1431,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/network/" class="md-nav__link">
+      <a href="../../core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1455,14 +1459,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../core/state/" class="md-nav__link">
+      <a href="../../core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1532,9 +1536,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1572,7 +1632,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1594,14 +1654,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1765,7 +1825,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1787,14 +1847,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2230,7 +2290,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2252,14 +2312,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2910,6 +2970,7 @@
 <th>Transport</th>
 <th>Class</th>
 <th>Use Case</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
@@ -2917,24 +2978,36 @@
 <td>Stdio</td>
 <td><code>Transports::Stdio</code></td>
 <td>Local subprocess servers</td>
+<td>Fully working</td>
 </tr>
 <tr>
 <td>WebSocket</td>
 <td><code>Transports::WebSocket</code></td>
 <td>Real-time bidirectional</td>
+<td><strong>Broken</strong> — see below</td>
 </tr>
 <tr>
 <td>SSE</td>
 <td><code>Transports::SSE</code></td>
 <td>Server-sent events</td>
+<td>Working, but <code>connect</code> reports success unconditionally</td>
 </tr>
 <tr>
 <td>Streamable HTTP</td>
 <td><code>Transports::StreamableHTTP</code></td>
 <td>HTTP with session support</td>
+<td>Working, but <code>connect</code> reports success unconditionally</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Read this before using a non-stdio transport.</strong> Only <code>Stdio</code> performs its
+connection and MCP handshake synchronously. The other three wrap that work in
+an <code>Async do ... end</code> block whose result is never awaited, so any error raised
+inside — including a refused TCP connection — is discarded. <code>connect</code> returns
+<code>self</code> regardless. The specific consequences are documented per transport
+below.</p>
+</blockquote>
 <h2 id="base-interface">Base Interface<a class="headerlink" href="#base-interface" title="Permanent link">&para;</a></h2>
 <p>All transports inherit from <code>RobotLab::MCP::Transports::Base</code> and implement:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">Base</span>
@@ -2950,6 +3023,11 @@
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">end</span>
 </span></code></pre></div>
 <p>The <code>timeout</code> is extracted from the config hash during initialization (and removed from <code>config</code>). If not provided, it defaults to <code>DEFAULT_TIMEOUT</code> (15 seconds). The timeout is propagated from <code>MCP::Server</code> through <code>MCP::Client</code> to the transport.</p>
+<p><strong>Only <code>Stdio</code> enforces the timeout.</strong> <code>SSE</code>, <code>WebSocket</code>, and <code>StreamableHTTP</code>
+store <code>@timeout</code> and expose it through the <code>timeout</code> reader, but never reference
+it — their requests are not time-bounded by this value. If you need a bound on a
+non-stdio transport, wrap the call yourself, or route the client through an
+<code>MCP::ConnectionPoller</code> (stdio only).</p>
 <h2 id="stdio-transport">Stdio Transport<a class="headerlink" href="#stdio-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::Stdio</code></p>
 <p>Spawns a subprocess and communicates via stdin/stdout using JSON-RPC messages (one per line). Automatically sends MCP <code>initialize</code> and <code>notifications/initialized</code> on connect. All blocking I/O is wrapped with <code>Timeout.timeout</code> so a missing or hung server cannot block the caller forever.</p>
@@ -3023,7 +3101,22 @@
 </span></code></pre></div>
 <h2 id="websocket-transport">WebSocket Transport<a class="headerlink" href="#websocket-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::WebSocket</code></p>
-<p>Uses <code>async-websocket</code> for non-blocking bidirectional communication. Requires the <code>async-websocket</code> gem.</p>
+<p>Intended to use <code>async-websocket</code> for non-blocking bidirectional communication.</p>
+<blockquote>
+<p><strong>This transport does not currently work.</strong> <code>connect</code> calls
+<code>Async::HTTP::Endpoint.parse</code>, but only requires <code>async</code> and
+<code>async/websocket/client</code> — the <code>Async::HTTP</code> namespace is never loaded, so the
+call raises <code>NameError</code>. That happens inside an un-awaited <code>Async</code> block, so
+the error is swallowed: <code>connect</code> returns <code>self</code>, no <code>MCPError</code> is raised, and
+<code>connected?</code> stays <code>false</code>. Every subsequent <code>send_request</code> then raises
+<code>MCPError, "Not connected"</code>.</p>
+<p>Verified: <code>WebSocket.new(url: "ws://127.0.0.1:9/ws").connect.connected?</code> is
+<code>false</code> with no exception surfacing.</p>
+<p>The rescue on <code>connect</code> only catches <code>LoadError</code>, which is raised if
+<code>async-websocket</code> is missing. Because of the <code>Async::HTTP::Endpoint</code> call, this
+transport also needs <code>async-http</code> even once <code>async-websocket</code> is installed —
+both are declared as runtime dependencies of the gem.</p>
+</blockquote>
 <h3 id="configuration_1">Configuration<a class="headerlink" href="#configuration_1" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ws&quot;</span><span class="p">,</span><span class="w">                              </span><span class="c1"># or &quot;websocket&quot;</span>
@@ -3050,10 +3143,16 @@
 </table>
 <h3 id="behavior_1">Behavior<a class="headerlink" href="#behavior_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Uses <code>Async::WebSocket::Client.connect</code> within an <code>Async</code> block</li>
-<li>Sends JSON-RPC messages as JSON strings</li>
-<li>Reads responses synchronously within the async context</li>
-<li>Raises <code>MCPError</code> if the <code>async-websocket</code> gem is not installed</li>
+<li>Intends to use <code>Async::WebSocket::Client.connect</code> within an <code>Async</code> block, then
+  send the MCP <code>initialize</code> handshake</li>
+<li>In practice the block raises <code>NameError</code> on <code>Async::HTTP::Endpoint</code> before the
+  connection is created, and the un-awaited block discards it</li>
+<li><code>send_request</code> sends JSON-RPC messages as JSON strings and reads the response
+  inside an awaited <code>Async</code> block — but it raises <code>MCPError, "Not connected"</code>
+  because <code>@connected</code> was never set</li>
+<li><code>connect</code> raises <code>MCPError</code> only for <code>LoadError</code> (missing <code>async-websocket</code>);
+  it does not raise for a connection failure</li>
+<li><code>close</code> is a no-op while <code>@connected</code> is <code>false</code></li>
 </ul>
 <h3 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">WebSocket</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
@@ -3061,8 +3160,10 @@
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">)</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">transport</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">transport</span><span class="o">.</span><span class="n">connected?</span><span class="w">  </span><span class="c1"># =&gt; false, even against a live server</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Raises MCPError: &quot;Not connected&quot;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
 <h2 id="sse-transport">SSE Transport<a class="headerlink" href="#sse-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::SSE</code></p>
@@ -3093,19 +3194,31 @@
 </table>
 <h3 id="behavior_2">Behavior<a class="headerlink" href="#behavior_2" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Creates an <code>Async::HTTP::Client</code> on connect</li>
+<li>Creates an <code>Async::HTTP::Client</code> on connect, then sends the MCP <code>initialize</code>
+  handshake</li>
 <li>Sends JSON-RPC messages via HTTP POST with <code>Content-Type: application/json</code></li>
 <li>Reads and parses JSON response body</li>
-<li>Raises <code>MCPError</code> if the <code>async-http</code> gem is not installed</li>
+<li>Raises <code>MCPError</code> if the <code>async-http</code> gem is not installed (<code>LoadError</code> only)</li>
+<li>The <code>timeout</code> from the server config is stored but never applied</li>
 </ul>
+<blockquote>
+<p><strong><code>connect</code> always reports success.</strong> <code>@connected = true</code> is assigned <em>before</em>
+<code>send_initialize</code> runs, and the whole sequence is inside an un-awaited <code>Async</code>
+block. Against an unreachable host, <code>connect</code> returns <code>self</code>, <code>connected?</code>
+returns <code>true</code>, and the handshake failure is never surfaced. The first real
+<code>send_request</code> is where the failure appears.</p>
+<p>Verified: <code>SSE.new(url: "http://127.0.0.1:9/sse").connect.connected?</code> is <code>true</code>.</p>
+</blockquote>
 <h3 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">SSE</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:8080/sse&quot;</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">)</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">transport</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># connected? is true here whether or not the server exists</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
 </span></code></pre></div>
 <h2 id="streamable-http-transport">Streamable HTTP Transport<a class="headerlink" href="#streamable-http-transport" title="Permanent link">&para;</a></h2>
 <p><strong>Class:</strong> <code>RobotLab::MCP::Transports::StreamableHTTP</code></p>
@@ -3155,8 +3268,18 @@
 <li>Sends <code>X-Session-ID</code> header with each request when a session ID is available</li>
 <li>Calls <code>auth_provider</code> for each request to populate the <code>Authorization</code> header</li>
 <li>Exposes <code>session_id</code> reader for accessing the current session ID</li>
-<li>Raises <code>MCPError</code> if the <code>async-http</code> gem is not installed</li>
+<li>Raises <code>MCPError</code> if the <code>async-http</code> gem is not installed (<code>LoadError</code> only)</li>
+<li>The <code>timeout</code> from the server config is stored but never applied</li>
 </ul>
+<blockquote>
+<p><strong><code>connect</code> always reports success</strong>, for the same reason as SSE:
+<code>@connected = true</code> precedes <code>send_initialize</code>, and the enclosing <code>Async</code> block
+is never awaited. <code>connected?</code> returns <code>true</code> against an unreachable host, and
+<code>session_id</code> stays at whatever you configured (<code>nil</code> if you configured nothing)
+because the handshake result was discarded.</p>
+<p>Verified: <code>StreamableHTTP.new(url: "http://127.0.0.1:9/mcp").connect</code> yields
+<code>connected? == true</code>, <code>session_id == nil</code>.</p>
+</blockquote>
 <h3 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">transport</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Transports</span><span class="o">::</span><span class="no">StreamableHTTP</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://server.smithery.ai/neon/mcp&quot;</span><span class="p">,</span>
@@ -3164,20 +3287,59 @@
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">)</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">transport</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">session_id</span><span class="w">  </span><span class="c1"># =&gt; assigned by server or pre-configured</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">puts</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">session_id</span><span class="w">  </span><span class="c1"># =&gt; pre-configured value, or nil until a request lands</span>
 </span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transport</span><span class="o">.</span><span class="n">send_request</span><span class="p">({</span><span class="w"> </span><span class="ss">jsonrpc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">method</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tools/list&quot;</span><span class="w"> </span><span class="p">})</span>
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">transport</span><span class="o">.</span><span class="n">close</span>
 </span></code></pre></div>
 <h2 id="connection-lifecycle">Connection Lifecycle<a class="headerlink" href="#connection-lifecycle" title="Permanent link">&para;</a></h2>
-<p>All transports follow the same lifecycle:</p>
+<p>All transports expose the same four-step lifecycle:</p>
 <ol>
 <li><strong>Create</strong> -- instantiate with configuration hash</li>
 <li><strong>Connect</strong> -- establish connection and perform MCP protocol initialization</li>
 <li><strong>Request/Response</strong> -- send JSON-RPC requests, receive responses</li>
 <li><strong>Close</strong> -- tear down connection and release resources</li>
 </ol>
-<p>Each transport sends the MCP <code>initialize</code> message during connect:</p>
+<p>Step 2 behaves differently per transport:</p>
+<table>
+<thead>
+<tr>
+<th>Transport</th>
+<th><code>connect</code> is synchronous</th>
+<th>Errors surface from <code>connect</code></th>
+<th><code>connected?</code> reflects reality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Stdio</code></td>
+<td>Yes</td>
+<td>Yes (<code>MCPError</code>)</td>
+<td>Yes — also checks the process is alive</td>
+</tr>
+<tr>
+<td><code>SSE</code></td>
+<td>No (un-awaited <code>Async</code>)</td>
+<td>No</td>
+<td>No — always <code>true</code> after <code>connect</code></td>
+</tr>
+<tr>
+<td><code>StreamableHTTP</code></td>
+<td>No (un-awaited <code>Async</code>)</td>
+<td>No</td>
+<td>No — always <code>true</code> after <code>connect</code></td>
+</tr>
+<tr>
+<td><code>WebSocket</code></td>
+<td>No (un-awaited <code>Async</code>)</td>
+<td>No</td>
+<td>No — always <code>false</code> after <code>connect</code></td>
+</tr>
+</tbody>
+</table>
+<p>Only <code>Stdio</code> gives you a trustworthy answer at connect time. For the other three,
+treat the first <code>send_request</code> as the real connection test.</p>
+<p>Each transport builds the same MCP <code>initialize</code> message during connect:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">&quot;jsonrpc&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
@@ -3204,11 +3366,12 @@
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="k">end</span>
 </span></code></pre></div>
 <p>Specific error cases:
-- <strong>Not connected</strong> -- calling <code>send_request</code> before <code>connect</code> raises <code>MCPError</code>
-- <strong>Missing gem</strong> -- WebSocket, SSE, and HTTP transports raise <code>MCPError</code> with a <code>LoadError</code> message if required gems are not installed
+- <strong>Not connected</strong> -- calling <code>send_request</code> before <code>connect</code> raises <code>MCPError</code> (all transports)
+- <strong>Missing gem</strong> -- WebSocket, SSE, and HTTP transports raise <code>MCPError</code> with a <code>LoadError</code> message if the required gem (<code>async-websocket</code> / <code>async-http</code>) is not installed. This is the <em>only</em> error <code>connect</code> re-raises on those three
+- <strong>Connection refused / unreachable host</strong> -- <strong>not</strong> reported by SSE, WebSocket, or StreamableHTTP <code>connect</code>; the error is discarded with the un-awaited <code>Async</code> block
 - <strong>No response</strong> -- Stdio transport raises <code>MCPError</code> if the subprocess produces no output (EOF on stdout)
 - <strong>Command not found</strong> -- Stdio transport raises <code>MCPError</code> with the original <code>Errno::ENOENT</code> message
-- <strong>Timeout</strong> -- Stdio transport raises <code>MCPError</code> if the server does not respond within the configured timeout
+- <strong>Timeout</strong> -- Stdio transport raises <code>MCPError</code> if the server does not respond within the configured timeout. No other transport enforces a timeout
 - <strong>Broken pipe</strong> -- Stdio transport raises <code>MCPError</code> and marks itself disconnected on <code>Errno::EPIPE</code> or <code>IOError</code>
 - <strong>Immediate exit</strong> -- Stdio transport raises <code>MCPError</code> if the server process exits immediately after spawn</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>

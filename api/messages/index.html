@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/messages/">
       
       
-        <link rel="prev" href="../core/memory/">
+        <link rel="prev" href="../errors/">
       
       
         <link rel="next" href="user-message/">
@@ -1262,6 +1262,8 @@
       
         
       
+        
+      
     
     
     
@@ -1328,6 +1330,8 @@
       
         
           
+        
+      
         
       
         
@@ -1427,14 +1431,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/network/" class="md-nav__link">
+      <a href="../core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1455,14 +1459,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/state/" class="md-nav__link">
+      <a href="../core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1532,9 +1536,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1574,7 +1634,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1596,14 +1656,14 @@
             </a>
             
               
-              <label class="md-nav__link md-nav__link--active" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link md-nav__link--active" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1765,7 +1825,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1787,14 +1847,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1926,7 +1986,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1948,14 +2008,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2289,6 +2349,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Common Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nil-keys-and-to_h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nil keys and to_h
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2438,26 +2515,42 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── ToolCallMessage     - role + Array&lt;ToolMessage&gt;
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>└── ToolResultMessage   - tool + result content
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>UserMessage             - Standalone (not a Message subclass)
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>ToolMessage             - Standalone (not a Message subclass)
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>UserMessage             - Standalone PORO (superclass Object)
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>ToolMessage             - Standalone PORO (superclass Object)
 </span></code></pre></div>
+<p><code>UserMessage</code> and <code>ToolMessage</code> are plain objects — their superclass is <code>Object</code>,
+not <code>Message</code>. They do not respond to <code>type</code>, <code>role</code>, or any of the predicates
+below.</p>
 <h2 id="common-interface">Common Interface<a class="headerlink" href="#common-interface" title="Permanent link">&para;</a></h2>
 <p>All Message subclasses implement:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">message</span><span class="o">.</span><span class="n">role</span><span class="w">       </span><span class="c1"># =&gt; String (&quot;user&quot;, &quot;assistant&quot;, &quot;tool_result&quot;)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">message</span><span class="o">.</span><span class="n">role</span><span class="w">       </span><span class="c1"># =&gt; String (&quot;system&quot;, &quot;user&quot;, &quot;assistant&quot;, &quot;tool_result&quot;)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w">    </span><span class="c1"># =&gt; String or structured data</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">message</span><span class="o">.</span><span class="n">type</span><span class="w">       </span><span class="c1"># =&gt; String (&quot;text&quot;, &quot;tool_call&quot;, &quot;tool_result&quot;)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">message</span><span class="o">.</span><span class="n">to_h</span><span class="w">       </span><span class="c1"># =&gt; Hash representation</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">message</span><span class="o">.</span><span class="n">to_json</span><span class="w">    </span><span class="c1"># =&gt; JSON string</span>
 </span></code></pre></div>
+<p>Valid values are fixed by constants on <code>Message</code>, and the constructor raises
+<code>ArgumentError</code> for anything else:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">::</span><span class="no">VALID_TYPES</span><span class="w">         </span><span class="c1"># =&gt; [&quot;text&quot;, &quot;tool_call&quot;, &quot;tool_result&quot;]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">::</span><span class="no">VALID_ROLES</span><span class="w">         </span><span class="c1"># =&gt; [&quot;system&quot;, &quot;user&quot;, &quot;assistant&quot;, &quot;tool_result&quot;]</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">::</span><span class="no">VALID_STOP_REASONS</span><span class="w">  </span><span class="c1"># =&gt; [&quot;tool&quot;, &quot;stop&quot;]</span>
+</span></code></pre></div>
+<h3 id="nil-keys-and-to_h">Nil keys and <code>to_h</code><a class="headerlink" href="#nil-keys-and-to_h" title="Permanent link">&para;</a></h3>
+<p><code>Message#to_h</code> — used as-is by <code>TextMessage</code> — ends in <code>.compact</code>, so any key
+whose value is <code>nil</code> is <strong>absent</strong> from the hash, not present with a <code>nil</code> value.
+A <code>TextMessage</code> built without a <code>stop_reason</code> produces a three-key hash. The same
+applies to <code>UserMessage#to_h</code>.</p>
+<p><code>ToolCallMessage</code>, <code>ToolResultMessage</code>, and <code>ToolMessage</code> override <code>to_h</code> without
+compacting, so their keys are always present.</p>
 <p>Type and role predicates:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">message</span><span class="o">.</span><span class="n">text?</span><span class="w">       </span><span class="c1"># =&gt; true if type is &quot;text&quot;</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_call?</span><span class="w">  </span><span class="c1"># =&gt; true if type is &quot;tool_call&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_result?</span><span class="w"> </span><span class="c1"># =&gt; true if type is &quot;tool_result&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">message</span><span class="o">.</span><span class="n">system?</span><span class="w">     </span><span class="c1"># =&gt; true if role is &quot;system&quot;</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">message</span><span class="o">.</span><span class="n">user?</span><span class="w">       </span><span class="c1"># =&gt; true if role is &quot;user&quot;</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">message</span><span class="o">.</span><span class="n">assistant?</span><span class="w">  </span><span class="c1"># =&gt; true if role is &quot;assistant&quot;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">message</span><span class="o">.</span><span class="n">stopped?</span><span class="w">    </span><span class="c1"># =&gt; true if stop_reason is &quot;stop&quot;</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_stop?</span><span class="w">  </span><span class="c1"># =&gt; true if stop_reason is &quot;tool&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">message</span><span class="o">.</span><span class="n">text?</span><span class="w">       </span><span class="c1"># =&gt; true if type is &quot;text&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_call?</span><span class="w">  </span><span class="c1"># =&gt; true if type is &quot;tool_call&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_result?</span><span class="w"> </span><span class="c1"># =&gt; true if type is &quot;tool_result&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">message</span><span class="o">.</span><span class="n">system?</span><span class="w">     </span><span class="c1"># =&gt; true if role is &quot;system&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">message</span><span class="o">.</span><span class="n">user?</span><span class="w">       </span><span class="c1"># =&gt; true if role is &quot;user&quot;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">message</span><span class="o">.</span><span class="n">assistant?</span><span class="w">  </span><span class="c1"># =&gt; true if role is &quot;assistant&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">message</span><span class="o">.</span><span class="n">stopped?</span><span class="w">    </span><span class="c1"># =&gt; true if stop_reason is &quot;stop&quot;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_stop?</span><span class="w">  </span><span class="c1"># =&gt; true if stop_reason is &quot;tool&quot;</span>
 </span></code></pre></div>
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <table>
@@ -2488,22 +2581,22 @@
 </table>
 <h2 id="usage-in-memory">Usage in Memory<a class="headerlink" href="#usage-in-memory" title="Permanent link">&para;</a></h2>
 <p>Messages are typically accessed through memory:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">messages</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Format for LLM</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">messages</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Format for LLM</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
 </span></code></pre></div>
 <h2 id="deserializing-from-hash">Deserializing from Hash<a class="headerlink" href="#deserializing-from-hash" title="Permanent link">&para;</a></h2>
 <p><code>Message.from_hash</code> reconstructs the correct subclass from a stored hash:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_call&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[...]</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># =&gt; #&lt;RobotLab::ToolCallMessage ...&gt;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_call&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[...]</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># =&gt; #&lt;RobotLab::ToolCallMessage ...&gt;</span>
 </span></code></pre></div>
 <p>When the <code>type</code> key is absent or <code>nil</code> (e.g. records persisted before the field was introduced), <code>from_hash</code> defaults to <code>TextMessage</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;legacy row&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Message</span><span class="o">.</span><span class="n">from_hash</span><span class="p">({</span><span class="w"> </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;legacy row&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># =&gt; #&lt;RobotLab::TextMessage ...&gt;</span>
 </span></code></pre></div>
 <p>String keys are normalised automatically via <code>transform_keys(&amp;:to_sym)</code>.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
@@ -2600,7 +2693,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../core/memory/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Memory">
+          <a href="../errors/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Errors">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2610,7 +2703,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Memory
+                Errors
               </div>
             </div>
           </a>

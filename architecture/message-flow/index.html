@@ -1542,6 +1542,8 @@
       
         
       
+        
+      
     
     
     
@@ -1605,6 +1607,8 @@
       
         
           
+        
+      
         
       
         
@@ -1704,14 +1708,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/network/" class="md-nav__link">
+      <a href="../../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1732,14 +1736,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/state/" class="md-nav__link">
+      <a href="../../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1809,9 +1813,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1849,7 +1909,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1871,14 +1931,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2040,7 +2100,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2062,14 +2122,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2201,7 +2261,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2223,14 +2283,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2803,28 +2863,36 @@
 <h1 id="message-flow">Message Flow<a class="headerlink" href="#message-flow" title="Permanent link">&para;</a></h1>
 <p>This page explains how messages move through RobotLab, from user input to LLM response.</p>
 <h2 id="message-types">Message Types<a class="headerlink" href="#message-types" title="Permanent link">&para;</a></h2>
-<p>RobotLab uses four primary message types:</p>
+<p><code>RobotLab::Message</code> is the abstract base for three conversation message classes. <code>ToolMessage</code> is a plain value object that they reference, and two further message classes — <code>UserMessage</code> and <code>RobotMessage</code> — live outside the hierarchy entirely:</p>
 <pre class="mermaid"><code>classDiagram
     class Message {
         &lt;&lt;abstract&gt;&gt;
         +type: String
         +role: String
-        +content: String
+        +content
         +stop_reason: String
+        +text?() bool
+        +tool_call?() bool
+        +tool_result?() bool
+        +system?() bool
+        +user?() bool
+        +assistant?() bool
+        +stopped?() bool
+        +tool_stop?() bool
+        +to_h() Hash
     }
 
     class TextMessage {
-        +text?() bool
-        +user?() bool
-        +assistant?() bool
-        +system?() bool
+        +content: String
     }
 
     class ToolMessage {
+        &lt;&lt;PORO&gt;&gt;
         +id: String
         +name: String
         +input: Hash
-        +tool_call?() bool
+        +to_h() Hash
+        +to_json() String
     }
 
     class ToolCallMessage {
@@ -2834,7 +2902,10 @@
     class ToolResultMessage {
         +tool: ToolMessage
         +content: Hash
-        +tool_result?() bool
+        +success?() bool
+        +error?() bool
+        +data()
+        +error()
     }
 
     Message &lt;|-- TextMessage
@@ -2842,6 +2913,26 @@
     Message &lt;|-- ToolResultMessage
     ToolMessage -- ToolCallMessage
     ToolMessage -- ToolResultMessage</code></pre>
+<p><code>ToolMessage</code> does <strong>not</strong> inherit from <code>Message</code> — its superclass is <code>Object</code>. It has no <code>type</code>, <code>role</code>, or predicate methods; only <code>id</code>, <code>name</code>, <code>input</code>, <code>to_h</code>, and <code>to_json</code>. The <code>tool_call?</code> predicate lives on <code>Message</code>, so it answers for <code>ToolCallMessage</code>, not for <code>ToolMessage</code>.</p>
+<p>The two classes outside the hierarchy:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UserMessage</code></td>
+<td>Envelope for user input carrying <code>session_id</code>, an extra <code>system_prompt</code>, <code>metadata</code>, <code>id</code>, <code>created_at</code>. <code>UserMessage.from</code> normalizes a String/Hash/TextMessage; <code>#to_message</code> converts to a <code>TextMessage</code></td>
+</tr>
+<tr>
+<td><code>RobotMessage</code></td>
+<td>Immutable <code>Data.define(:id, :from, :content, :in_reply_to)</code> envelope for robot-to-robot traffic on the message bus, with <code>#key</code> (<code>"from:id"</code>) and <code>#reply?</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="textmessage">TextMessage<a class="headerlink" href="#textmessage" title="Permanent link">&para;</a></h3>
 <p>Regular text content from users or assistants:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
@@ -2856,24 +2947,29 @@
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="toolmessage">ToolMessage<a class="headerlink" href="#toolmessage" title="Permanent link">&para;</a></h3>
-<p>Represents a tool invocation with its parameters:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+<p>A standalone value object (not a <code>Message</code>) representing a tool invocation and its parameters:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_123&quot;</span><span class="p">,</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Paris&quot;</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_h</span><span class="w">  </span><span class="c1">#=&gt; { type: &quot;tool&quot;, id: &quot;tool_123&quot;, name: &quot;get_weather&quot;, input: { location: &quot;Paris&quot; } }</span>
 </span></code></pre></div>
+<p>Note that the <code>type: "tool"</code> key appears only in <code>to_h</code>; there is no <code>type</code> reader and no predicate methods.</p>
 <h3 id="toolcallmessage">ToolCallMessage<a class="headerlink" href="#toolcallmessage" title="Permanent link">&para;</a></h3>
 <p>LLM's request to execute one or more tools:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">ToolCallMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">stop_reason</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool&quot;</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Paris&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="o">]</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="no">ToolMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;call_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">location</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Paris&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="ss">stop_reason</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool&quot;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
 </span></code></pre></div>
+<p>The signature is <code>initialize(role:, tools:, stop_reason: nil)</code> — <code>role</code> and
+<code>tools</code> are required and there is <strong>no</strong> <code>content:</code> keyword. Passing one raises
+<code>ArgumentError</code>.</p>
 <h3 id="toolresultmessage">ToolResultMessage<a class="headerlink" href="#toolresultmessage" title="Permanent link">&para;</a></h3>
 <p>Result from tool execution:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">ToolResultMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
@@ -2902,8 +2998,8 @@
     Robot-&gt;&gt;Robot: ensure_mcp_clients
 
     Robot-&gt;&gt;Tools: resolve_tools_hierarchy
-    Tools--&gt;&gt;Robot: filtered tools
-    Robot-&gt;&gt;Chat: @chat.with_tools(...)
+    Tools--&gt;&gt;Robot: filtered + capped tools
+    Robot-&gt;&gt;Chat: @chat.with_tools(*filtered, replace: true)
 
     Robot-&gt;&gt;Agent: ask("message")
     Agent-&gt;&gt;Chat: @chat.ask("message")
@@ -2942,16 +3038,16 @@
 <p><strong>Set Current Writer</strong>: Sets <code>memory.current_writer = robot.name</code> so subscription callbacks know which robot wrote a value.</p>
 </li>
 <li>
-<p><strong>Resolve MCP Hierarchy</strong>: Resolves MCP server configuration through the hierarchy: <code>runtime &gt; robot build &gt; network &gt; global config</code>.</p>
+<p><strong>Resolve MCP Hierarchy</strong>: Resolves MCP server configuration through the hierarchy: <code>runtime (run/task) &gt; robot build-time &gt; network &gt; global config</code>. <code>run</code> defaults <code>mcp:</code> to <code>:none</code>, so nothing is connected unless you pass <code>mcp: :inherit</code> or an explicit list.</p>
 </li>
 <li>
-<p><strong>Ensure MCP Clients</strong>: Initializes or updates MCP client connections. Discovers tools from connected MCP servers.</p>
+<p><strong>Ensure MCP Clients</strong>: Initializes or updates MCP client connections and discovers tools from them. Connection failures are logged and recorded in <code>failed_mcp_server_names</code>, never raised.</p>
 </li>
 <li>
-<p><strong>Resolve Tools Hierarchy</strong>: Resolves which tools are available through the same hierarchy.</p>
+<p><strong>Resolve Tools Hierarchy</strong>: Resolves which tools are available through the same hierarchy. <code>run</code> defaults <code>tools:</code> to <code>:none</code>, which means "send zero tools this turn" — pass <code>tools: :inherit</code> to send the robot's attached tools.</p>
 </li>
 <li>
-<p><strong>Filter Tools</strong>: Applies the resolved tool list to <code>@chat.with_tools(...)</code>.</p>
+<p><strong>Filter Tools</strong>: Filters by the resolved allowlist, clamps to <code>max_tools</code> (128 by default), and applies the set with <code>@chat.with_tools(*filtered, replace: true)</code> so the persistent chat holds exactly this turn's tools.</p>
 </li>
 <li>
 <p><strong>Agent#ask</strong>: Delegates to the parent class <code>RubyLLM::Agent#ask</code>, which calls <code>@chat.ask(message)</code>.</p>
@@ -2996,26 +3092,32 @@
     Network--&gt;&gt;User: result</code></pre>
 <h3 id="key-points">Key Points<a class="headerlink" href="#key-points" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Network creates initial result</strong>: <code>SimpleFlow::Result.new(run_context, context: { run_params: run_context })</code></li>
-<li><strong>Task wraps robot</strong>: Each <code>Task</code> deep-merges its own context with the run params before delegating to the robot</li>
-<li><strong>Robot extracts context</strong>: <code>extract_run_context(result)</code> pulls the message, MCP, tools, and memory from the SimpleFlow result</li>
+<li><strong>Network creates initial result</strong>: <code>SimpleFlow::Result.new(run_context, context: { run_params: run_context })</code>, after injecting <code>network_memory</code>, <code>network</code>, and (when non-empty) <code>network_config</code> into the run context, all wrapped in the <code>:network_run</code> hook</li>
+<li><strong>Task wraps robot</strong>: Each <code>Task</code> runs the <code>:task</code> hook and deep-merges its own context, <code>mcp</code>, <code>tools</code>, <code>memory</code>, and <code>config</code> into the run params before delegating to the robot</li>
+<li><strong>Robot extracts context</strong>: <code>extract_run_context(result)</code> pulls the message, MCP, tools, memory, network, and task out of the SimpleFlow result and passes them to <code>run</code> as keyword arguments</li>
 <li><strong>Shared memory</strong>: All robots use <code>network.memory</code> during network execution</li>
-<li><strong>Result accumulation</strong>: Each task stores its <code>RobotResult</code> in <code>result.context[:task_name]</code></li>
+<li><strong>Result accumulation</strong>: Each robot stores its <code>RobotResult</code> in <code>result.context[:robot_name]</code> — the key comes from <code>@name.to_sym</code> in <code>Robot#call</code>, so it is the <strong>robot's</strong> name, not the task name. They match only when the two are spelled the same way</li>
 </ul>
 <h2 id="robotresult">RobotResult<a class="headerlink" href="#robotresult" title="Permanent link">&para;</a></h2>
 <p>The return value of <code>robot.run("message")</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is Ruby?&quot;</span><span class="p">)</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1">#=&gt; &quot;Ruby is a dynamic programming language...&quot;</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1">#=&gt; false</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1">#=&gt; &quot;assistant&quot;</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1">#=&gt; [TextMessage(role: &quot;assistant&quot;, content: &quot;...&quot;)]</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1">#=&gt; []</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1">#=&gt; &quot;stop&quot;</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">         </span><span class="c1">#=&gt; Time</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">result</span><span class="o">.</span><span class="n">id</span><span class="w">                 </span><span class="c1">#=&gt; &quot;uuid&quot;</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1">#=&gt; &quot;sha256-hex&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">              </span><span class="c1">#=&gt; alias for last_text_content</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1">#=&gt; false</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1">#=&gt; &quot;assistant&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1">#=&gt; [TextMessage(role: &quot;assistant&quot;, content: &quot;...&quot;)]</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1">#=&gt; []</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1">#=&gt; nil (always — see below)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">         </span><span class="c1">#=&gt; Time</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">result</span><span class="o">.</span><span class="n">id</span><span class="w">                 </span><span class="c1">#=&gt; &quot;uuid&quot;</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1">#=&gt; &quot;sha256-hex&quot;</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">       </span><span class="c1">#=&gt; 42</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">      </span><span class="c1">#=&gt; 128</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="w">           </span><span class="c1">#=&gt; Float, nil</span>
 </span></code></pre></div>
+<p><code>stop_reason</code> is always <code>nil</code> on a <code>Robot#run</code> result: <code>build_result</code> reads it as <code>response.respond_to?(:stop_reason) ? response.stop_reason : nil</code>, and <code>RubyLLM::Message</code> does not define the method. It is consequently dropped from <code>export</code>, and <code>result.stopped?</code> reduces to <code>!result.has_tool_calls?</code>.</p>
+<p><code>output</code> always holds exactly one synthesized <code>TextMessage</code> built from the final response text — it is not a transcript of the turn, and it never contains <code>ToolCallMessage</code> or <code>ToolResultMessage</code> entries. <code>tool_calls</code> is read off the final assistant message, which carries no tool calls once RubyLLM's tool loop has finished, so it is effectively always empty. To observe tool activity, use the <code>on_tool_call</code> / <code>on_tool_result</code> callbacks or the tool hooks.</p>
 <h3 id="result-serialization">Result Serialization<a class="headerlink" href="#result-serialization" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Export for persistence (excludes debug fields)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">export</span>
@@ -3030,7 +3132,7 @@
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotResult</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="nb">hash</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="message-predicates">Message Predicates<a class="headerlink" href="#message-predicates" title="Permanent link">&para;</a></h2>
-<p>Check message types:</p>
+<p>These are defined on <code>Message</code>, so every <code>TextMessage</code>, <code>ToolCallMessage</code>, and <code>ToolResultMessage</code> responds to all of them. <code>ToolMessage</code> responds to none of them:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">message</span><span class="o">.</span><span class="n">text?</span><span class="w">         </span><span class="c1"># Is it a TextMessage?</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_call?</span><span class="w">    </span><span class="c1"># Is it a ToolCallMessage?</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_result?</span><span class="w">  </span><span class="c1"># Is it a ToolResultMessage?</span>
@@ -3042,6 +3144,7 @@
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">message</span><span class="o">.</span><span class="n">stopped?</span><span class="w">      </span><span class="c1"># Is stop_reason &quot;stop&quot;?</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="n">message</span><span class="o">.</span><span class="n">tool_stop?</span><span class="w">    </span><span class="c1"># Is stop_reason &quot;tool&quot;?</span>
 </span></code></pre></div>
+<p>Valid values are constrained at construction: <code>type</code> must be one of <code>text</code>, <code>tool_call</code>, <code>tool_result</code>; <code>role</code> one of <code>system</code>, <code>user</code>, <code>assistant</code>, <code>tool_result</code>; <code>stop_reason</code> one of <code>tool</code>, <code>stop</code>. Anything else raises <code>ArgumentError</code>.</p>
 <h2 id="creating-messages">Creating Messages<a class="headerlink" href="#creating-messages" title="Permanent link">&para;</a></h2>
 <h3 id="from-strings">From Strings<a class="headerlink" href="#from-strings" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
@@ -3075,10 +3178,10 @@
 </span></code></pre></div>
 <p>The template resolution process:
 1. <code>PM.parse(:helper)</code> loads the template file from the configured prompts directory
-2. YAML front matter is extracted and applied to the chat (model, temperature, etc.)
-3. The template body is rendered with the provided context
-4. The rendered text is set as system instructions via <code>@chat.with_instructions(rendered)</code></p>
-<p>If both <code>template:</code> and <code>system_prompt:</code> are provided, the template is applied first, then the system prompt is appended via a second <code>@chat.with_instructions</code> call.</p>
+2. Non-LLM front matter (<code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code>) is applied to the robot, filling in only what the constructor did not provide
+3. The LLM front-matter keys become a <code>RunConfig</code> that the robot's own <code>@config</code> merges over — front matter is the base, constructor kwargs win — and <code>apply_to</code> dispatches <code>chat.with_&lt;field&gt;</code> for each field the chat supports. In practice only <code>model</code> and <code>temperature</code> reach the chat this way; <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, and <code>stop</code> are parsed and silently dropped because <code>RubyLLM::Chat</code> defines no <code>with_</code> method for them. Set those via constructor kwargs instead
+4. The template body is rendered with ERB (<code>&lt;%= var %&gt;</code>; <code>{{ var }}</code> is not interpolated) and set as system instructions via <code>@chat.with_instructions(rendered)</code></p>
+<p>If both <code>template:</code> and <code>system_prompt:</code> are provided, the system prompt is appended to the rendered template, producing one combined system message — and it is re-appended on every template re-render, so supplying run-time context never silently drops it.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../state-management/">Memory Management</a> - How memory stores conversation data</li>

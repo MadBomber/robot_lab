@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/errors/">
       
       
+        <link rel="prev" href="../core/state/">
+      
+      
+        <link rel="next" href="../messages/">
       
       
         
@@ -25,7 +29,7 @@
     
     
       
-        <title>Error Reference - RobotLab</title>
+        <title>Errors - RobotLab</title>
       
     
     
@@ -116,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Error Reference
+              Errors
             
           </span>
         </div>
@@ -314,10 +318,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../" class="md-tabs__link">
           
   
@@ -1237,6 +1243,8 @@
       
   
   
+    
+  
   
   
     
@@ -1254,18 +1262,23 @@
       
         
       
-    
-    
-    
-      
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1287,13 +1300,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1317,6 +1330,8 @@
       
         
           
+        
+      
         
       
         
@@ -1416,14 +1431,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/network/" class="md-nav__link">
+      <a href="../core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1444,14 +1459,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/state/" class="md-nav__link">
+      <a href="../core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1521,8 +1536,289 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlaberror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Error
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabconfigurationerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ConfigurationError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabdependencyerror-configurationerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::DependencyError &lt; ConfigurationError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabinferenceerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::InferenceError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabtoollooperror-inferenceerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ToolLoopError &lt; InferenceError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabtoolnotfounderror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ToolNotFoundError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabmcperror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::MCPError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabbuserror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::BusError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabractorboundaryerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::RactorBoundaryError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabtoolerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ToolError
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabbudgetexceeded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::BudgetExceeded
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabawaittimeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AwaitTimeout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retryable-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retryable Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabdelegationfuturedelegationtimeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::DelegationFuture::DelegationTimeout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1561,7 +1857,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1583,14 +1879,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1752,7 +2048,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1774,14 +2070,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1913,7 +2209,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1935,14 +2231,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2378,6 +2674,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#robotlabawaittimeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AwaitTimeout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#retryable-errors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2463,8 +2770,11 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ├── RobotLab::BusError
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ├── RobotLab::RactorBoundaryError
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ├── RobotLab::ToolError
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    └── RobotLab::BudgetExceeded
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ├── RobotLab::BudgetExceeded
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    └── RobotLab::AwaitTimeout
 </span></code></pre></div>
+<p><code>AwaitTimeout</code> is defined in <code>lib/robot_lab/memory.rb</code> and raised by
+<a href="../core/memory/#get"><code>Memory#get</code></a> when a blocking read expires.</p>
 <p>Additionally, <code>DelegationFuture</code> defines its own scoped error:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>StandardError
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>└── RobotLab::Error
@@ -2483,24 +2793,59 @@
 <h2 id="robotlabconfigurationerror">RobotLab::ConfigurationError<a class="headerlink" href="#robotlabconfigurationerror" title="Permanent link">&para;</a></h2>
 <p>Raised when configuration is invalid or missing required values.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Example: missing API key, invalid template path</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ConfigurationError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bad config: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">end</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">begin</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ConfigurationError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bad config: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">end</span>
 </span></code></pre></div>
 <hr />
 <h2 id="robotlabdependencyerror-configurationerror">RobotLab::DependencyError &lt; ConfigurationError<a class="headerlink" href="#robotlabdependencyerror-configurationerror" title="Permanent link">&para;</a></h2>
-<p>Raised when a required optional gem dependency is not installed.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Triggered by: Convergence, HistoryCompressor when &#39;classifier&#39; gem is absent</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DependencyError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Add gem &#39;classifier&#39;, &#39;~&gt; 2.3&#39; to your Gemfile&quot;</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">end</span>
+<p>Raised when a required optional gem dependency is not installed. There are three
+distinct raise sites in core, each with its own message:</p>
+<table>
+<thead>
+<tr>
+<th>Raised by</th>
+<th>Missing dependency</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TextAnalysis.require_classifier!</code> — reached from <code>Convergence</code>, <code>HistoryCompressor</code>, <code>Robot#compress_history</code>, <code>Robot#search_history</code></td>
+<td><code>classifier</code> gem</td>
+<td><code>The 'classifier' gem is required for text analysis features. Add it to your Gemfile: gem 'classifier', '~&gt; 2.3'</code></td>
+</tr>
+<tr>
+<td><code>Memory</code>'s document-store methods (<code>store_document</code>, <code>search_documents</code>, <code>document_keys</code>, <code>delete_document</code>)</td>
+<td><code>robot_lab-document_store</code> gem</td>
+<td><code>document storage requires the robot_lab-document_store gem. Add \</code>gem 'robot_lab-document_store'` to your Gemfile.`</td>
+</tr>
+<tr>
+<td><code>Network#run</code> under <code>parallel_mode: :ractor</code></td>
+<td><code>robot_lab-ractor</code> gem</td>
+<td><code>parallel_mode: :ractor requires the robot_lab-ractor gem. Add \</code>gem 'robot_lab-ractor'` to your Gemfile.`</td>
+</tr>
+</tbody>
+</table>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">begin</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DependencyError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nb">warn</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>Two places swallow it rather than propagate: <code>auto_compact: :context_window</code>
+logs the message at <code>:warn</code> and skips compaction, and
+<code>MCP::ServerDiscovery</code> rescues it and falls back.</p>
 <hr />
 <h2 id="robotlabinferenceerror">RobotLab::InferenceError<a class="headerlink" href="#robotlabinferenceerror" title="Permanent link">&para;</a></h2>
 <p>Raised when LLM inference fails (API errors, timeouts, rate limits).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">InferenceError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;LLM call failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">begin</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">InferenceError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;LLM call failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">end</span>
 </span></code></pre></div>
 <hr />
 <h2 id="robotlabtoollooperror-inferenceerror">RobotLab::ToolLoopError &lt; InferenceError<a class="headerlink" href="#robotlabtoollooperror-inferenceerror" title="Permanent link">&para;</a></h2>
@@ -2513,61 +2858,134 @@
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">)</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">begin</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Run all steps.&quot;</span><span class="p">)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Run all steps.&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolLoopError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Tool call limit of 10 exceeded&quot;</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">clear_messages</span><span class="w">  </span><span class="c1"># required before reuse</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="k">end</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="c1"># &quot;Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)&quot;</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">clear_messages</span><span class="w">  </span><span class="c1"># required before reuse</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>The message format is:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Circuit breaker triggered: &lt;N&gt; tool calls exceeded max_tool_rounds (&lt;M&gt;)
+</span></code></pre></div>
+<p><code>N</code> is the call count that tripped the breaker (always <code>M + 1</code>); <code>M</code> is the configured limit.</p>
 <hr />
 <h2 id="robotlabtoolnotfounderror">RobotLab::ToolNotFoundError<a class="headerlink" href="#robotlabtoolnotfounderror" title="Permanent link">&para;</a></h2>
 <p>Raised when a tool name is referenced but cannot be found in the <code>ToolManifest</code>.</p>
 <hr />
 <h2 id="robotlabmcperror">RobotLab::MCPError<a class="headerlink" href="#robotlabmcperror" title="Permanent link">&para;</a></h2>
 <p>Raised when MCP server communication fails (connection refused, timeout, protocol error).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCPError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;MCP failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">begin</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCPError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;MCP failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">end</span>
 </span></code></pre></div>
 <p><code>MCPError.new(message, retryable: true)</code> marks a specific instance as safe to retry (see <a href="#retryable-errors">Retryable Errors</a> below). The connection-lost and timeout errors raised internally by <code>MCP::ConnectionPoller</code> are always constructed with <code>retryable: true</code>.</p>
 <hr />
 <h2 id="robotlabbuserror">RobotLab::BusError<a class="headerlink" href="#robotlabbuserror" title="Permanent link">&para;</a></h2>
 <p>Raised when message bus communication fails (no bus configured, channel not found).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BusError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bus error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">begin</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:bob</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hi&quot;</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BusError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bus error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">end</span>
 </span></code></pre></div>
 <hr />
 <h2 id="robotlabractorboundaryerror">RobotLab::RactorBoundaryError<a class="headerlink" href="#robotlabractorboundaryerror" title="Permanent link">&para;</a></h2>
 <p>Raised when a value cannot be made Ractor-shareable before crossing a Ractor boundary (e.g., a live <code>IO</code> object, a <code>Proc</code>, or an object with mutable state).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">begin</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundary</span><span class="o">.</span><span class="n">freeze_deep</span><span class="p">({</span><span class="w"> </span><span class="ss">io</span><span class="p">:</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundaryError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Cannot make value Ractor-shareable: ...&quot;</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">end</span>
+<div class="admonition note">
+<p class="admonition-title">The error class is core; the machinery that raises it is not</p>
+<p><code>RobotLab::RactorBoundaryError</code> is defined in core
+(<code>lib/robot_lab/error.rb</code>) so hosts can rescue it without loading anything
+extra. But <code>RactorBoundary</code>, <code>RactorWorkerPool</code>, and <code>RactorMemoryProxy</code> are
+<strong>not defined in core</strong> — they ship in the separate <strong><code>robot_lab-ractor</code></strong>
+gem. Core only <em>references</em> <code>RactorBoundary.freeze_deep</code> from
+<code>Network#build_robot_spec</code>, which is reachable only under
+<code>parallel_mode: :ractor</code>, which itself raises <code>DependencyError</code> unless that
+gem is loaded.</p>
+</div>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab/ractor&quot;</span><span class="w">   </span><span class="c1"># provides RactorBoundary and the worker pool</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">begin</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundary</span><span class="o">.</span><span class="n">freeze_deep</span><span class="p">({</span><span class="w"> </span><span class="ss">io</span><span class="p">:</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundaryError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="k">end</span>
 </span></code></pre></div>
-<p>Raised proactively by <code>RactorWorkerPool#submit</code> and <code>RactorMemoryProxy#set</code> before any Ractor is involved.</p>
 <hr />
 <h2 id="robotlabtoolerror">RobotLab::ToolError<a class="headerlink" href="#robotlabtoolerror" title="Permanent link">&para;</a></h2>
-<p>Raised when a tool fails during execution inside a Ractor worker (the pool unwraps <code>RactorJobError</code> and re-raises as <code>ToolError</code>).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">begin</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s2">&quot;MyTool&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">input</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bad&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Tool &#39;MyTool&#39; failed in Ractor: ...&quot;</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">end</span>
+<p>An opt-in error type for tool failures. Core raises it nowhere itself — you raise
+it from your own <code>execute</code>, and the <code>robot_lab-ractor</code> worker pool raises it when
+unwrapping a failure that happened inside a Ractor.</p>
+<p><code>ToolError.new(message, retryable: true)</code> marks a specific instance as retryable.</p>
+<p>When a tool raises inside <code>Tool#call</code>, the error is caught and returned to the
+LLM as text rather than propagating (unless the class sets
+<code>self.raise_on_error = true</code>). RobotLab appends <code>" (retryable)"</code> whenever
+<code>RobotLab::Errors.retryable?(error)</code> is true, so the model itself can see that
+another attempt is worth trying:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Fetch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Fetch a record&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;record id&quot;</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="k">raise</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolError</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;upstream unavailable&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">retryable</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">end</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="no">Fetch</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">({</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># =&gt; &quot;Error (fetch): upstream unavailable (retryable)&quot;</span>
 </span></code></pre></div>
-<p>Like <code>MCPError</code>, <code>ToolError.new(message, retryable: true)</code> marks a specific instance as retryable. When a tool raises inside <code>Tool#call</code>, RobotLab appends <code>" (retryable)"</code> to the formatted error text returned to the LLM whenever <code>RobotLab::Errors.retryable?(error)</code> is true, so the model itself can see that another attempt is worth trying.</p>
+<p>Unlike the generic <code>StandardError</code> path, the <code>ToolError</code> path writes <strong>nothing</strong>
+to the logger. See <a href="../core/tool/#call">Tool#call</a>.</p>
 <hr />
 <h2 id="robotlabbudgetexceeded">RobotLab::BudgetExceeded<a class="headerlink" href="#robotlabbudgetexceeded" title="Permanent link">&para;</a></h2>
-<p>Raised when a Robot's configured <code>token_budget</code> or <code>cost_budget</code> is already exhausted <strong>before</strong> an LLM call is attempted (see <a href="../../guides/observability/#budgets-token--cost">Budgets</a> and <code>RobotLab::Budget::Ledger</code>). This is distinct from the pre-existing <code>InferenceError</code> "Token budget exceeded" message, which covers a call that <em>completed</em> but pushed cumulative usage over budget — <code>BudgetExceeded</code> means the call was refused outright, before any tokens were spent.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;capped&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">cost_budget</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">50</span><span class="p">)</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">begin</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Do the expensive thing&quot;</span><span class="p">)</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BudgetExceeded</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;budget exceeded for cost: 0.62 &gt; 0.5&quot;</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">end</span>
+<p>Raised when a Robot's configured <code>token_budget</code> or <code>cost_budget</code> is already exhausted <strong>before</strong> an LLM call is attempted (see <a href="../../guides/observability/#budgets-token-cost">Budgets</a> and <code>RobotLab::Budget::Ledger</code>). This is distinct from the pre-existing <code>InferenceError</code> "Token budget exceeded" message, which covers a call that <em>completed</em> but pushed cumulative usage over budget — <code>BudgetExceeded</code> means the call was refused outright, before any tokens were spent.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;capped&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">cost_budget</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">50</span><span class="p">)</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">begin</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Do the expensive thing&quot;</span><span class="p">)</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BudgetExceeded</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;budget exceeded for cost: 0.62 &gt; 0.5&quot;</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>Raised by <code>Budget::Ledger#reserve!</code>; the message format is
+<code>"budget exceeded for &lt;dimension&gt;: &lt;committed + amount&gt; &gt; &lt;limit&gt;"</code> where
+<code>&lt;dimension&gt;</code> is <code>tokens</code> or <code>cost</code>.</p>
+<p>The post-call <code>InferenceError</code> messages are formatted differently:</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>token_budget</code></td>
+<td><code>Token budget exceeded: &lt;N&gt; tokens used, budget is &lt;M&gt;</code></td>
+</tr>
+<tr>
+<td><code>cost_budget</code></td>
+<td><code>Cost budget exceeded: $0.523100 used, budget is $0.500000</code> (both values via <code>%.6f</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="robotlabawaittimeout">RobotLab::AwaitTimeout<a class="headerlink" href="#robotlabawaittimeout" title="Permanent link">&para;</a></h2>
+<p>Raised by <a href="../core/memory/#get"><code>Memory#get</code></a> when a blocking read
+(<code>wait: true</code> or <code>wait: &lt;seconds&gt;</code>) expires before the key is written.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">begin</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AwaitTimeout</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Timeout waiting for :sentiment after 30 seconds&quot;</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">end</span>
+</span></code></pre></div>
+<p>With multiple keys the timeout is applied <strong>per missing key</strong>, so
+<code>get(:a, :b, wait: 30)</code> can block for up to 60 seconds before raising.</p>
+<p>Not retryable per <code>RobotLab::Errors.retryable?</code> — it falls into the
+"everything else" bucket.</p>
 <hr />
 <h2 id="retryable-errors">Retryable Errors<a class="headerlink" href="#retryable-errors" title="Permanent link">&para;</a></h2>
 <p><code>RobotLab::Errors.retryable?(error)</code> classifies whether a host (an ActiveJob <code>retry_on</code> list, <code>robot_lab-to</code>'s takeover loop, a custom retry wrapper) should retry the operation that raised <code>error</code>:</p>
@@ -2592,29 +3010,29 @@
 <td>Only when raised with <code>retryable: true</code> at the raise site</td>
 </tr>
 <tr>
-<td>Everything else (<code>ConfigurationError</code>, <code>ToolNotFoundError</code>, <code>DependencyError</code>, <code>RactorBoundaryError</code>, <code>BusError</code>, <code>BudgetExceeded</code>, non-RobotLab errors)</td>
+<td>Everything else (<code>ConfigurationError</code>, <code>ToolNotFoundError</code>, <code>DependencyError</code>, <code>RactorBoundaryError</code>, <code>BusError</code>, <code>BudgetExceeded</code>, <code>AwaitTimeout</code>, <code>DelegationTimeout</code>, non-RobotLab errors)</td>
 <td>Never</td>
 </tr>
 </tbody>
 </table>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">begin</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Error</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="k">retry</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Errors</span><span class="o">.</span><span class="n">retryable?</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="k">raise</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">begin</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Error</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="k">retry</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Errors</span><span class="o">.</span><span class="n">retryable?</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="k">raise</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">end</span>
 </span></code></pre></div>
 <p><code>RobotLab::Errors.retryable_classes</code> returns <code>[RobotLab::InferenceError]</code> — an always-retryable allow-list for explicit ActiveJob-style <code>retry_on</code> declarations. It excludes <code>MCPError</code>/<code>ToolError</code> because their retryability is per-raise (via <code>retryable:</code>), not per-class.</p>
 <hr />
 <h2 id="robotlabdelegationfuturedelegationtimeout">RobotLab::DelegationFuture::DelegationTimeout<a class="headerlink" href="#robotlabdelegationfuturedelegationtimeout" title="Permanent link">&para;</a></h2>
 <p>Raised by <code>DelegationFuture#value(timeout: N)</code> when the delegated task does not complete within <code>N</code> seconds.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">future</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">begin</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">future</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DelegationFuture</span><span class="o">::</span><span class="no">DelegationTimeout</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Delegation to &#39;analyst&#39; timed out after 10s&quot;</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">future</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">begin</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">future</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DelegationFuture</span><span class="o">::</span><span class="no">DelegationTimeout</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Delegation to &#39;analyst&#39; timed out after 10s&quot;</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">end</span>
 </span></code></pre></div>
 <hr />
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
@@ -2707,6 +3125,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../core/state/" class="md-footer__link md-footer__link--prev" aria-label="Previous: StateProxy">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                StateProxy
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../messages/" class="md-footer__link md-footer__link--next" aria-label="Next: Messages">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Messages
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">

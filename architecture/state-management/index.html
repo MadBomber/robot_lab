@@ -1657,6 +1657,8 @@
       
         
       
+        
+      
     
     
     
@@ -1720,6 +1722,8 @@
       
         
           
+        
+      
         
       
         
@@ -1819,14 +1823,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/network/" class="md-nav__link">
+      <a href="../../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1847,14 +1851,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/state/" class="md-nav__link">
+      <a href="../../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1924,9 +1928,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1964,7 +2024,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1986,14 +2046,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2155,7 +2215,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2177,14 +2237,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2316,7 +2376,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2338,14 +2398,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3031,7 +3091,7 @@
 
 
 <h1 id="memory-management">Memory Management<a class="headerlink" href="#memory-management" title="Permanent link">&para;</a></h1>
-<p>Memory in RobotLab is a reactive key-value store that provides persistent storage for runtime data, conversation history, and arbitrary user-defined values. It replaces the old <code>State</code> class with a unified system that supports both standalone robot usage and shared network execution.</p>
+<p>Memory in RobotLab is a reactive key-value store that provides persistent storage for runtime data, conversation history, and arbitrary user-defined values. A single unified <code>Memory</code> class serves both standalone robot usage and shared network execution.</p>
 <h2 id="memory-structure">Memory Structure<a class="headerlink" href="#memory-structure" title="Permanent link">&para;</a></h2>
 <p>The <code>Memory</code> class holds:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="w"> </span><span class="p">})</span>
@@ -3063,6 +3123,7 @@
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="c1"># Reset memory to initial state</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="n">robot</span><span class="o">.</span><span class="n">reset_memory</span>
 </span></code></pre></div>
+<p><code>reset_memory</code> resets only the key-value store. It does <strong>not</strong> touch the robot's chat history — that is <code>robot.clear_messages(keep_system: true)</code>. The two are independent.</p>
 <h2 id="network-shared-memory">Network Shared Memory<a class="headerlink" href="#network-shared-memory" title="Permanent link">&para;</a></h2>
 <p>When robots execute within a network, they share the network's memory instead of using their own inherent memory. This enables inter-robot communication.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">classifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Classify requests.&quot;</span><span class="p">)</span>
@@ -3148,7 +3209,7 @@
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="w">       </span><span class="c1">#=&gt; []</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">session_id</span><span class="w">    </span><span class="c1">#=&gt; nil</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">cache</span><span class="w">         </span><span class="c1">#=&gt; RubyLLM::SemanticCache</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">cache</span><span class="w">         </span><span class="c1">#=&gt; RubyLLM::SemanticCache (the module itself), or nil when enable_cache: false</span>
 </span></code></pre></div>
 <h2 id="stateproxy">StateProxy<a class="headerlink" href="#stateproxy" title="Permanent link">&para;</a></h2>
 <p>The <code>data</code> attribute is a <code>StateProxy</code> that provides convenient hash-style and method-style access:</p>
@@ -3165,7 +3226,7 @@
 <h2 id="reactive-features">Reactive Features<a class="headerlink" href="#reactive-features" title="Permanent link">&para;</a></h2>
 <p>Memory supports pub/sub semantics where robots can subscribe to key changes and optionally block until values become available.</p>
 <h3 id="setting-values">Setting Values<a class="headerlink" href="#setting-values" title="Permanent link">&para;</a></h3>
-<p>Use <code>memory.set(key, value)</code> to write a value and notify subscribers asynchronously:</p>
+<p>Use <code>memory.set(key, value)</code> to write a value, wake any waiters, and notify subscribers. Subscriber callbacks are dispatched through <code>Async { }</code>: inside a running reactor they run as fibers, but <strong>outside</strong> one they run synchronously on the writer's thread.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">score</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="ss">confidence</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">95</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
 <p>The <code>[]=</code> operator also triggers reactive notifications for non-reserved keys:</p>
@@ -3179,13 +3240,18 @@
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Block indefinitely until value exists</span>
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Block up to 30 seconds, raise AwaitTimeout if exceeded</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Block up to 30 seconds, then raise RobotLab::AwaitTimeout</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1"># Wait for multiple keys at once</span>
 </span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">:entities</span><span class="p">,</span><span class="w"> </span><span class="ss">:keywords</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1">#=&gt; { sentiment: {...}, entities: [...], keywords: [...] }</span>
 </span></code></pre></div>
+<p>Two things to be careful with:</p>
+<ul>
+<li>On expiry a blocking read <strong>raises</strong> <code>RobotLab::AwaitTimeout</code>; it does not return <code>nil</code>. Rescue it if a missing value is acceptable.</li>
+<li>With multiple keys the timeout is applied <strong>per missing key</strong>, not to the call as a whole. <code>get_multiple</code> waits on the missing keys one at a time in order, so the call raises as soon as the <em>first</em> one expires — it does not spend the full 60 s on each. The 180 s worst case is only reached when the earlier keys arrive just before their own deadlines.</li>
+</ul>
 <h3 id="subscriptions">Subscriptions<a class="headerlink" href="#subscriptions" title="Permanent link">&para;</a></h3>
 <p>Subscribe to key changes with async callbacks. The callback receives a <code>MemoryChange</code> object:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="ss">:raw_data</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">change</span><span class="o">|</span>
@@ -3236,12 +3302,13 @@
 </span></code></pre></div>
 <p>Each <code>RobotResult</code> contains:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">       </span><span class="c1"># Which robot produced this</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">           </span><span class="c1"># Array&lt;Message&gt; - response content</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">       </span><span class="c1"># Array&lt;ToolResultMessage&gt; - tools called</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">      </span><span class="c1"># Stop reason from LLM</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">           </span><span class="c1"># [TextMessage] synthesized from the final response text</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">       </span><span class="c1"># Array&lt;ToolResultMessage&gt; - effectively always empty (see Message Flow)</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">      </span><span class="c1"># always nil for a robot.run result (see Message Flow)</span>
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w"> </span><span class="c1"># Convenience: last text content string</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">  </span><span class="c1"># Whether any tools were called</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">       </span><span class="c1"># When it was created</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">     </span><span class="c1"># Prompt tokens for the run</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">    </span><span class="c1"># Completion tokens for the run</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">       </span><span class="c1"># When it was created</span>
 </span></code></pre></div>
 <h3 id="format-history">Format History<a class="headerlink" href="#format-history" title="Permanent link">&para;</a></h3>
 <p>The <code>format_history</code> method prepares messages for LLM consumption:</p>
@@ -3286,6 +3353,7 @@
 </span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="c1"># From hash</span>
 </span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="nb">hash</span><span class="p">)</span>
 </span></code></pre></div>
+<p><code>to_h</code> is compacted, so nil-valued reserved keys (a missing <code>session_id</code>, for instance) are omitted entirely rather than serialized as <code>nil</code>.</p>
 <h2 id="semantic-cache">Semantic Cache<a class="headerlink" href="#semantic-cache" title="Permanent link">&para;</a></h2>
 <p>Memory includes a semantic cache via <code>RubyLLM::SemanticCache</code> that reduces costs and latency by returning cached responses for semantically equivalent queries:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Using the cache with fetch</span>
@@ -3303,18 +3371,28 @@
 </span></code></pre></div>
 <h2 id="backend-options">Backend Options<a class="headerlink" href="#backend-options" title="Permanent link">&para;</a></h2>
 <p>Memory defaults to a Hash-based backend but can use Redis for distributed scenarios:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Auto-detect (uses Redis if available, falls back to Hash)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Try Redis, fall back to Hash</span>
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="ss">:auto</span><span class="p">)</span>
 </span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Force Hash backend</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Hash backend — the only value that is honoured literally</span>
 </span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="ss">:hash</span><span class="p">)</span>
 </span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Force Redis backend</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Same behaviour as :auto — try Redis, fall back to Hash</span>
 </span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="ss">:redis</span><span class="p">)</span>
 </span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>
-</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="c1"># Check backend</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="c1"># Check what you actually got</span>
 </span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a><span class="n">memory</span><span class="o">.</span><span class="n">redis?</span><span class="w">  </span><span class="c1">#=&gt; true/false</span>
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title"><code>backend: :redis</code> does not force Redis</p>
+<p><code>select_backend</code> special-cases only <code>:hash</code>; every other value (<code>:redis</code>,
+<code>:auto</code>, anything else) takes the same branch —
+<code>create_redis_backend || create_hash_backend</code>. <code>create_redis_backend</code>
+returns <code>nil</code> when <code>redis</code> is unavailable and rescues <code>StandardError</code> to
+<code>nil</code> on a connection failure, so an unreachable Redis silently downgrades
+to a Hash with no exception and no warning. Always check <code>memory.redis?</code> if
+the distinction matters.</p>
+</div>
 <p>Redis is configured via <code>RobotLab.config.redis</code> or the <code>REDIS_URL</code> environment variable.</p>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <h3 id="1-use-memory-for-cross-robot-data">1. Use Memory for Cross-Robot Data<a class="headerlink" href="#1-use-memory-for-cross-robot-data" title="Permanent link">&para;</a></h3>

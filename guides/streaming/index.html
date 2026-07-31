@@ -1166,10 +1166,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#streaming-via-callbacks" class="md-nav__link">
+  <a href="#streaming-via-on_content" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming via Callbacks
+        Streaming via on_content:
       
     </span>
   </a>
@@ -1177,71 +1177,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#available-callbacks" class="md-nav__link">
+  <a href="#streaming-via-a-block-on-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Available Callbacks
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Available Callbacks">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#on_new_message" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_new_message
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_end_message" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_end_message
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_tool_call" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_tool_call
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_tool_result" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_tool_result
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comprehensive-callback-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comprehensive Callback Setup
+        Streaming via a Block on run
       
     </span>
   </a>
@@ -1249,10 +1188,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#streaming-via-chat-block" class="md-nav__link">
+  <a href="#using-both-together" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming via Chat Block
+        Using Both Together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming-via-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming via RunConfig
       
     </span>
   </a>
@@ -1332,6 +1282,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tool-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-rubyllm-chat-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy RubyLLM Chat Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1344,10 +1316,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-register-callbacks-before-run" class="md-nav__link">
+  <a href="#1-wire-streaming-before-the-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Register Callbacks Before Run
+        1. Wire streaming before the run
       
     </span>
   </a>
@@ -1355,10 +1327,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-handle-errors-in-callbacks" class="md-nav__link">
+  <a href="#2-handle-errors-inside-the-callback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Handle Errors in Callbacks
+        2. Handle errors inside the callback
       
     </span>
   </a>
@@ -1369,7 +1341,7 @@
   <a href="#3-clean-up-resources" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Clean Up Resources
+        3. Clean up resources
       
     </span>
   </a>
@@ -1378,6 +1350,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-about-robotlabstreaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What About RobotLab::Streaming?
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1541,6 +1524,8 @@
       
         
       
+        
+      
     
     
     
@@ -1604,6 +1589,8 @@
       
         
           
+        
+      
         
       
         
@@ -1703,14 +1690,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/network/" class="md-nav__link">
+      <a href="../../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1731,14 +1718,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/state/" class="md-nav__link">
+      <a href="../../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1808,9 +1795,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1848,7 +1891,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1870,14 +1913,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2039,7 +2082,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2061,14 +2104,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2200,7 +2243,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2222,14 +2265,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2533,10 +2576,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#streaming-via-callbacks" class="md-nav__link">
+  <a href="#streaming-via-on_content" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming via Callbacks
+        Streaming via on_content:
       
     </span>
   </a>
@@ -2544,71 +2587,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#available-callbacks" class="md-nav__link">
+  <a href="#streaming-via-a-block-on-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Available Callbacks
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Available Callbacks">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#on_new_message" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_new_message
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_end_message" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_end_message
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_tool_call" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_tool_call
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#on_tool_result" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        on_tool_result
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comprehensive-callback-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comprehensive Callback Setup
+        Streaming via a Block on run
       
     </span>
   </a>
@@ -2616,10 +2598,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#streaming-via-chat-block" class="md-nav__link">
+  <a href="#using-both-together" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming via Chat Block
+        Using Both Together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming-via-runconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming via RunConfig
       
     </span>
   </a>
@@ -2699,6 +2692,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tool-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-rubyllm-chat-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy RubyLLM Chat Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2711,10 +2726,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-register-callbacks-before-run" class="md-nav__link">
+  <a href="#1-wire-streaming-before-the-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Register Callbacks Before Run
+        1. Wire streaming before the run
       
     </span>
   </a>
@@ -2722,10 +2737,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-handle-errors-in-callbacks" class="md-nav__link">
+  <a href="#2-handle-errors-inside-the-callback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Handle Errors in Callbacks
+        2. Handle errors inside the callback
       
     </span>
   </a>
@@ -2736,7 +2751,7 @@
   <a href="#3-clean-up-resources" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Clean Up Resources
+        3. Clean up resources
       
     </span>
   </a>
@@ -2745,6 +2760,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-about-robotlabstreaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What About RobotLab::Streaming?
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2800,208 +2826,297 @@
 
 <h1 id="streaming-responses">Streaming Responses<a class="headerlink" href="#streaming-responses" title="Permanent link">&para;</a></h1>
 <p>Stream LLM responses in real-time for better user experience.</p>
-<h2 id="streaming-via-callbacks">Streaming via Callbacks<a class="headerlink" href="#streaming-via-callbacks" title="Permanent link">&para;</a></h2>
-<p>RobotLab robots support streaming through callback methods inherited from RubyLLM::Agent. Register callbacks before calling <code>run</code>:</p>
+<p>RobotLab has exactly two ways to receive streaming content, and both hand you a
+<code>RubyLLM::Chunk</code>:</p>
+<ol>
+<li><strong><code>on_content:</code></strong> — a callback wired at build time (or through <code>RunConfig</code>) that fires on <em>every</em> <code>run</code></li>
+<li><strong>A block passed to <code>run</code></strong> — <code>robot.run(msg) { |chunk| ... }</code>, for one-off streaming</li>
+</ol>
+<blockquote>
+<p>[!IMPORTANT]
+Read the content off the chunk with <strong><code>chunk.content</code></strong>. <code>RubyLLM::Chunk</code>
+has no <code>#text</code> method — <code>chunk.text</code> raises <code>NoMethodError</code>.</p>
+</blockquote>
+<h2 id="streaming-via-on_content">Streaming via <code>on_content:</code><a class="headerlink" href="#streaming-via-on_content" title="Permanent link">&para;</a></h2>
+<p>Wire the callback once at build time; it fires on every subsequent <code>run</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;storyteller&quot;</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a creative storyteller.&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># Register streaming callback</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">end</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story about a brave robot&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a creative storyteller.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story about a brave robot&quot;</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">puts</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
 </span></code></pre></div>
-<h2 id="available-callbacks">Available Callbacks<a class="headerlink" href="#available-callbacks" title="Permanent link">&para;</a></h2>
-<h3 id="on_new_message">on_new_message<a class="headerlink" href="#on_new_message" title="Permanent link">&para;</a></h3>
-<p>Called when the assistant starts generating a new message, with streaming chunks:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">end</span>
+<h2 id="streaming-via-a-block-on-run">Streaming via a Block on <code>run</code><a class="headerlink" href="#streaming-via-a-block-on-run" title="Permanent link">&para;</a></h2>
+<p>For one-off streaming, pass a block straight to <code>run</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;factbot&quot;</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are concise. Answer in one sentence.&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What year was Ruby created?&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="on_end_message">on_end_message<a class="headerlink" href="#on_end_message" title="Permanent link">&para;</a></h3>
-<p>Called when the assistant finishes a message:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_end_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Response complete ---&quot;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Content length: </span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">&amp;.</span><span class="n">length</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">end</span>
+<p>The block goes to the same place <code>on_content:</code> does — no need to reach for
+<code>robot.chat.ask</code> to get streaming, and reaching for it skips memory resolution,
+tool resolution, hooks, and budget accounting.</p>
+<h2 id="using-both-together">Using Both Together<a class="headerlink" href="#using-both-together" title="Permanent link">&para;</a></h2>
+<p>When a robot has a stored <code>on_content:</code> <em>and</em> a block is passed to <code>run</code>, both
+fire for every chunk. The <strong>stored callback fires first</strong>, then the block:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">stored_log</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">block_log</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;combo&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are concise.&quot;</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">stored_log</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is Matz&#39;s full name?&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span><span class="w"> </span><span class="n">block_log</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">stored_log</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">block_log</span><span class="w">   </span><span class="c1"># =&gt; true — both saw the same chunks</span>
 </span></code></pre></div>
-<h3 id="on_tool_call">on_tool_call<a class="headerlink" href="#on_tool_call" title="Permanent link">&para;</a></h3>
-<p>Called when the LLM invokes a tool:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_tool_call</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tool_call</span><span class="o">|</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Calling tool: </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">end</span>
+<h2 id="streaming-via-runconfig">Streaming via RunConfig<a class="headerlink" href="#streaming-via-runconfig" title="Permanent link">&para;</a></h2>
+<p><code>on_content</code> is a <code>RunConfig</code> field, so it participates in the config cascade:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RunConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;config_bot&quot;</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are concise.&quot;</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="ss">config</span><span class="p">:</span><span class="w"> </span><span class="n">config</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Who designed the Ruby programming language?&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="on_tool_result">on_tool_result<a class="headerlink" href="#on_tool_result" title="Permanent link">&para;</a></h3>
-<p>Called when a tool returns its result:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_tool_result</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tool_call</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="o">|</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Tool </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> returned: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">end</span>
-</span></code></pre></div>
-<h2 id="comprehensive-callback-setup">Comprehensive Callback Setup<a class="headerlink" href="#comprehensive-callback-setup" title="Permanent link">&para;</a></h2>
-<p>Register all callbacks for full visibility:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">WeatherTool</span><span class="o">]</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="k">end</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_end_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">_message</span><span class="o">|</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Done ---&quot;</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="k">end</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_tool_call</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tool_call</span><span class="o">|</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Tool] Calling: </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="k">end</span>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
-</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_tool_result</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tool_call</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="o">|</span>
-</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;[Tool] </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> returned: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="k">end</span>
-</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
-</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="streaming-via-chat-block">Streaming via Chat Block<a class="headerlink" href="#streaming-via-chat-block" title="Permanent link">&para;</a></h2>
-<p>For more control, pass a block directly to <code>chat.ask</code> (the underlying RubyLLM method):</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chat_bot&quot;</span><span class="p">,</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">)</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># Use the underlying chat directly with a streaming block</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">robot</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s2">&quot;Tell me a story&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">end</span>
-</span></code></pre></div>
-<p>Note: Using <code>chat.ask</code> directly bypasses Robot's memory resolution and tool hierarchy. Use callbacks with <code>robot.run</code> when you need those features.</p>
+<blockquote>
+<p>[!WARNING]
+<code>on_content</code> is read from the <strong>robot's own</strong> config when the robot is
+constructed. A network-level <code>config:</code> propagates only <code>mcp</code> and <code>tools</code> to
+member robots — it will <strong>not</strong> supply <code>on_content</code> to them. Put the callback
+on each robot (or on the <code>config:</code> you pass to that robot).</p>
+</blockquote>
 <h2 id="web-integration">Web Integration<a class="headerlink" href="#web-integration" title="Permanent link">&para;</a></h2>
 <h3 id="rails-action-cable">Rails Action Cable<a class="headerlink" href="#rails-action-cable" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ChatChannel</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">ApplicationCable</span><span class="o">::</span><span class="no">Channel</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chat_bot&quot;</span><span class="p">,</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a helpful chat assistant.&quot;</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="p">)</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="n">transmit</span><span class="p">({</span><span class="w"> </span><span class="ss">event</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text.delta&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_end_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">_message</span><span class="o">|</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="n">transmit</span><span class="p">({</span><span class="w"> </span><span class="ss">event</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;run.completed&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">data</span><span class="o">[</span><span class="s2">&quot;message&quot;</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ChatChannel</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">ApplicationCable</span><span class="o">::</span><span class="no">Channel</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">      </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chat_bot&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a helpful chat assistant.&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="n">transmit</span><span class="p">({</span><span class="w"> </span><span class="ss">event</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text.delta&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">      </span><span class="p">}</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">data</span><span class="o">[</span><span class="s2">&quot;message&quot;</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="n">transmit</span><span class="p">({</span><span class="w"> </span><span class="ss">event</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;run.completed&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="server-sent-events">Server-Sent Events<a class="headerlink" href="#server-sent-events" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">StreamController</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">ApplicationController</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">ActionController</span><span class="o">::</span><span class="no">Live</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">create</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;text/event-stream&quot;</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stream_bot&quot;</span><span class="p">,</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">      </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="p">)</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">      </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data: </span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
-</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_end_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">_message</span><span class="o">|</span>
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">      </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data: [DONE]</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:message</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">  </span><span class="k">ensure</span>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">    </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">close</span>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">StreamController</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">ApplicationController</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">ActionController</span><span class="o">::</span><span class="no">Live</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">create</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;text/event-stream&quot;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stream_bot&quot;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">      </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:message</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">      </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data: </span><span class="si">#{</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;data: [DONE]</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">  </span><span class="k">ensure</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">    </span><span class="n">response</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">close</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="websocket">WebSocket<a class="headerlink" href="#websocket" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Using Faye WebSocket</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">ws</span><span class="o">.</span><span class="n">on</span><span class="w"> </span><span class="ss">:message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">msg</span><span class="o">|</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Using Faye WebSocket</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">ws</span><span class="o">.</span><span class="n">on</span><span class="w"> </span><span class="ss">:message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">msg</span><span class="o">|</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span><span class="w"> </span><span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="progress-tracking">Progress Tracking<a class="headerlink" href="#progress-tracking" title="Permanent link">&para;</a></h2>
-<p>Track streaming progress with callbacks:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">StreamProgress</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="vi">@chars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="vi">@tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:chars</span><span class="p">,</span><span class="w"> </span><span class="ss">:tools</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">attach</span><span class="p">(</span><span class="n">robot</span><span class="p">)</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">      </span><span class="vi">@chars</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">length</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">      </span><span class="nb">print</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">Received </span><span class="si">#{</span><span class="vi">@chars</span><span class="si">}</span><span class="s2"> characters...&quot;</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">on_tool_call</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tool_call</span><span class="o">|</span>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">      </span><span class="vi">@tools</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
-</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">      </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Tool call #</span><span class="si">#{</span><span class="vi">@tools</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="k">end</span>
-</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>
-</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="n">progress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">StreamProgress</span><span class="o">.</span><span class="n">new</span>
-</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="n">progress</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">robot</span><span class="p">)</span>
-</span><span id="__span-10-24"><a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>
-</span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Process this complex request&quot;</span><span class="p">)</span>
-</span><span id="__span-10-26"><a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total: </span><span class="si">#{</span><span class="n">progress</span><span class="o">.</span><span class="n">chars</span><span class="si">}</span><span class="s2"> chars, </span><span class="si">#{</span><span class="n">progress</span><span class="o">.</span><span class="n">tools</span><span class="si">}</span><span class="s2"> tool calls&quot;</span>
+<p>Chunk callbacks are the right place to count characters. Tool activity is
+tracked separately, through the robot's <code>on_tool_call:</code> / <code>on_tool_result:</code>
+callbacks:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">StreamProgress</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="kp">attr_reader</span><span class="w"> </span><span class="ss">:chars</span><span class="p">,</span><span class="w"> </span><span class="ss">:tools</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="vi">@chars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="vi">@tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="c1"># Returns the streaming block to hand to run().</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">content_callback</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">      </span><span class="vi">@chars</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">length</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="nb">print</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">Received </span><span class="si">#{</span><span class="vi">@chars</span><span class="si">}</span><span class="s2"> characters...&quot;</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">tool_callback</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">    </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">tool_call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">      </span><span class="vi">@tools</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">      </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Tool call #</span><span class="si">#{</span><span class="vi">@tools</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="k">end</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="n">progress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">StreamProgress</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">WeatherTool</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="w">  </span><span class="ss">on_content</span><span class="p">:</span><span class="w">   </span><span class="n">progress</span><span class="o">.</span><span class="n">content_callback</span><span class="p">,</span>
+</span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="w">  </span><span class="ss">on_tool_call</span><span class="p">:</span><span class="w"> </span><span class="n">progress</span><span class="o">.</span><span class="n">tool_callback</span>
+</span><span id="__span-7-33"><a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a><span class="p">)</span>
+</span><span id="__span-7-34"><a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a>
+</span><span id="__span-7-35"><a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Process this complex request&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span><span id="__span-7-36"><a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total: </span><span class="si">#{</span><span class="n">progress</span><span class="o">.</span><span class="n">chars</span><span class="si">}</span><span class="s2"> chars, </span><span class="si">#{</span><span class="n">progress</span><span class="o">.</span><span class="n">tools</span><span class="si">}</span><span class="s2"> tool calls&quot;</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!NOTE]
+<code>chunk.content</code> can be <code>nil</code> on chunks that carry only metadata (tool-call
+deltas, usage). Guard with <code>to_s</code> when accumulating, as above.</p>
+<p>[!WARNING]
+<code>run</code> defaults to <code>tools: :none</code>, so the tool callback above never fires
+unless you pass <code>tools: :inherit</code> (or an explicit allowlist). See
+<a href="../using-tools/#runtime-tool-filtering">Using Tools</a>.</p>
+</blockquote>
 <h2 id="without-streaming">Without Streaming<a class="headerlink" href="#without-streaming" title="Permanent link">&para;</a></h2>
-<p>When streaming is not needed, simply call <code>run</code> without registering callbacks:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># No streaming - returns RobotResult directly</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
+<p>When streaming is not needed, call <code>run</code> with no <code>on_content:</code> and no block:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
+</span></code></pre></div>
+<h2 id="tool-callbacks">Tool Callbacks<a class="headerlink" href="#tool-callbacks" title="Permanent link">&para;</a></h2>
+<p><code>on_tool_call:</code> and <code>on_tool_result:</code> are constructor/<code>RunConfig</code> callbacks
+alongside <code>on_content:</code>. Each receives <strong>one</strong> argument:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">WeatherTool</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="ss">on_tool_call</span><span class="p">:</span><span class="w">   </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">tool_call</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Tool] Calling: </span><span class="si">#{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="ss">on_tool_result</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;[Tool] returned: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">)</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Note that <code>on_tool_result</code> does <strong>not</strong> receive the originating tool call —
+only the result. If you need to correlate the two, record the call in
+<code>on_tool_call</code> and pair them up yourself.</p>
+<blockquote>
+<p>[!NOTE]
+RobotLab installs these two callbacks on the underlying chat's
+<code>on_tool_call</code> / <code>on_tool_result</code> hooks, which RubyLLM 1.16 has deprecated.
+Building a robot with either callback therefore prints a RubyLLM deprecation
+warning. The callbacks themselves work; the warning comes from the layer
+below.</p>
+</blockquote>
+<h2 id="legacy-rubyllm-chat-callbacks">Legacy RubyLLM Chat Callbacks<a class="headerlink" href="#legacy-rubyllm-chat-callbacks" title="Permanent link">&para;</a></h2>
+<p><code>Robot</code> also exposes RubyLLM's chat-level callbacks
+(<code>on_new_message</code>, <code>on_end_message</code>, <code>on_tool_call</code>, <code>on_tool_result</code>).</p>
+<blockquote>
+<p>[!CAUTION]
+All four are <strong>deprecated in RubyLLM 1.16</strong> and slated for removal in
+RubyLLM 2.0. Registering one emits a deprecation warning naming its
+replacement: <code>before_message</code>, <code>after_message</code>, <code>before_tool_call</code>, and
+<code>after_tool_result</code>. Prefer RobotLab's <code>on_content:</code> /
+<code>on_tool_call:</code> / <code>on_tool_result:</code> constructor callbacks instead.</p>
+</blockquote>
+<p>Their arities are not what you might expect:</p>
+<table>
+<thead>
+<tr>
+<th>Callback</th>
+<th>Replacement</th>
+<th>Arguments received</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on_new_message</code></td>
+<td><code>before_message</code></td>
+<td><strong>none</strong></td>
+</tr>
+<tr>
+<td><code>on_end_message</code></td>
+<td><code>after_message</code></td>
+<td>the completed <code>RubyLLM::Message</code></td>
+</tr>
+<tr>
+<td><code>on_tool_call</code></td>
+<td><code>before_tool_call</code></td>
+<td>the <code>ToolCall</code></td>
+</tr>
+<tr>
+<td><code>on_tool_result</code></td>
+<td><code>after_tool_result</code></td>
+<td>the <strong>result only</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!WARNING]
+<code>on_new_message</code> is <strong>not</strong> a streaming hook. It fires once when a message
+begins and is invoked with <strong>zero arguments</strong> — a block written as
+<code>do |message| ... end</code> receives <code>nil</code>, so <code>message.content</code> raises
+<code>NoMethodError: undefined method 'content' for nil</code>. Use <code>on_content:</code> or a
+<code>run</code> block for content.</p>
+</blockquote>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Correct usage of the legacy hooks (still deprecated):</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;--- message starting ---&quot;</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># no argument</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">on_end_message</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Length: </span><span class="si">#{</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">&amp;.</span><span class="n">length</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">robot</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">on_tool_result</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">result</span><span class="o">|</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Tool returned: </span><span class="si">#{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
-<h3 id="1-register-callbacks-before-run">1. Register Callbacks Before Run<a class="headerlink" href="#1-register-callbacks-before-run" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Correct: register first, then run</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">msg</span><span class="o">|</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">msg</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">msg</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+<h3 id="1-wire-streaming-before-the-run">1. Wire streaming before the run<a class="headerlink" href="#1-wire-streaming-before-the-run" title="Permanent link">&para;</a></h3>
+<p><code>on_content:</code> belongs in the constructor (or the <code>config:</code> you pass it); a
+<code>run</code> block belongs on the call itself. There is no "register then run" step.</p>
+<h3 id="2-handle-errors-inside-the-callback">2. Handle errors inside the callback<a class="headerlink" href="#2-handle-errors-inside-the-callback" title="Permanent link">&para;</a></h3>
+<p>An exception raised in a streaming callback propagates out of <code>run</code> and aborts
+the turn. Swallow client-side failures you can survive:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;broadcaster&quot;</span><span class="p">,</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are helpful.&quot;</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="n">broadcast</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">BroadcastError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">    </span><span class="c1"># Client disconnected, but let the run finish.</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Broadcast failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="2-handle-errors-in-callbacks">2. Handle Errors in Callbacks<a class="headerlink" href="#2-handle-errors-in-callbacks" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="k">begin</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="n">broadcast</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="k">rescue</span><span class="w"> </span><span class="no">BroadcastError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="c1"># Client disconnected, but continue processing</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="w"> </span><span class="s2">&quot;Broadcast failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="k">end</span>
+<h3 id="3-clean-up-resources">3. Clean up resources<a class="headerlink" href="#3-clean-up-resources" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">begin</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span><span class="w"> </span><span class="n">stream_to_client</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">ensure</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="n">close_stream_connection</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">end</span>
 </span></code></pre></div>
-<h3 id="3-clean-up-resources">3. Clean Up Resources<a class="headerlink" href="#3-clean-up-resources" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">begin</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">on_new_message</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">message</span><span class="o">|</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="n">stream_to_client</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">ensure</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span><span class="n">close_stream_connection</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="k">end</span>
-</span></code></pre></div>
+<h2 id="what-about-robotlabstreaming">What About <code>RobotLab::Streaming</code>?<a class="headerlink" href="#what-about-robotlabstreaming" title="Permanent link">&para;</a></h2>
+<p><code>RobotLab::Streaming::Context</code>, <code>Streaming::Events</code>, and
+<code>Streaming::SequenceCounter</code> exist in the codebase and are documented in the
+<a href="../../api/streaming/">API reference</a>, but <strong>nothing in <code>Robot</code> or
+<code>Network</code> constructs or publishes to them</strong>. They are a standalone event-object
+toolkit you would have to drive yourself — not the path that <code>run</code> takes. For
+actual token streaming, use <code>on_content:</code> or a <code>run</code> block as shown above.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../building-robots/">Building Robots</a> - Robot creation</li>
 <li><a href="../creating-networks/">Creating Networks</a> - Network patterns</li>
-<li><a href="../../api/streaming/">API Reference: Streaming</a> - Complete API</li>
+<li><a href="https://github.com/MadBomber/robot_lab/blob/main/examples/05_streaming.rb">examples/05_streaming.rb</a> - Runnable streaming example</li>
+<li><a href="../../api/streaming/">API Reference: Streaming</a> - The standalone <code>Streaming::*</code> event objects</li>
 </ul>
 
 

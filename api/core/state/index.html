@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/core/state/">
       
       
-        <link rel="prev" href="../network/">
+        <link rel="prev" href="../memory/">
       
       
-        <link rel="next" href="../tool/">
+        <link rel="next" href="../../errors/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>State - RobotLab</title>
+        <title>StateProxy - RobotLab</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#memory-state-management" class="md-skip">
+        <a href="#stateproxy" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              State
+              StateProxy
             
           </span>
         </div>
@@ -1262,6 +1262,8 @@
       
         
       
+        
+      
     
     
     
@@ -1330,6 +1332,8 @@
       
         
           
+        
+      
         
       
         
@@ -1429,14 +1433,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../network/" class="md-nav__link">
+      <a href="../result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1454,44 +1458,17 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    State
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1500,371 +1477,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#class-robotlabmemory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Class: RobotLab::Memory
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#session_id" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        session_id
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        results
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        messages
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#append_result" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        append_result
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#set_results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        set_results
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#results_from" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        results_from
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#session_id_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        session_id=
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#format_history" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        format_history
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clone
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_h" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_h
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_json" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from_hash-class-method" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        from_hash (class method)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stateproxy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        StateProxy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creating-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating Memory
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Creating Memory">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Basic
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-session-id" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Session ID
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-existing-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Existing Results
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usermessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UserMessage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#accessing-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Accessing Data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#working-with-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Working with Results
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#using-reactive-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using Reactive Memory
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serialization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1926,9 +1538,247 @@
 
               
             
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#class-robotlabstateproxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class: RobotLab::StateProxy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-you-get-one" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where you get one
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#element-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Element access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-style-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method-style access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-method-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full method list
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nested-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#change-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1966,7 +1816,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1988,14 +1838,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2157,7 +2007,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2179,14 +2029,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2318,7 +2168,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2340,14 +2190,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2651,10 +2501,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-robotlabmemory" class="md-nav__link">
+  <a href="#class-robotlabstateproxy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class: RobotLab::Memory
+        Class: RobotLab::StateProxy
       
     </span>
   </a>
@@ -2662,63 +2512,24 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
+  <a href="#where-you-get-one" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Attributes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#session_id" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        session_id
+        Where you get one
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#data" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        data
+        Constructor
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        results
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#messages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        messages
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2735,10 +2546,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#append_result" class="md-nav__link">
+  <a href="#element-access" class="md-nav__link">
     <span class="md-ellipsis">
       
-        append_result
+        Element access
       
     </span>
   </a>
@@ -2746,10 +2557,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#set_results" class="md-nav__link">
+  <a href="#method-style-access" class="md-nav__link">
     <span class="md-ellipsis">
       
-        set_results
+        Method-style access
       
     </span>
   </a>
@@ -2757,76 +2568,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#results_from" class="md-nav__link">
+  <a href="#full-method-list" class="md-nav__link">
     <span class="md-ellipsis">
       
-        results_from
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#session_id_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        session_id=
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#format_history" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        format_history
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clone
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_h" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_h
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_json" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_json
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from_hash-class-method" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        from_hash (class method)
+        Full method list
       
     </span>
   </a>
@@ -2835,89 +2580,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stateproxy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        StateProxy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creating-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating Memory
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Creating Memory">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Basic
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Data
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-session-id" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Session ID
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#with-existing-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        With Existing Results
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usermessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UserMessage
-      
-    </span>
-  </a>
   
 </li>
       
@@ -2934,10 +2596,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#accessing-data" class="md-nav__link">
+  <a href="#nested-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Accessing Data
+        Nested data
       
     </span>
   </a>
@@ -2945,32 +2607,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#working-with-results" class="md-nav__link">
+  <a href="#change-tracking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Working with Results
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#using-reactive-memory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using Reactive Memory
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serialization
+        Change tracking
       
     </span>
   </a>
@@ -3075,166 +2715,201 @@
   
 
 
-<h1 id="memory-state-management">Memory (State Management)<a class="headerlink" href="#memory-state-management" title="Permanent link">&para;</a></h1>
-<p>Memory manages conversation data, results, and runtime state. There is no separate <code>State</code> class; <code>Memory</code> serves this role.</p>
-<h2 id="class-robotlabmemory">Class: <code>RobotLab::Memory</code><a class="headerlink" href="#class-robotlabmemory" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span>
+<h1 id="stateproxy">StateProxy<a class="headerlink" href="#stateproxy" title="Permanent link">&para;</a></h1>
+<div class="admonition danger">
+<p class="admonition-title">There is no <code>RobotLab::State</code> class</p>
+<p>RobotLab has never had a <code>State</code> class. Runtime state lives in
+<a href="../memory/"><code>RobotLab::Memory</code></a>. The only state object is
+<strong><code>RobotLab::StateProxy</code></strong> (<code>lib/robot_lab/state_proxy.rb</code>), which is what
+<code>memory.data</code> returns — and that is what this page documents.</p>
+<p>This page is listed as "State" in the site navigation for historical reasons.
+For the key-value store, subscriptions, blocking reads, results, and
+serialization, go to <strong><a href="../memory/">Memory</a></strong>.</p>
+</div>
+<h2 id="class-robotlabstateproxy">Class: <code>RobotLab::StateProxy</code><a class="headerlink" href="#class-robotlabstateproxy" title="Permanent link">&para;</a></h2>
+<p>A thin wrapper around a symbol-keyed Hash that adds method-style access and an
+optional change callback. It is not a <code>Hash</code> subclass and does not implement the
+full <code>Hash</code> interface — the supported methods are listed below.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">StateProxy</span><span class="o">.</span><span class="n">new</span><span class="p">({</span><span class="w"> </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:count</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">proxy</span><span class="o">.</span><span class="n">count</span><span class="w">       </span><span class="c1"># =&gt; 1</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:name</span><span class="o">]</span><span class="w">      </span><span class="c1"># =&gt; &quot;test&quot;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">proxy</span><span class="o">.</span><span class="n">to_h</span><span class="w">        </span><span class="c1"># =&gt; { count: 1, name: &quot;test&quot; }</span>
 </span></code></pre></div>
-<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
-<h3 id="session_id">session_id<a class="headerlink" href="#session_id" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">session_id</span><span class="w">  </span><span class="c1"># =&gt; String | nil</span>
+<h2 id="where-you-get-one">Where you get one<a class="headerlink" href="#where-you-get-one" title="Permanent link">&para;</a></h2>
+<p><code>memory.data</code> — the reserved <code>:data</code> key of a <code>Memory</code> — is the only place the
+framework hands you a <code>StateProxy</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="w">                    </span><span class="c1"># =&gt; #&lt;RobotLab::StateProxy {user_id: &quot;123&quot;}&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:user_id</span><span class="o">]</span><span class="w">          </span><span class="c1"># =&gt; &quot;123&quot;     Hash access</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">user_id</span><span class="w">            </span><span class="c1"># =&gt; &quot;123&quot;     method access</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:status</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
 </span></code></pre></div>
-<p>Conversation session identifier for persistence.</p>
-<h3 id="data">data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="w">  </span><span class="c1"># =&gt; StateProxy</span>
+<p>The proxy is memoized (<code>@data ||= StateProxy.new(...)</code>) and is reset whenever
+<code>memory[:data] = ...</code> or <code>memory.reset</code> is called.</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>memory.data</code> mutations are not reactive</p>
+<p><code>memory.data[:x] = 1</code> writes through the proxy into the <code>:data</code> hash. It does
+<strong>not</strong> go through <code>Memory#set</code>, so it wakes no blocking readers and notifies
+no subscribers. Use <code>memory.set(:x, 1)</code> on a non-reserved key when you need
+reactive semantics.</p>
+</div>
+<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">StateProxy</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="ss">on_change</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Access workflow data as a proxy object.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:user_id</span><span class="o">]</span><span class="w">          </span><span class="c1"># Hash access</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">user_id</span><span class="w">            </span><span class="c1"># Method access</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:status</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
-</span></code></pre></div>
-<h3 id="results">results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;RobotResult&gt;</span>
-</span></code></pre></div>
-<p>All robot execution results.</p>
-<h3 id="messages">messages<a class="headerlink" href="#messages" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">messages</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
-</span></code></pre></div>
-<p>Formatted conversation messages for LLM.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data</code></td>
+<td><code>Hash</code></td>
+<td><code>{}</code></td>
+<td>Initial data. Keys are converted to Symbols via <code>transform_keys(&amp;:to_sym)</code></td>
+</tr>
+<tr>
+<td><code>on_change</code></td>
+<td><code>Proc</code>, <code>nil</code></td>
+<td><code>nil</code></td>
+<td>Called as <code>on_change.call(key, old_value, new_value)</code> on <code>[]=</code>, and only when the value actually changed (<code>old_value != value</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>Memory#data</code> constructs the proxy <strong>without</strong> an <code>on_change</code> callback.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
-<h3 id="append_result">append_result<a class="headerlink" href="#append_result" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">append_result</span><span class="p">(</span><span class="n">robot_result</span><span class="p">)</span>
+<h3 id="element-access">Element access<a class="headerlink" href="#element-access" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:key</span><span class="o">]</span><span class="w">          </span><span class="c1"># =&gt; value (keys are symbolized on read)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:key</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="w">  </span><span class="c1"># fires on_change when the value differs</span>
 </span></code></pre></div>
-<p>Add a robot result to history.</p>
-<h3 id="set_results">set_results<a class="headerlink" href="#set_results" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">set_results</span><span class="p">(</span><span class="n">array_of_results</span><span class="p">)</span>
+<p>Both <code>[]</code> and <code>[]=</code> call <code>key.to_sym</code>, so <code>proxy["a"]</code> and <code>proxy[:a]</code> are the same entry.</p>
+<h3 id="method-style-access">Method-style access<a class="headerlink" href="#method-style-access" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">proxy</span><span class="o">.</span><span class="n">name</span><span class="w">        </span><span class="c1"># same as proxy[:name] — only when :name already exists</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">proxy</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;x&quot;</span><span class="w">  </span><span class="c1"># same as proxy[:name] = &quot;x&quot; — always works</span>
 </span></code></pre></div>
-<p>Replace all results.</p>
-<h3 id="results_from">results_from<a class="headerlink" href="#results_from" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">results_from</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;RobotResult&gt;</span>
-</span></code></pre></div>
-<p>Get results starting at index.</p>
-<h3 id="session_id_1">session_id=<a class="headerlink" href="#session_id_1" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">session_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;session_123&quot;</span>
-</span></code></pre></div>
-<p>Set the session identifier.</p>
-<h3 id="format_history">format_history<a class="headerlink" href="#format_history" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">format_history</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Message&gt;</span>
-</span></code></pre></div>
-<p>Format results as conversation history.</p>
-<h3 id="clone">clone<a class="headerlink" href="#clone" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">new_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">clone</span>
-</span></code></pre></div>
-<p>Create a deep copy.</p>
-<h3 id="to_h">to_h<a class="headerlink" href="#to_h" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">to_h</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
-</span></code></pre></div>
-<p>Hash representation.</p>
-<h3 id="to_json">to_json<a class="headerlink" href="#to_json" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">to_json</span><span class="w">  </span><span class="c1"># =&gt; String</span>
-</span></code></pre></div>
-<p>JSON representation.</p>
-<h3 id="from_hash-class-method">from_hash (class method)<a class="headerlink" href="#from_hash-class-method" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="nb">hash</span><span class="p">)</span>
-</span></code></pre></div>
-<p>Restore from hash.</p>
-<h2 id="stateproxy">StateProxy<a class="headerlink" href="#stateproxy" title="Permanent link">&para;</a></h2>
-<p>The <code>data</code> attribute is a <code>StateProxy</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">data</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Hash-style access</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:key</span><span class="o">]</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:key</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># Method-style access</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">proxy</span><span class="o">.</span><span class="n">key</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">proxy</span><span class="o">.</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="c1"># Hash operations</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="n">proxy</span><span class="o">.</span><span class="n">key?</span><span class="p">(</span><span class="ss">:key</span><span class="p">)</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="n">proxy</span><span class="o">.</span><span class="n">keys</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="n">proxy</span><span class="o">.</span><span class="n">values</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="n">proxy</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="o">|</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="n">proxy</span><span class="o">.</span><span class="n">merge!</span><span class="p">(</span><span class="n">other_hash</span><span class="p">)</span>
-</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="n">proxy</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="ss">:key</span><span class="p">)</span>
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="n">proxy</span><span class="o">.</span><span class="n">to_h</span>
-</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="n">proxy</span><span class="o">.</span><span class="n">empty?</span>
-</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="n">proxy</span><span class="o">.</span><span class="n">size</span>
-</span></code></pre></div>
-<h2 id="creating-memory">Creating Memory<a class="headerlink" href="#creating-memory" title="Permanent link">&para;</a></h2>
-<h3 id="basic">Basic<a class="headerlink" href="#basic" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span>
-</span></code></pre></div>
-<h3 id="with-data">With Data<a class="headerlink" href="#with-data" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user_123&quot;</span><span class="p">,</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="ss">order_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ord_456&quot;</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="with-session-id">With Session ID<a class="headerlink" href="#with-session-id" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">memory</span><span class="o">.</span><span class="n">session_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;session_123&quot;</span>
-</span></code></pre></div>
-<h3 id="with-existing-results">With Existing Results<a class="headerlink" href="#with-existing-results" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">memory</span><span class="o">.</span><span class="n">set_results</span><span class="p">(</span><span class="n">previous_results</span><span class="p">)</span>
-</span></code></pre></div>
-<h2 id="usermessage">UserMessage<a class="headerlink" href="#usermessage" title="Permanent link">&para;</a></h2>
-<p>Enhanced message with metadata:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">UserMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="s2">&quot;What&#39;s my order status?&quot;</span><span class="p">,</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;session_123&quot;</span><span class="p">,</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Respond in Spanish&quot;</span><span class="p">,</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">source</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;web&quot;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="p">)</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="w">       </span><span class="c1"># =&gt; &quot;What&#39;s my order status?&quot;</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="n">message</span><span class="o">.</span><span class="n">session_id</span><span class="w">    </span><span class="c1"># =&gt; &quot;session_123&quot;</span>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="n">message</span><span class="o">.</span><span class="n">system_prompt</span><span class="w"> </span><span class="c1"># =&gt; &quot;Respond in Spanish&quot;</span>
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="n">message</span><span class="o">.</span><span class="n">metadata</span><span class="w">      </span><span class="c1"># =&gt; { source: &quot;web&quot; }</span>
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="w">            </span><span class="c1"># =&gt; UUID</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="n">message</span><span class="o">.</span><span class="n">created_at</span><span class="w">    </span><span class="c1"># =&gt; Time</span>
-</span></code></pre></div>
+<p>Implemented with <code>method_missing</code>. A <strong>getter</strong> for a key that does not exist
+falls through to <code>super</code> and raises <code>NoMethodError</code>; a <strong>setter</strong> always works and
+creates the key. <code>respond_to?(:name)</code> is true only once the key exists.</p>
+<p>Method-style access cannot reach a key whose name collides with a real
+<code>StateProxy</code> method (<code>keys</code>, <code>size</code>, <code>map</code>, <code>each</code>, <code>delete</code>, <code>dup</code>, <code>inspect</code>, …).
+Use <code>proxy[:keys]</code> for those.</p>
+<h3 id="full-method-list">Full method list<a class="headerlink" href="#full-method-list" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[](key)</code></td>
+<td>value</td>
+<td>Symbolizes the key</td>
+</tr>
+<tr>
+<td><code>[]=(key, value)</code></td>
+<td>value</td>
+<td>Symbolizes the key; fires <code>on_change</code></td>
+</tr>
+<tr>
+<td><code>key?(key)</code></td>
+<td><code>Boolean</code></td>
+<td>Aliases: <code>has_key?</code>, <code>include?</code></td>
+</tr>
+<tr>
+<td><code>keys</code></td>
+<td><code>Array&lt;Symbol&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>values</code></td>
+<td><code>Array</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>each { \|k, v\| }</code></td>
+<td>delegates to <code>Hash#each</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>map { \|k, v\| }</code></td>
+<td><code>Array</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>delete(key)</code></td>
+<td>deleted value</td>
+<td>Does <strong>not</strong> fire <code>on_change</code></td>
+</tr>
+<tr>
+<td><code>merge!(other)</code></td>
+<td><code>self</code></td>
+<td>Assigns each pair through <code>[]=</code>, so <code>on_change</code> fires per key</td>
+</tr>
+<tr>
+<td><code>to_h</code></td>
+<td><code>Hash</code></td>
+<td>A <strong>shallow</strong> <code>dup</code>; aliased as <code>to_hash</code></td>
+</tr>
+<tr>
+<td><code>dup</code></td>
+<td><code>StateProxy</code></td>
+<td>Deep duplicate, preserving <code>on_change</code></td>
+</tr>
+<tr>
+<td><code>empty?</code></td>
+<td><code>Boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>size</code></td>
+<td><code>Integer</code></td>
+<td>Aliased as <code>length</code></td>
+</tr>
+<tr>
+<td><code>inspect</code></td>
+<td><code>String</code></td>
+<td><code>#&lt;RobotLab::StateProxy {...}&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>There is no <code>clear</code>, no <code>fetch</code>, no <code>dig</code>, and no <code>clone</code>. <code>to_h</code> is a shallow
+copy, so nested Hashes are shared with the proxy — mutate them and the proxy sees
+it. Use <code>dup</code> when you need isolation.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="accessing-data">Accessing Data<a class="headerlink" href="#accessing-data" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">plan</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pro&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="p">)</span>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:name</span><span class="o">]</span><span class="w">  </span><span class="c1"># =&gt; &quot;Alice&quot;</span>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_h</span><span class="w">           </span><span class="c1"># =&gt; { user: { name: &quot;Alice&quot;, plan: &quot;pro&quot; } }</span>
+<h3 id="nested-data">Nested data<a class="headerlink" href="#nested-data" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">plan</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pro&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:name</span><span class="o">]</span><span class="w">  </span><span class="c1"># =&gt; &quot;Alice&quot;   (plain Hash below the top level)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">user</span><span class="w">           </span><span class="c1"># =&gt; { name: &quot;Alice&quot;, plan: &quot;pro&quot; }</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">memory</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_h</span><span class="w">           </span><span class="c1"># =&gt; { user: { name: &quot;Alice&quot;, plan: &quot;pro&quot; } }</span>
 </span></code></pre></div>
-<h3 id="working-with-results">Working with Results<a class="headerlink" href="#working-with-results" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># After running network</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">size</span><span class="w">           </span><span class="c1"># Number of results</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">last</span><span class="w">           </span><span class="c1"># Most recent</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:robot_name</span><span class="p">)</span><span class="w">  </span><span class="c1"># [&quot;classifier&quot;, &quot;support&quot;]</span>
-</span></code></pre></div>
-<h3 id="using-reactive-memory">Using Reactive Memory<a class="headerlink" href="#using-reactive-memory" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">memory</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="ss">:intent</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">)</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">intent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:intent</span><span class="p">)</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="n">memory</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="ss">:status</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">change</span><span class="o">|</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Status changed to </span><span class="si">#{</span><span class="n">change</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> by </span><span class="si">#{</span><span class="n">change</span><span class="o">.</span><span class="n">writer</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="k">end</span>
-</span></code></pre></div>
-<h3 id="serialization">Serialization<a class="headerlink" href="#serialization" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Save memory</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span><span class="o">.</span><span class="n">to_json</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="no">File</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;memory.json&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">json</span><span class="p">)</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="c1"># Restore memory</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">JSON</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;memory.json&quot;</span><span class="p">))</span>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Memory</span><span class="o">.</span><span class="n">from_hash</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<p>Only the top level is proxied. Nested values are returned as-is — a nested Hash
+is a plain Hash, not another <code>StateProxy</code>.</p>
+<h3 id="change-tracking">Change tracking<a class="headerlink" href="#change-tracking" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">StateProxy</span><span class="o">.</span><span class="n">new</span><span class="p">({</span><span class="w"> </span><span class="ss">status</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pending&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="ss">on_change</span><span class="p">:</span><span class="w"> </span><span class="nb">lambda</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">old</span><span class="p">,</span><span class="w"> </span><span class="kp">new</span><span class="o">|</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">old</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">#{</span><span class="kp">new</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">})</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:status</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="w">   </span><span class="c1"># &quot;status: \&quot;pending\&quot; -&gt; \&quot;active\&quot;&quot;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">proxy</span><span class="o">[</span><span class="ss">:status</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="w">   </span><span class="c1"># silent — value unchanged</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">proxy</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="ss">:status</span><span class="p">)</span><span class="w">       </span><span class="c1"># silent — delete does not fire on_change</span>
 </span></code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="../memory/">Memory</a> — the store that owns the proxy: keys, subscriptions, blocking reads, results, serialization</li>
 <li><a href="../../../architecture/state-management/">State Management Architecture</a></li>
-<li><a href="../memory/">Memory</a></li>
 </ul>
 
 
@@ -3325,7 +3000,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../network/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Network">
+          <a href="../memory/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Memory">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3335,20 +3010,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Network
+                Memory
               </div>
             </div>
           </a>
         
         
           
-          <a href="../tool/" class="md-footer__link md-footer__link--next" aria-label="Next: Tool">
+          <a href="../../errors/" class="md-footer__link md-footer__link--next" aria-label="Next: Errors">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Tool
+                Errors
               </div>
             </div>
             <div class="md-footer__button md-icon">

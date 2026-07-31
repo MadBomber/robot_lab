@@ -1502,6 +1502,8 @@
       
         
       
+        
+      
     
     
     
@@ -1565,6 +1567,8 @@
       
         
           
+        
+      
         
       
         
@@ -1664,14 +1668,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/network/" class="md-nav__link">
+      <a href="../../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1692,14 +1696,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/core/state/" class="md-nav__link">
+      <a href="../../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1769,9 +1773,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1809,7 +1869,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1831,14 +1891,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2000,7 +2060,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2022,14 +2082,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2161,7 +2221,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2183,14 +2243,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2732,12 +2792,13 @@
     participant LLM
 
     App-&gt;&gt;Robot: run("message")
-    Robot-&gt;&gt;Memory: resolve_active_memory()
+    Robot-&gt;&gt;Memory: resolve_run_memory()
+    Robot-&gt;&gt;Robot: prepare_tools()
     Robot-&gt;&gt;Robot: resolve_mcp_hierarchy()
     Robot-&gt;&gt;Robot: resolve_tools_hierarchy()
     Robot-&gt;&gt;Robot: ensure_mcp_clients()
-    Robot-&gt;&gt;Robot: filtered_tools()
-    Robot-&gt;&gt;Chat: with_tools(*filtered)
+    Robot-&gt;&gt;Robot: filtered_tools() + cap_tools()
+    Robot-&gt;&gt;Chat: with_tools(*filtered, replace: true)
     Robot-&gt;&gt;Chat: ask("message")
     Chat-&gt;&gt;LLM: API Request
 
@@ -2753,29 +2814,29 @@
     Robot--&gt;&gt;App: RobotResult</code></pre>
 <h2 id="step-by-step-flow">Step-by-Step Flow<a class="headerlink" href="#step-by-step-flow" title="Permanent link">&para;</a></h2>
 <h3 id="1-memory-resolution">1. Memory Resolution<a class="headerlink" href="#1-memory-resolution" title="Permanent link">&para;</a></h3>
-<p>The robot determines which memory to use for this run:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Priority order:</span>
+<p><code>Robot#run</code> first resolves the memory this run will write to, via <code>resolve_run_memory</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># resolve_active_memory priority order:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># 1. Explicit network_memory: parameter</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># 2. Network&#39;s memory (if running in a network)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># 3. Robot&#39;s inherent @memory (standalone mode)</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">run_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">resolve_active_memory</span><span class="p">(</span><span class="ss">network</span><span class="p">:</span><span class="w"> </span><span class="n">network</span><span class="p">,</span><span class="w"> </span><span class="ss">network_memory</span><span class="p">:</span><span class="w"> </span><span class="n">network_memory</span><span class="p">)</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Merge runtime memory if provided</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># A runtime memory: kwarg either replaces (Memory) or merges into (Hash) it</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">case</span><span class="w"> </span><span class="n">memory</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">when</span><span class="w"> </span><span class="no">Memory</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">run_memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">memory</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">when</span><span class="w"> </span><span class="no">Hash</span><span class="w">   </span><span class="k">then</span><span class="w"> </span><span class="n">run_memory</span><span class="o">.</span><span class="n">merge!</span><span class="p">(</span><span class="n">memory</span><span class="p">)</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">end</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Track who is writing to memory</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">run_memory</span><span class="o">.</span><span class="n">current_writer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@name</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">when</span><span class="w"> </span><span class="no">Memory</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">memory</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">when</span><span class="w"> </span><span class="no">Hash</span><span class="w">   </span><span class="k">then</span><span class="w"> </span><span class="n">run_memory</span><span class="o">.</span><span class="n">tap</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="n">m</span><span class="o">.</span><span class="n">merge!</span><span class="p">(</span><span class="n">memory</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">else</span><span class="w">             </span><span class="n">run_memory</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">end</span>
 </span></code></pre></div>
+<p><code>run</code> then sets <code>run_memory.current_writer = @name</code> for the duration of the run and restores the previous writer in an <code>ensure</code> block, so subscription callbacks always see the robot that actually wrote a value.</p>
+<p>The whole run body is wrapped in <code>RobotLab::Hooks.run(:run, context, ...)</code> against the registries <code>[RobotLab.hooks, network&amp;.hooks, @hooks]</code>.</p>
 <h3 id="2-mcp-hierarchy-resolution">2. MCP Hierarchy Resolution<a class="headerlink" href="#2-mcp-hierarchy-resolution" title="Permanent link">&para;</a></h3>
-<p>MCP servers are resolved through a hierarchy: <strong>runtime &gt; robot build-time &gt; network &gt; global config</strong>.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Resolve build-time config against network/global</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">parent_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">&amp;.</span><span class="n">network</span><span class="o">&amp;.</span><span class="n">mcp</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mcp</span>
+<p>MCP servers and tools are resolved together in <code>prepare_tools</code>, through a hierarchy: <strong>runtime (run/task) &gt; robot build-time &gt; network &gt; global config</strong>.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Parent value: task/network RunConfig, then the network object, then global config</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">parent_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network_config</span><span class="o">&amp;.</span><span class="n">mcp</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">network_parent_config</span><span class="p">(</span><span class="n">network</span><span class="p">)</span><span class="o">&amp;.</span><span class="n">mcp</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mcp</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">build_resolved</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolConfig</span><span class="o">.</span><span class="n">resolve_mcp</span><span class="p">(</span><span class="vi">@mcp_config</span><span class="p">,</span><span class="w"> </span><span class="ss">parent_value</span><span class="p">:</span><span class="w"> </span><span class="n">parent_value</span><span class="p">)</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Then resolve runtime override against build-time</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Then resolve the runtime override against the build-time value</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">resolved_mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolConfig</span><span class="o">.</span><span class="n">resolve_mcp</span><span class="p">(</span><span class="n">runtime_mcp</span><span class="p">,</span><span class="w"> </span><span class="ss">parent_value</span><span class="p">:</span><span class="w"> </span><span class="n">build_resolved</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Values at each level:</p>
@@ -2784,38 +2845,51 @@
 <li><code>:inherit</code> -- use parent level's MCP config</li>
 <li><code>Array</code> -- explicit list of server configurations</li>
 </ul>
+<p><code>run</code>'s default for <code>mcp:</code> is <code>:none</code>, so a plain <code>robot.run("...")</code> resolves to an empty server list and connects nothing, even when <code>mcp:</code> was supplied at build time. Pass <code>mcp: :inherit</code> to trigger the connection. (<code>robot.connect_mcp!</code> connects eagerly against the build-time config, which is useful for reporting connection status at startup.)</p>
 <h3 id="3-mcp-client-initialization">3. MCP Client Initialization<a class="headerlink" href="#3-mcp-client-initialization" title="Permanent link">&para;</a></h3>
 <p>If MCP servers need to be connected (or reconnected), the robot initializes clients:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Connect to each MCP server</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">mcp_servers</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">server_config</span><span class="o">|</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">MCP</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">server_config</span><span class="p">)</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="n">client</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">client</span><span class="o">.</span><span class="n">connected?</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="vi">@mcp_clients</span><span class="o">[</span><span class="n">client</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">name</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">discover_mcp_tools</span><span class="p">(</span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="n">server_name</span><span class="p">)</span><span class="w">  </span><span class="c1"># Auto-discover tools</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Connect to each MCP server (ensure_mcp_clients -&gt; init_mcp_client)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">MCP</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">server_config</span><span class="p">)</span><span class="w">   </span><span class="c1"># config is POSITIONAL</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">client</span><span class="o">.</span><span class="n">connect</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">if</span><span class="w"> </span><span class="n">client</span><span class="o">.</span><span class="n">connected?</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="vi">@mcp_clients</span><span class="o">[</span><span class="n">client</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">name</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="n">discover_mcp_tools</span><span class="p">(</span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="n">server_name</span><span class="p">)</span><span class="w">  </span><span class="c1"># each remote tool becomes a Tool.create wrapper</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">else</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="vi">@failed_mcp_configs</span><span class="o">[</span><span class="n">server_name</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">server_config</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>Connection failures are logged and recorded, never raised — they surface through <code>robot.failed_mcp_server_names</code>. A later run retries only the servers that are still needed and still failed.</p>
 <h3 id="4-tools-resolution">4. Tools Resolution<a class="headerlink" href="#4-tools-resolution" title="Permanent link">&para;</a></h3>
-<p>Tools are resolved through the same hierarchy and filtered:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Collect all available tools</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">available</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@local_tools</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="vi">@mcp_tools</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Apply whitelist if specified</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">ToolConfig</span><span class="o">.</span><span class="n">filter_tools</span><span class="p">(</span><span class="n">available</span><span class="p">,</span><span class="w"> </span><span class="ss">allowed_names</span><span class="p">:</span><span class="w"> </span><span class="n">resolved_tools</span><span class="p">)</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Apply tools to the persistent chat</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="o">*</span><span class="n">filtered</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">filtered</span><span class="o">.</span><span class="n">any?</span>
+<p>Tools are resolved through the same hierarchy, filtered, capped, and applied to the chat:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Explicit :none (or a literal []) means &quot;send zero tools this turn&quot;; otherwise</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># filter the local + MCP tools by the resolved allowlist and clamp to max_tools.</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="o">[]</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">cap_tools</span><span class="p">(</span><span class="n">filtered_tools</span><span class="p">(</span><span class="n">resolved_tools</span><span class="p">))</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="o">*</span><span class="n">filtered</span><span class="p">,</span><span class="w"> </span><span class="ss">replace</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">filtered</span><span class="o">.</span><span class="n">any?</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
 </span></code></pre></div>
+<p>Two details here are load-bearing:</p>
+<ul>
+<li><strong><code>replace: true</code></strong> — RubyLLM's <code>with_tools</code> appends by default. On a persistent chat that would let tools accumulate across turns, so the chat is made to hold exactly this turn's resolved set. An explicit <code>:none</code> therefore clears the chat's tools to zero.</li>
+<li><strong><code>cap_tools</code></strong> — the resolved list is clamped to <code>RunConfig#max_tools</code>, which defaults to <code>DEFAULT_MAX_TOOLS</code> (128) because most providers reject longer tool arrays. Setting <code>max_tools</code> to nil, 0, or a negative number falls back to 128; the cap cannot be disabled. Dropped tools are logged at <code>warn</code>.</li>
+</ul>
+<p>Because <code>run</code> defaults to <code>tools: :none</code>, a plain <code>robot.run("...")</code> sends the LLM no tools at all. Pass <code>tools: :inherit</code> to send the robot's attached tools; pass an explicit array of names to use it as an allowlist.</p>
 <h3 id="5-llm-inference">5. LLM Inference<a class="headerlink" href="#5-llm-inference" title="Permanent link">&para;</a></h3>
-<p>The message is sent to the LLM via <code>Agent#ask</code>, which delegates to <code>@chat.ask</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Robot#run calls Agent#ask</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ask</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Internally, Agent#ask calls:</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># @chat.ask(message)</span>
+<p>The message is sent to the LLM via <code>Agent#ask</code>, which delegates to <code>@chat.ask</code>. <code>invoke_ask</code> wraps that call in the <code>:llm_generation</code> hook and installs the per-run guards first:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">:llm_generation</span><span class="p">,</span><span class="w"> </span><span class="n">generation_context</span><span class="p">,</span><span class="w"> </span><span class="ss">registries</span><span class="p">:</span><span class="w"> </span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="ss">per_run_hooks</span><span class="p">:</span><span class="w"> </span><span class="n">hooks</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="n">effective_message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">inject_learnings</span><span class="p">(</span><span class="n">generation_context</span><span class="o">.</span><span class="n">request</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="n">maybe_compact</span><span class="p">(</span><span class="ss">network</span><span class="p">:</span><span class="w"> </span><span class="n">context</span><span class="o">.</span><span class="n">network</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="n">install_circuit_breaker</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@config</span><span class="o">.</span><span class="n">max_tool_rounds</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="n">install_doom_loop_detection</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="n">ask</span><span class="p">(</span><span class="n">effective_message</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">kwargs</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:with</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">effective_streaming_block</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>Notes on the surrounding behavior:</p>
+<ul>
+<li><code>:llm_generation</code> fires <strong>exactly once per <code>robot.run</code></strong> — the provider's tool loop happens inside the block, not once per API call.</li>
+<li>Only <code>:with</code> from <code>run</code>'s keyword arguments reaches <code>ask</code>. Every other unrecognized keyword is treated as template re-render context.</li>
+<li>Doom-loop detection is installed unconditionally on every run; <code>doom_loop_threshold:</code> (default 3) only tunes it.</li>
+</ul>
 <p>The persistent <code>@chat</code> (a <code>RubyLLM::Chat</code> instance) handles:</p>
 <ul>
 <li>Maintaining conversation history</li>
@@ -2831,74 +2905,89 @@
 <li>Sends the result back to the LLM</li>
 <li>Repeats until the LLM produces a final text response</li>
 </ol>
-<p>The <code>on_tool_call</code> and <code>on_tool_result</code> callbacks fire during this loop if configured:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># These callbacks are registered on @chat during Robot#initialize</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">on_tool_call</span><span class="p">(</span><span class="o">&amp;</span><span class="vi">@on_tool_call</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@on_tool_call</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">on_tool_result</span><span class="p">(</span><span class="o">&amp;</span><span class="vi">@on_tool_result</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@on_tool_result</span>
+<p>The <code>on_tool_call</code> and <code>on_tool_result</code> callbacks fire during this loop if configured. They are read off the effective <code>RunConfig</code> and registered on <code>@chat</code> during <code>Robot#initialize</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_chat_callbacks</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="vi">@chat</span><span class="o">.</span><span class="n">on_tool_call</span><span class="p">(</span><span class="o">&amp;</span><span class="vi">@on_tool_call</span><span class="p">)</span><span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="vi">@on_tool_call</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="vi">@chat</span><span class="o">.</span><span class="n">on_tool_result</span><span class="p">(</span><span class="o">&amp;</span><span class="vi">@on_tool_result</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@on_tool_result</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="n">setup_bus_channel</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@bus</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">end</span>
 </span></code></pre></div>
+<p>When <code>max_tool_rounds</code> is set, <code>install_circuit_breaker</code> temporarily wraps <code>on_tool_call</code> for the duration of the run and raises <code>ToolLoopError</code> once the round count is exceeded; the original callback is restored in <code>run</code>'s <code>ensure</code> block.</p>
 <h3 id="7-result-construction">7. Result Construction<a class="headerlink" href="#7-result-construction" title="Permanent link">&para;</a></h3>
-<p>After the LLM responds, a <code>RobotResult</code> is built:</p>
+<p>After the LLM responds, <code>build_result</code> turns the response into a <code>RobotResult</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_result</span><span class="p">(</span><span class="n">response</span><span class="p">,</span><span class="w"> </span><span class="n">_memory</span><span class="p">)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">respond_to?</span><span class="p">(</span><span class="ss">:content</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="o">[</span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;assistant&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span><span class="o">]</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="k">else</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="o">[]</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="n">tool_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">respond_to?</span><span class="p">(</span><span class="ss">:tool_calls</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[]</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">[]</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="no">RobotResult</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="vi">@name</span><span class="p">,</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="ss">output</span><span class="p">:</span><span class="w"> </span><span class="n">output</span><span class="p">,</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="ss">tool_calls</span><span class="p">:</span><span class="w"> </span><span class="n">normalize_tool_calls</span><span class="p">(</span><span class="n">tool_calls</span><span class="p">),</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="ss">stop_reason</span><span class="p">:</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">respond_to?</span><span class="p">(</span><span class="ss">:stop_reason</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="n">response</span><span class="o">.</span><span class="n">stop_reason</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="ss">raw</span><span class="p">:</span><span class="w"> </span><span class="n">response</span>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="p">)</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">end</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">text</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">result_text</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="o">[</span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;assistant&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="o">]</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="o">[]</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="c1"># ... reads response.tokens (or input_tokens/output_tokens), accumulates them</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="c1">#     into the robot&#39;s running totals, and passes them to RobotResult</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">end</span>
 </span></code></pre></div>
+<p><code>result_text</code> is deliberately more forgiving than <code>response.content</code>. It falls back, in order, to:</p>
+<ol>
+<li><code>response.content</code>, when present and non-empty</li>
+<li><code>response.thinking</code> — Ollama routes some models' (e.g. qwen3) entire output through <code>reasoning_content</code>, which RubyLLM surfaces as <code>thinking</code></li>
+<li>the most recent non-empty assistant message in <code>@chat.messages</code>, scoped to messages <em>after</em> the last user message, for models that end a turn on a tool call with no trailing text</li>
+</ol>
+<p>Scoping the history fallback to the current turn is what prevents a previous turn's answer from being returned when a thinking-mode model emits nothing in <code>content</code>.</p>
+<p><code>build_result</code> also does token accounting: it reads <code>response.tokens</code> (falling back to <code>input_tokens</code>/<code>output_tokens</code>), adds them to the robot's running totals, and stores them on the result. <code>run</code> then reconciles the budget reservation and enforces <code>token_budget</code> / <code>cost_budget</code>, raising <code>RobotLab::BudgetExceeded</code> when either is blown.</p>
 <h2 id="robotresult">RobotResult<a class="headerlink" href="#robotresult" title="Permanent link">&para;</a></h2>
 <p>The result object from a <code>robot.run</code> call:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">       </span><span class="c1"># =&gt; &quot;assistant&quot;</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">           </span><span class="c1"># =&gt; [TextMessage, ...]</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">       </span><span class="c1"># =&gt; [ToolResultMessage, ...]</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">      </span><span class="c1"># =&gt; &quot;stop&quot; or nil</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">           </span><span class="c1"># =&gt; [TextMessage] synthesized from result_text</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">       </span><span class="c1"># =&gt; [] in practice (see below)</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">      </span><span class="c1"># =&gt; nil — always (see below)</span>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">result</span><span class="o">.</span><span class="n">created_at</span><span class="w">       </span><span class="c1"># =&gt; Time</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">result</span><span class="o">.</span><span class="n">id</span><span class="w">               </span><span class="c1"># =&gt; UUID string</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="w">         </span><span class="c1"># =&gt; Float or nil (elapsed seconds, set in pipeline execution)</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">result</span><span class="o">.</span><span class="n">raw</span><span class="w">              </span><span class="c1"># =&gt; raw LLM response object</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># Convenience methods</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1"># =&gt; &quot;Hi there!&quot; (last text message content)</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">              </span><span class="c1"># =&gt; alias for last_text_content</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1"># =&gt; false</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="n">result</span><span class="o">.</span><span class="n">stopped?</span><span class="w">           </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span><span class="w">     </span><span class="c1"># =&gt; Integer</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">result</span><span class="o">.</span><span class="n">output_tokens</span><span class="w">    </span><span class="c1"># =&gt; Integer</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">         </span><span class="c1"># =&gt; &quot;sha256-hex&quot;</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">result</span><span class="o">.</span><span class="n">raw</span><span class="w">              </span><span class="c1"># =&gt; raw LLM response object</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1"># Convenience methods</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1"># =&gt; &quot;Hi there!&quot; (last text message content)</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">              </span><span class="c1"># =&gt; alias for last_text_content</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1"># =&gt; false</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="n">result</span><span class="o">.</span><span class="n">stopped?</span><span class="w">           </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="n">result</span><span class="o">.</span><span class="n">export</span><span class="w">             </span><span class="c1"># =&gt; Hash (excludes debug fields)</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">result</span><span class="o">.</span><span class="n">to_h</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">to_json</span>
 </span></code></pre></div>
+<p><code>stop_reason</code> is always <code>nil</code>. <code>build_result</code> assigns it with <code>response.respond_to?(:stop_reason) ? response.stop_reason : nil</code>, and <code>RubyLLM::Message</code> does not define <code>stop_reason</code>, so no <code>robot.run</code> result ever reports one. It is dropped from <code>export</code> by the <code>.compact</code>, and <code>stopped?</code> therefore reduces to <code>!has_tool_calls?</code>.</p>
+<p><code>output</code> is a single synthesized <code>TextMessage</code>, not a transcript of the turn, and <code>tool_calls</code> is read off the final assistant message — which no longer carries tool calls once RubyLLM's tool loop has finished, so it is effectively always empty. Observe tool usage through the <code>on_tool_call</code>/<code>on_tool_result</code> callbacks or the tool hooks instead.</p>
 <h2 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h2>
-<p>Robots support streaming by passing a block to <code>run</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="o">|</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">event</span><span class="o">.</span><span class="n">respond_to?</span><span class="p">(</span><span class="ss">:text</span><span class="p">)</span>
+<p>Robots support streaming by passing a block to <code>run</code>. The block receives a <code>RubyLLM::Chunk</code>; its text is in <code>content</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me a story&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">chunk</span><span class="o">|</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">end</span>
 </span></code></pre></div>
-<p>The block is forwarded to <code>Agent#ask</code> which passes it to <code>@chat.ask</code>. Streaming events are provider-specific but typically include text deltas.</p>
+<p><code>effective_streaming_block</code> merges the block with any stored <code>on_content:</code> callback. If both are present, both fire — the stored <code>on_content</code> first, then the runtime block. The merged block is forwarded to <code>Agent#ask</code>, which passes it to <code>@chat.ask</code>.</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># on_content fires on every run, no block required</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">                       </span><span class="ss">on_content</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">print</span><span class="w"> </span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="w"> </span><span class="p">})</span>
+</span></code></pre></div>
+<p><code>on_content</code> is read from the robot's own config at construction — a network-level <code>config:</code> does not supply it.</p>
 <h2 id="template-resolution">Template Resolution<a class="headerlink" href="#template-resolution" title="Permanent link">&para;</a></h2>
 <p>When a robot has a <code>template:</code>, it is resolved during initialization:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 1. Parse the template via prompt_manager</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">PM</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="vi">@template</span><span class="p">)</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># 2. Extract and apply front matter config</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1">#    (model, temperature, top_p, etc.)</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">apply_front_matter_config</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># 3. Render the template body with context</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">rendered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parsed</span><span class="o">.</span><span class="n">to_s</span><span class="p">(</span><span class="o">**</span><span class="n">resolved_context</span><span class="p">)</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1"># 4. Set as system instructions on @chat</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_instructions</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># 1. Parse the template via prompt_manager</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">PM</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="vi">@template</span><span class="p">)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># 2. Apply the non-LLM front matter keys: robot_name, description, tools, mcp</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1">#    (constructor-provided values win, so these only fill in gaps)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">apply_front_matter_extras</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># 3. Turn the LLM keys into a RunConfig. Front matter is the BASE;</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1">#    @config (constructor kwargs) merges over it and wins.</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="n">effective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RunConfig</span><span class="o">.</span><span class="n">from_front_matter</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="vi">@config</span><span class="p">)</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">effective</span><span class="o">.</span><span class="n">apply_to</span><span class="p">(</span><span class="vi">@chat</span><span class="p">,</span><span class="w"> </span><span class="ss">provider</span><span class="p">:</span><span class="w"> </span><span class="vi">@provider</span><span class="p">,</span><span class="w"> </span><span class="ss">assume_model_exists</span><span class="p">:</span><span class="w"> </span><span class="o">!</span><span class="vi">@provider</span><span class="o">.</span><span class="n">nil?</span><span class="p">)</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1"># 4. Render the template body with context and set it as system instructions</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_instructions</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">to_s</span><span class="p">(</span><span class="o">**</span><span class="n">resolved_context</span><span class="p">))</span>
 </span></code></pre></div>
+<p>If required parameters are missing at build time, rendering is skipped and deferred: the first <code>run</code> that supplies context calls <code>rerender_template</code>, which re-renders and re-appends the inline <code>system_prompt</code>. When <code>skills:</code> are in play, each skill's body and front matter are accumulated the same way and the bodies are joined before being set as one instructions block.</p>
 <h3 id="front-matter-config-keys">Front Matter Config Keys<a class="headerlink" href="#front-matter-config-keys" title="Permanent link">&para;</a></h3>
-<p>Templates can configure the chat via YAML front matter:</p>
+<p>Templates parse these LLM keys into a <code>RunConfig</code>:</p>
 <table>
 <thead>
 <tr>
@@ -2917,30 +3006,35 @@
 </tr>
 <tr>
 <td><code>top_p</code></td>
-<td>Sets nucleus sampling</td>
+<td>Parsed, but <strong>not applied</strong> — see below</td>
 </tr>
 <tr>
 <td><code>top_k</code></td>
-<td>Sets top-k sampling</td>
+<td>Parsed, but <strong>not applied</strong></td>
 </tr>
 <tr>
 <td><code>max_tokens</code></td>
-<td>Sets max response tokens</td>
+<td>Parsed, but <strong>not applied</strong></td>
 </tr>
 <tr>
 <td><code>presence_penalty</code></td>
-<td>Sets presence penalty</td>
+<td>Parsed, but <strong>not applied</strong></td>
 </tr>
 <tr>
 <td><code>frequency_penalty</code></td>
-<td>Sets frequency penalty</td>
+<td>Parsed, but <strong>not applied</strong></td>
 </tr>
 <tr>
 <td><code>stop</code></td>
-<td>Sets stop sequences</td>
+<td>Parsed, but <strong>not applied</strong></td>
 </tr>
 </tbody>
 </table>
+<p><code>RunConfig#apply_to</code> dispatches <code>chat.with_&lt;field&gt;</code> guarded by <code>respond_to?</code>. <code>RubyLLM::Chat</code> only defines <code>with_model</code> and <code>with_temperature</code>, so the other six are silently dropped when they come from front matter. To set them, use constructor kwargs or a <code>config:</code> RunConfig — that path goes through <code>apply_chat_params</code> → <code>with_params</code> and does take effect:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:report</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="ss">top_p</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Front matter keys that are not LLM fields — <code>description</code>, <code>robot_name</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code>, <code>parameters</code> — all work.</p>
+<p>Template bodies render with ERB: use <code>&lt;%= var %&gt;</code>. <code>{{ var }}</code> is not interpolated and passes through verbatim.</p>
 <h2 id="model-selection">Model Selection<a class="headerlink" href="#model-selection" title="Permanent link">&para;</a></h2>
 <p>The model is determined by:</p>
 <ol>
@@ -2948,13 +3042,13 @@
 <li>Front matter <code>model</code> from template</li>
 <li>Global <code>RobotLab.config.ruby_llm.model</code></li>
 </ol>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="w">  </span><span class="c1"># Takes precedence</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">)</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Or configure globally via config files / environment variables</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># ROBOT_LAB_RUBY_LLM__MODEL=gpt-4o</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span><span class="w">  </span><span class="c1"># Takes precedence</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">)</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="c1"># Or configure globally via config files / environment variables</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># ROBOT_LAB_RUBY_LLM__MODEL=gpt-4o</span>
 </span></code></pre></div>
 <h2 id="simpleflow-integration">SimpleFlow Integration<a class="headerlink" href="#simpleflow-integration" title="Permanent link">&para;</a></h2>
 <p>When a robot runs inside a network, the <code>call</code> method is invoked by SimpleFlow:</p>
@@ -2965,6 +3059,7 @@
     participant Chat as @chat
 
     SF-&gt;&gt;Task: call(result)
+    Task-&gt;&gt;Task: Hooks.run(:task, ...)
     Task-&gt;&gt;Task: deep_merge(run_params, task_context)
     Task-&gt;&gt;Robot: call(enhanced_result)
     Robot-&gt;&gt;Robot: extract_run_context(result)
@@ -2973,30 +3068,31 @@
     Robot-&gt;&gt;Chat: ask(message)
     Chat--&gt;&gt;Robot: response
     Robot--&gt;&gt;SF: result.continue(robot_result)</code></pre>
-<p>The <code>Task</code> wrapper deep-merges per-task configuration (context, mcp, tools) before delegating to the robot's <code>call</code>. The base <code>Robot#call</code> extracts the message, calls <code>run</code>, and records the elapsed time in <code>RobotResult#duration</code>. If the robot raises any exception, the error is caught and wrapped in a <code>RobotResult</code> so one failing robot does not crash the entire pipeline:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">run_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">extract_run_context</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run_context</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="ss">:message</span><span class="p">)</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="n">start_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="n">robot_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">run_context</span><span class="p">)</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="n">robot_result</span><span class="o">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="n">result</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="o">.</span><span class="n">with_context</span><span class="p">(</span><span class="vi">@name</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">robot_result</span><span class="p">)</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="o">.</span><span class="n">continue</span><span class="p">(</span><span class="n">robot_result</span><span class="p">)</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="k">rescue</span><span class="w"> </span><span class="no">Exception</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="n">elapsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="n">error_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotResult</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">    </span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="vi">@name</span><span class="p">,</span>
-</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">    </span><span class="ss">output</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;assistant&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">class</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">]</span>
-</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="p">)</span>
-</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="n">error_result</span><span class="o">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">elapsed</span>
-</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>
-</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">  </span><span class="n">result</span>
-</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">    </span><span class="o">.</span><span class="n">with_context</span><span class="p">(</span><span class="vi">@name</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">error_result</span><span class="p">)</span>
-</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">    </span><span class="o">.</span><span class="n">continue</span><span class="p">(</span><span class="n">error_result</span><span class="p">)</span>
-</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="k">end</span>
+<p>The <code>Task</code> wrapper runs the <code>:task</code> hook family and deep-merges its per-task configuration (context, mcp, tools, memory, config) into <code>run_params</code> before delegating to the robot's <code>call</code>. Note that a task's <code>mcp:</code>/<code>tools:</code> land in <code>run_params</code> and are therefore consumed by the robot as <em>runtime</em> values, not as a separate tier between the network and the robot.</p>
+<p>The base <code>Robot#call</code> extracts the message, calls <code>run</code>, and records the elapsed time in <code>RobotResult#duration</code>. Because the result is stored under <code>@name.to_sym</code>, the pipeline context is keyed by the <strong>robot's</strong> name, not the task name. If the robot raises any exception, the error is caught and wrapped in a <code>RobotResult</code> so one failing robot does not crash the entire pipeline:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">run_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">extract_run_context</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run_context</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="ss">:message</span><span class="p">)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="n">start_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="n">robot_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">run_context</span><span class="p">)</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="n">robot_result</span><span class="o">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">  </span><span class="n">result</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="o">.</span><span class="n">with_context</span><span class="p">(</span><span class="vi">@name</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">robot_result</span><span class="p">)</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="o">.</span><span class="n">continue</span><span class="p">(</span><span class="n">robot_result</span><span class="p">)</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="k">rescue</span><span class="w"> </span><span class="no">Exception</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="n">elapsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Process</span><span class="o">.</span><span class="n">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">  </span><span class="n">error_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotResult</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="vi">@name</span><span class="p">,</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">    </span><span class="ss">output</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">TextMessage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">role</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;assistant&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">class</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">]</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">  </span><span class="p">)</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">  </span><span class="n">error_result</span><span class="o">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">elapsed</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="w">  </span><span class="n">result</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">    </span><span class="o">.</span><span class="n">with_context</span><span class="p">(</span><span class="vi">@name</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">error_result</span><span class="p">)</span>
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="w">    </span><span class="o">.</span><span class="n">continue</span><span class="p">(</span><span class="n">error_result</span><span class="p">)</span>
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>

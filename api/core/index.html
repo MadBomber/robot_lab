@@ -1262,6 +1262,8 @@
       
         
       
+        
+      
     
     
     
@@ -1330,6 +1332,8 @@
       
         
           
+        
+      
         
       
         
@@ -1429,14 +1433,14 @@
   
   
     <li class="md-nav__item">
-      <a href="network/" class="md-nav__link">
+      <a href="result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1457,14 +1461,14 @@
   
   
     <li class="md-nav__item">
-      <a href="state/" class="md-nav__link">
+      <a href="network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1534,9 +1538,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1574,7 +1634,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1596,14 +1656,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1765,7 +1825,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1787,14 +1847,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1926,7 +1986,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1948,14 +2008,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2431,16 +2491,28 @@
         +name: String
         +description: String
         +model: String
-        +template: String
-        +tools: Array~Tool~
-        +run(message) Message
+        +template: Symbol
+        +local_tools: Array~Tool~
+        +mcp_tools: Array~Tool~
+        +tools_config: Symbol_or_Array
+        +run(message) RobotResult
+    }
+
+    class RobotResult {
+        +robot_name: String
+        +reply: String
+        +output: Array~TextMessage~
+        +input_tokens: Integer
+        +output_tokens: Integer
+        +export() Hash
     }
 
     class Network {
         +name: String
         +robots: Hash
         +config: RunConfig
-        +run(message)
+        +memory: Memory
+        +run(message) SimpleFlow_Result
     }
 
     class RunConfig {
@@ -2453,8 +2525,9 @@
     class Tool {
         +name: String
         +description: String
-        +parameters: Hash
-        +handler: Proc
+        +robot: Robot
+        +mcp: String
+        +call(args)
     }
 
     class Memory {
@@ -2481,8 +2554,10 @@
     Robot --&gt; RunConfig : uses
     Robot --&gt; Tool : has
     Robot --&gt; Memory : uses
+    Robot ..&gt; RobotResult : returns
     Network --&gt; Memory : uses
-    Robot ..&gt; RobotMessage : sends/receives</code></pre>
+    Robot ..&gt; RobotMessage : sends/receives
+    Memory --&gt; StateProxy : data</code></pre>
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2494,19 +2569,23 @@
 <tbody>
 <tr>
 <td><a href="robot/">Robot</a></td>
-<td>LLM agent with personality, tools, and model configuration</td>
+<td>LLM agent with templates, tools, memory, and model configuration</td>
+</tr>
+<tr>
+<td><a href="result/">RobotResult</a></td>
+<td>Value object returned by <code>Robot#run</code></td>
 </tr>
 <tr>
 <td><a href="network/">Network</a></td>
-<td>Container for robots with routing and orchestration</td>
+<td>Container for robots with DAG orchestration</td>
 </tr>
 <tr>
-<td>RunConfig</td>
+<td><a href="robot/#runconfig">RunConfig</a></td>
 <td>Shared configuration for LLM, tools, callbacks, and infrastructure</td>
 </tr>
 <tr>
 <td><a href="tool/">Tool</a></td>
-<td>Callable function with parameters and handler</td>
+<td>Callable function with parameters and an <code>execute</code> method</td>
 </tr>
 <tr>
 <td><a href="tool/#built-in-askuser">AskUser</a></td>
@@ -2517,15 +2596,20 @@
 <td>Reactive key-value store for sharing data</td>
 </tr>
 <tr>
+<td><a href="state/">StateProxy</a></td>
+<td>Hash/method-access wrapper returned by <code>memory.data</code></td>
+</tr>
+<tr>
 <td>RobotMessage</td>
 <td>Typed envelope for bus-based inter-robot communication</td>
 </tr>
 <tr>
 <td><code>RobotLab::Runnable</code></td>
-<td>Shared interface (<code>crew</code>, <code>chief</code>, <code>run</code>) implemented by both <code>Robot</code> and <code>Network</code> — see <a href="../../architecture/core-concepts/#runnable-protocol">Runnable Protocol</a></td>
+<td>Shared interface (<code>crew</code>, <code>chief</code>, <code>robot_count</code>, <code>network?</code>, <code>single?</code>) implemented by both <code>Robot</code> and <code>Network</code> — see <a href="../../architecture/core-concepts/#runnable-protocol">Runnable Protocol</a></td>
 </tr>
 </tbody>
 </table>
+<p>There is no <code>RobotLab::State</code> class and no <code>RobotLab::NetworkRun</code> class.</p>
 <h2 id="quick-examples">Quick Examples<a class="headerlink" href="#quick-examples" title="Permanent link">&para;</a></h2>
 <h3 id="robot">Robot<a class="headerlink" href="#robot" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
@@ -2535,15 +2619,20 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="n">greet_tool</span><span class="o">]</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span><span class="w">              </span><span class="c1"># no tools sent — run() defaults to tools: :none</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span><span class="w">  </span><span class="c1"># sends greet_tool</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">                              </span><span class="c1"># =&gt; String</span>
 </span></code></pre></div>
+<p><code>Robot#run</code> returns a <a href="result/"><code>RobotLab::RobotResult</code></a>, not a <code>Message</code>.</p>
 <h3 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h3>
+<p>The builder DSL method is <code>task</code> (there is no <code>step</code>):</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;my_network&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="n">step</span><span class="w"> </span><span class="ss">:analyzer</span><span class="p">,</span><span class="w"> </span><span class="n">analyzer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="n">step</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyzer</span><span class="o">]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:analyzer</span><span class="p">,</span><span class="w"> </span><span class="n">analyzer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:none</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="n">task</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="n">writer_robot</span><span class="p">,</span><span class="w"> </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:analyzer</span><span class="o">]</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">end</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Process this&quot;</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="ss">message</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Process this&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; SimpleFlow::Result</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="w">                                   </span><span class="c1"># =&gt; RobotResult of the last task</span>
 </span></code></pre></div>
 <h3 id="memory">Memory<a class="headerlink" href="#memory" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">memory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">create_memory</span><span class="p">(</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">user_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="w"> </span><span class="p">})</span>

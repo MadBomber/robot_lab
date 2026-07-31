@@ -1575,6 +1575,8 @@
       
         
       
+        
+      
     
     
     
@@ -1638,6 +1640,8 @@
       
         
           
+        
+      
         
       
         
@@ -1737,14 +1741,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/network/" class="md-nav__link">
+      <a href="../api/core/result/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    RobotResult
   
 
     
@@ -1765,14 +1769,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/state/" class="md-nav__link">
+      <a href="../api/core/network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    State
+    Network
   
 
     
@@ -1842,9 +1846,65 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1882,7 +1942,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1904,14 +1964,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2073,7 +2133,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2095,14 +2155,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2234,7 +2294,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2256,14 +2316,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2872,7 +2932,7 @@
 <p>A <strong>Robot</strong> is an LLM-powered agent that inherits from <code>RubyLLM::Agent</code>. Each robot wraps a persistent chat session created at initialization and provides template-based prompts, tools, memory, and MCP integration. Robots are created using keyword arguments via the <code>RobotLab.build</code> factory method.</p>
 <p>Each robot has:</p>
 <ul>
-<li><strong>Name</strong>: A unique identifier (auto-generated if omitted)</li>
+<li><strong>Name</strong>: An identifier. Nothing is auto-generated — if you omit <code>name:</code> the robot is literally named <code>"robot"</code>. The value is load-bearing: a robot still named <code>"robot"</code> is treated as "unnamed", which is what lets a template's <code>robot_name:</code> front matter key take effect. Give every robot an explicit name.</li>
 <li><strong>Template</strong>: A <code>.md</code> file with YAML front matter managed by prompt_manager, referenced by symbol</li>
 <li><strong>System Prompt</strong>: Inline instructions (can be used alone or combined with a template)</li>
 <li><strong>Model</strong>: The LLM model to use (defaults to <code>RobotLab.config.ruby_llm.model</code>)</li>
@@ -2891,15 +2951,18 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4&quot;</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Robot with inline system prompt</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;helper&quot;</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a friendly customer support agent.&quot;</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="c1"># Bare robot configured via chaining</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">robot</span><span class="o">.</span><span class="n">with_instructions</span><span class="p">(</span><span class="s2">&quot;Be concise.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Attached tools are only sent when the run asks for them</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Where is order 4471?&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Robot with inline system prompt</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;helper&quot;</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You are a friendly customer support agent.&quot;</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="c1"># Bare robot configured via chaining</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">)</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="n">robot</span><span class="o">.</span><span class="n">with_instructions</span><span class="p">(</span><span class="s2">&quot;Be concise.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The primary method is <code>robot.run("message")</code>, which takes a positional string argument and returns a <code>RobotResult</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is 2 + 2?&quot;</span><span class="p">)</span>
@@ -2911,13 +2974,14 @@
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1"># =&gt; &quot;Your name is Alice.&quot;</span>
 </span></code></pre></div>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
-<p>RobotLab uses <code>MywayConfig</code> for configuration. There is no <code>RobotLab.configure</code> block. Instead, configuration is loaded automatically from multiple sources in priority order:</p>
+<p>RobotLab uses <code>MywayConfig</code> for configuration. Values are loaded automatically from multiple sources in priority order (lowest to highest):</p>
 <ol>
 <li>Bundled defaults (<code>lib/robot_lab/config/defaults.yml</code>)</li>
 <li>Environment-specific overrides (development, test, production)</li>
-<li>XDG user config (<code>~/.config/robot_lab/config.yml</code>)</li>
+<li>XDG user config (<code>~/.config/robot_lab/robot_lab.yml</code>)</li>
 <li>Project config (<code>./config/robot_lab.yml</code>)</li>
 <li>Environment variables (<code>ROBOT_LAB_*</code> prefix)</li>
+<li>Constructor parameters</li>
 </ol>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Access configuration values</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ruby_llm</span><span class="o">.</span><span class="n">model</span><span class="w">            </span><span class="c1">#=&gt; &quot;claude-sonnet-4&quot;</span>
@@ -2927,9 +2991,25 @@
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...</span>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># Reload configuration</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">reload_config!</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># A configure block also exists, for runtime-only attributes such as the logger</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">configure</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Logger</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">File</span><span class="o">::</span><span class="no">NULL</span><span class="p">)</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="k">end</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="c1"># Reload configuration</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">reload_config!</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+Two easy mistakes. First, the user config file is
+<code>~/.config/robot_lab/**robot_lab**.yml</code> — the filename repeats the app name, and
+<code>config.yml</code> is never read. Second, the <code>defaults:</code> wrapper used inside the gem's
+bundled <code>defaults.yml</code> is silently ignored in your own files; write keys flat, or
+under a section named for the current environment. The user file honours a
+<code>development:</code> / <code>test:</code> / <code>production:</code> section; <code>./config/robot_lab.yml</code> must be
+flat outside Rails but <strong>must</strong> be environment-sectioned under Rails. See
+<a href="../getting-started/configuration/">Configuration</a> for the full matrix.</p>
+</blockquote>
 <h2 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h2>
 <p>A <strong>Network</strong> is a collection of robots orchestrated using <a href="https://github.com/MadBomber/simple_flow">SimpleFlow</a> pipelines. Networks provide:</p>
 <ul>
@@ -2955,24 +3035,75 @@
 <p>A <strong>Task</strong> wraps a robot for use in a network pipeline with per-task configuration:</p>
 <ul>
 <li><strong>Context</strong>: Task-specific context deep-merged with network run params</li>
-<li><strong>MCP</strong>: MCP servers available to this task (<code>:none</code>, <code>:inherit</code>, or array)</li>
-<li><strong>Tools</strong>: Tools available to this task (<code>:none</code>, <code>:inherit</code>, or array)</li>
+<li><strong>MCP</strong>: MCP servers available to this task (<code>:none</code>, <code>:inherit</code>, or a name array)</li>
+<li><strong>Tools</strong>: Tools available to this task (<code>:none</code>, <code>:inherit</code>, or a name array)</li>
 <li><strong>Memory</strong>: Task-specific memory</li>
 <li><strong>Dependencies</strong>: <code>:none</code>, <code>[:task1, :task2]</code>, or <code>:optional</code></li>
+<li><strong>Config</strong>: a <code>RunConfig</code> — but see the caveat below</li>
+<li><strong>Poller group</strong>: <code>poller_group:</code> (defaults to <code>:default</code>)</li>
 </ul>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">     </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">escalation_level</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">     </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">RefundTool</span><span class="p">,</span><span class="w"> </span><span class="no">InvoiceTool</span><span class="o">]</span><span class="p">,</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">     </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># The robot must already have the tools ATTACHED...</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">billing_robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You handle billing.&quot;</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">RefundTool</span><span class="p">,</span><span class="w"> </span><span class="no">InvoiceTool</span><span class="p">,</span><span class="w"> </span><span class="no">AuditTool</span><span class="o">]</span><span class="w">   </span><span class="c1"># attached as CLASSES</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">task</span><span class="w"> </span><span class="ss">:billing</span><span class="p">,</span><span class="w"> </span><span class="n">billing_robot</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">     </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">department</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">escalation_level</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">     </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">RefundTool</span><span class="p">,</span><span class="w"> </span><span class="no">InvoiceTool</span><span class="o">]</span><span class="p">,</span><span class="w">   </span><span class="c1"># ...and this SELECTS from them</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">     </span><span class="ss">depends_on</span><span class="p">:</span><span class="w"> </span><span class="ss">:optional</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!WARNING]
+An explicit <code>tools:</code> array is a <strong>name allowlist</strong> over tools the robot already
+has attached — it is not a way to attach new tools, and it is not a
+local-vs-MCP switch. Attach tools with <code>local_tools:</code> when building the robot,
+then filter here.</p>
+<p><strong>The allowlist entries must match the form the tool was attached in.</strong> Matching
+is a string comparison against each attached tool's <code>name</code>, and <code>Class#name</code>
+differs from <code>RubyLLM::Tool#name</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Attached as</th>
+<th>Matching allowlist entry</th>
+<th>Does not match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>local_tools: [RefundTool]</code> (class)</td>
+<td><code>[RefundTool]</code> or <code>%w[RefundTool]</code></td>
+<td><code>%w[refund]</code></td>
+</tr>
+<tr>
+<td><code>local_tools: [RefundTool.new]</code> (instance)</td>
+<td><code>%w[refund]</code></td>
+<td><code>[RefundTool]</code></td>
+</tr>
+</tbody>
+</table>
+<p>A task-level <code>config:</code> is merged into the network config, so like a
+network-level config it propagates <strong>only <code>mcp</code> and <code>tools</code></strong> — not <code>model</code>,
+<code>temperature</code>, or callbacks.</p>
+</blockquote>
 <h2 id="simpleflowresult">SimpleFlow::Result<a class="headerlink" href="#simpleflowresult" title="Permanent link">&para;</a></h2>
 <p>Networks use <code>SimpleFlow::Result</code> for data flow between tasks:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="w">      </span><span class="c1"># Current task&#39;s output (RobotResult)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="w">    </span><span class="c1"># Accumulated context from all tasks</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">result</span><span class="o">.</span><span class="n">halted?</span><span class="w">    </span><span class="c1"># Whether execution stopped early</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">result</span><span class="o">.</span><span class="n">continued?</span><span class="w"> </span><span class="c1"># Whether execution continues</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">result</span><span class="o">.</span><span class="n">context</span><span class="w">    </span><span class="c1"># Accumulated context, keyed by ROBOT name</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">result</span><span class="o">.</span><span class="n">continue?</span><span class="w">  </span><span class="c1"># Whether the pipeline is still continuing</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="w">     </span><span class="c1"># Accumulated errors</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!NOTE]
+There is no <code>halted?</code> and no <code>continued?</code> — both raise <code>NoMethodError</code>. The
+predicate is <code>continue?</code>. Note also that <code>result.context</code> is keyed by each
+robot's <code>name:</code>, not by its task name.</p>
+</blockquote>
 <h3 id="result-methods">Result Methods<a class="headerlink" href="#result-methods" title="Permanent link">&para;</a></h3>
+<p>The complete public API is <code>activate</code>, <code>activated_steps</code>, <code>context</code>, <code>continue</code>,
+<code>continue?</code>, <code>errors</code>, <code>halt</code>, <code>value</code>, <code>with_context</code>, and <code>with_error</code>.</p>
 <table>
 <thead>
 <tr>
@@ -2994,8 +3125,16 @@
 <td>Add data to context</td>
 </tr>
 <tr>
+<td><code>with_error(key, message)</code></td>
+<td>Record an error</td>
+</tr>
+<tr>
 <td><code>activate(task_name)</code></td>
 <td>Enable optional task</td>
+</tr>
+<tr>
+<td><code>activated_steps</code></td>
+<td>Tasks activated so far</td>
 </tr>
 </tbody>
 </table>
@@ -3026,7 +3165,27 @@
 </span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;You can do math.&quot;</span><span class="p">,</span>
 </span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Calculator</span><span class="o">]</span>
 </span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">)</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="c1"># tools: :inherit is required -- run() sends no tools by default</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What is 17 * 23?&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!WARNING]
+<code>Robot#run</code> defaults to <code>mcp: :none, tools: :none</code>, and an explicit <code>:none</code>
+means "send zero tools this turn". Attaching tools with <code>local_tools:</code> does
+<strong>not</strong> by itself make them available — a plain <code>robot.run("...")</code> sends the
+model no tools at all. Pass <code>tools: :inherit</code> on the run (and
+<code>mcp: :inherit, tools: :inherit</code> for MCP servers).</p>
+<p>For a <strong>standalone</strong> robot, do not pass <code>tools: :inherit</code> to <code>RobotLab.build</code>.
+Build-time <code>:inherit</code> resolves against the parent level, which for a standalone
+robot is the global <code>:none</code> — that produces an allowlist matching nothing and
+suppresses the tools even when the run asks for them. Leave <code>tools:</code> unset.</p>
+<p>Inside a <strong>network</strong> it means the opposite: build-time <code>tools: :inherit</code> is
+exactly how a robot opts into the allowlist carried by the network's <code>config:</code>.
+With <code>RunConfig.new(tools: %w[RefundTool])</code> on the network and <code>tools: :inherit</code>
+on both the robot and its task, the robot sends only <code>refund</code>; leaving the
+robot's <code>tools:</code> unset sends everything it has attached instead.</p>
+</blockquote>
 <h3 id="robotlabtoolcreate-factory">RobotLab::Tool.create Factory<a class="headerlink" href="#robotlabtoolcreate-factory" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
@@ -3046,15 +3205,30 @@
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span><span class="w">  </span><span class="c1"># =&gt; &quot;Hi there!&quot; (String or nil)</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">result</span><span class="o">.</span><span class="n">reply</span><span class="w">              </span><span class="c1"># =&gt; alias for last_text_content</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1"># =&gt; [TextMessage, ...] array of output messages</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1"># =&gt; [] array of tool call results</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="w">             </span><span class="c1"># =&gt; [TextMessage] built from the final response text</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="w">         </span><span class="c1"># =&gt; [] (see note below -- effectively always empty)</span>
 </span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">result</span><span class="o">.</span><span class="n">robot_name</span><span class="w">         </span><span class="c1"># =&gt; &quot;assistant&quot;</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1"># =&gt; &quot;end_turn&quot; or nil</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">result</span><span class="o">.</span><span class="n">stop_reason</span><span class="w">        </span><span class="c1"># =&gt; nil (always -- see note below)</span>
 </span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">result</span><span class="o">.</span><span class="n">has_tool_calls?</span><span class="w">    </span><span class="c1"># =&gt; false</span>
 </span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">result</span><span class="o">.</span><span class="n">checksum</span><span class="w">           </span><span class="c1"># =&gt; &quot;a1b2c3d4...&quot; (for dedup)</span>
 </span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">result</span><span class="o">.</span><span class="n">duration</span><span class="w">           </span><span class="c1"># =&gt; Float or nil (elapsed seconds, set in pipeline execution)</span>
 </span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">result</span><span class="o">.</span><span class="n">raw</span><span class="w">                </span><span class="c1"># =&gt; raw LLM response object</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!NOTE]
+<code>result.tool_calls</code> and <code>result.has_tool_calls?</code> read the <strong>final</strong> assistant
+message. By the time <code>run</code> returns, ruby_llm's tool loop has already completed
+and that message carries no tool calls — so in practice <code>tool_calls</code> is always
+empty and <code>has_tool_calls?</code> is always <code>false</code>. To observe tool activity, use
+the <code>on_tool_call</code> / <code>on_tool_result</code> callbacks instead. Likewise
+<code>result.output</code> is a single-element array built from the final response text,
+not a transcript of the whole turn.</p>
+<p><code>result.stop_reason</code> is likewise <strong>always <code>nil</code></strong>: <code>RubyLLM::Message</code> does not
+define <code>stop_reason</code>, and <code>RobotResult</code> only populates the field when the
+response responds to it. It is dropped from <code>result.export</code> for the same reason.
+Because <code>stopped?</code> is derived from the absence of tool calls, it is
+correspondingly always <code>true</code>. Do not branch on <code>"end_turn"</code> / <code>"tool_use"</code>.</p>
+</blockquote>
 <h2 id="memory">Memory<a class="headerlink" href="#memory" title="Permanent link">&para;</a></h2>
 <p><strong>Memory</strong> is a reactive key-value store that provides persistent storage across robot executions. Standalone robots use their own inherent memory; robots in a network share the network's memory.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Standalone robot with inherent memory</span>
@@ -3070,9 +3244,18 @@
 </span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="c1"># Runtime memory injection</span>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Help me&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">memory</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="w"> </span><span class="p">})</span>
 </span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c1"># Reset memory</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c1"># Reset the key-value store (does NOT clear chat history)</span>
 </span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="n">robot</span><span class="o">.</span><span class="n">reset_memory</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="c1"># Clear chat history (does NOT touch the key-value store)</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="n">robot</span><span class="o">.</span><span class="n">clear_messages</span><span class="p">(</span><span class="ss">keep_system</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!NOTE]
+<code>reset_memory</code> and <code>clear_messages</code> are independent. A robot's conversation
+history and its key-value memory are two separate stores; clearing one leaves
+the other intact.</p>
+</blockquote>
 <h3 id="reserved-memory-keys">Reserved Memory Keys<a class="headerlink" href="#reserved-memory-keys" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3113,7 +3296,7 @@
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w">  </span><span class="c1"># timeout in seconds</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1"># Multiple keys</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1"># Multiple keys -- the timeout applies PER MISSING KEY, not to the call as a whole</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">:entities</span><span class="p">,</span><span class="w"> </span><span class="ss">:keywords</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
 </span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># Subscribe to changes</span>
@@ -3121,6 +3304,13 @@
 </span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">change</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2"> changed by </span><span class="si">#{</span><span class="n">change</span><span class="o">.</span><span class="n">writer</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">change</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="k">end</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!WARNING]
+A blocking <code>get</code> that times out <strong>raises <code>RobotLab::AwaitTimeout</code></strong> — it does
+not return <code>nil</code>. Wrap it in a <code>rescue</code> if a missing key is an acceptable
+outcome. With several keys, the timeout is applied to each missing key in turn,
+so <code>get(:a, :b, :c, wait: 60)</code> can block for up to 180 seconds.</p>
+</blockquote>
 <h2 id="mcp-model-context-protocol">MCP (Model Context Protocol)<a class="headerlink" href="#mcp-model-context-protocol" title="Permanent link">&para;</a></h2>
 <p><strong>MCP</strong> allows robots to connect to external tool servers:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
@@ -3131,7 +3321,29 @@
 </span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;github&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mcp-server-github&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span><span class="o">]</span>
 </span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="p">)</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="c1"># Connect the servers AND expose their tools for this run</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;List the Ruby files in ./lib&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+<code>transport:</code> must be a <strong>nested hash</strong> — <code>transport: { type: "stdio", command: ..., args: [...] }</code>.
+A flat <code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys raises
+<code>NoMethodError: undefined method 'transform_keys' for an instance of String</code>,
+and that exception is <strong>swallowed</strong> rather than raised: the robot builds
+successfully with zero tools. It is not silent, though — a line is logged at
+<code>WARN</code> through <code>RobotLab.config.logger</code> (<code>Robot 'dev' error connecting to MCP
+server 'fs': undefined method 'transform_keys' for an instance of String</code>) and
+the server name lands in <code>robot.failed_mcp_server_names</code>. An <em>invalid</em> transport
+type is swallowed the same way; only a direct <code>MCP::Server.new</code> raises
+<code>ArgumentError</code>. Valid transport types are <code>stdio</code>, <code>sse</code>, <code>ws</code>,
+<code>websocket</code>, <code>streamable-http</code>, and <code>http</code> (<code>streamable_http</code> with an
+underscore is invalid).</p>
+<p><code>mcp:</code> also defaults to <code>:none</code> on <code>run</code>. <code>mcp: :inherit</code> triggers the
+connection attempt; <code>tools: :inherit</code> is additionally required for the MCP
+tools to reach the model. MCP connection failures are logged and recorded in
+<code>robot.failed_mcp_server_names</code> — they are not raised.</p>
+</blockquote>
 <p>MCP configuration follows a hierarchical resolution: <code>runtime &gt; robot &gt; network &gt; global config</code>. Values can be <code>:none</code>, <code>:inherit</code>, or explicit arrays.</p>
 <h2 id="execution-flow">Execution Flow<a class="headerlink" href="#execution-flow" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
@@ -3279,26 +3491,51 @@
 </span></code></pre></div>
 <h3 id="front-matter-keys">Front Matter Keys<a class="headerlink" href="#front-matter-keys" title="Permanent link">&para;</a></h3>
 <p>Templates support two categories of front matter keys:</p>
-<p><strong>LLM Config:</strong> <code>model</code>, <code>temperature</code>, <code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>, <code>presence_penalty</code>, <code>frequency_penalty</code>, <code>stop</code> — applied to the robot's chat configuration.</p>
-<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code> — applied to the robot's identity and capabilities. These make templates self-contained: reading the <code>.md</code> file tells you everything about the robot.</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>---
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>description: GitHub assistant with MCP tool access
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>robot_name: github_bot
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>tools:
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>CodeSearchTool
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>mcp:
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>name: github
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    transport: stdio
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    command: npx
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    args: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;]
-</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="gu">model: claude-sonnet-4</span>
-</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="gu">---</span>
-</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>You are a GitHub assistant. Use available tools to help with repository tasks.
+<p><strong>LLM Config:</strong> only <code>model</code> and <code>temperature</code> take effect.</p>
+<p><strong>Robot Extras:</strong> <code>robot_name</code>, <code>description</code>, <code>tools</code>, <code>mcp</code>, <code>skills</code>, <code>parameters</code> — applied to the robot's identity and capabilities. These make templates self-contained: reading the <code>.md</code> file tells you everything about the robot.</p>
+<blockquote>
+<p>[!WARNING]
+Front matter is parsed into a <code>RunConfig</code> and then applied by dispatching
+<code>chat.with_&lt;field&gt;</code> for each field the chat responds to. The chat object only
+has <code>with_model</code> and <code>with_temperature</code>, so <strong><code>top_p</code>, <code>top_k</code>, <code>max_tokens</code>,
+<code>presence_penalty</code>, <code>frequency_penalty</code>, and <code>stop</code> are parsed and silently
+dropped</strong> when declared in front matter. A template declaring all eight yields
+a chat with empty params.</p>
+<p>Those six <em>do</em> work as constructor keyword arguments or via a <code>config:</code>
+<code>RunConfig</code>, because that path goes through <code>with_params</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bot&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:writer</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="ss">top_p</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">3</span><span class="p">)</span>
 </span></code></pre></div>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Template provides everything — minimal constructor</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:github_assistant</span><span class="p">)</span>
+</blockquote>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>---
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>description: GitHub assistant with MCP tool access
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>robot_name: github_bot
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>tools:
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>CodeSearchTool
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>mcp:
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>name: github
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>    transport:
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>      type: stdio
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>      command: npx
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>      args: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;]
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="gu">model: claude-sonnet-4</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="gu">---</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>You are a GitHub assistant. Use available tools to help with repository tasks.
 </span></code></pre></div>
-<p>Constructor-provided values (<code>local_tools:</code>, <code>mcp:</code>, <code>name:</code>, <code>description:</code>) always take precedence over front matter values.</p>
+<blockquote>
+<p>[!IMPORTANT]
+Note the <strong>nested</strong> <code>transport:</code> mapping above. A flat
+<code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys raises a <code>NoMethodError</code>
+that is swallowed rather than propagated, leaving you with a robot that has no
+tools. Look for the <code>WARN</code> line on <code>RobotLab.config.logger</code> and check
+<code>robot.failed_mcp_server_names</code> — both record the failure.</p>
+</blockquote>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Template provides everything — minimal constructor</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:github_assistant</span><span class="p">)</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># ...but the tools and MCP servers it declares still have to be requested per run</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Open issues in MadBomber/robot_lab?&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Constructor-provided values (<code>local_tools:</code>, <code>mcp:</code>, <code>name:</code>, <code>description:</code>) always take precedence over front matter values. In the cascade, front matter is the <strong>base</strong>: template front matter → <code>config:</code> RunConfig → constructor keyword arguments, with constructor arguments always winning.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../getting-started/quick-start/">Quick Start Guide</a> - Build your first robot</li>
