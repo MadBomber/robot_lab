@@ -37,36 +37,47 @@ RobotLab automatically installs these core dependencies:
 |-----|---------|
 | `ruby_llm` (~> 1.12) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) |
 | `prompt_manager` (~> 1.0) | Template-based prompt management with YAML front matter |
-| `simple_flow` (~> 0.3) | Pipeline workflow execution for networks |
+| `simple_flow` (~> 0.4) | Pipeline workflow execution for networks |
 | `myway_config` (~> 0.1) | Layered configuration (defaults, env vars, config files) |
-| `ruby_llm-mcp` | Model Context Protocol client for external tool servers |
-| `ruby_llm-schema` | Schema validation for structured outputs |
-| `ruby_llm-semantic_cache` | Semantic caching for LLM responses |
+| `ruby_llm-mcp` (~> 1.0) | Model Context Protocol client for external tool servers |
+| `ruby_llm-schema` (~> 0.3) | Schema validation for structured outputs |
+| `ruby_llm-semantic_cache` (~> 0.1) | Semantic caching for LLM responses |
 | `zeitwerk` (~> 2.6) | Autoloading and eager loading |
 | `async` (~> 2.0) | Fiber-based concurrency |
+| `async-http` (~> 0.60) | MCP SSE and streamable-HTTP transports |
+| `async-websocket` (~> 0.30) | MCP WebSocket transport |
+| `typed_bus` (~> 0.0.1) | Typed message bus for robot-to-robot messaging |
+| `ractor_queue` (~> 0.2) | Queue used by the Network bus poller |
+
+> [!NOTE]
+> `async-http` and `async-websocket` are hard runtime dependencies, not optional
+> extras — they install with the gem whether or not you use MCP.
 
 ### Optional Dependencies
 
-For specific features, you may need additional gems:
+Several features are gated behind gems the core gem does **not** install. Add
+whichever you need to your own `Gemfile`:
 
-=== "MCP WebSocket Transport"
+| Gem | Enables | Without it |
+|-----|---------|------------|
+| `classifier` (~> 2.3) | `robot.compress_history`, `RobotLab::Convergence` | `RobotLab::DependencyError` |
+| `robot_lab-document_store` | `memory.store_document` / `search_documents` / `document_keys` / `delete_document`, and `AgentSkill` catalogs | `RobotLab::DependencyError` (skill catalogs raise `LoadError`) |
+| `redis` | Redis-backed `Memory` | `Memory#redis?` is `false` and the store silently stays in-process |
+| `robot_lab-ractor` | Ractor-parallel tool execution and `Network` ractor scheduling | tools run inline; a network run with `parallel_mode: :ractor` raises `RobotLab::DependencyError` |
 
-    ```ruby
-    gem "async-websocket"
-    ```
+```ruby
+# Gemfile
+gem "classifier", "~> 2.3"
+gem "robot_lab-document_store"
+gem "redis"
+gem "robot_lab-ractor"
+```
 
-=== "MCP HTTP Transport"
-
-    ```ruby
-    gem "async-http"
-    ```
-
-=== "Rails Integration"
-
-    ```ruby
-    # Rails is detected automatically
-    gem "rails", ">= 7.0"
-    ```
+> [!NOTE]
+> Several capabilities advertised on the [home page](../index.md) — embedding-based
+> document retrieval, runtime skill matching, and CPU parallelism — depend on the
+> gems above. They are genuinely optional, but the feature is unavailable until the
+> gem is installed.
 
 ## Verify Installation
 
@@ -84,32 +95,32 @@ Run it:
 
 ```bash
 ruby test_robot_lab.rb
-# => RobotLab version: 0.1.0
+# => RobotLab version: 0.2.6
 # => Installation successful!
 ```
 
 ## Rails Installation
 
-For Rails applications, use the install generator:
+> [!IMPORTANT]
+> The core `robot_lab` gem ships **no Rails Engine, no Railtie, and no generators**.
+> Rails integration lives in the separate
+> [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) gem.
 
-```bash
-rails generate robot_lab:install
+Core RobotLab only performs two bare `defined?(::Rails)` checks: it uses
+`Rails.logger` as the default logger, and it resolves the template path to
+`app/prompts` when `Rails.root` is present. Nothing else is Rails-aware.
+
+For generators, an `ActiveJob` base class, and Turbo Stream broadcasting, add the
+extension gem:
+
+```ruby
+# Gemfile
+gem "robot_lab"
+gem "robot_lab-rails"
 ```
 
-This creates:
-
-- `config/initializers/robot_lab.rb` - Configuration file
-- `db/migrate/*_create_robot_lab_tables.rb` - Database migrations
-- `app/models/robot_lab_thread.rb` - Thread model
-- `app/models/robot_lab_result.rb` - Result model
-- `app/robots/` - Directory for robot definitions
-- `app/tools/` - Directory for tool definitions
-
-Then run migrations:
-
-```bash
-rails db:migrate
-```
+Then follow that gem's own installation instructions for its generators and
+migrations.
 
 ## Environment Setup
 
@@ -165,11 +176,12 @@ gem install robot_lab --verbose
 
 ### Missing Dependencies
 
-If you see "LoadError" for optional gems:
+If you see a `LoadError` (or a `RobotLab::DependencyError`) naming a gem RobotLab
+does not depend on, add it yourself:
 
 ```bash
-# Install the specific gem mentioned in the error
-bundle add async-websocket
+# e.g. compress_history / Convergence need the classifier gem
+bundle add classifier
 ```
 
 ### API Key Issues

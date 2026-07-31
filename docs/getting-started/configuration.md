@@ -8,12 +8,17 @@ Configuration values are loaded in priority order (lowest to highest):
 
 1. **Bundled defaults** -- `lib/robot_lab/config/defaults.yml` (shipped with the gem)
 2. **Environment-specific overrides** -- `development`, `test`, or `production` sections in defaults.yml
-3. **User config file** -- `~/.config/robot_lab/config.yml`
+3. **User config file** -- `~/.config/robot_lab/robot_lab.yml`
 4. **Project config file** -- `./config/robot_lab.yml`
 5. **Environment variables** -- `ROBOT_LAB_*` prefix
 6. **Runtime attributes** -- e.g., `RobotLab.config.logger = ...`
 
 Higher-priority sources override lower-priority ones. You only need to set the values you want to change.
+
+> [!IMPORTANT]
+> The user config file is `~/.config/robot_lab/**robot_lab**.yml` — the filename
+> repeats the application name. `~/.config/robot_lab/config.yml` is **never
+> read**, and RobotLab gives no warning when it is present but ignored.
 
 ## Accessing Configuration
 
@@ -24,8 +29,7 @@ Use `RobotLab.config` to access the configuration object:
 RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
 RobotLab.config.ruby_llm.anthropic_api_key #=> "sk-ant-..."
 RobotLab.config.ruby_llm.request_timeout  #=> 120
-RobotLab.config.max_iterations             #=> 10
-RobotLab.config.streaming_enabled          #=> true
+RobotLab.config.template_path              #=> nil (auto-detected)
 
 # Check the environment
 RobotLab.config.development?  #=> true/false
@@ -46,8 +50,7 @@ Environment variables use the `ROBOT_LAB_` prefix. Use double underscores (`__`)
 
 ```bash
 # Top-level settings
-export ROBOT_LAB_MAX_ITERATIONS=20
-export ROBOT_LAB_STREAMING_ENABLED=false
+export ROBOT_LAB_TEMPLATE_PATH=prompts
 
 # Nested ruby_llm settings (note the double underscore)
 export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
@@ -63,58 +66,103 @@ The double underscore convention maps to nested YAML structure:
 ```
 ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY  -->  ruby_llm.anthropic_api_key
 ROBOT_LAB_RUBY_LLM__MODEL              -->  ruby_llm.model
-ROBOT_LAB_MAX_ITERATIONS               -->  max_iterations
+ROBOT_LAB_TEMPLATE_PATH                -->  template_path
 ```
+
+> [!WARNING]
+> **Nested values arrive as Strings.** Only top-level keys are type-coerced.
+> With `ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180` set,
+> `RobotLab.config.ruby_llm.request_timeout` returns the String `"180"`, not the
+> Integer `180`. If a numeric nested setting matters to your code, set it in a
+> config file instead, or coerce it yourself with `.to_i` / `.to_f`.
 
 ## Config Files
 
+> [!WARNING]
+> **A `defaults:` wrapper is always ignored in your own files.** The `defaults:`
+> key you see inside the gem's bundled `lib/robot_lab/config/defaults.yml` applies
+> **only to that bundled file**. Wrap your own settings in it and every value
+> silently falls back to the default — no error, no warning.
+>
+> ```yaml
+> # WRONG — silently ignored in a user or project config file
+> defaults:
+>   template_path: prompts
+>
+> # RIGHT
+> template_path: prompts
+> ```
+>
+> Sections named for the **current environment** (`development:`, `test:`,
+> `production:`) are a different matter, and the two files disagree:
+>
+> | File | Flat keys | `development:` section |
+> |------|-----------|------------------------|
+> | `~/.config/robot_lab/robot_lab.yml` | honoured | honoured |
+> | `./config/robot_lab.yml` (no Rails) | honoured | ignored |
+> | `./config/robot_lab.yml` (under Rails) | **ignored** | **honoured** |
+>
+> The user file checks for a section matching the current environment and falls
+> back to the file root, so both forms work. The project file is read by
+> anyway_config, which only treats it as environmental once
+> `Anyway::Settings.current_environment` is set — which is precisely what Rails
+> does (it sets it to `Rails.env`). See [Rails Integration](#rails-integration).
+
 ### Project Config
 
-Create `./config/robot_lab.yml` in your project root:
+Create `./config/robot_lab.yml` in your project root. Outside Rails, write the
+keys at the top level (under Rails they must be nested under the environment name
+instead — see [Rails Integration](#rails-integration)):
 
 ```yaml title="config/robot_lab.yml"
-defaults:
-  ruby_llm:
-    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
-    model: claude-sonnet-4
-    request_timeout: 120
+ruby_llm:
+  anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+  model: claude-sonnet-4
+  request_timeout: 120
+  max_retries: 3
+  log_level: info
 
-  max_iterations: 15
-  template_path: prompts
-
-development:
-  ruby_llm:
-    log_level: :debug
-
-test:
-  max_iterations: 3
-  streaming_enabled: false
-  ruby_llm:
-    model: claude-haiku-3-5
-    request_timeout: 30
-    max_retries: 1
-
-production:
-  max_iterations: 20
-  ruby_llm:
-    request_timeout: 180
-    max_retries: 5
-    log_level: :warn
+template_path: prompts
 ```
 
-!!! tip "ERB support"
-    Config files support ERB templating, so you can reference environment variables with `<%= ENV['...'] %>`. This is useful for keeping secrets out of config files while still using YAML structure.
+> [!NOTE]
+> **ERB works here, and only here.** The project config file is read through ERB,
+> so `<%= ENV['ANTHROPIC_API_KEY'] %>` is expanded before the YAML is parsed. The
+> user config file described below is **not** — see the warning there.
+
+> [!WARNING]
+> **No YAML symbols in the project config file.** It is parsed with an empty
+> permitted-classes list, so `log_level: :info` raises
+> `Psych::DisallowedClass: Tried to load unspecified class: Symbol` and your
+> application fails to boot. Write the plain string `log_level: info`. (Symbols
+> *are* permitted in the bundled `defaults.yml` and in the user config file,
+> which is why you will see `:debug` there.)
 
 ### User Config
 
-Create `~/.config/robot_lab/config.yml` for personal defaults that apply across all your projects:
+Create `~/.config/robot_lab/robot_lab.yml` for personal defaults that apply
+across all your projects. Keys go at the top level here too:
 
-```yaml title="~/.config/robot_lab/config.yml"
-defaults:
-  ruby_llm:
-    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
-    model: claude-sonnet-4
+```yaml title="~/.config/robot_lab/robot_lab.yml"
+ruby_llm:
+  model: claude-sonnet-4
+  request_timeout: 120
 ```
+
+> [!WARNING]
+> **Do not put ERB in the user config file.** It is parsed with
+> `YAML.safe_load` and never passed through ERB, so
+> `anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>` is stored as the literal
+> nine-character-plus string `"<%= ENV['ANTHROPIC_API_KEY'] %>"` and sent to the
+> provider as your API key. Put secrets in environment variables
+> (`ANTHROPIC_API_KEY` or `ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY`), or in the
+> project config file where ERB is evaluated.
+
+> [!NOTE]
+> The user config file honours **both** forms: flat keys at the root, or a
+> top-level section named for the current environment (`development:`, `test:`,
+> `production:`). The loader looks for the environment section first and falls back
+> to the root. Only `defaults:` is ignored here.
 
 ## Configuration Reference
 
@@ -122,12 +170,28 @@ defaults:
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `max_iterations` | `10` | Maximum robots per network run |
-| `max_tool_iterations` | `10` | Maximum tool calls per robot run |
-| `streaming_enabled` | `true` | Enable streaming by default |
 | `template_path` | `null` (auto-detected) | Directory for prompt templates |
 | `mcp` | `:none` | Global MCP server configuration |
-| `tools` | `:none` | Global tool whitelist |
+| `tools` | `:none` | Global tool allowlist |
+| `sandbox.*` | see below | Skill-script confinement ceiling |
+
+> [!WARNING]
+> **Reserved / not implemented.** `defaults.yml` also ships `max_iterations`,
+> `max_tool_iterations`, `streaming_enabled`, and an entire `chat:` tree
+> (`chat.with_model`, `chat.with_temperature`, `chat.with_tools`,
+> `chat.with_params.*`). These keys resolve — `RobotLab.config.max_iterations`
+> returns `10` — but **nothing in the library reads them**. Setting them has zero
+> effect. They are placeholders; do not build on them.
+>
+> The real equivalents are:
+>
+> | Dead key | Use instead |
+> |----------|-------------|
+> | `max_tool_iterations` | `max_tool_rounds:` on a robot or `RunConfig` |
+> | `streaming_enabled` | `on_content:` callback, or a block passed to `run` |
+> | `chat.with_temperature` | `temperature:` on a robot or `RunConfig` |
+> | `chat.with_params.*` | `top_p:` / `max_tokens:` / etc. on a robot or `RunConfig` |
+> | `max_iterations` | no equivalent — networks are bounded by their task graph |
 
 ### RubyLLM Settings (`ruby_llm:` section)
 
@@ -152,11 +216,18 @@ All settings under the `ruby_llm:` key are applied to `RubyLLM.configure` automa
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `ruby_llm.provider` | `:anthropic` | Default LLM provider |
-| `ruby_llm.model` | `claude-sonnet-4` | Default model for robots |
+| `ruby_llm.model` | `claude-sonnet-4` | Default model for robots that do not set `model:` |
 | `ruby_llm.default_model` | `null` | RubyLLM default model override |
 | `ruby_llm.default_embedding_model` | `null` | Default embedding model |
 | `ruby_llm.default_image_model` | `null` | Default image model |
+
+> [!NOTE]
+> `defaults.yml` also carries `ruby_llm.provider: :anthropic` and
+> `ruby_llm.assume_model_exists: false`, but neither is read. A robot's provider
+> comes from its own `provider:` keyword argument, and `assume_model_exists` is
+> derived from whether that argument was given. Model ids must be full RubyLLM
+> ids — an unknown id raises `RubyLLM::ModelNotFoundError` when the robot is
+> constructed.
 
 #### Connection Settings
 
@@ -185,19 +256,25 @@ All settings under the `ruby_llm:` key are applied to `RubyLLM.configure` automa
 | `ruby_llm.log_level` | `:info` | Log level (`:debug`, `:info`, `:warn`, `:error`) |
 | `ruby_llm.log_stream_debug` | `false` | Log streaming debug output |
 
-### Chat Configuration (`chat:` section)
+### Chat Configuration (`chat:` section) — not implemented
 
-Default chat parameters applied to all robots unless overridden:
+The `chat:` tree in `defaults.yml` (`chat.with_temperature`,
+`chat.with_params.top_p`, `chat.with_params.max_tokens`, `chat.with_tools`, …)
+is **reserved and has no consumers**. Values set there are parsed and then
+ignored.
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `chat.with_temperature` | `0.7` | Controls randomness (0.0-2.0) |
-| `chat.with_params.top_p` | `null` | Nucleus sampling threshold |
-| `chat.with_params.top_k` | `null` | Top-k sampling |
-| `chat.with_params.max_tokens` | `null` | Maximum tokens in response |
-| `chat.with_params.presence_penalty` | `null` | Presence penalty (-2.0 to 2.0) |
-| `chat.with_params.frequency_penalty` | `null` | Frequency penalty (-2.0 to 2.0) |
-| `chat.with_params.stop` | `null` | Stop sequences |
+To set LLM parameters globally, pass a `RunConfig` to each robot, or set them per
+robot with constructor keyword arguments:
+
+```ruby
+robot = RobotLab.build(
+  name: "bot",
+  system_prompt: "You are helpful.",
+  temperature: 0.7,
+  max_tokens: 2000,
+  top_p: 0.9
+)
+```
 
 ### Skill-Script Sandboxing (`sandbox:` section)
 
@@ -242,7 +319,8 @@ This clears the cached config and reloads from all sources on next access.
 
 ## Environment-Specific Configuration
 
-The `defaults.yml` shipped with RobotLab includes environment-specific overrides:
+The `defaults.yml` shipped with RobotLab includes environment-specific overrides.
+This is what the gem actually ships:
 
 === "Development"
 
@@ -256,10 +334,10 @@ The `defaults.yml` shipped with RobotLab includes environment-specific overrides
 
     ```yaml
     test:
-      max_iterations: 3
-      streaming_enabled: false
+      max_iterations: 3          # reserved, no effect
+      streaming_enabled: false   # reserved, no effect
       ruby_llm:
-        model: claude-haiku-3-5
+        model: claude-3-haiku-20240307
         request_timeout: 30
         max_retries: 1
         log_level: :warn
@@ -269,8 +347,8 @@ The `defaults.yml` shipped with RobotLab includes environment-specific overrides
 
     ```yaml
     production:
-      streaming_enabled: false
-      max_iterations: 20
+      streaming_enabled: false   # reserved, no effect
+      max_iterations: 20         # reserved, no effect
       ruby_llm:
         request_timeout: 180
         max_retries: 5
@@ -279,24 +357,54 @@ The `defaults.yml` shipped with RobotLab includes environment-specific overrides
 
 The current environment is determined automatically (via `RAILS_ENV`, `RACK_ENV`, or defaults to `development`).
 
+> [!NOTE]
+> Under `test`, the effective default model is `claude-3-haiku-20240307` — a full
+> dated model id. Short aliases like `claude-haiku-3-5` are **not** valid RubyLLM
+> model ids and raise `RubyLLM::ModelNotFoundError` at robot construction.
+
 ## Rails Integration
 
-In Rails, RobotLab is configured automatically via its Railtie. The logger defaults to `Rails.logger`, and templates default to `app/prompts/`.
+> [!NOTE]
+> Core RobotLab ships **no Railtie and no Engine**. It performs two bare
+> `defined?(::Rails)` checks: the default logger becomes `Rails.logger`, and
+> `template_path` resolves to `Rails.root/app/prompts` when left unset. Generators,
+> `RobotLab::Job`, and Turbo broadcasting live in the separate
+> [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) gem.
 
-Create a project config file for Rails-specific settings:
+> [!WARNING]
+> **Under Rails, `./config/robot_lab.yml` must be environment-sectioned — a flat
+> file is ignored.** Rails' anyway_config integration sets
+> `Anyway::Settings.current_environment` to `Rails.env`, which switches the project
+> config loader into environmental mode. Keys then have to live under
+> `development:` / `test:` / `production:`; anything written at the root of the file
+> is dropped. Outside Rails the rule is exactly inverted — flat keys are read and an
+> environment section is ignored.
 
-```yaml title="config/robot_lab.yml"
-defaults:
+```yaml title="config/robot_lab.yml (under Rails)"
+development:
   ruby_llm:
     anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
     model: claude-sonnet-4
-
+    request_timeout: 180
+    max_retries: 5
   template_path: null  # auto-detects app/prompts in Rails
 
 production:
   ruby_llm:
+    anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
+    model: claude-sonnet-4
     request_timeout: 180
     max_retries: 5
+```
+
+The same file outside Rails would instead be written flat:
+
+```yaml title="config/robot_lab.yml (no Rails)"
+ruby_llm:
+  model: claude-sonnet-4
+  request_timeout: 180
+
+template_path: prompts
 ```
 
 You can also use Rails credentials:
@@ -311,13 +419,10 @@ anthropic_api_key: sk-ant-...
 openai_api_key: sk-...
 ```
 
-Then reference them in your config file with ERB:
-
-```yaml title="config/robot_lab.yml"
-defaults:
-  ruby_llm:
-    anthropic_api_key: <%= Rails.application.credentials.anthropic_api_key %>
-```
+`./config/robot_lab.yml` is evaluated through ERB, so credentials can be
+referenced inline as shown above. Note that this only works in the **project**
+config file — the `~/.config/robot_lab/robot_lab.yml` user file is not run
+through ERB.
 
 ## RunConfig: Shared Operational Defaults
 
@@ -362,12 +467,31 @@ robot = RobotLab.build(
   temperature: 0.9  # overrides shared config's 0.5
 )
 
-# Network applies config to all member robots
+# Network-level config
 network = RobotLab.create_network(name: "pipeline", config: shared) do
   task :analyzer, analyzer_robot, depends_on: :none
   task :writer, writer_robot, depends_on: [:analyzer]
 end
 ```
+
+> [!WARNING]
+> **A network-level `config:` propagates only `mcp` and `tools`** — and only when
+> the member robot opts in by passing `mcp: :inherit` / `tools: :inherit` on its
+> `run`. LLM fields (`model`, `temperature`, `max_tokens`, …) and callbacks
+> (`on_content`, `on_tool_call`, `on_tool_result`) are read from each robot's
+> **own** config at construction time and are never inherited from the network.
+> The only field the network itself consumes is `max_concurrent_robots`.
+>
+> If you want a whole team on one model, pass the same `config:` to each robot:
+>
+> ```ruby
+> shared  = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+> analyst = RobotLab.build(name: "analyst", system_prompt: "...", config: shared)
+> writer  = RobotLab.build(name: "writer",  system_prompt: "...", config: shared)
+> ```
+>
+> A per-task `config:` is merged into the network config and is subject to the
+> same `mcp`/`tools`-only limitation.
 
 ### Merging Configs
 
@@ -387,10 +511,10 @@ effective.temperature  #=> 0.9 (overridden)
 |----------|--------|
 | **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | **Tools** | `mcp`, `tools` |
-| **Callbacks** | `on_tool_call`, `on_tool_result` |
+| **Callbacks** | `on_tool_call`, `on_tool_result`, `on_content` |
 | **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `max_tools`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold` |
 
-`cost_budget` mirrors `token_budget` for cumulative dollar spend — see [Budgets](../guides/observability.md#budgets-token--cost). `max_tools` overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see [Tool Capping](../guides/using-tools.md#tool-capping-and-per-turn-filtering).
+`cost_budget` mirrors `token_budget` for cumulative dollar spend — see [Budgets](../guides/observability.md#budgets-token-cost). `max_tools` overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see [Tool Capping](../guides/using-tools.md#tool-capping-and-per-turn-filtering).
 
 ### RunConfig vs RobotLab.config
 
@@ -410,14 +534,23 @@ Individual robots can override the global model and other settings:
 robot = RobotLab.build(
   name: "fast_bot",
   system_prompt: "You are a quick responder.",
-  model: "claude-haiku-3-5",
+  model: "claude-3-haiku-20240307",
   temperature: 0.3,
   max_tokens: 500
 )
 
 # Or use chaining at runtime
-robot.with_temperature(0.9).with_max_tokens(2000).run("Tell me a story.")
+robot.with_temperature(0.9).with_params(max_tokens: 2000).run("Tell me a story.")
 ```
+
+> [!WARNING]
+> There is **no `with_max_tokens`, `with_top_p`, `with_top_k`, `with_stop`,
+> `with_presence_penalty`, or `with_frequency_penalty`** — calling them raises
+> `NoMethodError`. The complete chainable set is `with_context`, `with_headers`,
+> `with_instructions`, `with_model`, `with_params`, `with_schema`,
+> `with_temperature`, `with_thinking`, `with_tool`, `with_tools`, plus RobotLab's
+> own `with_template` and `with_bus`. For everything else use a constructor
+> keyword argument or `with_params(...)`.
 
 ## Hierarchical MCP and Tools
 
@@ -425,28 +558,82 @@ MCP servers and tools use a hierarchical configuration: `runtime > robot > netwo
 
 - `:inherit` -- Use the parent level's configuration
 - `:none` -- No MCP servers or tools at this level
-- An explicit array -- Specific servers or tools
+- An explicit array -- A name **allowlist** (not a local-vs-MCP switch). Entries are
+  compared as strings against each attached tool's `name`, so they must match the
+  form the tool was attached in: a tool attached as a class matches `[RefundTool]`
+  or `%w[RefundTool]`, while one attached as an instance matches `%w[refund]`
+
+> [!WARNING]
+> **`tools:` and `mcp:` both default to `:none` — including on `run()` itself.**
+> `Robot#run` is declared `run(message = nil, ..., mcp: :none, tools: :none, ...)`,
+> and an explicit `:none` means "send zero tools this turn". So a plain
+> `robot.run("...")` sends the LLM **no tools and connects no MCP servers**, even
+> when you passed `local_tools:` or `mcp:` at build time.
+>
+> The fix goes on the **run**, not the build:
+>
+> ```ruby
+> robot.run("...", tools: :inherit)                  # send the attached local tools
+> robot.run("...", mcp: :inherit, tools: :inherit)   # connect MCP and send its tools
+> ```
+>
+> `mcp: :inherit` triggers the connection; `tools: :inherit` is additionally
+> required for the MCP tools to actually be handed to the model.
+
+> [!IMPORTANT]
+> **For a standalone robot, do not pass `tools: :inherit` at build time.** Build-time
+> `:inherit` resolves against the parent level, and for a standalone robot the parent
+> is the global `:none` — producing an allowlist of `["none"]` that matches nothing
+> and suppresses the tools even when the run asks for `:inherit`. Verified
+> resolution for a standalone robot:
+>
+> | build `tools:` | run `tools:` | tools sent |
+> |---|---|---|
+> | unset | `:none` (default) | none |
+> | unset | `:inherit` | the attached tools ✅ |
+> | `:inherit` | `:inherit` | **none** ❌ |
+> | `:inherit` | `:none` | none |
+> | `:none` | `:inherit` | the attached tools ✅ |
+>
+> Leave `tools:` unset at build time — unless the robot is a member of a network.
+
+> [!NOTE]
+> **Inside a network, build-time `:inherit` is the opt-in, not a bug.** The parent
+> is resolved at run time as the network's `config:`, so `:inherit` is how a robot
+> asks for the network-level allowlist. With
+> `RobotLab::RunConfig.new(tools: %w[RefundTool])` on the network and a robot
+> holding `local_tools: [RefundTool, InvoiceTool]`:
+>
+> | build `tools:` | task `tools:` | tools sent |
+> |---|---|---|
+> | unset | omitted (`:none`) | none |
+> | unset | `:inherit` | `refund`, `invoice` — the network allowlist is **not** applied |
+> | `:inherit` | `:inherit` | `refund` — the network allowlist **is** applied ✅ |
+> | `:inherit` | omitted (`:none`) | none |
+>
+> The same reasoning applies to `mcp:`.
 
 ```ruby
-# Robot inheriting network MCP config
-robot = RobotLab.build(
-  name: "agent",
-  system_prompt: "You are helpful.",
-  mcp: :inherit,
-  tools: :inherit
-)
-
-# Robot with no MCP, specific tools
+# Correct: attach tools at build time, request them at run time
 robot = RobotLab.build(
   name: "calculator",
   system_prompt: "You solve math problems.",
-  mcp: :none,
-  tools: :inherit,          # required: without this, local_tools below is never sent
   local_tools: [Calculator]
 )
+
+robot.run("What is 17 * 23?", tools: :inherit)
+
+# Robot with MCP servers attached at build time
+robot = RobotLab.build(
+  name: "agent",
+  system_prompt: "You are helpful.",
+  mcp: [{ name: "filesystem", transport: { type: "stdio", command: "mcp-server-filesystem" } }]
+)
+
+robot.run("List the files in ./lib", mcp: :inherit, tools: :inherit)
 ```
 
-> **`tools:` defaults to `:none` at every level**, including `run()` itself. Attaching tools via `local_tools:` does not by itself make them available — an explicit `:none` (or an unset runtime override, which is equivalent) now sends **zero** tools for that call. Pass `tools: :inherit` wherever you want a robot's attached tools to actually be used. See [Runtime Tool Filtering](../guides/using-tools.md#runtime-tool-filtering) for the full `:inherit`/`:none`/array semantics.
+See [Runtime Tool Filtering](../guides/using-tools.md#runtime-tool-filtering) for the full `:inherit`/`:none`/array semantics.
 
 ## Next Steps
 

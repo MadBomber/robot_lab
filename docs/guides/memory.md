@@ -86,7 +86,7 @@ Memory has reserved keys with special behavior:
 | `:results` | Array | Accumulated robot results |
 | `:messages` | Array | Conversation history |
 | `:session_id` | String | Session identifier for history persistence |
-| `:cache` | SemanticCache | Semantic cache (read-only after init) |
+| `:cache` | `RubyLLM::SemanticCache` module, or `nil` | Semantic cache (read-only after init). Set at construction time; `nil` when built with `enable_cache: false` |
 
 ### The Data Hash
 
@@ -143,6 +143,16 @@ You can also clear just the custom keys without resetting reserved keys:
 robot.memory.clear  # Clears non-reserved keys only
 ```
 
+> [!WARNING]
+> `reset_memory` resets **only the key-value store**. It does not touch the
+> robot's conversation history — the chat still holds every prior message, and
+> the LLM will still see them. Clearing the transcript is a separate call:
+>
+> ```ruby
+> robot.reset_memory                        # key-value store only
+> robot.clear_messages(keep_system: true)   # conversation history only
+> ```
+
 ## Network Shared Memory
 
 When robots run in a network, they share the network's memory instead of using their own inherent memory. This allows robots to communicate through shared state:
@@ -190,11 +200,40 @@ results = memory.get(:sentiment, :entities, :keywords, wait: 60)
 # => { sentiment: {...}, entities: [...], keywords: [...] }
 ```
 
-Each blocking wait is backed by an `IO.pipe` pair (`Waiter` class). Calling `signal` writes one byte per waiting caller, so all threads blocked on `IO.select` wake immediately. This design works cleanly with Ruby's Async fiber scheduler — no mutex contention or spurious wakeups.
+> [!WARNING]
+> A blocking `get` that expires **raises `RobotLab::AwaitTimeout`** — it does
+> not return `nil`. (A *non*-blocking `get`, the default, returns `nil` for a
+> missing key.) Wrap it if a missing value is survivable:
+>
+> ```ruby
+> begin
+>   memory.get(:sentiment, wait: 30)
+> rescue RobotLab::AwaitTimeout => e
+>   # => "Timeout waiting for :sentiment after 30 seconds"
+>   nil
+> end
+> ```
+
+> [!CAUTION]
+> With multiple keys the timeout is applied **per missing key**, not to the call
+> as a whole. `memory.get(:a, :b, :c, wait: 30)` awaits the missing keys
+> sequentially, each with its own fresh 30-second budget.
+>
+> It does not, however, spend the whole 90 seconds before reporting: the first
+> key whose wait expires **raises `AwaitTimeout` immediately**, aborting the call
+> — so the keys that were already resolved are lost along with the ones not yet
+> attempted. The 90 seconds is the worst case only for a call that *succeeds*
+> (each key arriving just under its own deadline).
+
+Each blocking wait is backed by an `IO.pipe` pair (`Waiter` class). The waiting
+side calls `@read_io.wait_readable(timeout)`; `signal` writes one byte per
+waiting caller so every blocked waiter wakes exactly once. `wait_readable`
+yields to Ruby's Async fiber scheduler when one is installed — no mutex
+contention or spurious wakeups.
 
 ### Subscriptions
 
-Subscribe to key changes with asynchronous callbacks:
+Subscribe to key changes:
 
 ```ruby
 # Subscribe to a single key
@@ -213,6 +252,24 @@ memory.subscribe_pattern("analysis:*") do |change|
   puts "Analysis key #{change.key} updated"
 end
 ```
+
+> [!IMPORTANT]
+> Subscription callbacks are dispatched through `Async { }`. Inside a running
+> Async reactor that defers them; **outside one — which is the normal case for
+> plain Ruby, Rails request threads, and tests — the block runs synchronously
+> on the writer's thread**, before `memory[:key] = value` returns:
+>
+> ```ruby
+> order = []
+> memory.subscribe(:k) { |c| order << "callback" }
+> order << "before-set"
+> memory[:k] = 1
+> order << "after-set"
+> order   # => ["before-set", "callback", "after-set"]
+> ```
+>
+> Keep subscription callbacks fast, and never assume the writer has moved on by
+> the time your callback runs.
 
 ### Unsubscribe
 
@@ -243,6 +300,8 @@ Memory can be exported and reconstructed:
 # Export to hash
 hash = robot.memory.to_h
 # => { data: {...}, results: [...], messages: [...], session_id: "...", custom: {...} }
+# to_h is compacted: nil entries are dropped, so an unset :session_id (and the
+# :cache key, which is never exported) simply will not appear.
 
 # Export to JSON
 json = robot.memory.to_json
@@ -279,40 +338,72 @@ memory[:stage] = "response"
 
 ### Caching Expensive Operations
 
+A tool reaches memory through its owning robot. Subclass `RobotLab::Tool` (which
+has a `robot` accessor) and attach an **instance constructed with `robot:`** —
+that is the only supported way for tool code to read and write robot memory:
+
 ```ruby
-class FetchUser < RubyLLM::Tool
+class FetchUser < RobotLab::Tool
   description "Fetch user details by ID"
   param :user_id, type: :string, desc: "User ID"
 
   def execute(user_id:)
-    cache_key = "cache:user:#{user_id}"
+    cache_key = :"cache:user:#{user_id}"
 
-    # Check robot's memory for cached value
-    # (In practice, you'd access memory through the robot's context)
-    cached = Thread.current[:robot_memory]&.[](cache_key.to_sym)
+    cached = robot&.memory&.[](cache_key)
     return cached if cached
 
-    # Fetch and cache
     user = User.find(user_id).to_h
-    Thread.current[:robot_memory]&.[]=(cache_key.to_sym, user)
+    robot&.memory&.[]=(cache_key, user)
     user
   end
 end
+
+robot = RobotLab.build(name: "support", system_prompt: "...")
+robot.local_tools << FetchUser.new(robot: robot)
+
+robot.run("Look up user 42", tools: :inherit)
 ```
+
+> [!WARNING]
+> There is **no thread-local memory handle** in RobotLab — nothing anywhere in
+> the codebase ever assigns `Thread.current[:robot_memory]`. A tool that reads
+> it will always see `nil` and silently cache nothing. Go through `robot.memory`
+> as above, and remember that `FetchUser.new` without `robot:` leaves `robot`
+> `nil`.
 
 ### Semantic Caching
 
-Memory includes a semantic cache for LLM response caching:
+Memory exposes a semantic cache for LLM response caching. It is on by default
+and becomes `nil` when you opt out with `enable_cache: false`:
+
+```ruby
+RobotLab.create_memory.cache                       # => RubyLLM::SemanticCache
+RobotLab.create_memory(enable_cache: false).cache  # => nil
+
+RobotLab.build(name: "x", system_prompt: "…").memory.cache
+# => RubyLLM::SemanticCache
+RobotLab.build(name: "x", system_prompt: "…", enable_cache: false).memory.cache
+# => nil
+```
+
+Guard for `nil` in any code that might run against a cache-disabled memory.
 
 ```ruby
 # Access the semantic cache
-cache = robot.memory.cache  # => RubyLLM::SemanticCache
+cache = robot.memory.cache
 
 # Use it to cache semantically similar queries
 response = cache.fetch("What is Ruby?") do
   robot.run("What is Ruby?")
 end
 ```
+
+> [!NOTE]
+> `memory.cache` is the `RubyLLM::SemanticCache` **module itself**, not a
+> per-memory instance. Its cache store, vector store, and configuration are
+> process-global — two memories with `enable_cache: true` share one cache. It
+> also embeds every query, so `fetch` costs an embedding call.
 
 ## Best Practices
 

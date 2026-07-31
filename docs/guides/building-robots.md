@@ -20,11 +20,19 @@ puts result.last_text_content
 
 ### Name
 
-A unique identifier used for routing and logging. If omitted, an auto-generated name is used:
+An identifier used for routing, logging, and as the key under which a robot's result is stored in a network's `result.context`. If omitted it defaults to the literal string `"robot"` — nothing is auto-generated, so two unnamed robots share the same name.
 
 ```ruby
 robot = RobotLab.build(name: "support_agent", system_prompt: "...")
+
+RobotLab.build.name  # => "robot"
 ```
+
+> [!NOTE]
+> The default is load-bearing. A robot records whether `name:` was supplied by
+> comparing it against `"robot"`; front-matter `robot_name:` is applied **only**
+> when the constructor left the name at its default. Passing `name: "robot"`
+> explicitly therefore still counts as "not named", and front matter wins.
 
 ### Description
 
@@ -123,16 +131,31 @@ The following YAML front matter keys are applied to the robot's chat automatical
 
 **LLM Configuration:**
 
-| Key | Description |
-|-----|-------------|
-| `model` | Override the LLM model |
-| `temperature` | Controls randomness (0.0 - 1.0) |
-| `top_p` | Nucleus sampling threshold |
-| `top_k` | Top-k sampling |
-| `max_tokens` | Maximum tokens in response |
-| `presence_penalty` | Penalize based on presence |
-| `frequency_penalty` | Penalize based on frequency |
-| `stop` | Stop sequences |
+| Key | Description | Applied from front matter? |
+|-----|-------------|----------------------------|
+| `model` | Override the LLM model | Yes |
+| `temperature` | Controls randomness (0.0 - 1.0) | Yes |
+| `top_p` | Nucleus sampling threshold | **No — silently dropped** |
+| `top_k` | Top-k sampling | **No — silently dropped** |
+| `max_tokens` | Maximum tokens in response | **No — silently dropped** |
+| `presence_penalty` | Penalize based on presence | **No — silently dropped** |
+| `frequency_penalty` | Penalize based on frequency | **No — silently dropped** |
+| `stop` | Stop sequences | **No — silently dropped** |
+
+> [!WARNING]
+> Only `model` and `temperature` take effect from front matter. The other six are
+> parsed into the robot's `RunConfig` and then dropped: `RunConfig#apply_to`
+> dispatches `chat.with_<field>` guarded by `respond_to?`, and `RubyLLM::Chat`
+> only implements `with_model` and `with_temperature`. A template declaring all
+> eight leaves the chat's params hash empty — no warning, no error.
+>
+> The same six **do** work as constructor kwargs or via a `config:` `RunConfig`,
+> which route through `with_params`:
+>
+> ```ruby
+> RobotLab.build(name: "w", system_prompt: "...", top_p: 0.5, max_tokens: 1200)
+> # chat params => {top_p: 0.5, max_tokens: 1200}
+> ```
 
 **Robot Identity and Capabilities:**
 
@@ -161,15 +184,16 @@ Unlike `template:` on `build` (which renders a template as a robot's *system pro
 
 Templates can declare everything a robot needs — identity, tools, MCP servers, and LLM config — making the `.md` file a complete robot definition:
 
-```markdown title="prompts/github_assistant.md"
+```markdown title="prompts/my_github_assistant.md"
 ---
 description: GitHub assistant with MCP tool access
 robot_name: github_bot
 mcp:
   - name: github
-    transport: stdio
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-github"]
+    transport:
+      type: stdio
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-github"]
 model: claude-sonnet-4
 temperature: 0.3
 ---
@@ -181,8 +205,21 @@ Build the robot with minimal constructor arguments:
 
 ```ruby
 # Template provides name, description, MCP config, model, and temperature
-robot = RobotLab.build(template: :github_assistant)
+robot = RobotLab.build(template: :my_github_assistant)
+
+# MCP still has to be requested at run time — see the warning below
+robot.run("What are the open issues?", mcp: :inherit, tools: :inherit)
 ```
+
+> [!WARNING]
+> `transport:` **must be a nested hash**. The shipped
+> `examples/prompts/github_assistant.md` uses the flat form
+> (`transport: stdio` with sibling `command:`/`args:` keys), which raises
+> `NoMethodError: undefined method 'transform_keys' for an instance of String`
+> internally. The error is swallowed and logged as a warning, the server lands in
+> `robot.failed_mcp_server_names`, and the robot builds with **zero tools**. That
+> shipped template also declares no `model:` or `temperature:`, so it does not
+> demonstrate the full self-contained pattern shown here.
 
 ### Tools in Front Matter
 
@@ -201,6 +238,9 @@ You help customers with order inquiries and refunds.
 ```ruby
 # Tools are loaded from frontmatter — no local_tools: needed
 robot = RobotLab.build(template: :order_support)
+
+# ...but they are only sent to the model when the run asks for them
+robot.run("Where is order 12345?", tools: :inherit)
 ```
 
 Tool classes must be defined and loaded before the robot is built. If a tool name cannot be resolved, it is skipped with a warning.
@@ -224,18 +264,28 @@ Declare MCP server configurations directly in the template:
 description: Developer assistant with filesystem access
 mcp:
   - name: filesystem
-    transport: stdio
-    command: mcp-server-filesystem
-    args: ["--root", "/home/user/projects"]
+    transport:
+      type: stdio
+      command: mcp-server-filesystem
+      args: ["--root", "/home/user/projects"]
 ---
 You are a developer assistant with filesystem access.
 ```
 
 ```ruby
 robot = RobotLab.build(template: :developer)
+robot.run("List the files in lib/", mcp: :inherit, tools: :inherit)
 ```
 
 Constructor `mcp:` overrides frontmatter `mcp:` when provided.
+
+> [!WARNING]
+> `transport:` takes a nested hash — `type:` plus the transport's own keys. A flat
+> `transport: stdio` with sibling `command:`/`args:` keys fails silently (the
+> `transform_keys` NoMethodError is swallowed) and the robot ends up with no MCP
+> tools. Valid `type:` values are `stdio`, `sse`, `ws`, `websocket`,
+> `streamable-http`, and `http`; the underscored `streamable_http` raises
+> `ArgumentError`.
 
 ### Template with System Prompt
 
@@ -363,7 +413,6 @@ Skills can include LLM configuration in their front matter. Config cascades in p
 ---
 description: Enable creative responses
 temperature: 0.9
-top_p: 0.95
 ---
 Be creative and imaginative in your responses.
 ```
@@ -376,6 +425,12 @@ robot = RobotLab.build(
 )
 # temperature is 0.9 from the skill (unless the main template or constructor overrides it)
 ```
+
+> [!NOTE]
+> Skill front matter is subject to the same limitation as template front matter:
+> only `model` and `temperature` reach the chat. Adding `top_p: 0.95` to
+> `creative_mode.md` would be parsed and then silently discarded. Set it as a
+> constructor kwarg (`top_p: 0.95`) instead.
 
 The precedence order (highest wins):
 
@@ -427,7 +482,40 @@ robot = RobotLab.build(
   system_prompt: "You help customers with orders.",
   local_tools: [OrderLookup, InventoryCheck]
 )
+
+result = robot.run("Where is order 12345?", tools: :inherit)
 ```
+
+> [!WARNING]
+> **`run` defaults to `tools: :none` and `mcp: :none`.** Attaching tools at build
+> time is not enough — a plain `robot.run("...")` sends the model **zero** tools,
+> because an explicit `:none` means "send no tools this turn" rather than "fall
+> back to the attached set". Pass `tools: :inherit` on the call to send the
+> attached tools, and `mcp: :inherit, tools: :inherit` to connect MCP servers and
+> send their tools.
+>
+> For a **standalone** robot, do not pass `tools: :inherit` at *build* time: the
+> parent level is the global config's `:none`, so it resolves to an allowlist of
+> `["none"]`, which matches nothing. Leave `tools:` unset in the constructor.
+>
+> | build `tools:` | run `tools:` | tools sent |
+> |---|---|---|
+> | unset | `:none` (default) | none |
+> | unset | `:inherit` | all attached — **the correct pattern** |
+> | `:inherit` | `:inherit` | none — the standalone trap |
+> | `:none` | `:inherit` | all attached |
+>
+> This table is for a robot run on its own. Inside a **network** whose `config:`
+> sets `tools:`/`mcp:`, build-time `:inherit` is not a trap — it is exactly how a
+> robot opts in to the network-level list, and the parent is that list rather
+> than `:none`. See
+> [Network-Wide Tool and MCP Defaults](creating-networks.md#network-wide-tool-and-mcp-defaults).
+>
+> An explicit array (`tools: [OrderLookup]`) is an **allowlist** over the attached
+> tools; it selects from them and cannot add new ones. Entries must match how the
+> tool was attached — a tool attached as a class matches its class name
+> (`[OrderLookup]`), one attached as an instance matches RubyLLM's derived name
+> (`%w[order_lookup]`). The two forms do not cross-match.
 
 See the [Using Tools](using-tools.md) guide for details on defining tools.
 
@@ -456,6 +544,14 @@ MCP configuration supports hierarchical resolution:
 | `:inherit` | Use parent network/config MCP servers |
 | `[...]` | Explicit array of server configurations |
 
+`run` also defaults to `mcp: :none`, so the servers configured above are not connected by a plain `run`:
+
+```ruby
+robot.run("Read config/database.yml", mcp: :inherit, tools: :inherit)
+```
+
+`robot.connect_mcp!` connects eagerly if you want the handshake to happen up front, but a later plain `run()` still sends no tools — `tools: :inherit` is what puts the MCP tools in the request. Connection failures are logged and recorded in `robot.failed_mcp_server_names`; they are never raised.
+
 See the [MCP Integration](mcp-integration.md) guide for transport types and advanced patterns.
 
 ## Chaining Configuration
@@ -474,23 +570,34 @@ result = robot
 
 ### Available Chain Methods
 
+This is the complete set — the LLM-facing methods are delegated dynamically from `RubyLLM::Chat`, and `with_template` / `with_bus` are RobotLab's own:
+
 | Method | Description |
 |--------|-------------|
 | `with_model(id)` | Change the LLM model |
 | `with_instructions(text)` | Set system instructions |
 | `with_temperature(val)` | Set temperature |
-| `with_top_p(val)` | Set nucleus sampling |
-| `with_top_k(val)` | Set top-k sampling |
-| `with_max_tokens(val)` | Set max output tokens |
-| `with_presence_penalty(val)` | Set presence penalty |
-| `with_frequency_penalty(val)` | Set frequency penalty |
-| `with_stop(sequences)` | Set stop sequences |
+| `with_params(**params)` | Set arbitrary provider params (`top_p`, `max_tokens`, …) |
+| `with_context(ctx)` | Set the RubyLLM context |
+| `with_headers(**headers)` | Set extra request headers |
 | `with_tool(tool)` | Add a single tool |
 | `with_tools(*tools)` | Add multiple tools |
-| `with_template(id, **ctx)` | Apply a prompt template |
 | `with_schema(schema)` | Set structured output schema |
 | `with_thinking(config)` | Enable extended thinking |
+| `with_template(id, **ctx)` | Apply a prompt template |
 | `with_bus(bus)` | Connect to a message bus (creates one if nil) |
+
+> [!WARNING]
+> `with_top_p`, `with_top_k`, `with_max_tokens`, `with_presence_penalty`,
+> `with_frequency_penalty`, and `with_stop` **do not exist** — calling any of them
+> raises `NoMethodError`. `RubyLLM::Chat` exposes those knobs through
+> `with_params`, so use either the constructor kwarg or `with_params`:
+>
+> ```ruby
+> robot.with_params(max_tokens: 2000, top_p: 0.3).run("...")
+> # or
+> RobotLab.build(name: "bot", system_prompt: "...", max_tokens: 2000, top_p: 0.3)
+> ```
 
 ## Running Robots
 
@@ -508,13 +615,35 @@ The `run` method returns a `RobotResult` with:
 ```ruby
 result.last_text_content  # => "Hi there! How can I help?"
 result.reply              # => alias for last_text_content
-result.output             # => Array of output messages
-result.tool_calls         # => Array of tool call results
+result.output             # => [TextMessage] built from the final response text
+result.tool_calls         # => Array of tool call results (see note)
 result.robot_name         # => "assistant"
-result.stop_reason        # => stop reason from the LLM
+result.stop_reason        # => always nil (see note)
+result.input_tokens       # => Integer
+result.output_tokens      # => Integer
 result.duration           # => Float (elapsed seconds, set in pipeline execution)
 result.raw                # => raw LLM response object
 ```
+
+> [!NOTE]
+> `result.tool_calls` is effectively always empty. It is read from the *final*
+> assistant message, and by the time ruby_llm's tool loop has finished that
+> message carries no tool calls. Use `:tool_call` [hooks](hooks.md) or the
+> `on_tool_call:` / `on_tool_result:` callbacks to observe tool activity.
+> Similarly, `result.output` holds only the final response text, not the full
+> turn. There is no `result.content` and no `result.text?`.
+
+> [!WARNING]
+> `result.stop_reason` is **always `nil`**. `RubyLLM::Message` does not define
+> `stop_reason`, and `build_result` fills the field with
+> `response.respond_to?(:stop_reason) ? response.stop_reason : nil` — so no
+> provider value ever lands there, and `.compact` drops the key from
+> `result.export` entirely. Do not branch on `"end_turn"`, `"tool_use"`, or
+> `"stop"`. Consequently `result.stopped?` is simply "this result has no tool
+> calls".
+>
+> (`RobotLab::Message::VALID_STOP_REASONS` is `["tool", "stop"]`, but that
+> constant governs the `Message` classes you build yourself, not `RobotResult`.)
 
 ### With Runtime Memory
 
@@ -569,7 +698,7 @@ robot = RobotLab.build(
 robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
 ```
 
-The `on_content` callback participates in the RunConfig cascade, so it can be set at the config level and inherited by robots:
+`on_content` is also a `RunConfig` field, so it can be supplied through a `config:` on the robot itself rather than as a constructor kwarg:
 
 ```ruby
 config = RobotLab::RunConfig.new(
@@ -577,6 +706,13 @@ config = RobotLab::RunConfig.new(
 )
 robot = RobotLab.build(name: "bot", system_prompt: "...", config: config)
 ```
+
+> [!WARNING]
+> This only works for the robot's **own** config. A network-level `config:` does
+> **not** supply `on_content` (or any other callback or LLM field) to its member
+> robots — a network propagates only `mcp` and `tools`. Each robot reads
+> `on_content` from its own config at construction time, so streaming callbacks
+> must be set per robot.
 
 You can also monitor tool activity via callbacks:
 
@@ -640,7 +776,11 @@ billing_specialist = RobotLab.build(
   context: { department: "billing" },
   local_tools: [InvoiceLookup, RefundProcessor]
 )
+
+billing_specialist.run("Refund order 12345", tools: :inherit)
 ```
+
+In a network, the equivalent opt-in is on the task: `task :billing, billing_specialist, tools: :inherit, depends_on: :optional`.
 
 ### Summarizer Robot
 
@@ -710,7 +850,16 @@ bob.serve  # every inbound task runs through bob.run and replies automatically
 alice.send_message(to: :bob, content: "Tell me a funny robot joke.")
 ```
 
-`serve` is shorthand for `respond_to_tasks(auto_reply: true) { |message| run(message.content).reply }`. Use `respond_to_tasks` directly when the reply shouldn't just be `run(...).reply` — e.g. post-processing the result first:
+`serve` is shorthand for `respond_to_tasks(auto_reply: true) { |message| run(bus_task_content(message)).reply }`.
+
+`bus_task_content` flattens the message payload for `run`: a `String` content is passed through via `to_s`, while a `Hash` content becomes one `"key: value"` line per entry. So a task sent as `{ topic: "robots", style: "dry" }` reaches the LLM as:
+
+```
+topic: robots
+style: dry
+```
+
+Use `respond_to_tasks` directly when the reply shouldn't just be `run(...).reply` — e.g. to build the prompt yourself, or to post-process the result:
 
 ```ruby
 bob.respond_to_tasks do |message|
@@ -776,7 +925,7 @@ bot.with_bus(existing_bus)  # now connected and can send/receive messages
 
 ## Context Window Compression
 
-Long-running robots accumulate conversation history that can grow to fill the context window. `compress_history` prunes old turns using TF-IDF cosine similarity against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.
+Long-running robots accumulate conversation history that can grow to fill the context window. `compress_history` prunes old turns using stemmed term-frequency cosine similarity (term frequencies only — no IDF weighting) against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.
 
 ```ruby
 # Default settings: protect 3 most-recent turn pairs, drop anything below 0.2
@@ -813,7 +962,7 @@ gem "classifier", "~> 2.3"
 
 ## Convergence Detection
 
-`RobotLab::Convergence` uses TF-IDF cosine similarity to detect when two independent agents have reached the same conclusion. The primary use case is a network router that skips an expensive reconciler robot when two verifiers already agree.
+`RobotLab::Convergence` uses stemmed term-frequency cosine similarity (not TF-IDF — on a two-document corpus, IDF suppresses exactly the shared terms that signal agreement) to detect when two independent agents have reached the same conclusion. The primary use case is skipping an expensive reconciler robot when two verifiers already agree. Texts shorter than 30 characters always score `0.0`.
 
 ```ruby
 # Check the similarity score directly (returns Float 0.0..1.0)
@@ -826,25 +975,40 @@ RobotLab::Convergence.detected?(result_a.reply, result_b.reply)
 RobotLab::Convergence.detected?(text_a, text_b, threshold: 0.75)
 ```
 
-Wire it into a network router for the reconciler fast-path:
+Wire it into a network for the reconciler fast-path. There is no router object in RobotLab — the reconciler is declared `depends_on: :optional` and a gate robot activates it only when the verifiers disagree:
 
 ```ruby
 verifier_a = RobotLab.build(name: "verifier_a", system_prompt: "Verify the answer.")
 verifier_b = RobotLab.build(name: "verifier_b", system_prompt: "Independently verify the answer.")
 reconciler = RobotLab.build(name: "reconciler", system_prompt: "Reconcile conflicting answers.")
 
-router = lambda do |args|
-  a = args.context[:verifier_a]&.reply.to_s
-  b = args.context[:verifier_b]&.reply.to_s
+class ConvergenceGate < RobotLab::Robot
+  def call(result)
+    a = result.context[:verifier_a]&.reply.to_s   # keyed by ROBOT name
+    b = result.context[:verifier_b]&.reply.to_s
 
-  # Skip reconciler when verifiers agree
-  RobotLab::Convergence.detected?(a, b) ? nil : ["reconciler"]
+    return result if RobotLab::Convergence.detected?(a, b)  # agree — skip reconciler
+
+    result.activate(:reconciler)
+  end
 end
 
-network = RobotLab.create_network(name: "verify", router: router) do
-  # ...
+network = RobotLab.create_network(name: "verify") do
+  task :verifier_a, verifier_a, depends_on: :none
+  task :verifier_b, verifier_b, depends_on: :none
+  task :gate,       ConvergenceGate.new(name: "gate"), depends_on: %i[verifier_a verifier_b]
+  task :reconciler, reconciler, depends_on: :optional
 end
+
+network.run(message: "Is the deployment healthy?").activated_steps
+# => [] when they agreed, [:reconciler] when they diverged
 ```
+
+> [!WARNING]
+> `RobotLab.create_network` accepts only `name:`, `concurrency:`, `config:`, and a
+> block. There are no `router:` or `robots:` keyword arguments — passing them
+> raises `ArgumentError: unknown keywords: :robots, :router` — and no `Router` or
+> `Router::Args` class exists anywhere in the library.
 
 Requires the `classifier` gem (`~> 2.3`).
 
@@ -901,20 +1065,64 @@ result = f1.value(timeout: 30)
 
 ## Configuration
 
-RobotLab uses `MywayConfig` for configuration. Access the config object directly -- there is no `RobotLab.configure` block:
+RobotLab uses `MywayConfig` for configuration. Read values off the config object directly:
 
 ```ruby
-RobotLab.config.ruby_llm.model           # => "claude-sonnet-4"
+RobotLab.config.ruby_llm.model            # => "claude-sonnet-4"
 RobotLab.config.ruby_llm.request_timeout  # => 120
 ```
 
-Configuration is loaded from:
+`RobotLab.configure` also exists, and yields the config object for imperative setup:
 
-- Bundled defaults (`lib/robot_lab/config/defaults.yml`)
-- Environment-specific overrides (development, test, production)
-- XDG config files (`~/.config/robot_lab/config.yml`)
-- Project config (`./config/robot_lab.yml`)
-- Environment variables (`ROBOT_LAB_*` prefix)
+```ruby
+RobotLab.configure do |config|
+  config.logger = Logger.new($stdout)
+end
+```
+
+Configuration is layered, lowest precedence first:
+
+1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
+2. Environment-specific overrides (development, test, production)
+3. XDG user config (`~/.config/robot_lab/robot_lab.yml`)
+4. Project config (`./config/robot_lab.yml`)
+5. Environment variables (`ROBOT_LAB_*` prefix; `__` for nesting)
+6. Constructor parameters
+
+> [!WARNING]
+> The XDG file is `~/.config/robot_lab/**robot_lab.yml**` — the filename repeats
+> the app name. `~/.config/robot_lab/config.yml` is never read.
+>
+> A top-level `defaults:` wrapper is **always** ignored — that key means
+> something only inside the gem's own bundled `defaults.yml`. Write
+> `max_tool_rounds: 12`, not `defaults:\n  max_tool_rounds: 12`.
+>
+> An **environment-named** wrapper is a different story, and the two config
+> files behave differently:
+>
+> | File | flat keys | `development:` / `test:` / `production:` wrapper |
+> |---|---|---|
+> | `~/.config/robot_lab/robot_lab.yml` | honored | **honored** for the current environment |
+> | `./config/robot_lab.yml` (no Rails) | honored | ignored |
+> | `./config/robot_lab.yml` (in Rails) | ignored | **required** — keys must be nested under `Rails.env` |
+>
+> The XDG loader checks for a section named for the current environment and only
+> falls back to the file root when there is none. Outside Rails the environment
+> defaults to `development` (or `RAILS_ENV` / `RACK_ENV` when set), so a
+> `development:` section in the XDG file takes effect while `test:` and
+> `production:` sections sit dormant. Verified with a `max_iterations: 777`
+> XDG file: flat → 777, `development:` → 777, `production:` → 10 (until
+> `RACK_ENV=production`, then 777), `defaults:` → 10.
+>
+> Inside Rails, `anyway_config` sets the current environment to `Rails.env`,
+> which makes the **project** file environmental too — a flat
+> `./config/robot_lab.yml` is then ignored.
+>
+> ERB is evaluated only in `./config/robot_lab.yml`. The XDG loader uses
+> `YAML.safe_load` with no ERB pass, so `<%= ENV['KEY'] %>` there stays a literal
+> string. Nested env vars also arrive as strings
+> (`ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180` yields `"180"`); top-level keys are
+> type-coerced.
 
 ## Best Practices
 

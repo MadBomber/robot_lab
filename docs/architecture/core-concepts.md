@@ -25,10 +25,16 @@ robot = RobotLab.build(
     say so honestly.
   PROMPT
   local_tools: [OrderLookup, RefundProcessor],  # RubyLLM::Tool subclasses
-  mcp: :inherit,                                 # Use network's MCP servers
+  mcp: :inherit,                                 # Use the network's MCP servers
   temperature: 0.7                               # Inference parameter
 )
 ```
+
+The build-time `mcp: :inherit` above assumes this robot will be added to a
+network whose `config:` supplies an `mcp:` list. The parent is resolved on every
+run, so `:inherit` picks up whatever the enclosing network provides. For a robot
+that will run **standalone**, `:inherit` resolves against the global default
+`:none` and yields nothing — give it an explicit array instead.
 
 Or with a template:
 
@@ -83,23 +89,31 @@ result = robot.run("What is the weather in Berlin?")
 puts result.last_text_content
 ```
 
-With runtime overrides:
+`run` defaults to `mcp: :none, tools: :none`. Those defaults are *explicit* "send nothing this turn" values, not "unset" — so a plain `run` connects no MCP servers and sends the LLM zero tools even when `local_tools:`/`mcp:` were supplied at build time. Opt in per run:
+
+```ruby
+robot.run("...", tools: :inherit)                 # send the attached local tools
+robot.run("...", mcp: :inherit, tools: :inherit)  # connect MCP servers and send their tools
+```
+
+With other runtime overrides:
 
 ```ruby
 result = robot.run("Analyze this",
   memory: { data: report },
-  mcp: :none,
-  tools: :none
+  tools: :inherit
 )
 ```
 
-With streaming:
+With streaming — the block receives a `RubyLLM::Chunk`, whose text is in `content`:
 
 ```ruby
-robot.run("Tell me a story") do |event|
-  print event.text if event.respond_to?(:text)
+robot.run("Tell me a story") do |chunk|
+  print chunk.content
 end
 ```
+
+An `on_content:` callback (constructor kwarg or `RunConfig` field) fires on every run. When both an `on_content` callback and a block are supplied, both fire, stored callback first.
 
 ## Tool
 
@@ -208,7 +222,7 @@ end
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `:data` | `Hash` | Runtime data (accessible via `memory.data.key_name`) |
+| `:data` | `StateProxy` | Runtime data (hash-style `memory.data[:key]` and method-style `memory.data.key_name`) |
 | `:results` | `Array` | Accumulated robot results |
 | `:messages` | `Array` | Conversation history |
 | `:session_id` | `String` | Session identifier |
@@ -227,7 +241,7 @@ memory.get(:sentiment)  # => { score: 0.8 } or nil
 
 # Blocking read (waits until value exists)
 memory.get(:sentiment, wait: true)    # Blocks indefinitely
-memory.get(:sentiment, wait: 30)      # Blocks up to 30 seconds
+memory.get(:sentiment, wait: 30)      # Blocks up to 30s, then raises RobotLab::AwaitTimeout
 
 # Subscribe to changes
 memory.subscribe(:sentiment) do |change|
@@ -296,12 +310,20 @@ The output from a robot execution:
 result = robot.run("Hello!")
 
 result.robot_name       # => "support_agent"
-result.output           # => [TextMessage, ...]
-result.tool_calls       # => [ToolResultMessage, ...]
-result.stop_reason      # => "stop"
+result.output           # => [TextMessage] built from the final response text
+result.tool_calls       # => [] — see note below
+result.stop_reason      # => nil — always (see below)
 result.created_at       # => Time
 result.id               # => UUID string
+result.input_tokens     # => Integer
+result.output_tokens    # => Integer
+result.duration         # => Float, nil (set by Robot#call during pipeline execution)
+result.checksum         # => "sha256-hex"
 ```
+
+`stop_reason` is always `nil` on a `Robot#run` result — `build_result` only copies it when the response responds to `stop_reason`, and `RubyLLM::Message` does not. The table above describes `Message::VALID_STOP_REASONS`, which applies to message objects you construct yourself, not to `RobotResult`. As a consequence `result.stopped?` reduces to `!result.has_tool_calls?`.
+
+`output` is always a single `TextMessage` synthesized from the final response text — it is not a transcript of the turn. `tool_calls` is read off that final assistant message, which no longer carries tool calls once RubyLLM's tool loop has finished, so in practice it is empty; use the `on_tool_call`/`on_tool_result` callbacks or the tool hooks to observe tool usage.
 
 ### Accessing Response Content
 
@@ -323,20 +345,43 @@ result.to_json    # => JSON string
 
 ## Configuration
 
-RobotLab uses `MywayConfig` for configuration. There is no `RobotLab.configure` block. Configuration is loaded from:
+Global configuration uses `MywayConfig`. Sources are layered lowest to highest:
 
 1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
-2. Environment-specific overrides
-3. XDG config files (`~/.config/robot_lab/config.yml`)
-4. Project config (`./config/robot_lab.yml`)
-5. Environment variables (`ROBOT_LAB_*` prefix)
+2. Environment-specific overrides (development / test / production)
+3. XDG config file (`~/.config/robot_lab/robot_lab.yml` — note the filename repeats the app name; `config.yml` is never read, and this loader does **not** run ERB)
+4. Project config (`./config/robot_lab.yml` — ERB is evaluated here)
+5. Environment variables (`ROBOT_LAB_*` prefix, double underscore for nesting)
+6. Constructor params
 
-Access via `RobotLab.config`:
+The two file layers treat top-level wrappers differently:
+
+- **XDG file** (`~/.config/robot_lab/robot_lab.yml`) — a section named for the current environment **is** honoured. The loader checks `parsed.key?(env)` first (env comes from `Anyway::Settings.current_environment`, then `RAILS_ENV`, then `RACK_ENV`, defaulting to `"development"`) and falls back to the root when no such key exists. So `development:` works, a flat file works, and `production:` is simply skipped while you are in development. Only a `defaults:` wrapper is meaningless — it is not an environment name, so the whole hash is read as flat config and `defaults` is an unknown key.
+- **Project file** (`./config/robot_lab.yml`) — outside Rails this must be flat; every wrapper, `defaults:` and environment names alike, is ignored. Inside Rails, `anyway_config` sets `current_environment` to `Rails.env`, which makes this file environmental: a flat project file is then ignored and keys must be nested under `development:` / `test:` / `production:`.
+
+Read via `RobotLab.config`, or set values with the `RobotLab.configure` block, which yields the same `Config` object:
 
 ```ruby
 RobotLab.config.ruby_llm.model            # => "claude-sonnet-4"
 RobotLab.config.ruby_llm.request_timeout  # => 120
+
+RobotLab.configure do |c|
+  c.logger = Logger.new($stdout)
+end
 ```
+
+### RunConfig
+
+Global `Config` is distinct from `RunConfig`, the per-run settings object that flows `RobotLab.config → Network → Task → Robot → template front matter → constructor kwargs`. Its fields are:
+
+- **LLM**: `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`
+- **Capabilities** (`TOOL_FIELDS`): `mcp`, `tools`
+- **Callbacks**: `on_tool_call`, `on_tool_result`, `on_content`
+- **Infrastructure** (`INFRA_FIELDS`): `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`, `max_tools`
+
+`TOOL_FIELDS` is exactly `[:mcp, :tools]` — those are the two a network propagates. `max_tools` is an infrastructure field, so it is *not* inherited that way.
+
+Per robot, template front matter is the **base**, a `config:` RunConfig merges over it, and constructor kwargs always win. A network-level `config:` propagates only `mcp` and `tools` down to member robots (and only when a robot opts in with `:inherit`); LLM fields and callbacks are never inherited from a network. `max_concurrent_robots` is the one field the network itself consumes.
 
 ## Configuration Hierarchy
 
@@ -348,29 +393,32 @@ RobotLab.config (global)
 +-- mcp: [server1, server2]
 +-- tools: [tool1, tool2]
 |
-+-- Network
++-- Network config: (RunConfig)
 |     |
 |     +-- mcp: :inherit | :none | [servers]
 |     +-- tools: :inherit | :none | [tools]
-|     |
-|     +-- Task (per-step config)
-|     |     +-- context: { department: "billing" }
-|     |     +-- mcp: :none | :inherit | [servers]
-|     |     +-- tools: :none | :inherit | [tools]
 |     |
 |     +-- Robot (build-time config)
 |           |
 |           +-- mcp: :inherit | :none | [servers]
 |           +-- tools: :inherit | :none | [tools]
 |           |
-|           +-- run() call (runtime config)
-|                 +-- mcp: :none | [servers]
-|                 +-- tools: :none | [tools]
+|           +-- Task (per-task) / run() call -- the RUNTIME level
+|                 +-- mcp: :none (default) | :inherit | [servers]
+|                 +-- tools: :none (default) | :inherit | [tools]
 ```
 
-Resolution order: **runtime > robot build-time > task > network > global config**.
+Resolution order: **task/runtime > robot build-time > network > global config**.
 
-The `:inherit` value pulls from the parent level. `:none` explicitly disables.
+A `Task`'s `mcp:`/`tools:` are not a separate tier between network and robot. The task injects them into `run_params`, and `Robot#call` pulls them out and passes them to `run` — so they arrive as the *runtime* value and are resolved against the robot's build-time value.
+
+The `:inherit` value pulls from the parent level. `:none` explicitly disables. An explicit array is a **filter over the already-attached tools**, not a local-vs-MCP switch.
+
+Three consequences worth internalizing:
+
+- `run()` defaults both to `:none`, so the runtime level is a deliberate "send nothing this turn" unless you override it. Pass `tools: :inherit` (and `mcp: :inherit`) to use what the robot was built with.
+- Build-time `:inherit` depends on there being a parent to inherit from. The parent is recomputed on every run (`network_config&.tools || network_parent_config(network)&.tools || RobotLab.config.tools`), so inside a network whose `config:` sets `tools:`/`mcp:` it is exactly the right way to opt in. For a robot that runs **standalone** the parent is the global `:none`, so build-time `:inherit` matches nothing — leave `tools:` unset there and opt in at run time.
+- An explicit array is compared with `tool.name.to_s`, and `Class#name` differs from `RubyLLM::Tool#name`. A tool attached as a class matches `[RefundTool]` (`"RefundTool"`); the same tool attached as an instance matches `%w[refund]`. Both forms work — but the array must be written in the same form the tool was attached in, or it filters everything out. Note that the **build-time** `tools:` kwarg is validated (`validate_tools_filter!`) and accepts only Strings/Symbols; the class form is available only at the task/runtime level, which is not validated. See [Network Orchestration](network-orchestration.md#task-configuration).
 
 ## Message Bus
 
@@ -378,7 +426,7 @@ The **Message Bus** provides bidirectional, cyclic communication between robots,
 
 ### How It Works
 
-Robots connect to a shared `TypedBus::MessageBus` via the `bus:` parameter. Each robot gets a typed channel (accepting only `RobotMessage` objects) named after its `name`. Messages are delivered asynchronously via the `async` gem's fiber scheduler.
+Robots connect to a shared `TypedBus::MessageBus` via the `bus:` parameter. Each robot gets a typed channel (accepting only `RobotMessage` objects) named after its `name`. Delivery is routed through a shared `BusPoller`, which runs the handler **in the caller's execution context** (Async fiber or OS thread) rather than on a background thread of its own. A mutex serializes deliveries per robot: if a robot is already processing a message, later ones are queued and drained after the current one returns.
 
 ```ruby
 bus = TypedBus::MessageBus.new
@@ -415,7 +463,7 @@ end
 
 Block arity controls delivery handling: 1 argument auto-acks; 2 arguments give manual control over `delivery.ack!`/`delivery.nack!`.
 
-`send_message`/`send_reply` synchronize the per-robot message counter and outbox with an internal mutex, so concurrent sends from multiple threads and reply correlation on the poller thread can't clobber each other — the bus is safe to send on from more than one thread at a time.
+`send_message`/`send_reply` synchronize the per-robot message counter and outbox with an internal mutex, so concurrent sends from multiple threads and reply correlation can't clobber each other — the bus is safe to send on from more than one thread at a time. (There is no poller thread doing the correlating: as described above, `BusPoller#enqueue` processes deliveries inline in the caller's context.)
 
 For the common case of a robot that should simply answer whatever tasks arrive on the bus, `respond_to_tasks`/`serve` do the `on_message` wiring above in one call:
 

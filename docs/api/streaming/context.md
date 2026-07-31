@@ -2,6 +2,12 @@
 
 Manages streaming event publishing with automatic sequencing, timestamping, and ID generation.
 
+> **Not wired into the framework.** No robot, network, task, or hook ever
+> constructs a `Streaming::Context` — `grep -rn "Streaming::" lib/` finds nothing
+> outside `lib/robot_lab/streaming/`. The class works, but it only publishes what
+> *you* hand it. For token streaming from a robot, use `on_content:` or the block
+> form of `run`; see the [Streaming overview](index.md#the-real-streaming-api).
+
 ## Class: `RobotLab::Streaming::Context`
 
 ```ruby
@@ -157,10 +163,20 @@ Create a new context that shares the same sequence counter as this context, but 
 ### generate_part_id
 
 ```ruby
-context.generate_part_id  # => "part_run_1234_900123_a1b2c3d4"
+context.generate_part_id  # => "part_37ac1d49_815007_8f522876"
 ```
 
-Generate an OpenAI-compatible part ID (max 40 characters). Combines a truncated message ID, a timestamp suffix, and random hex.
+Generate an OpenAI-compatible part ID (max 40 characters), assembled as
+`"part_<msg>_<ts>_<rand>"`:
+
+| Segment | Source | Length |
+|---------|--------|--------|
+| `<msg>` | First 8 characters of **`message_id`** (not `run_id`) | 8 |
+| `<ts>` | Last 6 digits of the millisecond Unix timestamp | 6 |
+| `<rand>` | `SecureRandom.hex(4)` | 8 hex chars |
+
+Note this reads `message_id`, so two contexts sharing a message produce IDs with
+the same first segment.
 
 ### generate_step_id
 
@@ -168,7 +184,11 @@ Generate an OpenAI-compatible part ID (max 40 characters). Combines a truncated 
 context.generate_step_id("text_output")  # => "publish-3:text_output"
 ```
 
-Generate a step ID for durable execution compatibility. Uses the current sequence number.
+Generate a step ID for durable execution compatibility, formatted as
+`"publish-<n>:<base_name>"`. It reads the counter with `current`, which does
+**not** increment: `<n>` is the sequence number of the most recently published
+event (`0` before anything has been published), so calling it repeatedly between
+publishes yields the same ID.
 
 **Parameters:**
 
@@ -206,10 +226,13 @@ context.publish_event(event: "text.delta", data: { delta: "world!" })
 context.publish_event(event: "run.completed", data: {})
 ```
 
-### Network with Child Contexts
+### Modelling a Multi-Robot Run with Child Contexts
+
+`RobotLab::Network` does not do any of this for you — the nesting below is
+something you would write by hand around your own orchestration.
 
 ```ruby
-# Network-level context
+# Parent context
 network_ctx = RobotLab::Streaming::Context.new(
   run_id: "net_run_1",
   message_id: "net_msg_1",

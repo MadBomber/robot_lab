@@ -1,6 +1,6 @@
 # Memory Management
 
-Memory in RobotLab is a reactive key-value store that provides persistent storage for runtime data, conversation history, and arbitrary user-defined values. It replaces the old `State` class with a unified system that supports both standalone robot usage and shared network execution.
+Memory in RobotLab is a reactive key-value store that provides persistent storage for runtime data, conversation history, and arbitrary user-defined values. A single unified `Memory` class serves both standalone robot usage and shared network execution.
 
 ## Memory Structure
 
@@ -40,6 +40,8 @@ result2 = robot.run("What are my preferences?")
 # Reset memory to initial state
 robot.reset_memory
 ```
+
+`reset_memory` resets only the key-value store. It does **not** touch the robot's chat history — that is `robot.clear_messages(keep_system: true)`. The two are independent.
 
 ## Network Shared Memory
 
@@ -116,7 +118,7 @@ memory.data.category  #=> "billing"   (method-style via StateProxy)
 
 memory.results       #=> []
 memory.session_id    #=> nil
-memory.cache         #=> RubyLLM::SemanticCache
+memory.cache         #=> RubyLLM::SemanticCache (the module itself), or nil when enable_cache: false
 ```
 
 ## StateProxy
@@ -141,7 +143,7 @@ Memory supports pub/sub semantics where robots can subscribe to key changes and 
 
 ### Setting Values
 
-Use `memory.set(key, value)` to write a value and notify subscribers asynchronously:
+Use `memory.set(key, value)` to write a value, wake any waiters, and notify subscribers. Subscriber callbacks are dispatched through `Async { }`: inside a running reactor they run as fibers, but **outside** one they run synchronously on the writer's thread.
 
 ```ruby
 memory.set(:sentiment, { score: 0.8, confidence: 0.95 })
@@ -164,13 +166,18 @@ memory.get(:sentiment)
 # Block indefinitely until value exists
 memory.get(:sentiment, wait: true)
 
-# Block up to 30 seconds, raise AwaitTimeout if exceeded
+# Block up to 30 seconds, then raise RobotLab::AwaitTimeout
 memory.get(:sentiment, wait: 30)
 
 # Wait for multiple keys at once
 results = memory.get(:sentiment, :entities, :keywords, wait: 60)
 #=> { sentiment: {...}, entities: [...], keywords: [...] }
 ```
+
+Two things to be careful with:
+
+- On expiry a blocking read **raises** `RobotLab::AwaitTimeout`; it does not return `nil`. Rescue it if a missing value is acceptable.
+- With multiple keys the timeout is applied **per missing key**, not to the call as a whole. `get_multiple` waits on the missing keys one at a time in order, so the call raises as soon as the *first* one expires — it does not spend the full 60 s on each. The 180 s worst case is only reached when the earlier keys arrive just before their own deadlines.
 
 ### Subscriptions
 
@@ -237,11 +244,12 @@ Each `RobotResult` contains:
 
 ```ruby
 result.robot_name       # Which robot produced this
-result.output           # Array<Message> - response content
-result.tool_calls       # Array<ToolResultMessage> - tools called
-result.stop_reason      # Stop reason from LLM
+result.output           # [TextMessage] synthesized from the final response text
+result.tool_calls       # Array<ToolResultMessage> - effectively always empty (see Message Flow)
+result.stop_reason      # always nil for a robot.run result (see Message Flow)
 result.last_text_content # Convenience: last text content string
-result.has_tool_calls?  # Whether any tools were called
+result.input_tokens     # Prompt tokens for the run
+result.output_tokens    # Completion tokens for the run
 result.created_at       # When it was created
 ```
 
@@ -307,6 +315,8 @@ json = memory.to_json
 memory = Memory.from_hash(hash)
 ```
 
+`to_h` is compacted, so nil-valued reserved keys (a missing `session_id`, for instance) are omitted entirely rather than serialized as `nil`.
+
 ## Semantic Cache
 
 Memory includes a semantic cache via `RubyLLM::SemanticCache` that reduces costs and latency by returning cached responses for semantically equivalent queries:
@@ -334,18 +344,27 @@ robot = RobotLab.build(name: "bot", system_prompt: "...", enable_cache: false)
 Memory defaults to a Hash-based backend but can use Redis for distributed scenarios:
 
 ```ruby
-# Auto-detect (uses Redis if available, falls back to Hash)
+# Try Redis, fall back to Hash
 memory = Memory.new(backend: :auto)
 
-# Force Hash backend
+# Hash backend — the only value that is honoured literally
 memory = Memory.new(backend: :hash)
 
-# Force Redis backend
+# Same behaviour as :auto — try Redis, fall back to Hash
 memory = Memory.new(backend: :redis)
 
-# Check backend
+# Check what you actually got
 memory.redis?  #=> true/false
 ```
+
+!!! note "`backend: :redis` does not force Redis"
+    `select_backend` special-cases only `:hash`; every other value (`:redis`,
+    `:auto`, anything else) takes the same branch —
+    `create_redis_backend || create_hash_backend`. `create_redis_backend`
+    returns `nil` when `redis` is unavailable and rescues `StandardError` to
+    `nil` on a connection failure, so an unreachable Redis silently downgrades
+    to a Hash with no exception and no warning. Always check `memory.redis?` if
+    the distinction matters.
 
 Redis is configured via `RobotLab.config.redis` or the `REDIS_URL` environment variable.
 

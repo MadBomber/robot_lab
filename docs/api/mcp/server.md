@@ -11,6 +11,7 @@ This is **not** an MCP server implementation -- it is the configuration used by 
 ```ruby
 server = RobotLab::MCP::Server.new(
   name: "filesystem",
+  description: "Read, write, and search local files and directories",
   transport: { type: "stdio", command: "mcp-server-filesystem", args: ["--root", "/data"] }
 )
 
@@ -25,7 +26,7 @@ server = RobotLab::MCP::Server.new(
 ## Constructor
 
 ```ruby
-Server.new(name:, transport:, timeout: nil, **_extra)
+Server.new(name:, transport:, timeout: nil, description: nil, **_extra)
 ```
 
 **Parameters:**
@@ -35,6 +36,10 @@ Server.new(name:, transport:, timeout: nil, **_extra)
 | `name` | `String` | **required** | Unique server identifier |
 | `transport` | `Hash` | **required** | Transport configuration (must include `type`) |
 | `timeout` | `Numeric`, `nil` | `15` | Request timeout in seconds. Values >= 1000 are auto-converted from milliseconds. Minimum 1 second |
+| `description` | `String`, `nil` | `""` | Human-readable summary of what the server does; scored by `MCP::ServerDiscovery` |
+
+Any other keyword is absorbed by `**_extra` and silently discarded, so a
+misspelled key raises nothing.
 
 **Raises:** `ArgumentError` if:
 - The transport type is not one of the valid types
@@ -60,6 +65,18 @@ server.name  # => String
 ```
 
 The server identifier string.
+
+### description
+
+```ruby
+server.description  # => String
+```
+
+Human-readable summary of the server's capabilities. Always a String — a `nil`
+or omitted `description:` becomes `""`. Used by `MCP::ServerDiscovery`, which
+scores `"#{name} #{description}"` against the user's message when a robot is
+built with `mcp_discovery: true`. Discovery falls back to the full server list
+when no server in the list has a non-empty description.
 
 ### transport
 
@@ -90,10 +107,14 @@ Returns the transport type string (e.g., `"stdio"`, `"ws"`, `"sse"`).
 ### to_h
 
 ```ruby
-server.to_h  # => { name: "...", transport: { ... }, timeout: 15 }
+server.to_h
+# => { name: "y", description: "", transport: { type: "sse", url: "http://x" }, timeout: 30.0 }
 ```
 
-Converts the server configuration to a hash representation (includes `timeout`).
+Converts the server configuration to a hash representation. The hash is **not**
+compacted — all four keys are always present, and `description` is `""` when it
+was never set. Note that `timeout` is normalized to a Float unless it defaulted
+(`DEFAULT_TIMEOUT` is the Integer `15`).
 
 ## Transport Configuration Options
 
@@ -207,6 +228,9 @@ robot = Robot.new(
   system_prompt: "You help with development tasks.",
   mcp: servers
 )
+
+# `run` defaults to `mcp: :none, tools: :none` — opt in per run
+robot.run("What changed in the repo?", mcp: :inherit, tools: :inherit)
 ```
 
 ### Creating a Client from a Server

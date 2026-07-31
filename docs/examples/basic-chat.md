@@ -6,11 +6,14 @@ A simple conversational robot example.
 
 This example demonstrates the minimal setup for a conversational robot that can respond to user messages using `robot.run("message")`.
 
+The closest runnable file in this repository is
+[`examples/01_simple_robot.rb`](https://github.com/MadBomber/robot_lab/blob/main/examples/01_simple_robot.rb).
+The snippets below wrap that same API in a small REPL.
+
 ## Complete Example
 
 ```ruby
 #!/usr/bin/env ruby
-# examples/basic_chat.rb
 
 require "bundler/setup"
 require "robot_lab"
@@ -49,9 +52,15 @@ puts "\nGoodbye!"
 
 ## With Streaming
 
+Pass a block to `run` to receive each `RubyLLM::Chunk` as it arrives.
+
+> [!WARNING]
+> The yielded object is a `RubyLLM::Chunk`. Read its text with `chunk.content`.
+> There is no `chunk.text` method — a guard like `if chunk.respond_to?(:text)`
+> silently prints nothing.
+
 ```ruby
 #!/usr/bin/env ruby
-# examples/streaming_chat.rb
 
 require "bundler/setup"
 require "robot_lab"
@@ -73,30 +82,55 @@ loop do
   next if input.empty?
 
   print "\nAssistant: "
-  result = assistant.run(input) do |event|
-    print event.text if event.respond_to?(:text)
-  end
+  assistant.run(input) { |chunk| print chunk.content }
   puts
 end
 
 puts "\nGoodbye!"
 ```
 
+You can also wire streaming once at build time with the `on_content:` callback,
+which fires on every `run`:
+
+```ruby
+assistant = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are a helpful assistant.",
+  on_content: ->(chunk) { print chunk.content }
+)
+
+assistant.run("Tell me a one-sentence fact about Ruby.")
+```
+
+When both are supplied, the stored `on_content` callback fires first, then the
+block. See [`examples/05_streaming.rb`](https://github.com/MadBomber/robot_lab/blob/main/examples/05_streaming.rb)
+for all four variations (stored callback, per-call block, both, and via `RunConfig`).
+
 ## With Template
+
+Templates are `.md` files with YAML front matter, resolved from the configured
+prompts directory (`ROBOT_LAB_TEMPLATE_PATH`). Parameters declared `null` in the
+front matter are required and are supplied via `context:`.
 
 ```ruby
 #!/usr/bin/env ruby
-# examples/template_chat.rb
 
 require "bundler/setup"
 require "robot_lab"
 
-# Build a robot using a prompt template file
-# Template: prompts/assistant.md (Markdown with YAML front matter)
+# Template file: prompts/support.md
+# ---
+# description: Support assistant
+# parameters:
+#   company_name: null
+#   tone: friendly
+# ---
+# You are a <%= tone %> support assistant for <%= company_name %>.
+
 assistant = RobotLab.build(
   name: "assistant",
-  template: :assistant,
-  context: { tone: "friendly", domain: "general" },
+  template: :support,
+  context: { company_name: "Acme Corp", tone: "friendly" },
   model: "claude-sonnet-4"
 )
 
@@ -117,11 +151,13 @@ end
 puts "\nGoodbye!"
 ```
 
+A full template-driven network lives in
+[`examples/06_prompt_templates.rb`](https://github.com/MadBomber/robot_lab/blob/main/examples/06_prompt_templates.rb).
+
 ## With Memory
 
 ```ruby
 #!/usr/bin/env ruby
-# examples/chat_with_memory.rb
 
 require "bundler/setup"
 require "robot_lab"
@@ -153,11 +189,14 @@ end
 puts "\nGoodbye!"
 ```
 
+The full Memory API — subscriptions, `StateProxy`, blocking reads, clone and
+reset — is demonstrated in
+[`examples/10_memory.rb`](https://github.com/MadBomber/robot_lab/blob/main/examples/10_memory.rb).
+
 ## Bare Robot with Chaining
 
 ```ruby
 #!/usr/bin/env ruby
-# examples/bare_robot.rb
 
 require "bundler/setup"
 require "robot_lab"
@@ -175,27 +214,41 @@ result = robot
 puts result.last_text_content
 ```
 
+> [!NOTE]
+> Only the `with_*` methods that `RubyLLM::Chat` exposes are delegated:
+> `with_context`, `with_headers`, `with_instructions`, `with_model`, `with_params`,
+> `with_schema`, `with_temperature`, `with_thinking`, `with_tool`, `with_tools`
+> (plus RobotLab's own `with_template` and `with_bus`).
+> There is no `with_max_tokens` / `with_top_p` / `with_top_k` — use a constructor
+> kwarg (`max_tokens: 2000`) or `with_params(max_tokens: 2000, top_p: 0.3)`.
+
+`examples/09_chaining.rb` walks through chaining and reconfiguration without
+making any LLM calls.
+
 ## Running
 
 ```bash
 # Set API key
 export ANTHROPIC_API_KEY="your-key"
 
-# Run basic chat
-ruby examples/basic_chat.rb
+# Simplest runnable robot
+ruby examples/01_simple_robot.rb
 
-# Run with streaming
-ruby examples/streaming_chat.rb
+# Streaming
+ruby examples/05_streaming.rb
+
+# with_* chaining and reconfiguration (no LLM calls)
+ruby examples/09_chaining.rb
 ```
 
 ## Key Concepts
 
 1. **Robot Building**: Use `RobotLab.build(name:, system_prompt:)` or `RobotLab.build(name:, template:)` to create a robot
 2. **Execution**: Call `robot.run("message")` to send a message and get a response
-3. **Response**: Access the text via `result.last_text_content`
-4. **Streaming**: Pass a block to `robot.run("message") { |event| ... }`
+3. **Response**: Access the text via `result.last_text_content` (aliased as `result.reply`)
+4. **Streaming**: Pass a block to `robot.run("message") { |chunk| print chunk.content }`, or set `on_content:` at build time
 5. **Memory**: Access inherent memory via `robot.memory[:key]`
-6. **Chaining**: Configure with `with_*` methods that return `self`
+6. **Chaining**: Configure with the delegated `with_*` methods, which return `self`
 7. **Conversation History**: The persistent `@chat` maintains history across multiple `run` calls
 
 ## See Also

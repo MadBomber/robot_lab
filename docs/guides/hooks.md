@@ -11,7 +11,7 @@ There are seven hook families. Each family has `before_*`, `around_*`, and `afte
 | Family | Hook names | Fires during |
 |--------|-----------|-------------|
 | `:run` | `before_run`, `around_run`, `after_run`, `on_error` | every `robot.run(...)` call |
-| `:llm_generation` | `before_llm_generation`, `around_llm_generation`, `after_llm_generation` | each LLM API call within a run (may fire multiple times when tool calls loop) |
+| `:llm_generation` | `before_llm_generation`, `around_llm_generation`, `after_llm_generation` | exactly once per `robot.run(...)` — it wraps the whole generation phase, including the provider's tool loop |
 | `:tool_call` | `before_tool_call`, `around_tool_call`, `after_tool_call` | each tool invocation |
 | `:network_run` | `before_network_run`, `around_network_run`, `after_network_run`, `on_error` | every `network.run(...)` call |
 | `:task` | `before_task`, `around_task`, `after_task`, `on_error` | each robot task within a network run |
@@ -32,19 +32,29 @@ before_run
       }
       after_compaction
       [LLM call 1]
+      before_tool_call
+      around_tool_call { [tool invocation 1] }
+      after_tool_call
+      [LLM call 2]
+      before_tool_call
+      around_tool_call { [tool invocation 2] }
+      after_tool_call
+      [LLM call 3]
     }
-    after_llm_generation
-    before_tool_call
-    around_tool_call { [tool invocation] }
-    after_tool_call
-    before_llm_generation
-    around_llm_generation { [LLM call 2] }
     after_llm_generation
   }
 after_run
 ```
 
-Compaction hooks fire at most once per LLM call, only when the compaction threshold is actually exceeded (or a custom `Proc` strategy is configured). They do not fire on every `run` invocation.
+> [!IMPORTANT]
+> The `:llm_generation` family fires **once per `run`**, not once per LLM API
+> call. The provider's tool loop — every LLM round trip and every tool call —
+> happens *inside* the `around_llm_generation` block. Tool hooks therefore fire
+> nested within it, never between two `llm_generation` cycles. If you need
+> per-API-call instrumentation, `:tool_call` hooks are the only per-round signal
+> the hook system exposes.
+
+Compaction hooks fire at most once per `run` — they live inside the same single `llm_generation` block — and only when the compaction threshold is actually exceeded (or a custom `Proc` strategy is configured). They do not fire on every `run` invocation.
 
 The `:learn` family fires synchronously inside `robot.learn(text)`, once per call. Hooks do not fire when `text` is blank.
 
@@ -133,6 +143,16 @@ Hooks are registered on three objects and can optionally be scoped to a single c
 
 All four levels are additive. When a run fires, every matching registration executes in order: global → network → robot → per-run. There is no way to suppress an outer registration from an inner one.
 
+> [!WARNING]
+> The **`:task` family is the exception.** `Task#call` resolves its handlers from
+> `[RobotLab.hooks, network.hooks]` only — the robot's own registry is not
+> consulted. A `before_task`/`around_task`/`after_task`/`on_error` handler
+> registered with `robot.on(...)` (or per-run `hooks:`) **never fires**. Register
+> task hooks globally or on the network.
+>
+> The `:network_run` family likewise reads `[RobotLab.hooks, network.hooks]`,
+> which is the same set it would see anyway since networks have no robot scope.
+
 ---
 
 ## The `on` Method
@@ -156,7 +176,16 @@ robot.on(handler_class,   context: nil)
 
 ## Namespaces and `ctx.local`
 
-Each handler class's namespace gives it an isolated key-value store — a `DotState` — accessible via `ctx.local`. State set in `before_run` is visible in `around_run`, `after_run`, and `on_error` for the same run.
+Each handler class's namespace gives it an isolated key-value store — a `DotState` — accessible via `ctx.local`. State set in `before_run` is visible in `around_run`, `after_run`, and `on_error` for the same run, and in the `:llm_generation`, `:tool_call`, and `:compaction` contexts nested inside it.
+
+> [!WARNING]
+> **`ctx.local` lives for exactly one run.** Its backing store is a fresh
+> `ExtensionState` created with each `HookContext`, so the next `robot.run` starts
+> from an empty slate (or from whatever `context:` defaults you declared).
+> `ctx.local` is a scratchpad for correlating the phases of a single run — it is
+> **not** a place to accumulate counters, totals, or caches across runs. For
+> cross-run state, use a class-level `attr_accessor` on the handler itself, or an
+> external store.
 
 ```ruby
 class TimerHook < RobotLab::Hook
@@ -192,22 +221,41 @@ end
 
 ## The `context:` Parameter — Default State
 
-Pass `context: { key: value }` to pre-populate the handler's namespace `DotState` before each callback fires. Keys are only written if they are not already present, making them defaults that earlier hooks at the same level can override:
+Pass `context: { key: value }` to pre-populate the handler's namespace `DotState` before each callback fires. Keys are only written if they are not already present, making them defaults that earlier hooks in the same run can override:
 
 ```ruby
-class CounterHook < RobotLab::Hook
-  self.namespace = :counter
+class TagHook < RobotLab::Hook
+  self.namespace = :tagging
 
   def self.before_run(ctx)
-    ctx.local.count += 1
-    puts "run ##{ctx.local.count}"
+    # ctx.local.environment is pre-populated from context:, so no nil guard needed
+    puts "[#{ctx.local.environment}] #{ctx.robot.name}: #{ctx.request.inspect}"
   end
 end
 
-RobotLab.on(CounterHook, context: { count: 0 })
+RobotLab.on(TagHook, context: { environment: "staging" })
 ```
 
 This is the intended pattern for extensions to declare their required state without asking callers to initialize it. Without `context:`, accessing an unset key on `DotState` returns `nil`.
+
+Because `ctx.local` is re-created per run, the defaults are re-applied on *every* run — a `context: { count: 0 }` default means `ctx.local.count` is `0` at the start of each run, not a counter that survives. Keep cross-run tallies on the handler class:
+
+```ruby
+class RunCounter < RobotLab::Hook
+  self.namespace = :run_counter
+
+  class << self
+    def count = @count ||= 0
+
+    def before_run(_ctx)
+      @count = count + 1
+      puts "run ##{@count}"   # 1, 2, 3, ... across runs
+    end
+  end
+end
+
+RobotLab.on(RunCounter)
+```
 
 ---
 
@@ -229,7 +277,15 @@ class PerfHook < RobotLab::Hook
 end
 ```
 
-> **Important:** If an around hook does not return the block's return value, the run returns `nil`. This is a silent failure — there is no exception.
+> [!IMPORTANT]
+> If `around_run`, `around_llm_generation`, `around_network_run`, or `around_task`
+> does not return the block's return value, the operation returns `nil`. This is a
+> silent failure — there is no exception.
+>
+> `around_compaction` and `around_learn` are the return-value-agnostic exceptions:
+> nothing consumes their result, so forgetting the return value is harmless. They
+> must still call `block.call` — skipping it suppresses the compaction or the
+> learning entirely. `around_tool_call` is different again; see below.
 
 Around hooks registered across different handler classes are chained: each wraps the next, with the actual operation at the innermost layer.
 
@@ -288,7 +344,16 @@ end
 robot.on(SemanticCompressor)
 ```
 
-If `on_compaction` does not assign `ctx.compacted_messages`, the core algorithm runs as normal. Multiple `on_compaction` handlers can be registered; the first one that sets `ctx.compacted_messages` wins — subsequent handlers still fire but their assignment is ignored once `handled?` is true.
+If `on_compaction` does not assign `ctx.compacted_messages`, the core algorithm runs as normal.
+
+> [!WARNING]
+> With multiple `on_compaction` handlers, **the last one to assign
+> `ctx.compacted_messages` wins.** `Hooks.call(:on_compaction, ...)` runs every
+> registered handler unconditionally, and `compacted_messages` is a plain
+> accessor — `handled?` is only consulted *after* all of them have run, so a later
+> handler silently overwrites an earlier handler's message array. Register at most
+> one compaction-replacing handler, or have later handlers check `ctx.handled?`
+> themselves before assigning.
 
 > **Note:** `on_compaction` fires inside the core block of `Hooks.run(:compaction)`. It is not a standard `before_*/around_*/after_*` hook — it does not compose with around handlers or produce a chainable result. Use `around_compaction` if you need to wrap the entire process including observation of the final result.
 
@@ -348,7 +413,7 @@ Extends `RunHookContext` and is passed to `:llm_generation` hooks. All `RunHookC
 | Attribute | Type | Notes |
 |-----------|------|-------|
 | `generation_response` | RubyLLM::Message\|nil | Set after the LLM responds; readable in `after_llm_generation` |
-| `iteration` | Integer | Which LLM call within this run, 0-based |
+| `iteration` | Integer | **Always `0`.** The field exists but is never passed a value, because the family fires once per run rather than once per LLM call. Do not branch on it. |
 
 ### ToolCallHookContext
 
@@ -409,7 +474,7 @@ Passed to `:compaction` hooks (`before_compaction`, `around_compaction`, `after_
 
 #### `ctx.handled?`
 
-Returns `true` once `ctx.compacted_messages` has been assigned. The core compaction algorithm checks `handled?` after `on_compaction` fires — if `true`, it skips `compress_history` and calls `replace_messages` with the handler's result instead. See [on_compaction](#on_compaction) below.
+Returns `true` once `ctx.compacted_messages` has been assigned. The core compaction algorithm checks `handled?` after `on_compaction` fires — if `true`, it skips `compress_history` and calls `replace_messages` with the handler's result instead. See [on_compaction](#on_compaction-replacing-the-core-strategy) below.
 
 ### LearnHookContext
 
@@ -486,9 +551,12 @@ class MyExtension < RobotLab::Hook
       @logger ||= Logger.new($stdout)
     end
 
+    attr_accessor :call_count   # class-level: survives across runs
+
     def before_run(ctx)
-      ctx.local.call_count = (ctx.local.call_count || 0) + 1
-      logger.info("run ##{ctx.local.call_count} starting: #{ctx.request.inspect}")
+      self.call_count = call_count.to_i + 1
+      ctx.local.started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      logger.info("run ##{call_count} starting: #{ctx.request.inspect}")
     end
 
     def after_run(ctx)
@@ -520,17 +588,19 @@ To attach only to a specific robot:
 robot.on(MyExtension)
 ```
 
-With per-registration default state:
+With per-registration default state — re-applied at the start of every run, so use it for constants and configuration, not for accumulators:
 
 ```ruby
-RobotLab.on(MyExtension, context: { call_count: 0 })
+RobotLab.on(MyExtension, context: { service: "checkout" })
 ```
 
 ### Extension Guidelines
 
 - Set `self.namespace = :my_name` explicitly so callers can read the namespace without relying on class naming conventions.
-- Use `context:` on the `on(...)` call to declare default state rather than guarding against `nil` inside callbacks.
-- Around hooks (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`, `around_compaction`) must call `block.call` and return its value — omitting either causes the run to return `nil`. `around_tool_call` is the exception: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run or set `ctx.tool_result` directly to short-circuit.
+- Use `context:` on the `on(...)` call to declare default state rather than guarding against `nil` inside callbacks. Remember the defaults are re-applied per run — keep anything that must accumulate on the handler class instead of in `ctx.local`.
+- Around hooks whose block result is the operation's result (`around_run`, `around_llm_generation`, `around_network_run`, `around_task`) must call `block.call` **and** return its value — omitting either causes the run to return `nil`.
+- `around_compaction` and `around_learn` are return-value-agnostic: nothing consumes their result, so forgetting to return the block's value is harmless. They must still call `block.call` — skipping it suppresses the compaction (or the learning) entirely.
+- `around_tool_call` is different again: the result is carried in `ctx.tool_result`, so call `block.call` to let the tool run, or set `ctx.tool_result` directly to short-circuit.
 - Keep error hooks non-raising. Exceptions from hook callbacks propagate and can mask the original error.
 - Test each callback method in isolation by constructing a context object directly and calling the class method.
 
@@ -582,22 +652,27 @@ Use `around_llm_generation` to skip the LLM call entirely when a cached response
 class LlmCacheHook < RobotLab::Hook
   self.namespace = :cache
 
-  def self.around_llm_generation(ctx, &block)
-    ctx.local.hits ||= 0
-    cached = ResponseCache.get(ctx.request)
-    if cached
-      ctx.local.hits += 1
-      cached              # return cached value — block.call (LLM) is skipped
-    else
-      result = block.call # LLM call happens here
-      ResponseCache.set(ctx.request, result)
-      result
+  class << self
+    attr_accessor :hits   # class-level — ctx.local resets every run
+
+    def around_llm_generation(ctx, &block)
+      cached = ResponseCache.get(ctx.request)
+      if cached
+        self.hits = hits.to_i + 1
+        cached              # return cached value — block.call (LLM) is skipped
+      else
+        result = block.call # LLM call happens here
+        ResponseCache.set(ctx.request, result)
+        result
+      end
     end
   end
 end
 
-robot.on(LlmCacheHook, context: { hits: 0 })
+robot.on(LlmCacheHook)
 ```
+
+Skipping `block.call` here skips the *entire* generation phase for that run, including the provider's tool loop — the `:llm_generation` family wraps the whole phase, not one API round trip.
 
 ### Tool Call Audit Log
 
@@ -732,7 +807,7 @@ robot.on(LearningPromotionHook)
 
 ### Custom Compaction Strategy
 
-Replace the built-in TF-IDF compressor with a domain-specific algorithm using `on_compaction`:
+Replace the built-in term-frequency compressor with a domain-specific algorithm using `on_compaction`:
 
 ```ruby
 class SummarizerCompactor < RobotLab::Hook
@@ -763,18 +838,25 @@ robot.on(SummarizerCompactor)
 
 ### Run Counter Per Robot
 
+Cross-run tallies belong on the handler class — `ctx.local` is wiped between runs:
+
 ```ruby
 class MetricsHook < RobotLab::Hook
   self.namespace = :metrics
 
-  def self.before_run(ctx)
-    ctx.local.counts ||= {}
-    name = ctx.robot.name
-    ctx.local.counts[name] = (ctx.local.counts[name] || 0) + 1
+  class << self
+    def counts = @counts ||= Hash.new(0)
+
+    def before_run(ctx)
+      counts[ctx.robot.name] += 1
+    end
   end
 end
 
-RobotLab.on(MetricsHook, context: { counts: {} })
+RobotLab.on(MetricsHook)
+
+# later
+MetricsHook.counts   # => { "classifier" => 12, "responder" => 12 }
 ```
 
 ---
@@ -825,6 +907,8 @@ RobotLab.on(ObservabilityHook)
 
 Cap total spending across all robots in a session and raise before an expensive run would push you over budget:
 
+A session total must live on the handler class — `ctx.local` is re-created per run and would reset the tally every time:
+
 ```ruby
 class BudgetHook < RobotLab::Hook
   self.namespace = :budget
@@ -833,25 +917,28 @@ class BudgetHook < RobotLab::Hook
   COST_PER_OUTPUT_TOKEN = 4.00 / 1_000_000
   SESSION_BUDGET_USD    = 0.50
 
-  def self.before_run(ctx)
-    ctx.local.total_cost ||= 0.0
-    if ctx.local.total_cost >= SESSION_BUDGET_USD
-      raise RobotLab::Error, "Session budget of $#{SESSION_BUDGET_USD} exceeded"
-    end
-  end
+  class << self
+    def total_cost = @total_cost ||= 0.0
 
-  def self.after_run(ctx)
-    r = ctx.response
-    ctx.local.total_cost +=
-      r.input_tokens  * COST_PER_INPUT_TOKEN +
-      r.output_tokens * COST_PER_OUTPUT_TOKEN
+    def before_run(_ctx)
+      if total_cost >= SESSION_BUDGET_USD
+        raise RobotLab::Error, "Session budget of $#{SESSION_BUDGET_USD} exceeded"
+      end
+    end
+
+    def after_run(ctx)
+      r = ctx.response
+      @total_cost = total_cost +
+                    r.input_tokens  * COST_PER_INPUT_TOKEN +
+                    r.output_tokens * COST_PER_OUTPUT_TOKEN
+    end
   end
 end
 
-RobotLab.on(BudgetHook, context: { total_cost: 0.0 })
+RobotLab.on(BudgetHook)
 ```
 
-For a single robot's own token/dollar ceiling (rather than a cross-robot session total), `token_budget:`/`cost_budget:` on `Robot.new` give you this natively — see [Budgets](observability.md#budgets-token--cost) — including a `RobotLab::BudgetExceeded` raised up front once a prior call already exhausted the budget, so the next call is refused before it spends anything.
+For a single robot's own token/dollar ceiling (rather than a cross-robot session total), `token_budget:`/`cost_budget:` on `Robot.new` give you this natively — see [Budgets](observability.md#budgets-token-cost) — including a `RobotLab::BudgetExceeded` raised up front once a prior call already exhausted the budget, so the next call is refused before it spends anything.
 
 ### Tool Access Control
 

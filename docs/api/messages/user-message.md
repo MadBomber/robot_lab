@@ -89,19 +89,38 @@ Message creation timestamp.
 message.to_h  # => Hash
 ```
 
-Hash representation.
+Hash representation. The hash ends in `.compact`, so keys whose value is `nil`
+are **omitted** — a message built without `session_id:` or `system_prompt:` has
+no such keys at all. `metadata` always survives because it defaults to `{}`.
+
+`created_at` is serialized with `Time#iso8601`, which carries the **local** UTC
+offset. It is not normalized to `Z`/UTC.
 
 **Returns:**
 
 ```ruby
-{
-  content: "What's my order status?",
+UserMessage.new(
+  "What's my order status?",
   session_id: "session_123",
   system_prompt: "Be concise",
-  metadata: { source: "web" },
-  id: "uuid-here",
-  created_at: "2024-01-15T10:30:00Z"
-}
+  metadata: { source: "web" }
+).to_h
+# => {
+#      content: "What's my order status?",
+#      session_id: "session_123",
+#      system_prompt: "Be concise",
+#      metadata: { source: "web" },
+#      id: "uuid-here",
+#      created_at: "2026-07-31T13:04:42-05:00"
+#    }
+
+UserMessage.new("hi").to_h
+# => {
+#      content: "hi",
+#      metadata: {},
+#      id: "uuid-here",
+#      created_at: "2026-07-31T13:04:42-05:00"
+#    }
 ```
 
 ### to_json
@@ -134,7 +153,18 @@ Returns the content string.
 UserMessage.from(input)  # => UserMessage
 ```
 
-Creates a `UserMessage` from a String, Hash, or existing `UserMessage`.
+Normalizes any input into a `UserMessage`:
+
+| Input | Result |
+|-------|--------|
+| `UserMessage` | Returned unchanged (same object) |
+| `String` | `new(input)` |
+| `Hash` | Keys symbolized, then `new(content, session_id:, system_prompt:, metadata:, id:)` |
+| `TextMessage` | `new(input.content)` — role and stop reason are dropped |
+| anything else | `new(input.to_s)` |
+
+There is no "unsupported input" branch: `from` never raises for an unrecognized
+type, it falls through to `to_s`.
 
 ## Examples
 
@@ -187,6 +217,13 @@ msg = UserMessage.from(content: "Hello!", session_id: "123")
 
 # From an existing UserMessage (returns as-is)
 msg = UserMessage.from(existing_message)
+
+# From a TextMessage (only the content is carried over)
+msg = UserMessage.from(TextMessage.new(role: "user", content: "Hello!"))
+msg.content  # => "Hello!"
+
+# Anything else falls back to to_s
+UserMessage.from(42).content  # => "42"
 ```
 
 ## See Also

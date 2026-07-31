@@ -1,10 +1,50 @@
 # Streaming
 
-Real-time event streaming during robot and network execution.
+A standalone event-publishing toolkit. **Not** the live streaming path.
+
+## Status: not wired in
+
+`RobotLab::Streaming::Context`, `Streaming::Events`, and
+`Streaming::SequenceCounter` exist and work, but **nothing in the framework uses
+them**. `grep -rn "Streaming::" lib/` returns zero hits outside
+`lib/robot_lab/streaming/` itself: no robot, network, task, or hook ever
+constructs a `Streaming::Context`, and no framework code publishes any of the
+events listed below. Enabling this module does not make a robot stream.
+
+Treat this as a set of building blocks you may drive yourself — a vocabulary of
+event names plus a sequencing/ID helper — if you are writing your own
+event-broadcast layer (a websocket relay, a SSE endpoint, an audit feed).
+
+### The real streaming API
+
+To actually receive tokens as a robot generates them, use `on_content:` and/or a
+block on `run`:
+
+```ruby
+# Constructor / RunConfig callback — fires on every run
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) { print chunk.content }
+)
+
+# Or a block passed to run
+robot.run("Tell me a story") { |chunk| print chunk.content }
+```
+
+Each callback receives a `RubyLLM::Chunk`. Use `chunk.content` — there is no
+`chunk.text`. If both are supplied, both fire, with the stored `on_content`
+first. `on_content` is read from the robot's own config at construction time; a
+network-level `config:` does not supply it.
+
+The config key `streaming_enabled` has zero consumers in `lib/` and does nothing.
 
 ## Overview
 
-The streaming system provides structured event publishing during LLM execution. Events are emitted for run lifecycle, content deltas (token streaming), tool calls, and metadata updates. The system supports nested contexts for network-level orchestration where multiple robots execute within a single run.
+The module provides structured event publishing with automatic sequencing,
+timestamping, and ID generation. Event names cover run lifecycle, content deltas
+(token streaming), tool calls, and metadata updates, and contexts can be nested
+so a network-level run and its child robot runs share one monotonic sequence.
 
 ```ruby
 publish = ->(event) {
@@ -32,24 +72,25 @@ context.publish_event(event: "text.delta", data: { delta: "Hello" })
 |-----------|-------------|
 | [Context](context.md) | Manages streaming state, sequencing, and event publishing |
 | [Events](events.md) | Event type constants and classification helpers |
-
-Also used internally:
-
-| Component | Description |
-|-----------|-------------|
-| `SequenceCounter` | Thread-safe monotonic counter for event ordering |
+| `SequenceCounter` | Thread-safe monotonic counter for event ordering. Its only consumer is `Streaming::Context`, which is itself unused by the framework |
 
 ## Event Categories
+
+These are the names defined in `Streaming::Events`. They are constants and
+classification helpers only — no framework code emits any of them.
 
 | Category | Events | Description |
 |----------|--------|-------------|
 | Lifecycle | `run.started`, `run.completed`, `run.failed`, `run.interrupted` | Run-level state changes |
 | Steps | `step.started`, `step.completed`, `step.failed` | Durable execution steps |
 | Parts | `part.created`, `part.completed`, `part.failed` | Message composition parts |
-| Deltas | `text.delta`, `tool_call.arguments.delta`, `reasoning.delta`, `data.delta` | Token-level content streaming |
+| Deltas | `text.delta`, `tool_call.arguments.delta`, `tool_call.output.delta`, `reasoning.delta`, `data.delta` | Token-level content streaming |
 | HITL | `hitl.requested`, `hitl.resolved` | Human-in-the-loop events |
 | Metadata | `usage.updated`, `metadata.updated` | Token usage and metadata |
 | Terminal | `stream.ended` | End of stream signal |
+
+`DELTA_EVENTS` has five members — `tool_call.output.delta` is easy to miss.
+`ALL_EVENTS` has twenty.
 
 ## Event Structure
 
@@ -88,10 +129,14 @@ context.publish_event(event: "text.delta", data: { delta: "world!" })
 context.publish_event(event: "run.completed", data: {})
 ```
 
-### Nested Contexts for Networks
+### Nested Contexts
+
+Contexts can be nested to model a parent run with child runs sharing one
+sequence. Note that no `Network` creates these — you would build the hierarchy
+yourself.
 
 ```ruby
-# Parent context for the network run
+# Parent context for a run you are orchestrating
 network_context = RobotLab::Streaming::Context.new(
   run_id: "network_run_1",
   message_id: "msg_1",
@@ -108,3 +153,4 @@ robot_context.publish_event(event: "text.delta", data: { delta: "Response" })
 
 - [Context](context.md)
 - [Events](events.md)
+- [Robot](../core/robot.md) -- `on_content:`, and the block form of `run`, which is how streaming actually works

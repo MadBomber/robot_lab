@@ -8,12 +8,19 @@ Transports handle the low-level communication between `MCP::Client` and external
 
 RobotLab provides four built-in transport types:
 
-| Transport | Class | Use Case |
-|-----------|-------|----------|
-| Stdio | `Transports::Stdio` | Local subprocess servers |
-| WebSocket | `Transports::WebSocket` | Real-time bidirectional |
-| SSE | `Transports::SSE` | Server-sent events |
-| Streamable HTTP | `Transports::StreamableHTTP` | HTTP with session support |
+| Transport | Class | Use Case | Status |
+|-----------|-------|----------|--------|
+| Stdio | `Transports::Stdio` | Local subprocess servers | Fully working |
+| WebSocket | `Transports::WebSocket` | Real-time bidirectional | **Broken** — see below |
+| SSE | `Transports::SSE` | Server-sent events | Working, but `connect` reports success unconditionally |
+| Streamable HTTP | `Transports::StreamableHTTP` | HTTP with session support | Working, but `connect` reports success unconditionally |
+
+> **Read this before using a non-stdio transport.** Only `Stdio` performs its
+> connection and MCP handshake synchronously. The other three wrap that work in
+> an `Async do ... end` block whose result is never awaited, so any error raised
+> inside — including a refused TCP connection — is discarded. `connect` returns
+> `self` regardless. The specific consequences are documented per transport
+> below.
 
 ## Base Interface
 
@@ -34,6 +41,12 @@ end
 ```
 
 The `timeout` is extracted from the config hash during initialization (and removed from `config`). If not provided, it defaults to `DEFAULT_TIMEOUT` (15 seconds). The timeout is propagated from `MCP::Server` through `MCP::Client` to the transport.
+
+**Only `Stdio` enforces the timeout.** `SSE`, `WebSocket`, and `StreamableHTTP`
+store `@timeout` and expose it through the `timeout` reader, but never reference
+it — their requests are not time-bounded by this value. If you need a bound on a
+non-stdio transport, wrap the call yourself, or route the client through an
+`MCP::ConnectionPoller` (stdio only).
 
 ## Stdio Transport
 
@@ -90,7 +103,23 @@ transport.close
 
 **Class:** `RobotLab::MCP::Transports::WebSocket`
 
-Uses `async-websocket` for non-blocking bidirectional communication. Requires the `async-websocket` gem.
+Intended to use `async-websocket` for non-blocking bidirectional communication.
+
+> **This transport does not currently work.** `connect` calls
+> `Async::HTTP::Endpoint.parse`, but only requires `async` and
+> `async/websocket/client` — the `Async::HTTP` namespace is never loaded, so the
+> call raises `NameError`. That happens inside an un-awaited `Async` block, so
+> the error is swallowed: `connect` returns `self`, no `MCPError` is raised, and
+> `connected?` stays `false`. Every subsequent `send_request` then raises
+> `MCPError, "Not connected"`.
+>
+> Verified: `WebSocket.new(url: "ws://127.0.0.1:9/ws").connect.connected?` is
+> `false` with no exception surfacing.
+>
+> The rescue on `connect` only catches `LoadError`, which is raised if
+> `async-websocket` is missing. Because of the `Async::HTTP::Endpoint` call, this
+> transport also needs `async-http` even once `async-websocket` is installed —
+> both are declared as runtime dependencies of the gem.
 
 ### Configuration
 
@@ -107,10 +136,16 @@ Uses `async-websocket` for non-blocking bidirectional communication. Requires th
 
 ### Behavior
 
-- Uses `Async::WebSocket::Client.connect` within an `Async` block
-- Sends JSON-RPC messages as JSON strings
-- Reads responses synchronously within the async context
-- Raises `MCPError` if the `async-websocket` gem is not installed
+- Intends to use `Async::WebSocket::Client.connect` within an `Async` block, then
+  send the MCP `initialize` handshake
+- In practice the block raises `NameError` on `Async::HTTP::Endpoint` before the
+  connection is created, and the un-awaited block discards it
+- `send_request` sends JSON-RPC messages as JSON strings and reads the response
+  inside an awaited `Async` block — but it raises `MCPError, "Not connected"`
+  because `@connected` was never set
+- `connect` raises `MCPError` only for `LoadError` (missing `async-websocket`);
+  it does not raise for a connection failure
+- `close` is a no-op while `@connected` is `false`
 
 ### Example
 
@@ -120,8 +155,10 @@ transport = RobotLab::MCP::Transports::WebSocket.new(
 )
 
 transport.connect
-response = transport.send_request({ jsonrpc: "2.0", id: 1, method: "tools/list" })
-transport.close
+transport.connected?  # => false, even against a live server
+
+# Raises MCPError: "Not connected"
+transport.send_request({ jsonrpc: "2.0", id: 1, method: "tools/list" })
 ```
 
 ## SSE Transport
@@ -145,10 +182,20 @@ Uses `async-http` for HTTP-based communication. Sends requests via HTTP POST and
 
 ### Behavior
 
-- Creates an `Async::HTTP::Client` on connect
+- Creates an `Async::HTTP::Client` on connect, then sends the MCP `initialize`
+  handshake
 - Sends JSON-RPC messages via HTTP POST with `Content-Type: application/json`
 - Reads and parses JSON response body
-- Raises `MCPError` if the `async-http` gem is not installed
+- Raises `MCPError` if the `async-http` gem is not installed (`LoadError` only)
+- The `timeout` from the server config is stored but never applied
+
+> **`connect` always reports success.** `@connected = true` is assigned *before*
+> `send_initialize` runs, and the whole sequence is inside an un-awaited `Async`
+> block. Against an unreachable host, `connect` returns `self`, `connected?`
+> returns `true`, and the handshake failure is never surfaced. The first real
+> `send_request` is where the failure appears.
+>
+> Verified: `SSE.new(url: "http://127.0.0.1:9/sse").connect.connected?` is `true`.
 
 ### Example
 
@@ -158,6 +205,8 @@ transport = RobotLab::MCP::Transports::SSE.new(
 )
 
 transport.connect
+# connected? is true here whether or not the server exists
+
 response = transport.send_request({ jsonrpc: "2.0", id: 1, method: "tools/list" })
 transport.close
 ```
@@ -192,7 +241,17 @@ HTTP-based transport with session management and optional authentication. Suppor
 - Sends `X-Session-ID` header with each request when a session ID is available
 - Calls `auth_provider` for each request to populate the `Authorization` header
 - Exposes `session_id` reader for accessing the current session ID
-- Raises `MCPError` if the `async-http` gem is not installed
+- Raises `MCPError` if the `async-http` gem is not installed (`LoadError` only)
+- The `timeout` from the server config is stored but never applied
+
+> **`connect` always reports success**, for the same reason as SSE:
+> `@connected = true` precedes `send_initialize`, and the enclosing `Async` block
+> is never awaited. `connected?` returns `true` against an unreachable host, and
+> `session_id` stays at whatever you configured (`nil` if you configured nothing)
+> because the handshake result was discarded.
+>
+> Verified: `StreamableHTTP.new(url: "http://127.0.0.1:9/mcp").connect` yields
+> `connected? == true`, `session_id == nil`.
 
 ### Example
 
@@ -203,7 +262,7 @@ transport = RobotLab::MCP::Transports::StreamableHTTP.new(
 )
 
 transport.connect
-puts transport.session_id  # => assigned by server or pre-configured
+puts transport.session_id  # => pre-configured value, or nil until a request lands
 
 response = transport.send_request({ jsonrpc: "2.0", id: 1, method: "tools/list" })
 transport.close
@@ -211,14 +270,26 @@ transport.close
 
 ## Connection Lifecycle
 
-All transports follow the same lifecycle:
+All transports expose the same four-step lifecycle:
 
 1. **Create** -- instantiate with configuration hash
 2. **Connect** -- establish connection and perform MCP protocol initialization
 3. **Request/Response** -- send JSON-RPC requests, receive responses
 4. **Close** -- tear down connection and release resources
 
-Each transport sends the MCP `initialize` message during connect:
+Step 2 behaves differently per transport:
+
+| Transport | `connect` is synchronous | Errors surface from `connect` | `connected?` reflects reality |
+|-----------|--------------------------|-------------------------------|-------------------------------|
+| `Stdio` | Yes | Yes (`MCPError`) | Yes — also checks the process is alive |
+| `SSE` | No (un-awaited `Async`) | No | No — always `true` after `connect` |
+| `StreamableHTTP` | No (un-awaited `Async`) | No | No — always `true` after `connect` |
+| `WebSocket` | No (un-awaited `Async`) | No | No — always `false` after `connect` |
+
+Only `Stdio` gives you a trustworthy answer at connect time. For the other three,
+treat the first `send_request` as the real connection test.
+
+Each transport builds the same MCP `initialize` message during connect:
 
 ```json
 {
@@ -252,11 +323,12 @@ end
 ```
 
 Specific error cases:
-- **Not connected** -- calling `send_request` before `connect` raises `MCPError`
-- **Missing gem** -- WebSocket, SSE, and HTTP transports raise `MCPError` with a `LoadError` message if required gems are not installed
+- **Not connected** -- calling `send_request` before `connect` raises `MCPError` (all transports)
+- **Missing gem** -- WebSocket, SSE, and HTTP transports raise `MCPError` with a `LoadError` message if the required gem (`async-websocket` / `async-http`) is not installed. This is the *only* error `connect` re-raises on those three
+- **Connection refused / unreachable host** -- **not** reported by SSE, WebSocket, or StreamableHTTP `connect`; the error is discarded with the un-awaited `Async` block
 - **No response** -- Stdio transport raises `MCPError` if the subprocess produces no output (EOF on stdout)
 - **Command not found** -- Stdio transport raises `MCPError` with the original `Errno::ENOENT` message
-- **Timeout** -- Stdio transport raises `MCPError` if the server does not respond within the configured timeout
+- **Timeout** -- Stdio transport raises `MCPError` if the server does not respond within the configured timeout. No other transport enforces a timeout
 - **Broken pipe** -- Stdio transport raises `MCPError` and marks itself disconnected on `Errno::EPIPE` or `IOError`
 - **Immediate exit** -- Stdio transport raises `MCPError` if the server process exits immediately after spawn
 

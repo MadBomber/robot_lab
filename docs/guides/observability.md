@@ -116,7 +116,10 @@ begin
 rescue RobotLab::BudgetExceeded => e
   puts e.message  # "budget exceeded for cost: 0.51 > 0.5" — refused before spending
 rescue RobotLab::InferenceError => e
-  puts e.message  # "Cost budget exceeded: $0.5231 used, budget is $0.5" — this call pushed it over
+  puts e.message
+  # "Cost budget exceeded: $0.523100 used, budget is $0.500000" — this call pushed it over
+  # (the cost message is formatted with %.6f; the token message is not formatted:
+  #  "Token budget exceeded: 10412 tokens used, budget is 10000")
 end
 ```
 
@@ -143,12 +146,20 @@ robot = RobotLab.build(
   local_tools: [StepTool],
   max_tool_rounds: 10
 )
+```
 
+> [!WARNING]
+> `run` defaults to `tools: :none`, so a plain `robot.run("...")` sends the LLM
+> **no** tools — even when `local_tools:` were attached at build time — and the
+> breaker can never fire. Pass `tools: :inherit` on the call to actually send the
+> attached tools.
+
+```ruby
 begin
-  robot.run("Run all steps.")
+  robot.run("Run all steps.", tools: :inherit)
 rescue RobotLab::ToolLoopError => e
-  puts "Circuit breaker fired: #{e.message}"
-  # => "Circuit breaker fired: Tool call limit of 10 exceeded"
+  puts e.message
+  # => "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
 end
 ```
 
@@ -170,6 +181,8 @@ Error: tool_use ids were found without tool_result blocks immediately after
 Call `clear_messages` to flush the corrupted history before reusing the robot. The system prompt and all configuration (tools, `max_tool_rounds`, etc.) are preserved:
 
 ```ruby
+begin
+  robot.run("Keep calling the tool.", tools: :inherit)
 rescue RobotLab::ToolLoopError => e
   puts "Breaker fired: #{e.message}"
 end
@@ -191,7 +204,7 @@ unguarded = RobotLab.build(
   system_prompt: "Use the provided tool to answer questions.",
   local_tools: [DoubleTool]
 )
-result = unguarded.run("Double the number 21 using the tool.")
+result = unguarded.run("Double the number 21 using the tool.", tools: :inherit)
 puts result.reply  # "The result is 42."
 ```
 
@@ -205,16 +218,18 @@ puts result.reply  # "The result is 42."
 
 ### doom_loop_threshold
 
+Doom loop detection is **always on** — the detector is installed unconditionally on every `run()`. `doom_loop_threshold:` does not enable it; it only tunes the number of repetitions after which it fires. The default is `3`.
+
 ```ruby
 robot = RobotLab.build(
   name: "runner",
   system_prompt: "Execute all steps.",
   local_tools: [StepTool],
-  doom_loop_threshold: 3
+  doom_loop_threshold: 5   # tune the always-on detector; default is 3
 )
 ```
 
-Set `doom_loop_threshold:` to the number of repetitions after which the detector fires. It catches two patterns:
+The detector catches two patterns:
 
 - **Consecutive repetition** — `[A, A, A]` (same tool called N times in a row)
 - **Cyclic repetition** — `[A, B, C, A, B, C, A, B, C]` (same sequence repeated N times)
@@ -252,27 +267,38 @@ Long-running robots accumulate conversation history. Eventually, the cumulative 
 
 ### auto_compact
 
-Set `auto_compact:` to have the robot compress its history automatically before each `run()`:
+`auto_compact` and `compact_threshold` are **`RunConfig` fields only** — they are not constructor keyword arguments. Build a `RunConfig` and pass it as `config:`:
 
 ```ruby
 # Compact when estimated token usage exceeds 80% of the model's context window
+config = RobotLab::RunConfig.new(auto_compact: :context_window)
+
 robot = RobotLab.build(
   name: "analyst",
   system_prompt: "You are a research analyst.",
-  auto_compact: :context_window
+  config: config
 )
 ```
+
+> [!WARNING]
+> `Robot#initialize` has a closed keyword list — it takes no `**rest`. Passing
+> `auto_compact:` or `compact_threshold:` directly to `RobotLab.build` raises
+> `ArgumentError: unknown keyword`.
 
 ### Tuning the Threshold
 
 `compact_threshold:` sets the fraction of the model's context window that triggers compaction. Defaults to `0.80` (80%):
 
 ```ruby
+config = RobotLab::RunConfig.new(
+  auto_compact:      :context_window,
+  compact_threshold: 0.70   # compact earlier, at 70%
+)
+
 robot = RobotLab.build(
   name: "analyst",
   system_prompt: "You are a research analyst.",
-  auto_compact:      :context_window,
-  compact_threshold: 0.70   # compact earlier, at 70%
+  config: config
 )
 ```
 
@@ -281,16 +307,20 @@ robot = RobotLab.build(
 Pass a `Proc` to take full control — the proc decides both when and how to compact:
 
 ```ruby
-robot = RobotLab.build(
-  name: "analyst",
-  system_prompt: "You are a research analyst.",
+config = RobotLab::RunConfig.new(
   auto_compact: ->(r) {
     r.compress_history(recent_turns: 5) if r.chat.messages.size > 40
   }
 )
+
+robot = RobotLab.build(
+  name: "analyst",
+  system_prompt: "You are a research analyst.",
+  config: config
+)
 ```
 
-The proc receives the robot instance and is called before every `run()` when messages are non-empty.
+The proc receives the robot instance and is called once per `run()` when messages are non-empty.
 
 ### Options
 
@@ -299,13 +329,6 @@ The proc receives the robot instance and is called before every `run()` when mes
 | `nil` / `:none` | No automatic compaction (default) |
 | `:context_window` | Compact when estimated token usage exceeds `compact_threshold` fraction of model's context window |
 | `Proc` | Called with the robot; application decides when and how to compact |
-
-Via `RunConfig`:
-
-```ruby
-config = RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.75)
-robot  = RobotLab.build(name: "analyst", system_prompt: "...", config: config)
-```
 
 Requires the `classifier` gem (`~> 2.3`) when using `:context_window`. Without it, a `RobotLab::DependencyError` is caught and logged rather than raised, so the robot continues running uncompressed.
 
@@ -387,20 +410,33 @@ end
 
 After all three runs, `reviewer.learnings` contains up to three insights (fewer if any are subsets of others).
 
-### Durable Learning (learn: Constructor Shorthand)
+### Durable Learning (the `:learn` hook family)
 
-The `robot_lab-durable` gem adds automatic end-of-session learning promotion. Enable it with `learn: true` in the constructor:
+Core RobotLab keeps learnings for the life of the process only. Cross-session persistence is supplied by the [`robot_lab-durable`](https://github.com/MadBomber/robot_lab-durable) gem, which registers a `RobotLab::Hook` on the `:learn` family — there is no `learn:` constructor shorthand.
+
+> [!WARNING]
+> `learn:` and `learn_domain:` are **not** constructor keyword arguments and do
+> not exist anywhere in the codebase. `RobotLab.build(learn: true)` raises
+> `ArgumentError: unknown keyword: :learn`.
+
+The wiring is the ordinary hook registration described in the [Hooks guide](hooks.md) — an `on_learn` handler receives each learning after session-level deduplication and decides whether to persist it:
 
 ```ruby
-reviewer = RobotLab.build(
-  name:         "reviewer",
-  system_prompt: "You are a Ruby code reviewer.",
-  learn:        true,
-  learn_domain: "ruby_review"   # optional namespace for the durable store
-)
+class DurableLearnHook < RobotLab::Hook
+  self.namespace = :durable
+
+  def self.on_learn(ctx)
+    return unless ctx.stored
+
+    DurableStore.promote(text: ctx.text, robot: ctx.robot.name, domain: ctx.local.domain)
+  end
+end
+
+reviewer = RobotLab.build(name: "reviewer", system_prompt: "You are a Ruby code reviewer.")
+reviewer.on(DurableLearnHook, context: { domain: "ruby_review" })
 ```
 
-At the end of each session, the robot reflects on its observations and promotes durable insights to a YAML-backed store that persists across process restarts. On the next run, those stored insights are automatically reloaded as learnings.
+The extension promotes durable insights to a YAML-backed store that persists across process restarts; see the gem's own README for its registration entry point.
 
 ### Memory Persistence
 
@@ -522,28 +558,40 @@ Texts shorter than 30 characters always return `0.0`.
 | Same topic, different emphasis | 0.45 – 0.60 |
 | Unrelated | < 0.15 |
 
-### Router Fast-Path Pattern
+### Reconciler Fast-Path Pattern
 
-Skip the reconciler when verifiers agree:
+Skip the reconciler when verifiers agree. RobotLab has no router object — routing is done by declaring the optional branch as a task with `depends_on: :optional` and having a preceding robot call `result.activate(:task_name)` on it. Subclass `RobotLab::Robot` and override `#call` to make the decision:
 
 ```ruby
-router = ->(args) do
-  a = args.context[:verifier_a]&.reply.to_s
-  b = args.context[:verifier_b]&.reply.to_s
+class ConvergenceGate < RobotLab::Robot
+  def call(result)
+    # result.context is keyed by ROBOT name, not task name
+    a = result.context[:verifier_a]&.reply.to_s
+    b = result.context[:verifier_b]&.reply.to_s
 
-  if RobotLab::Convergence.detected?(a, b)
-    nil                  # both agree — network halts, no reconciler call
-  else
-    ["reconciler"]       # diverged — send to reconciler
+    return result if RobotLab::Convergence.detected?(a, b)  # agree — reconciler stays dormant
+
+    result.activate(:reconciler)                            # diverged — activate the branch
   end
 end
 
-network = RobotLab.create_network(
-  name:   "fact_check",
-  robots: [verifier_a, verifier_b, reconciler],
-  router: router
-)
+network = RobotLab.create_network(name: "fact_check") do
+  task :verifier_a, verifier_a, depends_on: :none
+  task :verifier_b, verifier_b, depends_on: :none
+  task :gate,       ConvergenceGate.new(name: "gate"), depends_on: %i[verifier_a verifier_b]
+  task :reconciler, reconciler, depends_on: :optional
+end
+
+result = network.run(message: "Is the deployment healthy?")
+result.activated_steps  # => [] when they agreed, [:reconciler] when they diverged
 ```
+
+The gate robot never calls the LLM — overriding `#call` replaces the default "run and continue" behaviour entirely, so the decision costs nothing.
+
+> [!NOTE]
+> `result.context` is keyed by the **robot's** name (`@name`), not the task name.
+> The lookups above work because each verifier's `name:` matches its task label.
+> If they differ, index by the robot name.
 
 Tune `threshold:` to control how strictly "agreement" is defined. A lower threshold (e.g., `0.6`) accepts more variation between verifiers; a higher threshold (e.g., `0.9`) only fast-paths near-identical responses.
 
@@ -662,10 +710,10 @@ Once registered, a run prints a line per event:
 ```
   · math_bot: thinking…
   · → calculate operation="add"
-  · math_bot: thinking…
+  · → calculate operation="multiply"
 ```
 
-- Before each LLM call: `"<robot name>: thinking…"`
+- Once per `run`: `"<robot name>: thinking…"` — Narrator hooks `before_llm_generation`, which fires exactly once per `robot.run`; the provider's tool loop happens *inside* that hook, so the line is not repeated per LLM API call
 - Before each tool call: `"→ <tool name> <first arg>=<value>"` — only the *first* argument is shown, truncated to 80 characters
 - After a tool call: `"  ✗ <error message>"` — printed only when the tool raised; silent on success
 

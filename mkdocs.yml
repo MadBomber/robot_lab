@@ -177,10 +177,12 @@ nav:
       - Core Classes:
           - api/core/index.md
           - Robot: api/core/robot.md
+          - RobotResult: api/core/result.md
           - Network: api/core/network.md
-          - State: api/core/state.md
           - Tool: api/core/tool.md
           - Memory: api/core/memory.md
+          - StateProxy: api/core/state.md
+      - Errors: api/errors.md
       - Messages:
           - api/messages/index.md
           - UserMessage: api/messages/user-message.md

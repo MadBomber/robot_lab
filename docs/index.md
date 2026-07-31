@@ -142,16 +142,35 @@ Each robot is backed by a persistent LLM chat, configured with keyword arguments
 
 </div>
 
+> [!NOTE]
+> A few of the features above need a gem the core `robot_lab` gem does not install.
+> **Knowledge & Retrieval** (`memory.store_document` / `memory.search_documents`)
+> and **Runtime Skill Matching** (`AgentSkill` catalogs) both require
+> `robot_lab-document_store`; the Redis backing for **Reactive Memory** requires
+> `redis`; Ractor parallelism requires `robot_lab-ractor`; and
+> `robot.compress_history` requires `classifier`. See
+> [Optional Dependencies](getting-started/installation.md#optional-dependencies).
+
 ## Extension Gems
 
 These optional gems extend RobotLab with additional capabilities:
 
 | Gem | What it adds |
 |-----|-------------|
-| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` base class, Turbo Stream broadcasting |
-| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism for `ractor_safe` tools and robot networks via Ruby Ractors |
-| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence — robots accumulate and recall learned facts |
+| [robot_lab-a2a](https://github.com/MadBomber/robot_lab-a2a) | Agent2Agent (A2A) protocol adapter over HTTP + SSE |
+| [robot_lab-audit](https://github.com/MadBomber/robot_lab-audit) | SQLite-backed execution audit log, wired through the Hook system |
+| [robot_lab-discovery](https://github.com/MadBomber/robot_lab-discovery) | Zero-configuration mDNS/DNS-SD robot discovery on the local network |
 | [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | Embedding-based semantic document search powered by fastembed |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | HTM-backed long-term memory — robots accumulate and recall learned facts across sessions |
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism for `ractor_safe` tools and robot networks via Ruby Ractors |
+| [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` base class, Turbo Stream broadcasting |
+| [robot_lab-to](https://github.com/MadBomber/robot_lab-to) | Autonomous overnight agent loop — iterate a robot toward an objective, committing each step |
+| [robot_lab-web](https://github.com/MadBomber/robot_lab-web) | Rails-free Sinatra + HTMX browser console that streams a robot's run over SSE |
+
+> [!NOTE]
+> The Rails Engine, generators, `RobotLab::Job`, and Turbo broadcasting are
+> **only** in `robot_lab-rails`. The core gem ships no Railtie and no generators.
+> The former `robot_lab-acp` gem is retired and superseded by `robot_lab-a2a`.
 
 ## Quick Example
 
@@ -162,7 +181,10 @@ require "robot_lab"
 # Set API keys via env vars:
 #   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 #
-# Or place a config file at ~/.config/robot_lab/config.yml
+# Or place a config file at ~/.config/robot_lab/robot_lab.yml
+# (the filename repeats the app name; config.yml is never read). Keys go at the
+# top level, or under a section named for the current environment
+# (development:/test:/production:). Only a `defaults:` wrapper is ignored.
 # Access config values: RobotLab.config.ruby_llm.model  #=> "claude-sonnet-4"
 
 # Create a robot with keyword arguments
@@ -187,6 +209,16 @@ puts result.last_text_content
 # Chaining configuration
 robot.with_instructions("Be extra concise.").with_temperature(0.3).run("Explain Ruby in one sentence.")
 ```
+
+> [!IMPORTANT]
+> `Robot#run` defaults to `tools: :none` and `mcp: :none`, so a plain
+> `robot.run("...")` sends the model **no tools** even when you attached them
+> with `local_tools:` or `mcp:` at build time. Ask for them on the run:
+>
+> ```ruby
+> robot.run("...", tools: :inherit)                  # attached local tools
+> robot.run("...", mcp: :inherit, tools: :inherit)   # MCP servers and their tools
+> ```
 
 ## Supported LLM Providers
 

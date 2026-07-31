@@ -6,11 +6,22 @@ Customer service system with intelligent routing using SimpleFlow pipelines.
 
 This example demonstrates a multi-robot network where a classifier routes customer inquiries to specialized support robots using SimpleFlow's optional task activation.
 
+The runnable version is
+[`examples/03_network.rb`](https://github.com/MadBomber/robot_lab/blob/main/examples/03_network.rb);
+the snippets here expand it with a fourth specialist and per-task configuration.
+
+> [!IMPORTANT]
+> Two names are in play and they are easy to confuse.
+> `result.activate(:x)` takes a **task** name (the first argument to `task`), while
+> `result.with_context(@name.to_sym, ...)` keys the context by the **robot's** name.
+> Activating a task name that was never declared **raises `ArgumentError` and aborts
+> the run** — it is not a silent no-op. Give each robot the same name as its task and
+> both problems disappear.
+
 ## Complete Example
 
 ```ruby
 #!/usr/bin/env ruby
-# examples/customer_service.rb
 
 require "bundler/setup"
 require "robot_lab"
@@ -185,16 +196,25 @@ class ClassifierRobot < RobotLab::Robot
       .with_context(@name.to_sym, robot_result)
       .continue(robot_result)
 
-    # 5. Activate the appropriate optional task based on output
+    # 5. Activate the appropriate optional task based on output.
+    #    These symbols MUST match the task names declared in create_network.
     category = robot_result.last_text_content.to_s.strip.downcase
     case category
-    when /billing/ then new_result.activate(:billing)
-    when /technical/ then new_result.activate(:technical)
-    else new_result.activate(:general)
+    when /billing/ then new_result.activate(:billing_agent)
+    when /technical/ then new_result.activate(:tech_agent)
+    else new_result.activate(:general_agent)
     end
   end
 end
 ```
+
+> [!WARNING]
+> `activate` validates its argument and **raises**. Activating `:billing` when the
+> network declared `task :billing_agent, ...` aborts the run with
+> `ArgumentError: Step :classifier attempted to activate unknown step :billing`.
+> Activating a task that was *not* declared `depends_on: :optional` raises too:
+> `ArgumentError: Step :classifier attempted to activate non-optional step :billing_agent.`
+> Use `result.activated_steps` to inspect what routing actually did.
 
 !!! note "extract_run_context"
     The `extract_run_context(result)` method is a protected helper on `Robot`. It extracts `run_params` from the SimpleFlow result context, handles value propagation from previous steps, and separates robot-specific params (`mcp:`, `tools:`, `memory:`, `network_memory:`) from the message and other context.
@@ -245,21 +265,42 @@ end
 
 ## Per-Task Configuration
 
-Tasks can have individual context, tools, and MCP servers:
+Tasks can carry their own context, a tool allowlist, and MCP servers:
 
 ```ruby
+# Tools must already be ATTACHED to the robot...
+billing_agent = RobotLab.build(
+  name: "billing_agent",
+  system_prompt: "You handle billing.",
+  local_tools: [RefundTool, InvoiceTool, AuditTool]
+)
+
 network = RobotLab.create_network(name: "support") do
   task :classifier, classifier, depends_on: :none
   task :billing_agent, billing_agent,
        context: { department: "billing", escalation_level: 2 },
-       tools: [RefundTool, InvoiceTool],
+       tools: [RefundTool, InvoiceTool],   # ...and this SELECTS from them
        depends_on: :optional
   task :tech_agent, tech_agent,
        context: { department: "technical" },
        mcp: [filesystem_server],
+       tools: :inherit,                    # send every discovered MCP tool
        depends_on: :optional
 end
 ```
+
+> [!WARNING]
+> Per-task `tools:` is an **allowlist over tools the robot already has** — it never
+> attaches anything. Give a task `tools: [RefundTool]` for a robot whose
+> `local_tools` are empty and it sends zero tools.
+>
+> Matching is by string comparison against each attached tool's `name`, so the two
+> sides must agree. `local_tools: [RefundTool]` (the class) matches
+> `tools: [RefundTool]`, but `local_tools: [RefundTool.new]` (an instance, whose
+> name is `"refund"`) does not — use `tools: %w[refund]` there.
+>
+> Omitting `tools:` from a task means `:none`: the robot sends no tools at all.
+> Use `tools: :inherit` for "send everything attached".
 
 The `Task` wrapper deep-merges per-task context with the network's run params before delegating to the robot's `call` method.
 
@@ -298,13 +339,19 @@ puts result.value.last_text_content
 Fan-out / fan-in pattern where multiple robots analyze in parallel and a synthesizer merges results:
 
 ```ruby
+# Robot names deliberately match their task names -- result.context is keyed
+# by the ROBOT's name, so mismatched names produce nil lookups below.
+sentiment = RobotLab.build(name: "sentiment", system_prompt: "Score sentiment.")
+entities  = RobotLab.build(name: "entities",  system_prompt: "Extract entities.")
+keywords  = RobotLab.build(name: "keywords",  system_prompt: "Extract keywords.")
+
 network = RobotLab.create_network(name: "multi_analysis") do
   task :prepare, preparer, depends_on: :none
 
   # These run in parallel (all depend on :prepare)
-  task :sentiment, sentiment_analyzer, depends_on: [:prepare]
-  task :entities, entity_extractor, depends_on: [:prepare]
-  task :keywords, keyword_extractor, depends_on: [:prepare]
+  task :sentiment, sentiment, depends_on: [:prepare]
+  task :entities, entities, depends_on: [:prepare]
+  task :keywords, keywords, depends_on: [:prepare]
 
   # Waits for all three to complete
   task :summarize, summarizer, depends_on: [:sentiment, :entities, :keywords]
@@ -312,12 +359,18 @@ end
 
 result = network.run(message: "Analyze this text")
 
-# Access parallel results from context
+# Access parallel results from context (keyed by robot name)
 puts "Sentiment: #{result.context[:sentiment].last_text_content}"
 puts "Entities: #{result.context[:entities].last_text_content}"
 puts "Keywords: #{result.context[:keywords].last_text_content}"
 puts "Summary: #{result.value.last_text_content}"
 ```
+
+> [!WARNING]
+> `result.context` is keyed by `@name` of the robot that wrote it, not by the task
+> name. Had these robots kept names like `sentiment_analyzer`, the lookups above
+> would return `nil` even though every task ran. Keep robot name and task name
+> identical.
 
 ## Shared Memory in Networks
 
@@ -374,30 +427,47 @@ network = RobotLab.create_network(name: "validated_pipeline") do
 end
 
 result = network.run(message: "Process this")
-if result.halted?
-  puts "Validation failed: #{result.value.last_text_content}"
-else
+if result.continue?
   puts "Processing complete: #{result.value.last_text_content}"
+else
+  puts "Validation failed: #{result.value.last_text_content}"
 end
 ```
+
+> [!WARNING]
+> `SimpleFlow::Result` has **no** `halted?` or `continued?` predicate — calling
+> either raises `NoMethodError`. The predicate is `continue?`, which returns
+> `false` after `halt`. The full public API is exactly `activate`,
+> `activated_steps`, `context`, `continue`, `continue?`, `errors`, `halt`, `value`,
+> `with_context`, and `with_error`. `with_value` is **private** — calling it raises
+> `NoMethodError`; use `continue(value)` or `halt(value)` to set the value.
 
 ## Running
 
 ```bash
 export ANTHROPIC_API_KEY="your-key"
-ruby examples/customer_service.rb
+
+# Classifier + three specialists with optional-task routing
+ruby examples/03_network.rb
+
+# Shared reactive memory across concurrent robots
+ruby examples/07_network_memory.rb
+
+# Network visualization and introspection (no LLM calls)
+ruby examples/11_network_introspection.rb
 ```
 
 ## Key Concepts
 
-1. **SimpleFlow Pipeline**: DAG-based execution with dependency management via `depends_on:`
+1. **SimpleFlow Pipeline**: DAG-based execution with dependency management via `depends_on:`. The DSL method is `task` — there is no `step`, no `router:` kwarg, and no `Router` class
 2. **Optional Tasks**: Use `depends_on: :optional` for tasks activated dynamically by classifiers
-3. **Robot#call Override**: Custom routing logic in classifier robots that override the `call` method
+3. **Robot#call Override**: Routing is written in Ruby — subclass `Robot`, override `call`, and call `result.activate(:task_name)`
 4. **extract_run_context**: Helper method to extract message and params from `SimpleFlow::Result`
-5. **Context Flow**: Data passed through `result.context` and accessed by downstream robots
-6. **Parallel Execution**: Tasks with the same dependencies run concurrently
-7. **Shared Memory**: Network memory (`network_memory:`) enables inter-robot communication
-8. **Per-Task Configuration**: Each task can have its own context, tools, and MCP servers via `Task`
+5. **Context Flow**: `result.context` is keyed by the **robot's** name (`with_context(@name.to_sym, ...)`), while `activate` takes a **task** name — keep the two identical
+6. **Result predicates**: `continue?` (not `halted?`), plus `activated_steps` to see what routing actually did
+7. **Parallel Execution**: Tasks with the same dependencies run concurrently; cap in-flight LLM calls with `RunConfig.new(max_concurrent_robots: N)`
+8. **Shared Memory**: Network memory (`network_memory:`) enables inter-robot communication
+9. **Per-Task Configuration**: Each task can carry its own context, MCP servers, and a `tools:` allowlist over the robot's already-attached tools
 
 ## See Also
 

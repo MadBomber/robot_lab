@@ -8,7 +8,7 @@ A **Robot** is an LLM-powered agent that inherits from `RubyLLM::Agent`. Each ro
 
 Each robot has:
 
-- **Name**: A unique identifier (auto-generated if omitted)
+- **Name**: An identifier. Nothing is auto-generated — if you omit `name:` the robot is literally named `"robot"`. The value is load-bearing: a robot still named `"robot"` is treated as "unnamed", which is what lets a template's `robot_name:` front matter key take effect. Give every robot an explicit name.
 - **Template**: A `.md` file with YAML front matter managed by prompt_manager, referenced by symbol
 - **System Prompt**: Inline instructions (can be used alone or combined with a template)
 - **Model**: The LLM model to use (defaults to `RobotLab.config.ruby_llm.model`)
@@ -27,6 +27,9 @@ robot = RobotLab.build(
   local_tools: [OrderLookup, RefundProcessor],
   model: "claude-sonnet-4"
 )
+
+# Attached tools are only sent when the run asks for them
+robot.run("Where is order 4471?", tools: :inherit)
 
 # Robot with inline system prompt
 robot = RobotLab.build(
@@ -56,13 +59,14 @@ puts result.last_text_content  # => "Your name is Alice."
 
 ## Configuration
 
-RobotLab uses `MywayConfig` for configuration. There is no `RobotLab.configure` block. Instead, configuration is loaded automatically from multiple sources in priority order:
+RobotLab uses `MywayConfig` for configuration. Values are loaded automatically from multiple sources in priority order (lowest to highest):
 
 1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
 2. Environment-specific overrides (development, test, production)
-3. XDG user config (`~/.config/robot_lab/config.yml`)
+3. XDG user config (`~/.config/robot_lab/robot_lab.yml`)
 4. Project config (`./config/robot_lab.yml`)
 5. Environment variables (`ROBOT_LAB_*` prefix)
+6. Constructor parameters
 
 ```ruby
 # Access configuration values
@@ -73,9 +77,24 @@ RobotLab.config.ruby_llm.request_timeout  #=> 120
 # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 # ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
 
+# A configure block also exists, for runtime-only attributes such as the logger
+RobotLab.configure do |c|
+  c.logger = Logger.new(File::NULL)
+end
+
 # Reload configuration
 RobotLab.reload_config!
 ```
+
+> [!IMPORTANT]
+> Two easy mistakes. First, the user config file is
+> `~/.config/robot_lab/**robot_lab**.yml` — the filename repeats the app name, and
+> `config.yml` is never read. Second, the `defaults:` wrapper used inside the gem's
+> bundled `defaults.yml` is silently ignored in your own files; write keys flat, or
+> under a section named for the current environment. The user file honours a
+> `development:` / `test:` / `production:` section; `./config/robot_lab.yml` must be
+> flat outside Rails but **must** be environment-sectioned under Rails. See
+> [Configuration](getting-started/configuration.md) for the full matrix.
 
 ## Network
 
@@ -106,17 +125,45 @@ result = network.run(message: "I was charged twice for my subscription.")
 A **Task** wraps a robot for use in a network pipeline with per-task configuration:
 
 - **Context**: Task-specific context deep-merged with network run params
-- **MCP**: MCP servers available to this task (`:none`, `:inherit`, or array)
-- **Tools**: Tools available to this task (`:none`, `:inherit`, or array)
+- **MCP**: MCP servers available to this task (`:none`, `:inherit`, or a name array)
+- **Tools**: Tools available to this task (`:none`, `:inherit`, or a name array)
 - **Memory**: Task-specific memory
 - **Dependencies**: `:none`, `[:task1, :task2]`, or `:optional`
+- **Config**: a `RunConfig` — but see the caveat below
+- **Poller group**: `poller_group:` (defaults to `:default`)
 
 ```ruby
+# The robot must already have the tools ATTACHED...
+billing_robot = RobotLab.build(
+  name: "billing",
+  system_prompt: "You handle billing.",
+  local_tools: [RefundTool, InvoiceTool, AuditTool]   # attached as CLASSES
+)
+
 task :billing, billing_robot,
      context: { department: "billing", escalation_level: 2 },
-     tools: [RefundTool, InvoiceTool],
+     tools: [RefundTool, InvoiceTool],   # ...and this SELECTS from them
      depends_on: :optional
 ```
+
+> [!WARNING]
+> An explicit `tools:` array is a **name allowlist** over tools the robot already
+> has attached — it is not a way to attach new tools, and it is not a
+> local-vs-MCP switch. Attach tools with `local_tools:` when building the robot,
+> then filter here.
+>
+> **The allowlist entries must match the form the tool was attached in.** Matching
+> is a string comparison against each attached tool's `name`, and `Class#name`
+> differs from `RubyLLM::Tool#name`:
+>
+> | Attached as | Matching allowlist entry | Does not match |
+> |---|---|---|
+> | `local_tools: [RefundTool]` (class) | `[RefundTool]` or `%w[RefundTool]` | `%w[refund]` |
+> | `local_tools: [RefundTool.new]` (instance) | `%w[refund]` | `[RefundTool]` |
+>
+> A task-level `config:` is merged into the network config, so like a
+> network-level config it propagates **only `mcp` and `tools`** — not `model`,
+> `temperature`, or callbacks.
 
 ## SimpleFlow::Result
 
@@ -124,19 +171,29 @@ Networks use `SimpleFlow::Result` for data flow between tasks:
 
 ```ruby
 result.value      # Current task's output (RobotResult)
-result.context    # Accumulated context from all tasks
-result.halted?    # Whether execution stopped early
-result.continued? # Whether execution continues
+result.context    # Accumulated context, keyed by ROBOT name
+result.continue?  # Whether the pipeline is still continuing
+result.errors     # Accumulated errors
 ```
 
+> [!NOTE]
+> There is no `halted?` and no `continued?` — both raise `NoMethodError`. The
+> predicate is `continue?`. Note also that `result.context` is keyed by each
+> robot's `name:`, not by its task name.
+
 ### Result Methods
+
+The complete public API is `activate`, `activated_steps`, `context`, `continue`,
+`continue?`, `errors`, `halt`, `value`, `with_context`, and `with_error`.
 
 | Method | Purpose |
 |--------|---------|
 | `continue(value)` | Continue to next tasks |
 | `halt(value)` | Stop pipeline execution |
 | `with_context(key, val)` | Add data to context |
+| `with_error(key, message)` | Record an error |
 | `activate(task_name)` | Enable optional task |
+| `activated_steps` | Tasks activated so far |
 
 ## Tool
 
@@ -170,7 +227,28 @@ robot = RobotLab.build(
   system_prompt: "You can do math.",
   local_tools: [Calculator]
 )
+
+# tools: :inherit is required -- run() sends no tools by default
+robot.run("What is 17 * 23?", tools: :inherit)
 ```
+
+> [!WARNING]
+> `Robot#run` defaults to `mcp: :none, tools: :none`, and an explicit `:none`
+> means "send zero tools this turn". Attaching tools with `local_tools:` does
+> **not** by itself make them available — a plain `robot.run("...")` sends the
+> model no tools at all. Pass `tools: :inherit` on the run (and
+> `mcp: :inherit, tools: :inherit` for MCP servers).
+>
+> For a **standalone** robot, do not pass `tools: :inherit` to `RobotLab.build`.
+> Build-time `:inherit` resolves against the parent level, which for a standalone
+> robot is the global `:none` — that produces an allowlist matching nothing and
+> suppresses the tools even when the run asks for them. Leave `tools:` unset.
+>
+> Inside a **network** it means the opposite: build-time `tools: :inherit` is
+> exactly how a robot opts into the allowlist carried by the network's `config:`.
+> With `RunConfig.new(tools: %w[RefundTool])` on the network and `tools: :inherit`
+> on both the robot and its task, the robot sends only `refund`; leaving the
+> robot's `tools:` unset sends everything it has attached instead.
 
 ### RobotLab::Tool.create Factory
 
@@ -197,15 +275,30 @@ result = robot.run("Hello!")
 
 result.last_text_content  # => "Hi there!" (String or nil)
 result.reply              # => alias for last_text_content
-result.output             # => [TextMessage, ...] array of output messages
-result.tool_calls         # => [] array of tool call results
+result.output             # => [TextMessage] built from the final response text
+result.tool_calls         # => [] (see note below -- effectively always empty)
 result.robot_name         # => "assistant"
-result.stop_reason        # => "end_turn" or nil
+result.stop_reason        # => nil (always -- see note below)
 result.has_tool_calls?    # => false
 result.checksum           # => "a1b2c3d4..." (for dedup)
 result.duration           # => Float or nil (elapsed seconds, set in pipeline execution)
 result.raw                # => raw LLM response object
 ```
+
+> [!NOTE]
+> `result.tool_calls` and `result.has_tool_calls?` read the **final** assistant
+> message. By the time `run` returns, ruby_llm's tool loop has already completed
+> and that message carries no tool calls — so in practice `tool_calls` is always
+> empty and `has_tool_calls?` is always `false`. To observe tool activity, use
+> the `on_tool_call` / `on_tool_result` callbacks instead. Likewise
+> `result.output` is a single-element array built from the final response text,
+> not a transcript of the whole turn.
+>
+> `result.stop_reason` is likewise **always `nil`**: `RubyLLM::Message` does not
+> define `stop_reason`, and `RobotResult` only populates the field when the
+> response responds to it. It is dropped from `result.export` for the same reason.
+> Because `stopped?` is derived from the absence of tool calls, it is
+> correspondingly always `true`. Do not branch on `"end_turn"` / `"tool_use"`.
 
 ## Memory
 
@@ -225,9 +318,17 @@ robot.memory.data.category  # => "billing" (method-style access)
 # Runtime memory injection
 robot.run("Help me", memory: { session_id: "abc123" })
 
-# Reset memory
+# Reset the key-value store (does NOT clear chat history)
 robot.reset_memory
+
+# Clear chat history (does NOT touch the key-value store)
+robot.clear_messages(keep_system: true)
 ```
+
+> [!NOTE]
+> `reset_memory` and `clear_messages` are independent. A robot's conversation
+> history and its key-value memory are two separate stores; clearing one leaves
+> the other intact.
 
 ### Reserved Memory Keys
 
@@ -251,7 +352,7 @@ network.memory.set(:sentiment, { score: 0.8 })
 result = network.memory.get(:sentiment, wait: true)
 result = network.memory.get(:sentiment, wait: 30)  # timeout in seconds
 
-# Multiple keys
+# Multiple keys -- the timeout applies PER MISSING KEY, not to the call as a whole
 results = network.memory.get(:sentiment, :entities, :keywords, wait: 60)
 
 # Subscribe to changes
@@ -259,6 +360,12 @@ network.memory.subscribe(:status) do |change|
   puts "#{change.key} changed by #{change.writer}: #{change.value}"
 end
 ```
+
+> [!WARNING]
+> A blocking `get` that times out **raises `RobotLab::AwaitTimeout`** — it does
+> not return `nil`. Wrap it in a `rescue` if a missing key is an acceptable
+> outcome. With several keys, the timeout is applied to each missing key in turn,
+> so `get(:a, :b, :c, wait: 60)` can block for up to 180 seconds.
 
 ## MCP (Model Context Protocol)
 
@@ -273,7 +380,29 @@ robot = RobotLab.build(
     { name: "github", transport: { type: "stdio", command: "mcp-server-github" } }
   ]
 )
+
+# Connect the servers AND expose their tools for this run
+robot.run("List the Ruby files in ./lib", mcp: :inherit, tools: :inherit)
 ```
+
+> [!IMPORTANT]
+> `transport:` must be a **nested hash** — `transport: { type: "stdio", command: ..., args: [...] }`.
+> A flat `transport: stdio` with sibling `command:`/`args:` keys raises
+> `NoMethodError: undefined method 'transform_keys' for an instance of String`,
+> and that exception is **swallowed** rather than raised: the robot builds
+> successfully with zero tools. It is not silent, though — a line is logged at
+> `WARN` through `RobotLab.config.logger` (`Robot 'dev' error connecting to MCP
+> server 'fs': undefined method 'transform_keys' for an instance of String`) and
+> the server name lands in `robot.failed_mcp_server_names`. An *invalid* transport
+> type is swallowed the same way; only a direct `MCP::Server.new` raises
+> `ArgumentError`. Valid transport types are `stdio`, `sse`, `ws`,
+> `websocket`, `streamable-http`, and `http` (`streamable_http` with an
+> underscore is invalid).
+>
+> `mcp:` also defaults to `:none` on `run`. `mcp: :inherit` triggers the
+> connection attempt; `tools: :inherit` is additionally required for the MCP
+> tools to reach the model. MCP connection failures are logged and recorded in
+> `robot.failed_mcp_server_names` — they are not raised.
 
 MCP configuration follows a hierarchical resolution: `runtime > robot > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays.
 
@@ -452,9 +581,24 @@ robot = RobotLab.build(
 
 Templates support two categories of front matter keys:
 
-**LLM Config:** `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` — applied to the robot's chat configuration.
+**LLM Config:** only `model` and `temperature` take effect.
 
-**Robot Extras:** `robot_name`, `description`, `tools`, `mcp`, `skills` — applied to the robot's identity and capabilities. These make templates self-contained: reading the `.md` file tells you everything about the robot.
+**Robot Extras:** `robot_name`, `description`, `tools`, `mcp`, `skills`, `parameters` — applied to the robot's identity and capabilities. These make templates self-contained: reading the `.md` file tells you everything about the robot.
+
+> [!WARNING]
+> Front matter is parsed into a `RunConfig` and then applied by dispatching
+> `chat.with_<field>` for each field the chat responds to. The chat object only
+> has `with_model` and `with_temperature`, so **`top_p`, `top_k`, `max_tokens`,
+> `presence_penalty`, `frequency_penalty`, and `stop` are parsed and silently
+> dropped** when declared in front matter. A template declaring all eight yields
+> a chat with empty params.
+>
+> Those six *do* work as constructor keyword arguments or via a `config:`
+> `RunConfig`, because that path goes through `with_params`:
+>
+> ```ruby
+> RobotLab.build(name: "bot", template: :writer, max_tokens: 2000, top_p: 0.3)
+> ```
 
 ```markdown
 ---
@@ -464,20 +608,31 @@ tools:
   - CodeSearchTool
 mcp:
   - name: github
-    transport: stdio
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-github"]
+    transport:
+      type: stdio
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-github"]
 model: claude-sonnet-4
 ---
 You are a GitHub assistant. Use available tools to help with repository tasks.
 ```
 
+> [!IMPORTANT]
+> Note the **nested** `transport:` mapping above. A flat
+> `transport: stdio` with sibling `command:`/`args:` keys raises a `NoMethodError`
+> that is swallowed rather than propagated, leaving you with a robot that has no
+> tools. Look for the `WARN` line on `RobotLab.config.logger` and check
+> `robot.failed_mcp_server_names` — both record the failure.
+
 ```ruby
 # Template provides everything — minimal constructor
 robot = RobotLab.build(template: :github_assistant)
+
+# ...but the tools and MCP servers it declares still have to be requested per run
+robot.run("Open issues in MadBomber/robot_lab?", mcp: :inherit, tools: :inherit)
 ```
 
-Constructor-provided values (`local_tools:`, `mcp:`, `name:`, `description:`) always take precedence over front matter values.
+Constructor-provided values (`local_tools:`, `mcp:`, `name:`, `description:`) always take precedence over front matter values. In the cascade, front matter is the **base**: template front matter → `config:` RunConfig → constructor keyword arguments, with constructor arguments always winning.
 
 ## Next Steps
 

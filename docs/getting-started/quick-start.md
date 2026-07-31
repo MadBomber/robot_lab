@@ -13,10 +13,14 @@ export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY="sk-ant-..."
 Or create a config file at `./config/robot_lab.yml`:
 
 ```yaml
-defaults:
-  ruby_llm:
-    anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+ruby_llm:
+  anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
 ```
+
+> [!IMPORTANT]
+> Config files are **flat** — put the keys at the top level. Wrapping them in a
+> `defaults:` key (as the gem's own bundled `defaults.yml` does) makes the whole
+> file silently ignored.
 
 See [Configuration](configuration.md) for all configuration options.
 
@@ -140,11 +144,29 @@ assistant = RobotLab.build(
   local_tools: [CurrentTime]
 )
 
-result = assistant.run("What time is it right now?")
+# tools: :inherit is REQUIRED -- run() sends no tools without it
+result = assistant.run("What time is it right now?", tools: :inherit)
 puts result.last_text_content
 ```
 
 Tools are passed to the robot via the `local_tools:` keyword argument as an array of `RubyLLM::Tool` subclasses.
+
+> [!WARNING]
+> **Attaching a tool is not the same as sending it.** `Robot#run` defaults to
+> `tools: :none`, which means "send zero tools this turn". Without
+> `tools: :inherit` on the run, the example above builds fine, calls the LLM
+> fine, and the model simply never sees `CurrentTime` — it will guess or say it
+> cannot check the time. The same applies to MCP: pass
+> `mcp: :inherit, tools: :inherit` to connect MCP servers and expose their tools.
+>
+> Do **not** try to fix this by passing `tools: :inherit` to `RobotLab.build` for
+> a standalone robot like this one — at build time it resolves against the global
+> `:none` and yields an allowlist matching nothing, suppressing the tools even
+> when the run asks for them. Put it on the `run` call.
+>
+> (The one place build-time `:inherit` *is* correct is a robot in a network, where
+> it opts into the network `config:`'s list — see
+> [Creating Networks](../guides/creating-networks.md).)
 
 ## Method Chaining
 
@@ -162,7 +184,20 @@ result = robot
 puts result.last_text_content
 ```
 
-Available chaining methods include `with_instructions`, `with_temperature`, `with_model`, `with_max_tokens`, `with_top_p`, `with_tools`, and more.
+The complete set of chaining methods is `with_context`, `with_headers`,
+`with_instructions`, `with_model`, `with_params`, `with_schema`,
+`with_temperature`, `with_thinking`, `with_tool`, `with_tools`, plus RobotLab's
+own `with_template` and `with_bus`.
+
+> [!NOTE]
+> There is no `with_max_tokens`, `with_top_p`, `with_top_k`, `with_stop`,
+> `with_presence_penalty`, or `with_frequency_penalty` — those raise
+> `NoMethodError`. Set them as constructor keyword arguments
+> (`RobotLab.build(..., max_tokens: 2000)`) or through `with_params`:
+>
+> ```ruby
+> robot.with_params(max_tokens: 2000, top_p: 0.3).run("...")
+> ```
 
 ## Multi-Robot Network
 
@@ -205,11 +240,21 @@ if result.value.is_a?(RobotLab::RobotResult)
   puts result.value.last_text_content
 end
 
-# Access intermediate results by task name
+# Access intermediate results by ROBOT name (see note below)
 if result.context[:analyst]
   puts "\nAnalysis: #{result.context[:analyst].last_text_content}"
 end
 ```
+
+> [!IMPORTANT]
+> `result.context` is keyed by the **robot's** `name:`, not by the task name.
+> Internally each robot writes `result.with_context(@name.to_sym, robot_result)`.
+> The lookup above works only because the robot is named `"analyst"` *and* its
+> task is named `:analyst`. If you register a robot under a different task name —
+> `task :first_pass, analyst` — the result is still at
+> `result.context[:analyst]`, not `result.context[:first_pass]`. Keeping the two
+> names identical, as in this example, is the simplest way to avoid the
+> surprise.
 
 ### Network Task Dependencies
 

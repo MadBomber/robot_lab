@@ -51,6 +51,7 @@ graph TB
 
     subgraph "Configuration"
         G[Config < MywayConfig::Base]
+        R[RunConfig]
     end
 
     subgraph "Integration Layer"
@@ -83,6 +84,10 @@ graph TB
     D --> I
     D --> J
     D --> F
+    G --> R
+    R --> B
+    R --> C
+    R --> D
     G --> D
     G --> L
     L --> M
@@ -100,30 +105,39 @@ graph TB
 | **Memory** | Reactive key-value store with pub/sub and blocking reads | [Memory Management](state-management.md) |
 | **Task** | Wraps a robot for pipeline execution with per-task config | [Network Orchestration](network-orchestration.md) |
 | **RobotResult** | Captures LLM output, tool calls, and metadata from a run | [Message Flow](message-flow.md) |
-| **Config** | MywayConfig-based configuration with env var and file support | [Configuration](#configuration) |
+| **RunConfig** | Per-run settings object (LLM fields, `mcp`/`tools`, callbacks, infrastructure) that cascades global → network → task → robot | [Core Concepts](core-concepts.md) |
+| **Config** | MywayConfig-based global configuration with env var and file support | [Configuration](#configuration) |
 
 ## Configuration
 
-RobotLab uses MywayConfig (`Config < MywayConfig::Base`) instead of a `configure` block. Configuration is loaded from multiple sources in priority order:
+Global configuration is a MywayConfig subclass (`Config < MywayConfig::Base`). It is loaded from multiple sources in priority order:
 
 1. **Bundled defaults** (`lib/robot_lab/config/defaults.yml`)
-2. **Environment overrides** (development, test, production sections)
-3. **XDG user config** (`~/.config/robot_lab/config.yml`)
-4. **Project config** (`./config/robot_lab.yml`)
+2. **Environment overrides** (development, test, production)
+3. **XDG user config** (`~/.config/robot_lab/robot_lab.yml` — the filename repeats the app name; `config.yml` is never read)
+4. **Project config** (`./config/robot_lab.yml` — the only file with an ERB pass)
 5. **Environment variables** (`ROBOT_LAB_*` prefix, double underscore for nesting)
+6. **Constructor params**
+
+Top-level wrappers behave differently per file. In the **XDG user config**, a section named for the current environment is honoured — the loader looks for `parsed.key?(env)` (`Anyway::Settings.current_environment`, else `RAILS_ENV`, else `RACK_ENV`, else `"development"`) and falls back to the root when absent — so both `development:` and a flat file work there. A `defaults:` wrapper is not an environment name, so it is ignored. The **project config** must be flat outside Rails (all wrappers ignored); under Rails, `anyway_config` sets `current_environment` to `Rails.env` and the project file becomes environmental, so a flat file is ignored and keys must sit under `development:` / `test:` / `production:`. See [Core Concepts](core-concepts.md#configuration) for details.
 
 ```ruby
 # Access configuration
 RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
 RobotLab.config.ruby_llm.request_timeout  #=> 120
+
+# Block form (yields the same Config object)
+RobotLab.configure do |c|
+  c.logger = Logger.new($stdout)
+end
 ```
 
 ## Data Flow
 
 1. **Input**: User calls `robot.run("message")` or `network.run(message: "...")`
 2. **Memory**: Robot resolves active memory (standalone or network-shared)
-3. **MCP**: Robot resolves and initializes MCP clients from hierarchical config
-4. **Tools**: Robot resolves and filters tools from hierarchical config
+3. **MCP**: Robot resolves MCP servers from hierarchical config and connects clients. `run` defaults to `mcp: :none`, so a plain `run` connects nothing
+4. **Tools**: Robot resolves and filters tools from hierarchical config. `run` defaults to `tools: :none`, so a plain `run` sends the LLM zero tools; pass `tools: :inherit` to send the robot's attached tools
 5. **Execution**: Robot delegates to `Agent#ask` which calls `@chat.ask` on RubyLLM
 6. **Tool Loop**: LLM may invoke tools; RubyLLM handles the tool call/result loop
 7. **Result**: Robot builds and returns a `RobotResult`
@@ -161,7 +175,7 @@ robot = RobotLab.build(name: "bot")
 
 ### Hierarchical Configuration
 
-Tools and MCP servers use hierarchical resolution: `runtime > robot build > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays.
+Tools and MCP servers use hierarchical resolution: `run()/task > robot build-time > network > global config`. Values can be `:none`, `:inherit`, or an explicit array (which filters the already-attached tools by name — entries must match how the tool was attached, class or instance). `run()` defaults both to `:none`, so the runtime level is an explicit "send nothing" unless you override it.
 
 ### SimpleFlow Pipeline
 

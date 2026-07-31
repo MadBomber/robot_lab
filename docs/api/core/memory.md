@@ -83,14 +83,33 @@ Retrieve one or more values, optionally waiting until they exist.
 
 **Parameters:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| `keys` | `Symbol`, `String` | One or more keys to retrieve |
-| `wait` | `Boolean`, `Numeric` | `false`: immediate, `true`: block, `Numeric`: timeout |
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `*keys` | `Symbol`, `String` | — | One or more keys to retrieve; flattened and symbolized |
+| `wait` | `Boolean`, `Numeric` | `false` | `false`: return immediately (nil if missing). `true`: block indefinitely. `Numeric`: block up to that many seconds |
 
-**Returns:** Single value for one key, `Hash` for multiple keys.
+**Returns:** the single value for one key, a `Hash` keyed by symbol for multiple keys.
 
-**Raises:** `AwaitTimeout` if timeout expires.
+**Raises:** `RobotLab::AwaitTimeout` — `"Timeout waiting for :<key> after <N> seconds"`.
+
+!!! warning "Blocking semantics"
+    - On expiry `get` **raises `RobotLab::AwaitTimeout`**; it does not return nil.
+      Rescue it if a missing value is acceptable.
+    - With multiple keys the timeout is applied **per missing key**, not to the
+      call as a whole. `get(:a, :b, :c, wait: 60)` can block for up to 180
+      seconds if all three are missing.
+    - `wait: true` blocks with no deadline and can hang forever. Prefer a numeric
+      timeout in production.
+    - Waiting is implemented with a pipe (`Waiter`, using `IO#wait_readable`), so
+      a blocked reader does not spin.
+
+    ```ruby
+    value = begin
+      memory.get(:sentiment, wait: 30)
+    rescue RobotLab::AwaitTimeout
+      nil
+    end
+    ```
 
 ### key?
 
@@ -114,7 +133,16 @@ Remove a key. Cannot delete reserved keys.
 memory.keys  # => Array<Symbol>
 ```
 
-Get all non-reserved keys.
+All keys **excluding** the reserved ones.
+
+### all_keys
+
+```ruby
+memory.all_keys  # => Array<Symbol>
+```
+
+All keys **including** the reserved ones (`:data`, `:results`, `:messages`,
+`:session_id`, `:cache`).
 
 ### clear
 
@@ -130,7 +158,14 @@ Clear all non-reserved keys.
 memory.reset
 ```
 
-Reset memory to initial state (clears everything including reserved keys, preserves cache).
+Reset memory to its initial state: clears the backend, restores `:data` to `{}`,
+`:results` and `:messages` to `[]`, `:session_id` to `nil`, and re-installs the
+existing cache object. The `StateProxy` returned by `data` is discarded and
+rebuilt on next access.
+
+This resets the **key-value store only**. It has nothing to do with a robot's
+chat history — use `robot.clear_messages(keep_system: true)` for that. The two
+are independent.
 
 ### subscribe
 
@@ -141,20 +176,41 @@ end
 ```
 
 Subscribe to changes on one or more keys. Callback receives a `MemoryChange` object.
+Returns a subscription ID for [`unsubscribe`](#unsubscribe).
 
-**MemoryChange attributes:**
+**Raises:** `ArgumentError` if no block is given.
+
+Only [`set`](#set) notifies subscribers. Writing a reserved key
+(`memory[:data] = ...`, `session_id=`, `append_result`) bypasses notification
+entirely, as does mutating `memory.data`.
+
+Callbacks are dispatched through `Async { }`. **Outside a running reactor the
+callback runs synchronously on the writer's thread**, so a slow subscriber blocks
+the `set` that triggered it.
+
+**`RobotLab::MemoryChange` attributes:**
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
 | `key` | `Symbol` | The changed key |
 | `value` | `Object` | New value |
-| `previous` | `Object` | Previous value |
-| `writer` | `String, nil` | Name of robot that wrote |
+| `previous` | `Object, nil` | Previous value |
+| `writer` | `String, nil` | `memory.current_writer` at the time of the write — set to the robot's name for the duration of each `run` |
 | `network_name` | `String, nil` | Network name |
 | `timestamp` | `Time` | When the change occurred |
-| `created?` | `Boolean` | Previous was nil |
-| `updated?` | `Boolean` | Previous was not nil |
-| `deleted?` | `Boolean` | New value is nil |
+| `correlation_id` | `String, nil` | Optional tracing ID |
+
+**Predicates** — note that each tests *both* sides, so all three are false when
+`previous` and `value` are both nil, and all three are false for a nil→nil write:
+
+| Predicate | Exact definition |
+|-----------|------------------|
+| `created?` | `previous.nil? && !value.nil?` |
+| `updated?` | `!previous.nil? && !value.nil?` |
+| `deleted?` | `value.nil? && !previous.nil?` |
+
+Also available: `to_h` (`.compact`ed, `timestamp` rendered as ISO-8601),
+`to_json`, and `MemoryChange.from_hash`.
 
 ### subscribe_pattern
 
@@ -164,7 +220,8 @@ sub_id = memory.subscribe_pattern("analysis:*") do |change|
 end
 ```
 
-Subscribe to keys matching a glob pattern (`*` and `?` supported).
+Subscribe to keys matching a glob pattern (`*` and `?` supported). Returns a
+subscription ID. **Raises:** `ArgumentError` if no block is given.
 
 ### unsubscribe
 
@@ -172,15 +229,119 @@ Subscribe to keys matching a glob pattern (`*` and `?` supported).
 memory.unsubscribe(sub_id)  # => Boolean
 ```
 
-Remove a subscription by its ID.
+Remove a subscription by its ID (works for both `subscribe` and
+`subscribe_pattern`). Returns `true` when something was removed.
+
+### unsubscribe_keys
+
+```ruby
+memory.unsubscribe_keys(:status, :progress)  # => self
+```
+
+Drop **all** key subscriptions for the named keys at once, without needing their
+IDs. Pattern subscriptions are unaffected.
+
+### subscribed?
+
+```ruby
+memory.subscribed?(:status)  # => Boolean
+```
+
+Whether any subscriber — key-based or pattern-based — would be notified for `key`.
 
 ### merge!
 
 ```ruby
-memory.merge!(key1: "value1", key2: "value2")
+memory.merge!(key1: "value1", key2: "value2")  # => self
 ```
 
-Merge multiple key-value pairs into memory.
+Merge multiple key-value pairs into memory. Each pair is assigned through `[]=`,
+so non-reserved keys go through the reactive `set` path and do notify subscribers.
+
+## Results and History
+
+### append_result
+
+```ruby
+memory.append_result(robot_result)  # => self
+```
+
+Push a `RobotResult` onto the accumulated `:results` array. Bypasses subscriber
+notification.
+
+### set_results
+
+```ruby
+memory.set_results(array_of_results)  # => self
+```
+
+Replace the whole `:results` array (used when loading from persistence).
+
+### results_from
+
+```ruby
+memory.results_from(5)  # => Array<RobotResult>
+```
+
+Results from the given index onward — for incremental saves. Returns `[]` when
+the index is past the end.
+
+### format_history
+
+```ruby
+memory.format_history(formatter: nil)  # => Array<Message>
+```
+
+`messages` followed by every result flat-mapped through `formatter`. Pass a
+`Proc` for `formatter:` to control how a `RobotResult` becomes messages; the
+default formatter is used when omitted.
+
+## Backend
+
+### redis?
+
+```ruby
+memory.redis?  # => Boolean
+```
+
+Whether this memory is backed by Redis rather than the in-process Hash. The
+`backend: :auto` default tries Redis and falls back to a Hash; `backend: :hash`
+forces the Hash.
+
+### current_writer / current_writer=
+
+```ruby
+memory.current_writer          # => String, nil
+memory.current_writer = "bot"
+```
+
+The name attributed to writes, surfaced as `MemoryChange#writer`. `Robot#run`
+sets this to the robot's name for the duration of the run and restores the
+previous value in an `ensure` block, so nested and concurrent runs attribute
+correctly.
+
+## Document Store
+
+These four methods require the **`robot_lab-document_store`** extension gem. Without
+it every one of them raises
+`RobotLab::DependencyError: document storage requires the robot_lab-document_store gem.`
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `store_document(key, text)` | `self` | Embed `text` and store it under `key` |
+| `search_documents(query, limit: 5)` | `Array<Hash>` | Hits sorted by score descending; each hash has `:key`, `:text`, `:score` |
+| `document_keys` | `Array<Symbol>` | Keys of all stored documents |
+| `delete_document(key)` | `self` | Remove a document |
+
+```ruby
+memory.store_document(:readme, File.read("README.md"))
+memory.search_documents("how to configure redis", limit: 3).each do |hit|
+  puts "#{hit[:key]} (#{hit[:score].round(3)})"
+end
+```
+
+Documents live in a separate store, not in the key-value backend — they do not
+appear in `keys`, `all_keys`, or `to_h`.
 
 ## Reserved Key Accessors
 
@@ -193,7 +354,9 @@ memory.data.user_id            # Method access
 memory.data[:status] = "active"
 ```
 
-Runtime data accessed through `StateProxy` for method-style access.
+Runtime data accessed through a [`StateProxy`](state.md) for method-style access.
+Writes made through the proxy are **not** reactive — they bypass `set`, so they
+wake no blocking readers and notify no subscribers.
 
 ### results
 
@@ -221,10 +384,22 @@ memory.session_id = "abc"  # Set session identifier
 ### cache
 
 ```ruby
-memory.cache  # => RubyLLM::SemanticCache
+memory.cache  # => RubyLLM::SemanticCache (the module itself), or nil
 ```
 
-Semantic cache module (read-only after initialization).
+Read-only after initialization — assigning it raises
+`ArgumentError: Cannot reassign cache - it is initialized automatically`.
+
+!!! warning "`cache` is `nil` when caching is disabled"
+    The value stored is the `RubyLLM::SemanticCache` **module**, not an instance.
+    When constructed with `enable_cache: false` it is `nil`, so
+    `memory.cache.fetch(...)` raises `NoMethodError`. Guard on
+    `memory.cache` before use, or leave `enable_cache` at its `true` default.
+
+    ```ruby
+    RobotLab::Memory.new.cache                      # => RubyLLM::SemanticCache
+    RobotLab::Memory.new(enable_cache: false).cache # => nil
+    ```
 
 ## Serialization
 
@@ -235,27 +410,50 @@ memory.to_h
 # => { data: {...}, results: [...], messages: [...], session_id: "...", custom: {...} }
 ```
 
+Keys: `data` (from the `StateProxy`), `results` (each via `RobotResult#export`),
+`messages` (each via `to_h`), `session_id`, and `custom` (every non-reserved key).
+`cache` is never serialized.
+
+!!! warning "`to_h` is `.compact`ed"
+    Nil values are dropped, so `session_id` disappears entirely when unset:
+
+    ```ruby
+    RobotLab::Memory.new.to_h
+    # => { data: {}, results: [], messages: [], custom: {} }   -- no :session_id
+    ```
+
+    Consumers must tolerate the missing key. `custom` is always present (it is
+    `{}` rather than nil when there are no custom keys).
+
 ### to_json
 
 ```ruby
 memory.to_json  # => String
 ```
 
+Serializes `to_h`.
+
 ### from_hash
 
 ```ruby
-memory = Memory.from_hash(hash)
+memory = RobotLab::Memory.from_hash(hash)
 ```
 
-Reconstruct memory from a hash.
+Reconstructs `data`, `results`, `messages`, and `session_id`, then re-applies
+every entry from `custom`. A fresh cache is created; subscriptions, backend
+choice, and `network_name` are **not** restored.
 
-### clone
+### clone / dup
 
 ```ruby
 new_memory = memory.clone
+new_memory = memory.dup     # alias for clone
 ```
 
-Deep copy with fresh subscriptions (cache and network_name preserved).
+Deep copy of `data` plus copies of `results`, `messages`, `session_id`, and all
+non-reserved keys. The `enable_cache` setting and `network_name` are preserved.
+Subscriptions are **not** copied — the clone starts with none. Copying custom
+keys uses the internal non-reactive setter, so no notifications fire.
 
 ## Examples
 
@@ -297,11 +495,18 @@ network.memory.set(:sentiment, { score: 0.8, confidence: 0.95 })
 
 # In robot B (reader, may run concurrently)
 result = network.memory.get(:sentiment, wait: true)   # Block indefinitely
-result = network.memory.get(:sentiment, wait: 30)     # Block up to 30s
+result = network.memory.get(:sentiment, wait: 30)     # Block up to 30s, then raise
 
-# Multiple keys with timeout
+# Multiple keys — the timeout applies PER MISSING KEY, so this can block 180s
 results = network.memory.get(:sentiment, :entities, :keywords, wait: 60)
 # => { sentiment: {...}, entities: [...], keywords: [...] }
+
+# Treat a timeout as "not available"
+sentiment = begin
+  network.memory.get(:sentiment, wait: 30)
+rescue RobotLab::AwaitTimeout
+  nil
+end
 ```
 
 ### Reactive Subscriptions
@@ -357,4 +562,5 @@ memory = Memory.from_hash(data)
 ## See Also
 
 - [Memory Guide](../../guides/memory.md)
+- [StateProxy](state.md) — the wrapper returned by `memory.data`
 - [State Management Architecture](../../architecture/state-management.md)
