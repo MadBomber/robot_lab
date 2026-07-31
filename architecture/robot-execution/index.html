@@ -1504,6 +1504,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1816,6 +1822,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support Classes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/errors/" class="md-nav__link">
         
   
@@ -1869,7 +1959,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1891,14 +1981,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2060,7 +2150,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2082,14 +2172,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2221,7 +2311,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_9" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2243,14 +2333,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_9" id="__nav_5_9_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_9">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2786,32 +2876,57 @@
 <p>When you call <code>robot.run("message")</code>, several steps occur:</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant App as Application
-    participant Robot
+    participant Skills as AgentSkillMatching&lt;br/&gt;(prepended)
+    participant Robot as Robot (Hooking run)
+    participant Hooks as Hooks / HookRegistry
     participant Memory
+    participant Ledger as Budget::Ledger
     participant Chat as @chat (RubyLLM)
     participant LLM
 
-    App-&gt;&gt;Robot: run("message")
+    App-&gt;&gt;Skills: run("message")
+    Skills-&gt;&gt;Skills: match_agent_skills + inject (prompt &amp; script tools)
+    Skills-&gt;&gt;Robot: super
+
     Robot-&gt;&gt;Memory: resolve_run_memory()
-    Robot-&gt;&gt;Robot: prepare_tools()
-    Robot-&gt;&gt;Robot: resolve_mcp_hierarchy()
-    Robot-&gt;&gt;Robot: resolve_tools_hierarchy()
-    Robot-&gt;&gt;Robot: ensure_mcp_clients()
-    Robot-&gt;&gt;Robot: filtered_tools() + cap_tools()
+    Robot-&gt;&gt;Memory: current_writer = name
+    Robot-&gt;&gt;Hooks: Hooks.run(:run, RunHookContext)
+    Note over Hooks: before_run / around_run wrap everything below
+
+    Robot-&gt;&gt;Robot: prepare_tools() — resolve_mcp_hierarchy,&lt;br/&gt;ensure_mcp_clients, resolve_tools_hierarchy,&lt;br/&gt;filtered_tools + cap_tools
     Robot-&gt;&gt;Chat: with_tools(*filtered, replace: true)
-    Robot-&gt;&gt;Chat: ask("message")
+    Robot-&gt;&gt;Robot: rerender_template(kwargs) — when template + extra kwargs
+    Robot-&gt;&gt;Ledger: reserve_budget! (raises BudgetExceeded if exhausted)
+
+    Robot-&gt;&gt;Hooks: Hooks.run(:llm_generation, LlmGenerationHookContext)
+    Robot-&gt;&gt;Robot: inject_learnings(request)
+    Robot-&gt;&gt;Robot: maybe_compact — fires :compaction family
+    Robot-&gt;&gt;Chat: install_circuit_breaker (when max_tool_rounds)
+    Robot-&gt;&gt;Chat: install_doom_loop_detection (always)
+    Robot-&gt;&gt;Chat: ask(message, &amp;streaming_block)
     Chat-&gt;&gt;LLM: API Request
 
-    loop Tool Calls
+    loop Tool loop (inside :llm_generation)
         LLM--&gt;&gt;Chat: tool_call response
-        Chat-&gt;&gt;Chat: execute tool
+        Chat-&gt;&gt;Hooks: Tool.call — Hooks.run(:tool_call)
         Chat-&gt;&gt;LLM: tool result
     end
 
     LLM--&gt;&gt;Chat: final response
     Chat--&gt;&gt;Robot: RubyLLM::Response
-    Robot-&gt;&gt;Robot: build_result(response)
-    Robot--&gt;&gt;App: RobotResult</code></pre>
+    Robot-&gt;&gt;Robot: build_result(response) — result_text + token accounting
+    Robot-&gt;&gt;Ledger: reconcile_budget!
+    Robot-&gt;&gt;Robot: enforce_token_budget! / enforce_cost_budget!&lt;br/&gt;(raise InferenceError on overage)
+    Robot-&gt;&gt;Hooks: after_run
+    Note over Robot,Memory: ensure: remove_doom_loop_detection,&lt;br/&gt;restore_tool_call_callback, restore current_writer
+    Robot--&gt;&gt;Skills: RobotResult
+    Skills-&gt;&gt;Skills: ensure: restore_after_agent_skills
+    Skills--&gt;&gt;App: RobotResult</code></pre>
+<p>The steps are described individually below. Two things this diagram makes
+explicit that the prose repeats: <code>Robot::AgentSkillMatching</code> is <strong>prepended</strong>, so
+its <code>run</code> wraps <code>Robot::Hooking#run</code> (which is the <code>run</code> everything else calls);
+and the <code>:llm_generation</code> family wraps the provider's <em>entire</em> tool loop, so
+<code>:tool_call</code> hooks fire nested inside it rather than between generations.</p>
 <h2 id="step-by-step-flow">Step-by-Step Flow<a class="headerlink" href="#step-by-step-flow" title="Permanent link">&para;</a></h2>
 <h3 id="1-memory-resolution">1. Memory Resolution<a class="headerlink" href="#1-memory-resolution" title="Permanent link">&para;</a></h3>
 <p><code>Robot#run</code> first resolves the memory this run will write to, via <code>resolve_run_memory</code>:</p>
@@ -2929,7 +3044,7 @@
 <li>the most recent non-empty assistant message in <code>@chat.messages</code>, scoped to messages <em>after</em> the last user message, for models that end a turn on a tool call with no trailing text</li>
 </ol>
 <p>Scoping the history fallback to the current turn is what prevents a previous turn's answer from being returned when a thinking-mode model emits nothing in <code>content</code>.</p>
-<p><code>build_result</code> also does token accounting: it reads <code>response.tokens</code> (falling back to <code>input_tokens</code>/<code>output_tokens</code>), adds them to the robot's running totals, and stores them on the result. <code>run</code> then reconciles the budget reservation and enforces <code>token_budget</code> / <code>cost_budget</code>, raising <code>RobotLab::BudgetExceeded</code> when either is blown.</p>
+<p><code>build_result</code> also does token accounting: it reads <code>response.tokens</code> (falling back to <code>input_tokens</code>/<code>output_tokens</code>), adds them to the robot's running totals, and stores them on the result. <code>run</code> then reconciles the budget reservation and enforces <code>token_budget</code> / <code>cost_budget</code>, raising <strong><code>RobotLab::InferenceError</code></strong> when this call's actual usage pushed cumulative usage over budget. (<code>RobotLab::BudgetExceeded</code> is the <em>other</em> budget error: it is raised by <code>reserve_budget!</code> <strong>before</strong> the call, when a prior call already exhausted the dimension. See <a href="../../guides/observability/#budgets-token-cost">Budgets</a>.)</p>
 <h2 id="robotresult">RobotResult<a class="headerlink" href="#robotresult" title="Permanent link">&para;</a></h2>
 <p>The result object from a <code>robot.run</code> call:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>

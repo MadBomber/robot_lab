@@ -1267,6 +1267,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1579,6 +1585,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support Classes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/errors/" class="md-nav__link">
         
   
@@ -1632,7 +1722,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1654,14 +1744,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1823,7 +1913,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1845,14 +1935,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1984,7 +2074,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_9" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2006,14 +2096,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_9" id="__nav_5_9_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_9">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2375,6 +2465,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="System Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#robot-subsystems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Robot subsystems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2559,25 +2666,31 @@
     subgraph "RobotLab Core"
         B[Network]
         C[Task]
-        D[Robot &lt; RubyLLM::Agent]
+        D[Robot &amp;lt; RubyLLM::Agent]
         E[Memory]
         F[RobotResult]
     end
 
     subgraph "Configuration"
-        G[Config &lt; MywayConfig::Base]
+        G[Config &amp;lt; MywayConfig::Base]
         R[RunConfig]
+    end
+
+    subgraph "Cross-Cutting"
+        HK[Hooks&lt;br/&gt;HookRegistry x3]
     end
 
     subgraph "Integration Layer"
         H[MCP Client]
-        I[Tools &lt; RubyLLM::Tool]
+        I[Tools &amp;lt; RubyLLM::Tool]
         J[Templates / prompt_manager]
+        SK[AgentSkills + Sandbox]
     end
 
     subgraph "Execution Layer"
         K[SimpleFlow::Pipeline]
         L[RubyLLM Chat]
+        TB[TypedBus + BusPoller]
     end
 
     subgraph "Provider Layer"
@@ -2593,22 +2706,65 @@
     C --&gt; D
     B --&gt; K
     B --&gt; E
+    B --&gt; TB
     D --&gt; E
     D --&gt; L
+    D --&gt; TB
     D --&gt; H
     D --&gt; I
     D --&gt; J
+    D --&gt; SK
     D --&gt; F
+    SK --&gt; I
     G --&gt; R
     R --&gt; B
     R --&gt; C
     R --&gt; D
     G --&gt; D
     G --&gt; L
+    HK -.wraps.-&gt; B
+    HK -.wraps.-&gt; C
+    HK -.wraps.-&gt; D
+    HK -.wraps.-&gt; I
     L --&gt; M
     L --&gt; N
     L --&gt; O
     H --&gt; P</code></pre>
+<p>The dotted <code>wraps</code> edges are the hook system: <code>Hooks.run</code> brackets every network
+run, task, robot run, LLM generation, tool call, compaction, and <code>learn</code> call. It
+is the framework's extension seam — the extension gems (<code>robot_lab-audit</code>,
+<code>robot_lab-durable</code>, …) attach here rather than subclassing core objects. See the
+<a href="../api/hooks/">Hooks API</a>.</p>
+<h3 id="robot-subsystems">Robot subsystems<a class="headerlink" href="#robot-subsystems" title="Permanent link">&para;</a></h3>
+<p>A <code>Robot</code> composes several small collaborators, each documented on the
+<a href="../api/support/">Support</a> and <a href="../api/skills/">Skills</a> API pages:</p>
+<pre class="mermaid"><code>graph LR
+    D[Robot]
+
+    D --&gt; BM[BusMessaging&lt;br/&gt;RobotMessage envelopes]
+    BM --&gt; BP[BusPoller&lt;br/&gt;per-robot serialization]
+    D --&gt; BD[Budget::Ledger&lt;br/&gt;token_budget / cost_budget]
+    D --&gt; DL[DoomLoopDetector&lt;br/&gt;always installed per run]
+    D --&gt; HC[HistoryCompressor&lt;br/&gt;compress_history / auto_compact]
+    D --&gt; DF[DelegationFuture&lt;br/&gt;delegate async: true]
+    D --&gt; HS[HistorySearch&lt;br/&gt;search_history]
+    D --&gt; ASM[AgentSkillMatching&lt;br/&gt;prepended around run]
+
+    ASM --&gt; AS[AgentSkill&lt;br/&gt;SKILL.md bundle]
+    AS --&gt; CAT[AgentSkillCatalog]
+    AS --&gt; CAP[Capabilities]
+    AS --&gt; ST[ScriptTool]
+    CAP --&gt; SB[Sandbox&lt;br/&gt;Seatbelt or Null]
+    ST --&gt; SB
+
+    HC --&gt; TA[TextAnalysis&lt;br/&gt;TF / TF-IDF]
+    HS --&gt; TA
+    CV[Convergence] --&gt; TA
+    SD[MCP::ServerDiscovery] --&gt; TA</code></pre>
+<p><code>TextAnalysis</code> is the shared floor under every similarity feature — history
+compression, history search, convergence detection, and MCP server discovery all
+route through it, which is why they share the one optional <code>classifier</code>
+dependency.</p>
 <h2 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2653,6 +2809,31 @@
 <td><strong>Config</strong></td>
 <td>MywayConfig-based global configuration with env var and file support</td>
 <td><a href="#configuration">Configuration</a></td>
+</tr>
+<tr>
+<td><strong>Hook</strong></td>
+<td>Handler base class for the seven hook families — the framework's extension seam</td>
+<td><a href="../api/hooks/">Hooks API</a></td>
+</tr>
+<tr>
+<td><strong>AgentSkill</strong></td>
+<td>A <code>SKILL.md</code> bundle whose instructions and <code>scripts/</code> become prompt text and tools</td>
+<td><a href="../api/skills/">Skills API</a></td>
+</tr>
+<tr>
+<td><strong>Sandbox</strong></td>
+<td>Opt-in OS-level confinement (macOS Seatbelt) for skill scripts, derived from <code>Capabilities</code></td>
+<td><a href="../api/skills/">Skills API</a></td>
+</tr>
+<tr>
+<td><strong>RobotMessage</strong></td>
+<td>Immutable envelope for TypedBus inter-robot messaging, serialized per robot by <code>BusPoller</code></td>
+<td><a href="../api/support/">Support API</a></td>
+</tr>
+<tr>
+<td><strong>Budget::Ledger</strong></td>
+<td>Thread-safe reserve/reconcile ledger behind <code>token_budget</code> / <code>cost_budget</code></td>
+<td><a href="../api/support/">Support API</a></td>
 </tr>
 </tbody>
 </table>

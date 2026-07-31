@@ -1,0 +1,4213 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-robot LLM workflow orchestration for Ruby">
+      
+      
+        <meta name="author" content="Dewayne VanHoozer">
+      
+      
+        <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/skills/">
+      
+      
+        <link rel="prev" href="../hooks/">
+      
+      
+        <link rel="next" href="../support/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Skills - RobotLab</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#skills-api" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="RobotLab" class="md-header__button md-logo" aria-label="RobotLab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RobotLab
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Skills
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/madbomber/robot_lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    madbomber/robot_lab
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RobotLab" class="md-nav__button md-logo" aria-label="RobotLab" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5"/></svg>
+
+    </a>
+    RobotLab
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/madbomber/robot_lab" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    madbomber/robot_lab
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../architecture/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/core-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/robot-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Robot Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/state-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/message-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Message Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../guides/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/building-robots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Robots
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-networks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Networks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/using-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/mcp-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Responses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability & Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hook System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/knowledge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Knowledge Search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../core/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Classes
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Classes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/robot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Robot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RobotResult
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StateProxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabagentskill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AgentSkill
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::AgentSkill">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        script_tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabagentskillcatalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AgentSkillCatalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::AgentSkillCatalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#skills_root" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SKILLS_ROOT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instance / reset!
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        all
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabcapabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Capabilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Capabilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from_front_matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        from_front_matter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fm_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ceiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ceiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        core?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intersect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        intersect
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabscripttool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ScriptTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::ScriptTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolfrom_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.from_path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolexecute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.execute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolrun_with_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.run_with_timeout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolterminate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.terminate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolformat_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.format_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolderive_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.derive_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolextract_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.extract_description
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Sandbox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sandboxenabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.enabled?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxmacos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.macos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxfor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.for
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxwarn_once_non_macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.warn_once_non_macos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandboxnull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox::Null
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandboxseatbelt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox::Seatbelt
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Sandbox::Seatbelt">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constants_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrap-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wrap / cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profile_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        profile_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support Classes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../messages/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Messages
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Messages
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../messages/user-message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UserMessage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../messages/text-message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TextMessage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../messages/tool-call-message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ToolCallMessage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../messages/tool-result-message/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ToolResultMessage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../mcp/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MCP
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/transports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../streaming/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_9" id="__nav_5_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Streaming
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/basic-chat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic Chat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/multi-robot-network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-Robot Network
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/tool-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabagentskill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AgentSkill
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::AgentSkill">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instructions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        script_tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabagentskillcatalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::AgentSkillCatalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::AgentSkillCatalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#skills_root" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SKILLS_ROOT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        instance / reset!
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        find
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        all
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabcapabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Capabilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Capabilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from_front_matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        from_front_matter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fm_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ceiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ceiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        core?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intersect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        intersect
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabscripttool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::ScriptTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::ScriptTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolfrom_path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.from_path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolexecute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.execute
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolrun_with_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.run_with_timeout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolterminate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.terminate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolformat_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.format_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolderive_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.derive_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripttoolextract_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptTool.extract_description
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Sandbox">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sandboxenabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.enabled?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxmacos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.macos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxfor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.for
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sandboxwarn_once_non_macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sandbox.warn_once_non_macos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandboxnull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox::Null
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabsandboxseatbelt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Sandbox::Seatbelt
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Sandbox::Seatbelt">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constants_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constructor_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrap-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wrap / cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#profile_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        profile_text
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/madbomber/robot_lab/edit/main/docs/api/skills.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/madbomber/robot_lab/raw/main/docs/api/skills.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="skills-api">Skills API<a class="headerlink" href="#skills-api" title="Permanent link">&para;</a></h1>
+<p>Class-level reference for the AgentSkills subsystem: skill bundles, the scripts
+they expose as tools, the capabilities those scripts declare, and the sandbox
+that confines them. For the how-to, see
+<a href="../../guides/using-tools/#skill-scripts-and-sandboxing">Using Tools: Skill Scripts and Sandboxing</a>
+and <a href="../../guides/building-robots/#composable-skills">Building Robots: Composable Skills</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Two different things are called 'skills'</p>
+<p><strong>Template skills</strong> (<code>RobotLab.build(skills: [:clarifier])</code>) are ordinary
+prompt templates whose bodies are prepended to a robot's system prompt — see
+<a href="../core/robot/#skills">Robot: Skills</a>. <strong>AgentSkills</strong> (this page) are
+<code>SKILL.md</code> <em>bundles</em> on disk, discovered from <code>~/.prompts/skills/</code>, matched
+to a message by embedding similarity at run time, and capable of contributing
+executable tools. They share the word but not the mechanism.</p>
+</div>
+<pre class="mermaid"><code>graph LR
+    subgraph "Discovery"
+        C[AgentSkillCatalog&lt;br/&gt;~/.prompts/skills/]
+        S[AgentSkill&lt;br/&gt;SKILL.md]
+    end
+
+    subgraph "Capability grant"
+        D[Capabilities&lt;br/&gt;declared in front matter]
+        CE[Capabilities.ceiling&lt;br/&gt;from config.sandbox]
+        G[effective grant&lt;br/&gt;declared ∩ ceiling]
+    end
+
+    subgraph "Execution"
+        T[ScriptTool.from_path&lt;br/&gt;-&gt; RobotLab::Tool]
+        SB{Sandbox.enabled?}
+        SE[Sandbox::Seatbelt&lt;br/&gt;macOS]
+        NU[Sandbox::Null&lt;br/&gt;passthrough]
+        P[script process]
+    end
+
+    R[Robot&lt;br/&gt;AgentSkillMatching] --&gt; C
+    C --&gt; S
+    S --&gt; D
+    S --&gt; T
+    D --&gt; G
+    CE --&gt; G
+    T --&gt; SB
+    SB -- "off, or trust: core,&lt;br/&gt;or non-macOS" --&gt; NU
+    SB -- "on + macOS" --&gt; SE
+    G --&gt; SE
+    SE --&gt; P
+    NU --&gt; P</code></pre>
+<hr />
+<h2 id="robotlabagentskill">RobotLab::AgentSkill<a class="headerlink" href="#robotlabagentskill" title="Permanent link">&para;</a></h2>
+<p>Immutable value object for one skill folder: a directory containing a <code>SKILL.md</code>
+with <code>name</code> and <code>description</code> front matter, plus optional <code>scripts/</code>,
+<code>references/</code>, and <code>assets/</code> subdirectories.</p>
+<h3 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">skill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AgentSkill</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;~/.prompts/skills/deploy-checker/SKILL.md&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>skill_md_path</code></td>
+<td><code>String</code>, <code>Pathname</code></td>
+<td>Path to the <code>SKILL.md</code> file itself, <strong>not</strong> the directory</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Raises <code>RobotLab::ConfigurationError</code></strong> when front matter is missing <code>name</code> or
+<code>description</code> (or either is blank) — and because a file with no <code>---</code> block
+parses to an empty hash, a <code>SKILL.md</code> without front matter always raises.
+Malformed YAML raises <code>Psych::SyntaxError</code> instead, straight from
+<code>YAML.safe_load</code>. <a href="#robotlabagentskillcatalog"><code>AgentSkillCatalog</code></a> rescues both
+and skips the bundle; construct an <code>AgentSkill</code> directly and you get the
+exception.</p>
+<h3 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>String</code></td>
+<td>Front-matter <code>name</code>; also the catalog lookup key (symbolized)</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>String</code></td>
+<td>Front-matter <code>description</code>; the text matched against the user's message</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td><code>Pathname</code></td>
+<td>The skill <strong>directory</strong> (<code>dirname</code> of the <code>SKILL.md</code> path)</td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td><code>Capabilities</code></td>
+<td>Built from front matter via <code>Capabilities.from_front_matter</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="instructions">instructions<a class="headerlink" href="#instructions" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">skill</span><span class="o">.</span><span class="n">instructions</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<p>The <code>SKILL.md</code> body below the front matter, stripped. This is the text
+<code>Robot::AgentSkillMatching</code> prepends to the system prompt when the skill matches.
+Memoized.</p>
+<h3 id="scripts">scripts<a class="headerlink" href="#scripts" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">skill</span><span class="o">.</span><span class="n">scripts</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Pathname&gt;</span>
+</span></code></pre></div>
+<p>Every <strong>file</strong> directly inside the skill's <code>scripts/</code> directory, sorted. Returns
+<code>[]</code> when there is no <code>scripts/</code> directory. Not recursive — subdirectories are
+skipped. Memoized.</p>
+<h3 id="script_tools">script_tools<a class="headerlink" href="#script_tools" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">skill</span><span class="o">.</span><span class="n">script_tools</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;RobotLab::Tool&gt;</span>
+</span></code></pre></div>
+<p>One <code>RobotLab::Tool</code> per script, built with
+<a href="#scripttoolfrom_path"><code>ScriptTool.from_path</code></a> and carrying this skill's
+<code>capabilities</code> and directory. <strong>Non-executable scripts are skipped</strong> (logged at
+<code>warn</code> and filtered out by <code>filter_map</code>), so this array can be shorter than
+<code>scripts</code>. Memoized.</p>
+<p>These tools are appended to <code>robot.local_tools</code> for the duration of a matched
+<code>run</code> and removed again in the <code>ensure</code> block — see
+<a href="../../architecture/robot-execution/#execution-overview">Robot Execution</a>.</p>
+<hr />
+<h2 id="robotlabagentskillcatalog">RobotLab::AgentSkillCatalog<a class="headerlink" href="#robotlabagentskillcatalog" title="Permanent link">&para;</a></h2>
+<p>Lazily-loaded registry of the skill folders under a root directory.</p>
+<h3 id="skills_root">SKILLS_ROOT<a class="headerlink" href="#skills_root" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">AgentSkillCatalog</span><span class="o">::</span><span class="no">SKILLS_ROOT</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># =&gt; #&lt;Pathname:/Users/you/.prompts/skills&gt;</span>
+</span></code></pre></div>
+<p><code>~/.prompts/skills</code>, expanded at load time. The path the process-level singleton
+scans.</p>
+<h3 id="instance-reset">instance / reset!<a class="headerlink" href="#instance-reset" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">AgentSkillCatalog</span><span class="o">.</span><span class="n">instance</span><span class="w">  </span><span class="c1"># =&gt; the singleton, scanning SKILLS_ROOT</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">AgentSkillCatalog</span><span class="o">.</span><span class="n">reset!</span><span class="w">    </span><span class="c1"># =&gt; nil; next `instance` builds a fresh one</span>
+</span></code></pre></div>
+<p><code>instance</code> memoizes. <code>reset!</code> drops the memo — it exists so tests can point the
+catalog at a fixture directory by resetting and constructing an instance
+explicitly with a different root.</p>
+<h3 id="constructor_1">Constructor<a class="headerlink" href="#constructor_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AgentSkillCatalog</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;/path/to/skills&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>skills_root</code></td>
+<td><code>String</code>, <code>Pathname</code></td>
+<td><code>SKILLS_ROOT</code></td>
+<td>Directory to scan</td>
+</tr>
+</tbody>
+</table>
+<p>Construction does <strong>no</strong> I/O; the scan happens on the first <code>find</code>/<code>all</code>.</p>
+<h3 id="find">find<a class="headerlink" href="#find" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">catalog</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="ss">:deploy_checker</span><span class="p">)</span><span class="w">   </span><span class="c1"># =&gt; AgentSkill or nil</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">catalog</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;deploy-checker&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; AgentSkill or nil</span>
+</span></code></pre></div>
+<p>Look up by skill <strong>name</strong> (the front-matter <code>name</code>, symbolized) — not by
+directory name, and not by file path. Returns <code>nil</code> when not found.</p>
+<h3 id="all">all<a class="headerlink" href="#all" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">catalog</span><span class="o">.</span><span class="n">all</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;AgentSkill&gt;</span>
+</span></code></pre></div>
+<p>Every successfully-loaded skill.</p>
+<div class="admonition note">
+<p class="admonition-title">Loading is lazy, thread-safe, and forgiving</p>
+<p>The scan runs once, under a <code>Mutex</code>, on the first <code>find</code> or <code>all</code>. A missing
+root directory is not an error — the catalog is simply empty. A directory
+without a <code>SKILL.md</code> is skipped silently; a <code>SKILL.md</code> that raises
+<code>ConfigurationError</code> or <code>Psych::SyntaxError</code> is skipped with a <code>warn</code>
+(<code>"AgentSkillCatalog: &lt;message&gt;, skipping &lt;dir&gt;"</code>). One bad bundle never
+prevents the others from loading, and the scan is never retried.</p>
+</div>
+<hr />
+<h2 id="robotlabcapabilities">RobotLab::Capabilities<a class="headerlink" href="#robotlabcapabilities" title="Permanent link">&para;</a></h2>
+<p>What a skill's scripts may read, write, reach, and how long they may run.</p>
+<p>A skill declares what it <strong>wants</strong> in <code>SKILL.md</code> front matter; the global
+<code>sandbox:</code> config declares the <strong>ceiling</strong>. The effective grant is the
+<a href="#intersect">intersection</a> of the two.</p>
+<h3 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DEFAULT_TIMEOUT</code></td>
+<td><code>60</code></td>
+<td>Seconds, used when <code>timeout</code> is absent or non-positive</td>
+</tr>
+<tr>
+<td><code>TRUST_LEVELS</code></td>
+<td><code>["core", "external"]</code></td>
+<td>Any other value falls back to <code>"external"</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="constructor_2">Constructor<a class="headerlink" href="#constructor_2" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="ss">fs_read</span><span class="p">:</span><span class="w"> </span><span class="o">[]</span><span class="p">,</span><span class="w"> </span><span class="ss">fs_write</span><span class="p">:</span><span class="w"> </span><span class="o">[]</span><span class="p">,</span><span class="w"> </span><span class="ss">network</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="no">DEFAULT_TIMEOUT</span><span class="p">,</span><span class="w"> </span><span class="ss">trust</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;external&quot;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Coercion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fs_read</code></td>
+<td><code>Array&lt;String&gt;</code></td>
+<td><code>[]</code></td>
+<td><code>Array(...)</code> then <code>to_s</code> on each entry</td>
+</tr>
+<tr>
+<td><code>fs_write</code></td>
+<td><code>Array&lt;String&gt;</code></td>
+<td><code>[]</code></td>
+<td>Same</td>
+</tr>
+<tr>
+<td><code>network</code></td>
+<td><code>Boolean</code></td>
+<td><code>false</code></td>
+<td>Any truthy value becomes <code>true</code></td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td><code>Integer</code></td>
+<td><code>60</code></td>
+<td><code>to_i</code>; anything not positive becomes <code>DEFAULT_TIMEOUT</code></td>
+</tr>
+<tr>
+<td><code>trust</code></td>
+<td><code>String</code></td>
+<td><code>"external"</code></td>
+<td>Must be in <code>TRUST_LEVELS</code>, else <code>"external"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Every value is normalized in the constructor, so the readers <code>fs_read</code>,
+<code>fs_write</code>, <code>network</code>, <code>timeout</code>, and <code>trust</code> always return well-formed values —
+a malformed <code>SKILL.md</code> degrades to the safe default rather than raising.</p>
+<h3 id="from_front_matter">from_front_matter<a class="headerlink" href="#from_front_matter" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">from_front_matter</span><span class="p">(</span><span class="n">front_matter_hash</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; Capabilities</span>
+</span></code></pre></div>
+<p>Build from a parsed <code>SKILL.md</code> front-matter hash, reading <code>fs_read</code>, <code>fs_write</code>,
+<code>network</code>, <code>timeout</code>, and <code>trust</code>. A <code>nil</code> front matter yields an all-defaults
+instance.</p>
+<h3 id="fm_value">fm_value<a class="headerlink" href="#fm_value" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">fm_value</span><span class="p">(</span><span class="n">front_matter</span><span class="p">,</span><span class="w"> </span><span class="ss">:network</span><span class="p">,</span><span class="w"> </span><span class="kp">false</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Look up a front-matter key tolerating <strong>either</strong> string or symbol keys (string
+first, then symbol), returning <code>default</code> when both are <code>nil</code>. Exposed because
+<code>from_front_matter</code> uses it and skill-tooling may need the same leniency.</p>
+<h3 id="ceiling">ceiling<a class="headerlink" href="#ceiling" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">ceiling</span><span class="w">                 </span><span class="c1"># =&gt; from RobotLab.config.sandbox</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">ceiling</span><span class="p">(</span><span class="n">custom_config</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The maximum grant any skill may receive, read from the config's <code>sandbox:</code>
+section. When there is no <code>sandbox</code> section at all, the ceiling is
+<code>Capabilities.new(fs_read: ["."])</code> — read-only access to the working directory,
+no writes, no network.</p>
+<p>Note the ceiling never carries a <code>trust</code> — trust is a property of the skill, not
+of the ceiling, and <code>intersect</code> keeps the declared value.</p>
+<h3 id="core">core?<a class="headerlink" href="#core" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">capabilities</span><span class="o">.</span><span class="n">core?</span><span class="w">  </span><span class="c1"># =&gt; trust == &quot;core&quot;</span>
+</span></code></pre></div>
+<p>A <code>core</code> skill is exempt from confinement: <code>Sandbox.for</code> returns a
+<a href="#robotlabsandboxnull"><code>Null</code></a> strategy for it regardless of platform or config.
+Reserve <code>trust: core</code> for bundles you wrote and audited.</p>
+<h3 id="intersect">intersect<a class="headerlink" href="#intersect" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">grant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">declared</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Capabilities</span><span class="o">.</span><span class="n">ceiling</span><span class="p">)</span>
+</span></code></pre></div>
+<p>The effective grant. Per field:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fs_read</code> / <code>fs_write</code></td>
+<td>A requested path survives only when it <strong>is</strong> a ceiling root or lives beneath one. Both sides are <code>File.expand_path</code>ed before comparison, so <code>~</code> and relative paths resolve first</td>
+</tr>
+<tr>
+<td><code>network</code></td>
+<td><code>declared &amp;&amp; ceiling</code> — both must allow it</td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td>The <strong>smaller</strong> of the two</td>
+</tr>
+<tr>
+<td><code>trust</code></td>
+<td>The <strong>declared</strong> value, unchanged</td>
+</tr>
+</tbody>
+</table>
+<p>Because the check is prefix-based on expanded paths, a ceiling of <code>["."]</code> grants
+nothing outside the working directory even if a skill asks for <code>/etc</code>.</p>
+<hr />
+<h2 id="robotlabscripttool">RobotLab::ScriptTool<a class="headerlink" href="#robotlabscripttool" title="Permanent link">&para;</a></h2>
+<p>Factory module that turns an executable script into a <code>RobotLab::Tool</code>. All
+methods are module functions.</p>
+<h3 id="scripttoolfrom_path">ScriptTool.from_path<a class="headerlink" href="#scripttoolfrom_path" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span><span class="n">script_path</span><span class="p">,</span><span class="w"> </span><span class="ss">capabilities</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span><span class="w"> </span><span class="ss">skill_dir</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># =&gt; RobotLab::Tool, or nil</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>script_path</code></td>
+<td><code>String</code>, <code>Pathname</code></td>
+<td><strong>required</strong></td>
+<td>The script file</td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td><code>Capabilities</code>, <code>nil</code></td>
+<td><code>nil</code> → <code>Capabilities.new</code></td>
+<td>The skill's declared capabilities</td>
+</tr>
+<tr>
+<td><code>skill_dir</code></td>
+<td><code>String</code>, <code>nil</code></td>
+<td><code>nil</code> → the script's own directory</td>
+<td>Bundle root; always granted read access under Seatbelt</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns <code>nil</code></strong> when the file is not executable, logging
+<code>"ScriptTool: &lt;basename&gt; is not executable, skipping"</code> at <code>warn</code>. It never raises.</p>
+<p>The generated tool takes a single optional <code>args</code> string parameter, which is
+<code>Shellwords.split</code> and appended to <code>bash &lt;script&gt;</code>. Its name comes from
+<a href="#scripttoolderive_name"><code>derive_name</code></a> and its description from
+<a href="#scripttoolextract_description"><code>extract_description</code></a>.</p>
+<h3 id="scripttoolexecute">ScriptTool.execute<a class="headerlink" href="#scripttoolexecute" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="ss">capabilities</span><span class="p">:,</span><span class="w"> </span><span class="ss">skill_dir</span><span class="p">:)</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<p>Run a command array and return its combined stdout+stderr, or an error string.
+Two paths:</p>
+<ul>
+<li><strong>Sandboxing off</strong> (the default) — <code>Open3.capture2e</code>, unconfined, <strong>no timeout</strong>.</li>
+<li><strong>Sandboxing on</strong> — intersects <code>capabilities</code> with <code>Capabilities.ceiling</code>, wraps
+  the command with the strategy from <code>Sandbox.for</code>, runs it under the grant's
+  timeout, and cleans the strategy up in an <code>ensure</code>.</li>
+</ul>
+<p>The declared <code>timeout:</code> therefore only takes effect when sandboxing is enabled.</p>
+<h3 id="scripttoolrun_with_timeout">ScriptTool.run_with_timeout<a class="headerlink" href="#scripttoolrun_with_timeout" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">run_with_timeout</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="n">timeout</span><span class="p">)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># =&gt; [String, Process::Status | nil]</span>
+</span></code></pre></div>
+<p>Run <code>cmd</code> in its own process group (<code>pgroup: true</code>), reading combined output
+until <code>timeout</code> seconds elapse. On expiry it terminates the group and returns
+<code>["&lt;partial output&gt;\n[killed: exceeded &lt;N&gt;s]", nil]</code> — a <code>nil</code> status is the
+timeout signal.</p>
+<h3 id="scripttoolterminate">ScriptTool.terminate<a class="headerlink" href="#scripttoolterminate" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">terminate</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>Process.kill('-TERM', ...)</code> against the process <strong>group</strong> of <code>pid</code>, so a script
+that spawned children takes them down with it. Swallows every error and returns
+<code>nil</code> — a process that already exited is not an error.</p>
+<h3 id="scripttoolformat_result">ScriptTool.format_result<a class="headerlink" href="#scripttoolformat_result" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">format_result</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>status</code></th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nil</code></td>
+<td><code>"Error (timed out):\n&lt;output&gt;"</code></td>
+</tr>
+<tr>
+<td>success</td>
+<td><code>output</code> verbatim</td>
+</tr>
+<tr>
+<td>non-zero exit</td>
+<td><code>"Error (exit &lt;N&gt;):\n&lt;output&gt;"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Failures come back as <strong>text for the LLM</strong>, not exceptions — the model sees the
+error and can adapt.</p>
+<h3 id="scripttoolderive_name">ScriptTool.derive_name<a class="headerlink" href="#scripttoolderive_name" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">derive_name</span><span class="p">(</span><span class="no">Pathname</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;check-deploy.sh&quot;</span><span class="p">))</span><span class="w">  </span><span class="c1"># =&gt; &quot;check_deploy&quot;</span>
+</span></code></pre></div>
+<p>Strips the final extension, replaces every run of non-alphanumerics with <code>_</code>, and
+trims leading/trailing underscores.</p>
+<h3 id="scripttoolextract_description">ScriptTool.extract_description<a class="headerlink" href="#scripttoolextract_description" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">ScriptTool</span><span class="o">.</span><span class="n">extract_description</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<p>The first non-shebang comment line in the file, with leading <code>#</code> and whitespace
+removed. Falls back to <code>derive_name(path)</code> when there is no comment or the file
+cannot be read.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="ch">#!/usr/bin/env bash</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="c1"># Verifies a deployment&#39;s health before promoting it.   &lt;- becomes the description</span>
+</span></code></pre></div>
+<hr />
+<h2 id="robotlabsandbox">RobotLab::Sandbox<a class="headerlink" href="#robotlabsandbox" title="Permanent link">&para;</a></h2>
+<p>Strategy selector for confining skill-script execution. Module functions.</p>
+<h3 id="sandboxenabled">Sandbox.enabled?<a class="headerlink" href="#sandboxenabled" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">.</span><span class="n">enabled?</span><span class="w">              </span><span class="c1"># =&gt; Boolean</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">.</span><span class="n">enabled?</span><span class="p">(</span><span class="n">some_config</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>true</code> only when the config responds to <code>sandbox</code>, that section exists, and
+<code>sandbox.enabled == true</code>. <strong>Sandboxing is off by default</strong> — see the
+<a href="../../getting-started/configuration/#skill-script-sandboxing-sandbox-section"><code>sandbox:</code> config section</a>.</p>
+<h3 id="sandboxmacos">Sandbox.macos?<a class="headerlink" href="#sandboxmacos" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">.</span><span class="n">macos?</span><span class="w">  </span><span class="c1"># =&gt; RUBY_PLATFORM.include?(&quot;darwin&quot;)</span>
+</span></code></pre></div>
+<h3 id="sandboxfor">Sandbox.for<a class="headerlink" href="#sandboxfor" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">.</span><span class="n">for</span><span class="p">(</span><span class="n">grant</span><span class="p">,</span><span class="w"> </span><span class="ss">skill_dir</span><span class="p">:,</span><span class="w"> </span><span class="ss">macos</span><span class="p">:</span><span class="w"> </span><span class="n">macos?</span><span class="p">)</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="c1"># =&gt; Sandbox::Seatbelt or Sandbox::Null</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grant</code></td>
+<td><code>Capabilities</code></td>
+<td><strong>required</strong></td>
+<td>The <strong>already-intersected</strong> effective grant</td>
+</tr>
+<tr>
+<td><code>skill_dir</code></td>
+<td><code>String</code></td>
+<td><strong>required</strong></td>
+<td>Bundle root, always granted read access</td>
+</tr>
+<tr>
+<td><code>macos</code></td>
+<td><code>Boolean</code></td>
+<td><code>macos?</code></td>
+<td>Injectable so both branches are testable on any host</td>
+</tr>
+</tbody>
+</table>
+<p>Selection order: a <code>trust: core</code> grant gets <code>Null</code>; otherwise macOS gets
+<code>Seatbelt</code>; anything else warns once and gets <code>Null</code>.</p>
+<h3 id="sandboxwarn_once_non_macos">Sandbox.warn_once_non_macos<a class="headerlink" href="#sandboxwarn_once_non_macos" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">.</span><span class="n">warn_once_non_macos</span>
+</span></code></pre></div>
+<p>Emits <code>"Sandbox: OS-level confinement is only available on macOS; scripts run
+unconfined here"</code> at <code>warn</code>, at most once per process. Idempotent, so a run with
+many scripts does not flood the log.</p>
+<hr />
+<h2 id="robotlabsandboxnull">RobotLab::Sandbox::Null<a class="headerlink" href="#robotlabsandboxnull" title="Permanent link">&para;</a></h2>
+<p>Passthrough strategy — used off macOS and for <code>trust: core</code> skills.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wrap(cmd)</code></td>
+<td><code>cmd</code></td>
+<td>Unchanged</td>
+</tr>
+<tr>
+<td><code>cleanup</code></td>
+<td><code>nil</code></td>
+<td>No-op</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="robotlabsandboxseatbelt">RobotLab::Sandbox::Seatbelt<a class="headerlink" href="#robotlabsandboxseatbelt" title="Permanent link">&para;</a></h2>
+<p>macOS strategy: generates a deny-by-default <code>sandbox-exec</code> profile from the grant
+and wraps the command as <code>sandbox-exec -f &lt;profile&gt; &lt;cmd...&gt;</code>.</p>
+<h3 id="constants_1">Constants<a class="headerlink" href="#constants_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SYSTEM_READ</code></td>
+<td><code>/usr /bin /sbin /System /Library /opt /private/etc /dev /var/select</code> — the locations an interpreter needs to boot</td>
+</tr>
+<tr>
+<td><code>DEV_WRITE</code></td>
+<td><code>/dev/null /dev/stdout /dev/stderr /dev/dtracehelper /dev/tty</code> — always writable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="constructor_3">Constructor<a class="headerlink" href="#constructor_3" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Sandbox</span><span class="o">::</span><span class="no">Seatbelt</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">grant</span><span class="p">,</span><span class="w"> </span><span class="ss">skill_dir</span><span class="p">:)</span>
+</span></code></pre></div>
+<h3 id="wrap-cleanup">wrap / cleanup<a class="headerlink" href="#wrap-cleanup" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strategy</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="o">[</span><span class="s2">&quot;bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;script.sh&quot;</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="c1"># =&gt; [&quot;sandbox-exec&quot;, &quot;-f&quot;, &quot;/tmp/robot_lab-sandbox-xxxx.sb&quot;, &quot;bash&quot;, &quot;script.sh&quot;]</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="n">strategy</span><span class="o">.</span><span class="n">cleanup</span><span class="w">  </span><span class="c1"># unlinks the generated profile</span>
+</span></code></pre></div>
+<p><code>wrap</code> writes the profile to a <code>Tempfile</code>; <code>cleanup</code> unlinks it and swallows any
+error (an already-removed file is fine). <code>ScriptTool.execute</code> always calls
+<code>cleanup</code> in an <code>ensure</code>.</p>
+<h3 id="profile_text">profile_text<a class="headerlink" href="#profile_text" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">strategy</span><span class="o">.</span><span class="n">profile_text</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<p>The generated Seatbelt profile. Public so the policy can be asserted in tests
+rather than inferred from behavior. It imports <code>bsd.sb</code> (without which a
+deny-default profile aborts the binary before it starts), denies by default, then
+allows: <code>process-fork</code>, <code>process-exec</code>, <code>sysctl-read</code>, <code>mach-lookup</code>,
+<code>file-read-metadata</code> on any path, <code>file-read*</code> on <code>SYSTEM_READ</code> + the skill
+directory + granted <code>fs_read</code> paths, <code>file-write*</code> on <code>DEV_WRITE</code> + granted
+<code>fs_write</code> paths, and <code>network*</code> only when the grant allows it.</p>
+<p>Every path is canonicalized to its symlink-free real path first, because macOS
+symlinks <code>/tmp</code> → <code>/private/tmp</code> and the kernel matches against the real path. For
+write targets that do not exist yet, the nearest existing ancestor is resolved and
+the remainder re-appended.</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>$HOME</code> is never implicitly readable</p>
+<p>Which is the point — SSH keys and cloud credentials stay out of reach. But it
+also means an interpreter installed under <code>$HOME</code> (rbenv, asdf, mise, a
+Homebrew prefix in <code>~</code>) is <strong>invisible</strong> to the sandboxed process and the
+script fails to start. Grant that path explicitly in <code>fs_read</code>, or mark the
+skill <code>trust: core</code>.</p>
+</div>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../guides/using-tools/#skill-scripts-and-sandboxing">Using Tools: Skill Scripts and Sandboxing</a></li>
+<li><a href="../../getting-started/configuration/#skill-script-sandboxing-sandbox-section">Configuration: <code>sandbox:</code> section</a></li>
+<li><a href="../core/robot/#skills">Robot: Skills</a> — template skills, the other meaning</li>
+<li><a href="../core/tool/">Tool</a> — <code>Tool.create</code>, which <code>ScriptTool</code> builds on</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  <form class="md-feedback" name="feedback" hidden>
+    <fieldset>
+      <legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+      <div class="md-feedback__inner">
+        <div class="md-feedback__list">
+          
+            <button class="md-feedback__icon md-icon" type="submit" title="This page was helpful" data-md-value="1">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"/></svg>
+            </button>
+          
+            <button class="md-feedback__icon md-icon" type="submit" title="This page could be improved" data-md-value="0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"/></svg>
+            </button>
+          
+        </div>
+        <div class="md-feedback__note">
+          
+            <div data-md-value="1" hidden>
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+          
+            <div data-md-value="0" hidden>
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve by creating an issue.
+            </div>
+          
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../hooks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Hooks">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Hooks
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../support/" class="md-footer__link md-footer__link--next" aria-label="Next: Support Classes">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Support Classes
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Dewayne VanHoozer
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/madbomber/robot_lab" target="_blank" rel="noopener" title="RobotLab on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://rubygems.org/gems/robot_lab" target="_blank" rel="noopener" title="RobotLab on RubyGems" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M116.7 33.8c4.5-6.1 11.7-9.8 19.3-9.8h240c7.6 0 14.8 3.6 19.3 9.8l112 152c6.8 9.2 6.1 21.9-1.5 30.4l-232 256c-4.5 5-11 7.9-17.8 7.9s-13.2-2.9-17.8-7.9l-232-256c-7.7-8.5-8.3-21.2-1.5-30.4zm38.5 39.8c-3.3 2.5-4.2 7-2.1 10.5l57.4 95.7L63.3 192c-4.1.3-7.3 3.8-7.3 8s3.2 7.6 7.3 8l192 16h1.3l192-16c4.1-.3 7.3-3.8 7.3-8s-3.2-7.6-7.3-8l-147.2-12.3 57.4-95.6c2.1-3.5 1.2-8.1-2.1-10.5s-7.9-2-10.7 1l-90 97.6-90.1-97.6c-2.8-3-7.4-3.4-10.7-1"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

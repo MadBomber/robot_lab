@@ -12,13 +12,13 @@
         <meta name="author" content="Dewayne VanHoozer">
       
       
-        <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/errors/">
+        <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/hooks/">
       
       
-        <link rel="prev" href="../support/">
+        <link rel="prev" href="../core/state/">
       
       
-        <link rel="next" href="../messages/">
+        <link rel="next" href="../skills/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Errors - RobotLab</title>
+        <title>Hooks - RobotLab</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#error-reference" class="md-skip">
+        <a href="#hooks-api" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Errors
+              Hooks
             
           </span>
         </div>
@@ -1582,10 +1582,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../hooks/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1601,6 +1628,455 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabhook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Hook
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Hook">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#namespace-namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        namespace / namespace=
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabhookregistry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::HookRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::HookRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registrations_for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        registrations_for
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        registrations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hookregistryregistration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HookRegistry::Registration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabhooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::Hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#around" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        around
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registrations_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        registrations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error_registrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        error_registrations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_all
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call_around" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_around
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#call_registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_registration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per_run_entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        per_run_entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabhookcontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::HookContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::HookContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-subclasses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context subclasses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context subclasses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runhookcontext-event-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunHookContext (event: :run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmgenerationhookcontext-event-run-subclass-of-runhookcontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LlmGenerationHookContext (event: :run) — subclass of RunHookContext
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toolcallhookcontext-event-tool_call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ToolCallHookContext (event: :tool_call)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#networkrunhookcontext-event-network_run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NetworkRunHookContext (event: :network_run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taskhookcontext-event-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TaskHookContext (event: :task)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#learnhookcontext-event-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LearnHookContext (event: :learn)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compactionhookcontext-event-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CompactionHookContext (event: :compaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extensionstate-and-dotstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExtensionState and DotState
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExtensionState and DotState">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extensionstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExtensionState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dotstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DotState
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-level-hook-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module-level hook methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module-level hook methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#with_hook_scope-current_hook_scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        with_hook_scope / current_hook_scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1666,37 +2142,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Errors
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
         
   
   
@@ -1712,204 +2161,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#hierarchy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Hierarchy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlaberror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::Error
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabconfigurationerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::ConfigurationError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabdependencyerror-configurationerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::DependencyError &lt; ConfigurationError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabinferenceerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::InferenceError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoollooperror-inferenceerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::ToolLoopError &lt; InferenceError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoolnotfounderror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::ToolNotFoundError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabmcperror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::MCPError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabbuserror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::BusError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabractorboundaryerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::RactorBoundaryError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoolerror" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::ToolError
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabbudgetexceeded" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::BudgetExceeded
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabawaittimeout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::AwaitTimeout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retryable-errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Retryable Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabdelegationfuturedelegationtimeout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::DelegationFuture::DelegationTimeout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Related
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2632,175 +2883,426 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hierarchy" class="md-nav__link">
+  <a href="#robotlabhook" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hierarchy
+        RobotLab::Hook
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Hook">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#namespace-namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        namespace / namespace=
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlaberror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#call" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::Error
+        call
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#robotlabconfigurationerror" class="md-nav__link">
+  <a href="#robotlabhookregistry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::ConfigurationError
+        RobotLab::HookRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::HookRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        on
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabdependencyerror-configurationerror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#registrations_for" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::DependencyError &lt; ConfigurationError
+        registrations_for
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabinferenceerror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#registrations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::InferenceError
+        registrations
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoollooperror-inferenceerror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#clear" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::ToolLoopError &lt; InferenceError
+        clear
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoolnotfounderror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#hookregistryregistration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::ToolNotFoundError
+        HookRegistry::Registration
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#robotlabmcperror" class="md-nav__link">
+  <a href="#robotlabhooks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::MCPError
+        RobotLab::Hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::Hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabbuserror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#call_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::BusError
+        call
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabractorboundaryerror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#around" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::RactorBoundaryError
+        around
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabtoolerror" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#registrations_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::ToolError
+        registrations
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabbudgetexceeded" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#error_registrations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::BudgetExceeded
+        error_registrations
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabawaittimeout" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#call_all" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::AwaitTimeout
+        call_all
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#retryable-errors" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#call_around" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Retryable Errors
+        call_around
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#robotlabdelegationfuturedelegationtimeout" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#call_registration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RobotLab::DelegationFuture::DelegationTimeout
+        call_registration
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#related" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#per_run_entries" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Related
+        per_run_entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set_result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotlabhookcontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RobotLab::HookContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RobotLab::HookContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-subclasses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context subclasses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context subclasses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runhookcontext-event-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunHookContext (event: :run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmgenerationhookcontext-event-run-subclass-of-runhookcontext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LlmGenerationHookContext (event: :run) — subclass of RunHookContext
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toolcallhookcontext-event-tool_call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ToolCallHookContext (event: :tool_call)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#networkrunhookcontext-event-network_run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NetworkRunHookContext (event: :network_run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taskhookcontext-event-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TaskHookContext (event: :task)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#learnhookcontext-event-learn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LearnHookContext (event: :learn)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compactionhookcontext-event-compaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CompactionHookContext (event: :compaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extensionstate-and-dotstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExtensionState and DotState
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExtensionState and DotState">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extensionstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExtensionState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dotstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DotState
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-level-hook-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module-level hook methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module-level hook methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#with_hook_scope-current_hook_scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        with_hook_scope / current_hook_scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
       
     </span>
   </a>
@@ -2830,7 +3332,7 @@
 
 
   
-    <a href="https://github.com/madbomber/robot_lab/edit/main/docs/api/errors.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/madbomber/robot_lab/edit/main/docs/api/hooks.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -2839,297 +3341,669 @@
     
       
     
-    <a href="https://github.com/madbomber/robot_lab/raw/main/docs/api/errors.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/madbomber/robot_lab/raw/main/docs/api/hooks.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="error-reference">Error Reference<a class="headerlink" href="#error-reference" title="Permanent link">&para;</a></h1>
-<p>All RobotLab exceptions inherit from <code>RobotLab::Error</code>, which inherits from <code>StandardError</code>. Rescue <code>RobotLab::Error</code> to catch any framework exception in one clause, or rescue specific subclasses for targeted handling.</p>
-<h2 id="hierarchy">Hierarchy<a class="headerlink" href="#hierarchy" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>StandardError
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── RobotLab::Error
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ├── RobotLab::ConfigurationError
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    │   └── RobotLab::DependencyError
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ├── RobotLab::InferenceError
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    │   └── RobotLab::ToolLoopError
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ├── RobotLab::ToolNotFoundError
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ├── RobotLab::MCPError
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ├── RobotLab::BusError
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ├── RobotLab::RactorBoundaryError
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ├── RobotLab::ToolError
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ├── RobotLab::BudgetExceeded
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    └── RobotLab::AwaitTimeout
-</span></code></pre></div>
-<p><code>AwaitTimeout</code> is defined in <code>lib/robot_lab/memory.rb</code> and raised by
-<a href="../core/memory/#get"><code>Memory#get</code></a> when a blocking read expires.</p>
-<p>Additionally, <code>DelegationFuture</code> defines its own scoped error:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>StandardError
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>└── RobotLab::Error
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    └── RobotLab::DelegationFuture::DelegationTimeout
-</span></code></pre></div>
+<h1 id="hooks-api">Hooks API<a class="headerlink" href="#hooks-api" title="Permanent link">&para;</a></h1>
+<p>Class-level reference for the hook system. For the conceptual walkthrough —
+families, firing order, registration levels, and worked examples — see the
+<a href="../../guides/hooks/">Hook System guide</a>. This page documents the public methods
+of the classes that implement it.</p>
+<pre class="mermaid"><code>classDiagram
+    class Hook {
+        &lt;&lt;abstract&gt;&gt;
+        +namespace() Symbol
+        +call(hook_name, ctx, block) Object
+    }
+
+    class HookRegistry {
+        +on(handler_class, context) Registration
+        +registrations_for(hook_name) Array
+        +registrations() Array
+        +clear() Array
+    }
+
+    class Registration {
+        &lt;&lt;Data&gt;&gt;
+        +handler_class Class
+        +context Hash
+        +namespace() Symbol
+    }
+
+    class Hooks {
+        &lt;&lt;module&gt;&gt;
+        +run(family, ctx, registries, per_run_hooks) Object
+        +call(hook_name, ctx, registries, per_run_hooks) void
+        +around(hook_name, ctx, registries, per_run_hooks) Object
+    }
+
+    class HookContext {
+        +event Symbol
+        +metadata ExtensionState
+        +ext(name) DotState
+        +local() DotState
+        +with_namespace(ns) Object
+        +to_h() Hash
+    }
+
+    HookContext &lt;|-- RunHookContext
+    RunHookContext &lt;|-- LlmGenerationHookContext
+    HookContext &lt;|-- ToolCallHookContext
+    HookContext &lt;|-- NetworkRunHookContext
+    HookContext &lt;|-- TaskHookContext
+    HookContext &lt;|-- LearnHookContext
+    HookContext &lt;|-- CompactionHookContext
+
+    HookRegistry --&gt; Registration : builds
+    Hooks --&gt; HookRegistry : reads
+    Hooks --&gt; HookContext : namespaces
+    Hook &lt;|-- Narrator</code></pre>
 <hr />
-<h2 id="robotlaberror">RobotLab::Error<a class="headerlink" href="#robotlaberror" title="Permanent link">&para;</a></h2>
-<p>Base class for all RobotLab errors. Rescue this to catch any framework exception.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">begin</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Error</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;RobotLab error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">end</span>
+<h2 id="robotlabhook">RobotLab::Hook<a class="headerlink" href="#robotlabhook" title="Permanent link">&para;</a></h2>
+<p>Base class for hook handlers. Subclasses implement hook methods as <strong>class</strong>
+methods; any method a subclass does not define is silently skipped when that hook
+fires.</p>
+<h3 id="namespace-namespace">namespace / namespace=<a class="headerlink" href="#namespace-namespace" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">TimerHook</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hook</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="no">TimerHook</span><span class="o">.</span><span class="n">namespace</span><span class="w">          </span><span class="c1"># =&gt; :timer_hook</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">Tracer</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hook</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nb">self</span><span class="o">.</span><span class="n">namespace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:trace</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">end</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="no">Tracer</span><span class="o">.</span><span class="n">namespace</span><span class="w">             </span><span class="c1"># =&gt; :trace</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hook</span><span class="o">.</span><span class="n">namespace</span><span class="w">     </span><span class="c1"># =&gt; nil (the base class has none)</span>
 </span></code></pre></div>
-<hr />
-<h2 id="robotlabconfigurationerror">RobotLab::ConfigurationError<a class="headerlink" href="#robotlabconfigurationerror" title="Permanent link">&para;</a></h2>
-<p>Raised when configuration is invalid or missing required values.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Example: missing API key, invalid template path</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">begin</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ConfigurationError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bad config: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">end</span>
+<p>The namespace isolates a handler's <code>ctx.local</code> scratchpad from every other
+handler. It defaults to the snake_case form of the <strong>last</strong> segment of the class
+name, so <code>MyExt::Tracer</code> becomes <code>:tracer</code>. <code>HookRegistry#on</code> raises
+<code>ArgumentError</code> when <code>namespace</code> is <code>nil</code>, which is why the base <code>Hook</code> class
+itself can never be registered.</p>
+<p><code>inherited</code> resets <code>@namespace</code> to <code>nil</code> on each subclass, so a namespace set on
+a parent handler is <strong>not</strong> inherited by its subclasses — each re-derives its own.</p>
+<h3 id="call">call<a class="headerlink" href="#call" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">HandlerClass</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w">            </span><span class="c1"># point / before / after hook</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="no">HandlerClass</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="c1"># around hook</span>
 </span></code></pre></div>
-<hr />
-<h2 id="robotlabdependencyerror-configurationerror">RobotLab::DependencyError &lt; ConfigurationError<a class="headerlink" href="#robotlabdependencyerror-configurationerror" title="Permanent link">&para;</a></h2>
-<p>Raised when a required optional gem dependency is not installed. There are three
-distinct raise sites in core, each with its own message:</p>
+<p>Dispatch one hook to this handler. This is the method <code>Hooks.call_registration</code>
+invokes; you rarely call it directly.</p>
 <table>
 <thead>
 <tr>
-<th>Raised by</th>
-<th>Missing dependency</th>
-<th>Message</th>
+<th>Case</th>
+<th>Behavior</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>TextAnalysis.require_classifier!</code> — reached from <code>Convergence</code>, <code>HistoryCompressor</code>, <code>Robot#compress_history</code>, <code>Robot#search_history</code></td>
-<td><code>classifier</code> gem</td>
-<td><code>The 'classifier' gem is required for text analysis features. Add it to your Gemfile: gem 'classifier', '~&gt; 2.3'</code></td>
+<td>Handler defines <code>hook_name</code></td>
+<td>Called with <code>context</code> (and the block, for around hooks)</td>
 </tr>
 <tr>
-<td><code>Memory</code>'s document-store methods (<code>store_document</code>, <code>search_documents</code>, <code>document_keys</code>, <code>delete_document</code>)</td>
-<td><code>robot_lab-document_store</code> gem</td>
-<td><code>document storage requires the robot_lab-document_store gem. Add \</code>gem 'robot_lab-document_store'` to your Gemfile.`</td>
+<td>Handler does not define it, block given</td>
+<td>The block is called directly — <strong>around passthrough</strong>, so the chain never breaks</td>
 </tr>
 <tr>
-<td><code>Network#run</code> under <code>parallel_mode: :ractor</code></td>
-<td><code>robot_lab-ractor</code> gem</td>
-<td><code>parallel_mode: :ractor requires the robot_lab-ractor gem. Add \</code>gem 'robot_lab-ractor'` to your Gemfile.`</td>
+<td>Handler does not define it, no block</td>
+<td>Silent no-op</td>
 </tr>
 </tbody>
 </table>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">begin</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">compress_history</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DependencyError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nb">warn</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">end</span>
-</span></code></pre></div>
-<p>Two places swallow it rather than propagate: <code>auto_compact: :context_window</code>
-logs the message at <code>:warn</code> and skips compaction, and
-<code>MCP::ServerDiscovery</code> rescues it and falls back.</p>
+<p>The check is <code>singleton_class.public_method_defined?(hook_name)</code>, so a hook
+defined as a <em>private</em> class method never fires.</p>
 <hr />
-<h2 id="robotlabinferenceerror">RobotLab::InferenceError<a class="headerlink" href="#robotlabinferenceerror" title="Permanent link">&para;</a></h2>
-<p>Raised when LLM inference fails (API errors, timeouts, rate limits).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">begin</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">InferenceError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;LLM call failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">end</span>
+<h2 id="robotlabhookregistry">RobotLab::HookRegistry<a class="headerlink" href="#robotlabhookregistry" title="Permanent link">&para;</a></h2>
+<p>The store behind <code>RobotLab.hooks</code>, <code>network.hooks</code>, and <code>robot.hooks</code>. Each of
+those three is a separate instance; a run consults all three.</p>
+<h3 id="on">on<a class="headerlink" href="#on" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">registration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="no">HandlerClass</span><span class="p">,</span><span class="w"> </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># =&gt; RobotLab::HookRegistry::Registration</span>
 </span></code></pre></div>
-<hr />
-<h2 id="robotlabtoollooperror-inferenceerror">RobotLab::ToolLoopError &lt; InferenceError<a class="headerlink" href="#robotlabtoollooperror-inferenceerror" title="Permanent link">&para;</a></h2>
-<p>Raised when a robot's tool call count exceeds <code>max_tool_rounds:</code>. The chat history will contain a dangling <code>tool_use</code> block with no matching <code>tool_result</code>; call <code>robot.clear_messages</code> before reusing the robot.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;runner&quot;</span><span class="p">,</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Execute every step.&quot;</span><span class="p">,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">StepTool</span><span class="o">]</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="ss">max_tool_rounds</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">)</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">begin</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Run all steps.&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolLoopError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="c1"># &quot;Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)&quot;</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">clear_messages</span><span class="w">  </span><span class="c1"># required before reuse</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="k">end</span>
+<p>Register a handler class.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>handler_class</code></td>
+<td><code>Class</code></td>
+<td><strong>required</strong></td>
+<td>Must be a subclass of <code>RobotLab::Hook</code></td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td><code>Hash</code>, <code>nil</code></td>
+<td><code>nil</code></td>
+<td>Defaults merged into the handler's <code>ctx.local</code> before each callback (via <code>DotState#merge_defaults</code>, so an already-set key is not overwritten)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Raises <code>ArgumentError</code></strong> when <code>handler_class</code> is not a <code>RobotLab::Hook</code>
+subclass, or when its <code>namespace</code> is <code>nil</code>.</p>
+<p><code>RobotLab.on</code>, <code>network.on</code>, and <code>robot.on</code> are thin delegators to this method.</p>
+<h3 id="registrations_for">registrations_for<a class="headerlink" href="#registrations_for" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">registry</span><span class="o">.</span><span class="n">registrations_for</span><span class="p">(</span><span class="ss">:before_run</span><span class="p">)</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Registration&gt;</span>
 </span></code></pre></div>
-<p>The message format is:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Circuit breaker triggered: &lt;N&gt; tool calls exceeded max_tool_rounds (&lt;M&gt;)
+<p>Only the registrations whose handler class actually implements <code>hook_name</code>. This
+is the filter that makes an unimplemented hook a no-op rather than an error, and
+it is what <code>Hooks.registrations</code> calls on each registry.</p>
+<h3 id="registrations">registrations<a class="headerlink" href="#registrations" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">registry</span><span class="o">.</span><span class="n">registrations</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;Registration&gt;</span>
 </span></code></pre></div>
-<p><code>N</code> is the call count that tripped the breaker (always <code>M + 1</code>); <code>M</code> is the configured limit.</p>
-<hr />
-<h2 id="robotlabtoolnotfounderror">RobotLab::ToolNotFoundError<a class="headerlink" href="#robotlabtoolnotfounderror" title="Permanent link">&para;</a></h2>
-<p>Raised when a tool name is referenced but cannot be found in the <code>ToolManifest</code>.</p>
-<hr />
-<h2 id="robotlabmcperror">RobotLab::MCPError<a class="headerlink" href="#robotlabmcperror" title="Permanent link">&para;</a></h2>
-<p>Raised when MCP server communication fails (connection refused, timeout, protocol error).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">begin</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCPError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;MCP failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">end</span>
+<p>Every registration, as a defensive copy (<code>@registrations.dup</code>) — mutating the
+returned array does not affect the registry.</p>
+<p>Used by <code>Network#ractor_hook_classes_for</code> to collect the handler classes that
+must cross a Ractor boundary under <code>parallel_mode: :ractor</code>.</p>
+<h3 id="clear">clear<a class="headerlink" href="#clear" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">registry</span><span class="o">.</span><span class="n">clear</span><span class="w">  </span><span class="c1"># =&gt; the emptied internal array</span>
 </span></code></pre></div>
-<p><code>MCPError.new(message, retryable: true)</code> marks a specific instance as safe to retry (see <a href="#retryable-errors">Retryable Errors</a> below). The connection-lost and timeout errors raised internally by <code>MCP::ConnectionPoller</code> are always constructed with <code>retryable: true</code>.</p>
+<p>Remove every registration <strong>in place</strong>. Note the difference from
+<code>RobotLab.clear_hooks!</code>, which replaces the global registry object entirely
+rather than emptying it.</p>
+<h3 id="hookregistryregistration">HookRegistry::Registration<a class="headerlink" href="#hookregistryregistration" title="Permanent link">&para;</a></h3>
+<p>A <code>Data</code> value object pairing a handler with its optional context.</p>
+<table>
+<thead>
+<tr>
+<th>Member / method</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>handler_class</code></td>
+<td><code>Class</code></td>
+<td>The <code>RobotLab::Hook</code> subclass</td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td><code>Hash</code>, <code>nil</code></td>
+<td>Per-registration defaults (defaults to <code>nil</code>)</td>
+</tr>
+<tr>
+<td><code>namespace</code></td>
+<td><code>Symbol</code></td>
+<td>Delegates to <code>handler_class.namespace</code></td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="robotlabbuserror">RobotLab::BusError<a class="headerlink" href="#robotlabbuserror" title="Permanent link">&para;</a></h2>
-<p>Raised when message bus communication fails (no bus configured, channel not found).</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">begin</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ss">:bob</span><span class="p">,</span><span class="w"> </span><span class="ss">content</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hi&quot;</span><span class="p">)</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BusError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Bus error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">end</span>
+<h2 id="robotlabhooks">RobotLab::Hooks<a class="headerlink" href="#robotlabhooks" title="Permanent link">&para;</a></h2>
+<p>The dispatcher (<code>module_function</code>, so every method is called as
+<code>RobotLab::Hooks.foo</code>). Core calls into it; extension authors normally write
+handler classes instead. It is documented here because a host that drives
+RobotLab objects directly — or an extension that adds its own hook family — needs
+the contract.</p>
+<h3 id="run">run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="ss">registries</span><span class="p">:,</span><span class="w"> </span><span class="ss">per_run_hooks</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">core_work</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; the block&#39;s return value</span>
 </span></code></pre></div>
+<p>Execute a full hook family around a block. In order: every <code>before_&lt;family&gt;</code>,
+then the <code>around_&lt;family&gt;</code> chain wrapping the block, then
+<a href="#set_result"><code>set_result</code></a>, then every <code>after_&lt;family&gt;</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>family</code></td>
+<td><code>Symbol</code></td>
+<td><code>:run</code>, <code>:llm_generation</code>, <code>:tool_call</code>, <code>:network_run</code>, <code>:task</code>, <code>:compaction</code>, <code>:learn</code></td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td><code>HookContext</code></td>
+<td>The family's context object</td>
+</tr>
+<tr>
+<td><code>registries</code></td>
+<td><code>Array&lt;HookRegistry, nil&gt;</code></td>
+<td>Consulted in order; <code>nil</code> entries are compacted away</td>
+</tr>
+<tr>
+<td><code>per_run_hooks</code></td>
+<td><code>Class</code>, <code>Array&lt;Class&gt;</code>, <code>nil</code></td>
+<td>Handler classes active only for this call (<code>robot.run(..., hooks:)</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Error path:</strong> <code>run</code> rescues <code>Exception</code> (not just <code>StandardError</code>, so
+<code>Timeout::Error</code> and <code>SignalException</code> are covered), assigns it to
+<code>context.error</code> when the context has an <code>error=</code> writer, fires <code>on_error</code>, and
+<strong>re-raises</strong>. Hooks never swallow an exception.</p>
+<h3 id="call_1">call<a class="headerlink" href="#call_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="ss">registries</span><span class="p">:,</span><span class="w"> </span><span class="ss">per_run_hooks</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Fire one non-around hook across all matching registrations. This is how the point
+hooks <code>:on_compaction</code> and <code>:on_learn</code> are dispatched from inside the core block
+of their family — which is why they do not compose with <code>around_*</code> handlers and
+have no chainable result.</p>
+<h3 id="around">around<a class="headerlink" href="#around" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="ss">registries</span><span class="p">:,</span><span class="w"> </span><span class="ss">per_run_hooks</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>Build and invoke just the around chain for one hook name, without the
+before/after phases.</p>
+<h3 id="registrations_1">registrations<a class="headerlink" href="#registrations_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">registrations</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">registries</span><span class="p">,</span><span class="w"> </span><span class="n">per_run_hooks</span><span class="p">)</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># =&gt; Array&lt;Registration&gt;</span>
+</span></code></pre></div>
+<p>The complete ordered list for one hook name: each registry's
+<code>registrations_for(hook_name)</code> concatenated in registry order, followed by the
+per-run entries. This ordering is what produces <strong>global → network → robot →
+per-run</strong> execution.</p>
+<h3 id="error_registrations">error_registrations<a class="headerlink" href="#error_registrations" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">error_registrations</span><span class="p">(</span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">registries</span><span class="p">,</span><span class="w"> </span><span class="n">per_run_hooks</span><span class="p">)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1"># =&gt; Array&lt;Registration&gt;</span>
+</span></code></pre></div>
+<p><code>on_error</code> registrations, but <strong>only</strong> for the <code>:run</code>, <code>:network_run</code>, and
+<code>:task</code> families — every other family returns <code>[]</code>. This is the mechanism behind
+the guide's statement that <code>:llm_generation</code>, <code>:tool_call</code>, <code>:compaction</code>, and
+<code>:learn</code> have no <code>on_error</code> variant.</p>
+<h3 id="call_all">call_all<a class="headerlink" href="#call_all" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">call_all</span><span class="p">(</span><span class="n">registrations</span><span class="p">,</span><span class="w"> </span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Invoke each registration in order for a non-around hook.</p>
+<h3 id="call_around">call_around<a class="headerlink" href="#call_around" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">call_around</span><span class="p">(</span><span class="n">registrations</span><span class="p">,</span><span class="w"> </span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">core_work</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>Fold the registrations into a nested chain and call it. The list is <code>reverse</code>d
+before folding, so the <strong>first</strong> registration ends up outermost — a global
+<code>around_run</code> wraps a robot-level one, not the other way round. A handler that
+does not implement the hook passes the block straight through.</p>
+<h3 id="call_registration">call_registration<a class="headerlink" href="#call_registration" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">call_registration</span><span class="p">(</span><span class="n">registration</span><span class="p">,</span><span class="w"> </span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Invoke one registration with its namespace active. It wraps the call in
+<code>context.with_namespace(registration.namespace)</code> and, when the registration
+carries a <code>context:</code> hash, merges those values into
+<code>context.ext(namespace)</code> as defaults first. This is what makes <code>ctx.local</code>
+resolve to the <em>calling handler's</em> private <code>DotState</code>.</p>
+<h3 id="per_run_entries">per_run_entries<a class="headerlink" href="#per_run_entries" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">per_run_entries</span><span class="p">(</span><span class="n">hook_name</span><span class="p">,</span><span class="w"> </span><span class="n">hooks</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1"># =&gt; Array&lt;Registration&gt;</span>
+</span></code></pre></div>
+<p>Turn <code>robot.run(msg, hooks: HandlerClass)</code> or <code>hooks: [A, B]</code> into
+<code>Registration</code>s, skipping any class that does not implement <code>hook_name</code>. Per-run
+registrations carry no <code>context:</code>.</p>
+<h3 id="set_result">set_result<a class="headerlink" href="#set_result" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Publish a family's return value onto its context so <code>after_*</code> handlers can read
+it. The mapping is fixed:</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Assigned to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:run</code></td>
+<td><code>context.response</code></td>
+</tr>
+<tr>
+<td><code>:network_run</code>, <code>:task</code></td>
+<td><code>context.result</code></td>
+</tr>
+<tr>
+<td><code>:llm_generation</code></td>
+<td><code>context.generation_response</code></td>
+</tr>
+<tr>
+<td><code>:tool_call</code>, <code>:compaction</code>, <code>:learn</code></td>
+<td><em>(nothing — those contexts carry their result in a family-specific accessor set by the core block)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Each assignment is guarded by <code>respond_to?</code>, so a custom context lacking the
+writer is simply skipped.</p>
 <hr />
-<h2 id="robotlabractorboundaryerror">RobotLab::RactorBoundaryError<a class="headerlink" href="#robotlabractorboundaryerror" title="Permanent link">&para;</a></h2>
-<p>Raised when a value cannot be made Ractor-shareable before crossing a Ractor boundary (e.g., a live <code>IO</code> object, a <code>Proc</code>, or an object with mutable state).</p>
-<div class="admonition note">
-<p class="admonition-title">The error class is core; the machinery that raises it is not</p>
-<p><code>RobotLab::RactorBoundaryError</code> is defined in core
-(<code>lib/robot_lab/error.rb</code>) so hosts can rescue it without loading anything
-extra. But <code>RactorBoundary</code>, <code>RactorWorkerPool</code>, and <code>RactorMemoryProxy</code> are
-<strong>not defined in core</strong> — they ship in the separate <strong><code>robot_lab-ractor</code></strong>
-gem. Core only <em>references</em> <code>RactorBoundary.freeze_deep</code> from
-<code>Network#build_robot_spec</code>, which is reachable only under
-<code>parallel_mode: :ractor</code>, which itself raises <code>DependencyError</code> unless that
-gem is loaded.</p>
+<h2 id="robotlabhookcontext">RobotLab::HookContext<a class="headerlink" href="#robotlabhookcontext" title="Permanent link">&para;</a></h2>
+<p>Base class for every hook context. The family-specific subclasses below add the
+accessors a handler actually reads.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>event</code></td>
+<td><code>Symbol</code></td>
+<td>The family (<code>:run</code>, <code>:tool_call</code>, …), symbolized at construction</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td><code>ExtensionState</code></td>
+<td>The per-run namespace store; defaults to a fresh <code>ExtensionState</code></td>
+</tr>
+<tr>
+<td><code>ext(name)</code></td>
+<td><code>DotState</code></td>
+<td>Another handler's namespaced state — <code>ctx.ext(:timer).start_time</code></td>
+</tr>
+<tr>
+<td><code>local</code></td>
+<td><code>DotState</code></td>
+<td><strong>This</strong> handler's state. Raises <code>ArgumentError: No hook namespace active</code> outside a <code>with_namespace</code> block</td>
+</tr>
+<tr>
+<td><code>with_namespace(ns) { \|ctx\| }</code></td>
+<td>block's value</td>
+<td>Sets the active namespace for the duration of the block and restores the previous one in an <code>ensure</code>. Called by <code>Hooks.call_registration</code></td>
+</tr>
+<tr>
+<td><code>to_h</code></td>
+<td><code>Hash</code></td>
+<td>Snapshot of every public reader (excluding <code>to_h</code> and <code>local</code>) plus <code>metadata: metadata.to_h</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title"><code>ctx.local</code> lives for exactly one run</p>
+<p><code>metadata</code> is a fresh <code>ExtensionState</code> per <code>HookContext</code>, and a new context is
+built per run. Use a class-level accessor on the handler for cross-run state.</p>
 </div>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab/ractor&quot;</span><span class="w">   </span><span class="c1"># provides RactorBoundary and the worker pool</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">begin</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundary</span><span class="o">.</span><span class="n">freeze_deep</span><span class="p">({</span><span class="w"> </span><span class="ss">io</span><span class="p">:</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">RactorBoundaryError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="k">end</span>
-</span></code></pre></div>
-<hr />
-<h2 id="robotlabtoolerror">RobotLab::ToolError<a class="headerlink" href="#robotlabtoolerror" title="Permanent link">&para;</a></h2>
-<p>An opt-in error type for tool failures. Core raises it nowhere itself — you raise
-it from your own <code>execute</code>, and the <code>robot_lab-ractor</code> worker pool raises it when
-unwrapping a failure that happened inside a Ractor.</p>
-<p><code>ToolError.new(message, retryable: true)</code> marks a specific instance as retryable.</p>
-<p>When a tool raises inside <code>Tool#call</code>, the error is caught and returned to the
-LLM as text rather than propagating (unless the class sets
-<code>self.raise_on_error = true</code>). RobotLab appends <code>" (retryable)"</code> whenever
-<code>RobotLab::Errors.retryable?(error)</code> is true, so the model itself can see that
-another attempt is worth trying:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Fetch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">&quot;Fetch a record&quot;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;record id&quot;</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="k">raise</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolError</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;upstream unavailable&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">retryable</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">end</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="no">Fetch</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">({</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="p">})</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># =&gt; &quot;Error (fetch): upstream unavailable (retryable)&quot;</span>
-</span></code></pre></div>
-<p>Unlike the generic <code>StandardError</code> path, the <code>ToolError</code> path writes <strong>nothing</strong>
-to the logger. See <a href="../core/tool/#call">Tool#call</a>.</p>
-<hr />
-<h2 id="robotlabbudgetexceeded">RobotLab::BudgetExceeded<a class="headerlink" href="#robotlabbudgetexceeded" title="Permanent link">&para;</a></h2>
-<p>Raised when a Robot's configured <code>token_budget</code> or <code>cost_budget</code> is already exhausted <strong>before</strong> an LLM call is attempted (see <a href="../../guides/observability/#budgets-token-cost">Budgets</a> and <code>RobotLab::Budget::Ledger</code>). This is distinct from the pre-existing <code>InferenceError</code> "Token budget exceeded" message, which covers a call that <em>completed</em> but pushed cumulative usage over budget — <code>BudgetExceeded</code> means the call was refused outright, before any tokens were spent.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;capped&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">cost_budget</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mi">50</span><span class="p">)</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">begin</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Do the expensive thing&quot;</span><span class="p">)</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">BudgetExceeded</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;budget exceeded for cost: 0.62 &gt; 0.5&quot;</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="k">end</span>
-</span></code></pre></div>
-<p>Raised by <code>Budget::Ledger#reserve!</code>; the message format is
-<code>"budget exceeded for &lt;dimension&gt;: &lt;committed + amount&gt; &gt; &lt;limit&gt;"</code> where
-<code>&lt;dimension&gt;</code> is <code>tokens</code> or <code>cost</code>.</p>
-<p>The post-call <code>InferenceError</code> messages are formatted differently:</p>
+<h3 id="context-subclasses">Context subclasses<a class="headerlink" href="#context-subclasses" title="Permanent link">&para;</a></h3>
+<p>Readers are read-only unless marked <strong>rw</strong>.</p>
+<h4 id="runhookcontext-event-run">RunHookContext (<code>event: :run</code>)<a class="headerlink" href="#runhookcontext-event-run" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Dimension</th>
-<th>Message</th>
+<th>Accessor</th>
+<th></th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>token_budget</code></td>
-<td><code>Token budget exceeded: &lt;N&gt; tokens used, budget is &lt;M&gt;</code></td>
+<td><code>robot</code></td>
+<td></td>
+<td>The robot being run</td>
 </tr>
 <tr>
-<td><code>cost_budget</code></td>
-<td><code>Cost budget exceeded: $0.523100 used, budget is $0.500000</code> (both values via <code>%.6f</code>)</td>
+<td><code>network</code></td>
+<td></td>
+<td>Owning <code>Network</code>, or <code>nil</code> when standalone</td>
+</tr>
+<tr>
+<td><code>task</code></td>
+<td></td>
+<td>The <code>Task</code> wrapper, when run from a pipeline</td>
+</tr>
+<tr>
+<td><code>memory</code></td>
+<td></td>
+<td>The resolved run memory</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td></td>
+<td>The robot's effective <code>RunConfig</code></td>
+</tr>
+<tr>
+<td><code>request</code></td>
+<td>rw</td>
+<td>The user message. <strong>Writable</strong> — assign in <code>before_run</code> to rewrite the prompt</td>
+</tr>
+<tr>
+<td><code>response</code></td>
+<td>rw</td>
+<td>The <code>RobotResult</code>; set by <code>Hooks.set_result</code> before <code>after_run</code></td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>rw</td>
+<td>Set by <code>Hooks.run</code> before <code>on_error</code></td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="robotlabawaittimeout">RobotLab::AwaitTimeout<a class="headerlink" href="#robotlabawaittimeout" title="Permanent link">&para;</a></h2>
-<p>Raised by <a href="../core/memory/#get"><code>Memory#get</code></a> when a blocking read
-(<code>wait: true</code> or <code>wait: &lt;seconds&gt;</code>) expires before the key is written.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">begin</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">memory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="ss">:sentiment</span><span class="p">,</span><span class="w"> </span><span class="ss">wait</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AwaitTimeout</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Timeout waiting for :sentiment after 30 seconds&quot;</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">end</span>
-</span></code></pre></div>
-<p>With multiple keys the timeout is applied <strong>per missing key</strong>, so
-<code>get(:a, :b, wait: 30)</code> can block for up to 60 seconds before raising.</p>
-<p>Not retryable per <code>RobotLab::Errors.retryable?</code> — it falls into the
-"everything else" bucket.</p>
-<hr />
-<h2 id="retryable-errors">Retryable Errors<a class="headerlink" href="#retryable-errors" title="Permanent link">&para;</a></h2>
-<p><code>RobotLab::Errors.retryable?(error)</code> classifies whether a host (an ActiveJob <code>retry_on</code> list, <code>robot_lab-to</code>'s takeover loop, a custom retry wrapper) should retry the operation that raised <code>error</code>:</p>
+<h4 id="llmgenerationhookcontext-event-run-subclass-of-runhookcontext">LlmGenerationHookContext (<code>event: :run</code>) — subclass of <code>RunHookContext</code><a class="headerlink" href="#llmgenerationhookcontext-event-run-subclass-of-runhookcontext" title="Permanent link">&para;</a></h4>
+<p>Adds <code>iteration</code> (Integer, defaults to <code>0</code>) and <code>generation_response</code> (<strong>rw</strong>,
+set by <code>set_result</code>). Note it inherits <code>event: :run</code> from its parent; the family
+name comes from the hook method names, not from <code>event</code>.</p>
+<h4 id="toolcallhookcontext-event-tool_call">ToolCallHookContext (<code>event: :tool_call</code>)<a class="headerlink" href="#toolcallhookcontext-event-tool_call" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Error</th>
-<th>Retryable?</th>
+<th>Accessor</th>
+<th></th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>InferenceError</code> (and subclasses, except <code>ToolLoopError</code>)</td>
-<td>Always</td>
+<td><code>tool</code></td>
+<td></td>
+<td>The tool instance</td>
 </tr>
 <tr>
-<td><code>ToolLoopError</code></td>
-<td>Never — it's a circuit breaker; retrying immediately re-triggers the same loop</td>
+<td><code>tool_name</code></td>
+<td></td>
+<td><code>tool.name</code>, falling back to <code>tool.class.name</code></td>
 </tr>
 <tr>
-<td><code>MCPError</code> / <code>ToolError</code></td>
-<td>Only when raised with <code>retryable: true</code> at the raise site</td>
+<td><code>tool_args</code></td>
+<td></td>
+<td>Arguments the LLM supplied</td>
 </tr>
 <tr>
-<td>Everything else (<code>ConfigurationError</code>, <code>ToolNotFoundError</code>, <code>DependencyError</code>, <code>RactorBoundaryError</code>, <code>BusError</code>, <code>BudgetExceeded</code>, <code>AwaitTimeout</code>, <code>DelegationTimeout</code>, non-RobotLab errors)</td>
-<td>Never</td>
+<td><code>robot</code></td>
+<td></td>
+<td>Owning robot, or <code>nil</code></td>
+</tr>
+<tr>
+<td><code>tool_result</code></td>
+<td>rw</td>
+<td>The result. Assign it in <code>around_tool_call</code> <strong>without</strong> calling the block to block a tool</td>
+</tr>
+<tr>
+<td><code>tool_error</code></td>
+<td>rw</td>
+<td>Set by <code>Tool#call</code> when <code>execute</code> raised</td>
 </tr>
 </tbody>
 </table>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">begin</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Error</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="k">retry</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Errors</span><span class="o">.</span><span class="n">retryable?</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="k">raise</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">end</span>
-</span></code></pre></div>
-<p><code>RobotLab::Errors.retryable_classes</code> returns <code>[RobotLab::InferenceError]</code> — an always-retryable allow-list for explicit ActiveJob-style <code>retry_on</code> declarations. It excludes <code>MCPError</code>/<code>ToolError</code> because their retryability is per-raise (via <code>retryable:</code>), not per-class.</p>
+<h4 id="networkrunhookcontext-event-network_run">NetworkRunHookContext (<code>event: :network_run</code>)<a class="headerlink" href="#networkrunhookcontext-event-network_run" title="Permanent link">&para;</a></h4>
+<p><code>network</code>, <code>memory</code>, <code>config</code>; <strong>rw</strong>: <code>context</code> (the run params hash), <code>result</code>, <code>error</code>.</p>
+<h4 id="taskhookcontext-event-task">TaskHookContext (<code>event: :task</code>)<a class="headerlink" href="#taskhookcontext-event-task" title="Permanent link">&para;</a></h4>
+<p><code>network</code>, <code>task</code>, <code>task_name</code> (<code>task.name</code>), <code>robot</code> (falls back to
+<code>task.robot</code>), <code>memory</code>, <code>config</code>; <strong>rw</strong>: <code>result</code>, <code>error</code>.</p>
+<h4 id="learnhookcontext-event-learn">LearnHookContext (<code>event: :learn</code>)<a class="headerlink" href="#learnhookcontext-event-learn" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Accessor</th>
+<th></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>robot</code></td>
+<td></td>
+<td>The robot learning</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td></td>
+<td>The stripped learning text</td>
+</tr>
+<tr>
+<td><code>learnings_before</code></td>
+<td></td>
+<td>Frozen copy of <code>robot.learnings</code> prior to the write</td>
+</tr>
+<tr>
+<td><code>stored</code></td>
+<td>rw</td>
+<td>Set <code>true</code> by core when the learning was actually appended (i.e. not deduplicated away)</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>rw</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="compactionhookcontext-event-compaction">CompactionHookContext (<code>event: :compaction</code>)<a class="headerlink" href="#compactionhookcontext-event-compaction" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Accessor</th>
+<th></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>robot</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>messages_before</code></td>
+<td></td>
+<td>Frozen copy of <code>chat.messages</code> before compaction</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td></td>
+<td>The effective <code>RunConfig</code></td>
+</tr>
+<tr>
+<td><code>strategy</code></td>
+<td></td>
+<td><code>:context_window</code>, or <code>:custom</code> when <code>auto_compact</code> is a <code>Proc</code></td>
+</tr>
+<tr>
+<td><code>compacted_messages</code></td>
+<td>rw</td>
+<td>Assign in <code>on_compaction</code> to <strong>replace</strong> the core algorithm</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>rw</td>
+<td></td>
+</tr>
+<tr>
+<td><code>handled?</code></td>
+<td></td>
+<td><code>!compacted_messages.nil?</code> — core skips its own compaction when true</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="robotlabdelegationfuturedelegationtimeout">RobotLab::DelegationFuture::DelegationTimeout<a class="headerlink" href="#robotlabdelegationfuturedelegationtimeout" title="Permanent link">&para;</a></h2>
-<p>Raised by <code>DelegationFuture#value(timeout: N)</code> when the delegated task does not complete within <code>N</code> seconds.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">future</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="o">.</span><span class="n">delegate</span><span class="p">(</span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">analyst</span><span class="p">,</span><span class="w"> </span><span class="ss">task</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">async</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">begin</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">future</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">DelegationFuture</span><span class="o">::</span><span class="no">DelegationTimeout</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="w">  </span><span class="c1"># &quot;Delegation to &#39;analyst&#39; timed out after 10s&quot;</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">end</span>
-</span></code></pre></div>
+<h2 id="extensionstate-and-dotstate">ExtensionState and DotState<a class="headerlink" href="#extensionstate-and-dotstate" title="Permanent link">&para;</a></h2>
+<p>The two-level store behind <code>ctx.local</code> / <code>ctx.ext</code>.</p>
+<h3 id="extensionstate">ExtensionState<a class="headerlink" href="#extensionstate" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ext(name)</code></td>
+<td><code>DotState</code></td>
+<td>The <code>DotState</code> for a namespace, auto-created on first access</td>
+</tr>
+<tr>
+<td><code>to_h</code></td>
+<td><code>Hash</code></td>
+<td><code>{ namespace =&gt; state_hash }</code> for every namespace touched</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dotstate">DotState<a class="headerlink" href="#dotstate" title="Permanent link">&para;</a></h3>
+<p>A schemaless dot-access bag.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>method_missing</code></td>
+<td>value / assigned value</td>
+<td><code>state.foo</code> reads, <code>state.foo = 1</code> writes. Any key is allowed</td>
+</tr>
+<tr>
+<td><code>merge_defaults(hash)</code></td>
+<td><code>self</code></td>
+<td>Writes each pair <strong>only when the key is absent</strong> — this is how a registration's <code>context:</code> becomes defaults rather than an override</td>
+</tr>
+<tr>
+<td><code>to_h</code></td>
+<td><code>Hash</code></td>
+<td>A <code>dup</code> of the backing hash</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title"><code>DotState#respond_to_missing?</code> always returns true</p>
+<p><code>state.respond_to?(:anything)</code> is <code>true</code>, and reading a key that was never
+set returns <code>nil</code> instead of raising <code>NoMethodError</code>. A typo in a <code>ctx.local</code>
+reader fails silently.</p>
+</div>
 <hr />
-<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<h2 id="module-level-hook-methods">Module-level hook methods<a class="headerlink" href="#module-level-hook-methods" title="Permanent link">&para;</a></h2>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">hooks</span><span class="w">                     </span><span class="c1"># =&gt; the global HookRegistry (memoized)</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="no">HandlerClass</span><span class="p">,</span><span class="w"> </span><span class="ss">context</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">clear_hooks!</span><span class="w">              </span><span class="c1"># =&gt; replaces the global registry with a new one</span>
+</span></code></pre></div>
+<p><code>clear_hooks!</code> swaps in a brand-new <code>HookRegistry</code>; any <code>Registration</code> object you
+held from before is orphaned. Use it in test teardown to avoid leaking handlers
+between examples.</p>
+<h3 id="with_hook_scope-current_hook_scope">with_hook_scope / current_hook_scope<a class="headerlink" href="#with_hook_scope-current_hook_scope" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">with_hook_scope</span><span class="p">(</span><span class="n">registries</span><span class="p">,</span><span class="w"> </span><span class="n">per_run_hooks</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="no">RobotLab</span><span class="o">.</span><span class="n">current_hook_scope</span><span class="w">   </span><span class="c1"># =&gt; { registries: [...], per_run_hooks: ... } or nil</span>
+</span></code></pre></div>
+<p>Publishes the active run's registries and per-run handlers in a
+<code>Thread.current</code> slot for the duration of the block, restoring the previous value
+in an <code>ensure</code>. <code>Robot::Hooking#run</code> opens the scope; <code>Tool#call</code> reads it so a
+tool invoked deep inside RubyLLM's tool loop still resolves the same registries
+(including the network's and any <code>hooks:</code> passed to that one <code>run</code>) instead of
+falling back to <code>[RobotLab.hooks, robot.hooks]</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Thread-local, so it does not cross a thread boundary</p>
+<p>A tool that executes on another thread — or a <code>delegate(async: true)</code> target —
+sees <code>current_hook_scope == nil</code> and falls back to the global + robot
+registries. Network-scoped and per-run hooks will not fire for it.</p>
+</div>
+<hr />
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../guides/building-robots/">Building Robots</a> — Tool loop circuit breaker, delegation</li>
-<li><a href="../../guides/observability/">Observability &amp; Safety</a> — circuit breaker and tool loop errors</li>
-<li><a href="../../guides/mcp-integration/">MCP Integration</a> — MCP connection errors</li>
+<li><a href="../../guides/hooks/">Hook System guide</a> — families, ordering, and applied patterns</li>
+<li><a href="../../guides/observability/">Observability &amp; Safety</a> — <code>Narrator</code>, budgets, doom-loop detection</li>
+<li><a href="../support/">Support API</a> — <code>Narrator</code>, the one <code>Hook</code> subclass shipped in core</li>
+<li><a href="../core/robot/#on">Robot: on</a> · <a href="../core/network/#on">Network: on</a></li>
 </ul>
 
 
@@ -3220,7 +4094,7 @@ to the logger. See <a href="../core/tool/#call">Tool#call</a>.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../support/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Support Classes">
+          <a href="../core/state/" class="md-footer__link md-footer__link--prev" aria-label="Previous: StateProxy">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3230,20 +4104,20 @@ to the logger. See <a href="../core/tool/#call">Tool#call</a>.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Support Classes
+                StateProxy
               </div>
             </div>
           </a>
         
         
           
-          <a href="../messages/" class="md-footer__link md-footer__link--next" aria-label="Next: Messages">
+          <a href="../skills/" class="md-footer__link md-footer__link--next" aria-label="Next: Skills">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Messages
+                Skills
               </div>
             </div>
             <div class="md-footer__button md-icon">
