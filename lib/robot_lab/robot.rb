@@ -776,7 +776,9 @@ module RobotLab
     # is the definitive choke point: tools are fully resolved (MCP connected)
     # and about to be handed to the chat, so the cap holds no matter how the
     # tools were configured, filtered, or connected. Cap value comes from
-    # RunConfig#max_tools, defaulting to DEFAULT_MAX_TOOLS; nil/<=0 disables it.
+    # RunConfig#max_tools, defaulting to DEFAULT_MAX_TOOLS; a nil, zero, or
+    # negative max_tools falls back to that default, so the cap cannot be
+    # disabled from configuration.
     #
     # @param tools [Array<Tool>] the resolved tools
     # @return [Array<Tool>] at most `max_tools` tools

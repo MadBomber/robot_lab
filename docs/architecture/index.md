@@ -44,25 +44,31 @@ graph TB
     subgraph "RobotLab Core"
         B[Network]
         C[Task]
-        D[Robot < RubyLLM::Agent]
+        D[Robot &lt; RubyLLM::Agent]
         E[Memory]
         F[RobotResult]
     end
 
     subgraph "Configuration"
-        G[Config < MywayConfig::Base]
+        G[Config &lt; MywayConfig::Base]
         R[RunConfig]
+    end
+
+    subgraph "Cross-Cutting"
+        HK[Hooks<br/>HookRegistry x3]
     end
 
     subgraph "Integration Layer"
         H[MCP Client]
-        I[Tools < RubyLLM::Tool]
+        I[Tools &lt; RubyLLM::Tool]
         J[Templates / prompt_manager]
+        SK[AgentSkills + Sandbox]
     end
 
     subgraph "Execution Layer"
         K[SimpleFlow::Pipeline]
         L[RubyLLM Chat]
+        TB[TypedBus + BusPoller]
     end
 
     subgraph "Provider Layer"
@@ -78,23 +84,73 @@ graph TB
     C --> D
     B --> K
     B --> E
+    B --> TB
     D --> E
     D --> L
+    D --> TB
     D --> H
     D --> I
     D --> J
+    D --> SK
     D --> F
+    SK --> I
     G --> R
     R --> B
     R --> C
     R --> D
     G --> D
     G --> L
+    HK -.wraps.-> B
+    HK -.wraps.-> C
+    HK -.wraps.-> D
+    HK -.wraps.-> I
     L --> M
     L --> N
     L --> O
     H --> P
 ```
+
+The dotted `wraps` edges are the hook system: `Hooks.run` brackets every network
+run, task, robot run, LLM generation, tool call, compaction, and `learn` call. It
+is the framework's extension seam — the extension gems (`robot_lab-audit`,
+`robot_lab-durable`, …) attach here rather than subclassing core objects. See the
+[Hooks API](../api/hooks.md).
+
+### Robot subsystems
+
+A `Robot` composes several small collaborators, each documented on the
+[Support](../api/support.md) and [Skills](../api/skills.md) API pages:
+
+```mermaid
+graph LR
+    D[Robot]
+
+    D --> BM[BusMessaging<br/>RobotMessage envelopes]
+    BM --> BP[BusPoller<br/>per-robot serialization]
+    D --> BD[Budget::Ledger<br/>token_budget / cost_budget]
+    D --> DL[DoomLoopDetector<br/>always installed per run]
+    D --> HC[HistoryCompressor<br/>compress_history / auto_compact]
+    D --> DF[DelegationFuture<br/>delegate async: true]
+    D --> HS[HistorySearch<br/>search_history]
+    D --> ASM[AgentSkillMatching<br/>prepended around run]
+
+    ASM --> AS[AgentSkill<br/>SKILL.md bundle]
+    AS --> CAT[AgentSkillCatalog]
+    AS --> CAP[Capabilities]
+    AS --> ST[ScriptTool]
+    CAP --> SB[Sandbox<br/>Seatbelt or Null]
+    ST --> SB
+
+    HC --> TA[TextAnalysis<br/>TF / TF-IDF]
+    HS --> TA
+    CV[Convergence] --> TA
+    SD[MCP::ServerDiscovery] --> TA
+```
+
+`TextAnalysis` is the shared floor under every similarity feature — history
+compression, history search, convergence detection, and MCP server discovery all
+route through it, which is why they share the one optional `classifier`
+dependency.
 
 ## Core Components
 
@@ -107,6 +163,11 @@ graph TB
 | **RobotResult** | Captures LLM output, tool calls, and metadata from a run | [Message Flow](message-flow.md) |
 | **RunConfig** | Per-run settings object (LLM fields, `mcp`/`tools`, callbacks, infrastructure) that cascades global → network → task → robot | [Core Concepts](core-concepts.md) |
 | **Config** | MywayConfig-based global configuration with env var and file support | [Configuration](#configuration) |
+| **Hook** | Handler base class for the seven hook families — the framework's extension seam | [Hooks API](../api/hooks.md) |
+| **AgentSkill** | A `SKILL.md` bundle whose instructions and `scripts/` become prompt text and tools | [Skills API](../api/skills.md) |
+| **Sandbox** | Opt-in OS-level confinement (macOS Seatbelt) for skill scripts, derived from `Capabilities` | [Skills API](../api/skills.md) |
+| **RobotMessage** | Immutable envelope for TypedBus inter-robot messaging, serialized per robot by `BusPoller` | [Support API](../api/support.md) |
+| **Budget::Ledger** | Thread-safe reserve/reconcile ledger behind `token_budget` / `cost_budget` | [Support API](../api/support.md) |
 
 ## Configuration
 

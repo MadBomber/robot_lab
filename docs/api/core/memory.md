@@ -308,6 +308,18 @@ Whether this memory is backed by Redis rather than the in-process Hash. The
 `backend: :auto` default tries Redis and falls back to a Hash; `backend: :hash`
 forces the Hash.
 
+### network_name
+
+```ruby
+memory.network_name  # => String, nil
+```
+
+The network this memory belongs to, set once at construction and read-only
+thereafter. `Network` creates its shared memory as `Memory.new(network_name: name)`;
+a standalone robot's inherent memory has `nil`. It is copied onto every
+`MemoryChange` so a subscriber can tell which network a write came from, and it is
+preserved by `clone`/`dup` — but **not** by `from_hash`.
+
 ### current_writer / current_writer=
 
 ```ruby

@@ -182,6 +182,9 @@ nav:
           - Tool: api/core/tool.md
           - Memory: api/core/memory.md
           - StateProxy: api/core/state.md
+      - Hooks: api/hooks.md
+      - Skills: api/skills.md
+      - Support Classes: api/support.md
       - Errors: api/errors.md
       - Messages:
           - api/messages/index.md

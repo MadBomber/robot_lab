@@ -8,7 +8,8 @@ module RobotLab
   # Provides:
   # - Nested configuration with a dedicated `ruby_llm:` section
   # - Environment-specific settings (development, test, production)
-  # - XDG config file loading (~/.config/robot_lab/config.yml)
+  # - XDG config file loading (~/.config/robot_lab/robot_lab.yml — the filename
+  #   repeats the `config_name`; `config.yml` is never read)
   # - Environment variable overrides (ROBOT_LAB_*)
   # - Automatic RubyLLM configuration application
   #
@@ -21,10 +22,14 @@ module RobotLab
   #   # ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
   #   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
   #
-  # @example User config file (~/.config/robot_lab/config.yml)
-  #   defaults:
-  #     ruby_llm:
-  #       anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+  # @example User config file (~/.config/robot_lab/robot_lab.yml)
+  #   # Flat keys, or a section named for the current environment. A `defaults:`
+  #   # wrapper is IGNORED here — it applies only to the gem's bundled
+  #   # defaults.yml. This file is NOT run through ERB, so keep secrets in
+  #   # environment variables or in ./config/robot_lab.yml (which is).
+  #   ruby_llm:
+  #     model: claude-sonnet-4
+  #     request_timeout: 120
   #
   class Config < MywayConfig::Base
     config_name :robot_lab

@@ -24,9 +24,9 @@ require 'typed_bus'
 #
 # @example Creating a network of robots
 #   network = RobotLab.create_network(name: "pipeline") do
-#     step :analyzer, analyzer, depends_on: :none
-#     step :writer, writer, depends_on: [:analyzer]
-#     step :reviewer, reviewer, depends_on: [:writer]
+#     task :analyzer, analyzer, depends_on: :none
+#     task :writer, writer, depends_on: [:analyzer]
+#     task :reviewer, reviewer, depends_on: [:writer]
 #   end
 #   result = network.run(message: "Process this document")
 #
@@ -35,7 +35,7 @@ require 'typed_bus'
 #   # ROBOT_LAB_DEFAULT_MODEL=gpt-4
 #   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 #
-#   # Or via config files (~/.config/robot_lab/config.yml or ./config/robot_lab.yml)
+#   # Or via config files (~/.config/robot_lab/robot_lab.yml or ./config/robot_lab.yml)
 #   # See lib/robot_lab/config/defaults.yml for all options
 #
 #   # Access configuration values:
@@ -145,7 +145,7 @@ module RobotLab
     # Configuration is automatically loaded from:
     # - Bundled defaults (lib/robot_lab/config/defaults.yml)
     # - Environment-specific overrides (development, test, production)
-    # - XDG config files (~/.config/robot_lab/config.yml)
+    # - XDG config file (~/.config/robot_lab/robot_lab.yml)
     # - Project config (./config/robot_lab.yml)
     # - Environment variables (ROBOT_LAB_*)
     #
@@ -246,28 +246,28 @@ module RobotLab
     #
     # @param name [String] the unique identifier for the network
     # @param concurrency [Symbol] concurrency model (:auto, :threads, :async)
-    # @yield Block for defining pipeline steps
+    # @yield Block for defining pipeline tasks (the DSL method is `task`)
     # @return [Network] a new Network instance
     #
     # @example Sequential pipeline
     #   network = RobotLab.create_network(name: "pipeline") do
-    #     step :first, robot1, depends_on: :none
-    #     step :second, robot2, depends_on: [:first]
+    #     task :first, robot1, depends_on: :none
+    #     task :second, robot2, depends_on: [:first]
     #   end
     #
     # @example With optional routing
     #   network = RobotLab.create_network(name: "support") do
-    #     step :classifier, classifier, depends_on: :none
-    #     step :billing, billing_robot, depends_on: :optional
-    #     step :technical, technical_robot, depends_on: :optional
+    #     task :classifier, classifier, depends_on: :none
+    #     task :billing, billing_robot, depends_on: :optional
+    #     task :technical, technical_robot, depends_on: :optional
     #   end
     #
     # @example Parallel execution
     #   network = RobotLab.create_network(name: "analysis") do
-    #     step :fetch, fetcher, depends_on: :none
-    #     step :sentiment, sentiment_bot, depends_on: [:fetch]
-    #     step :entities, entity_bot, depends_on: [:fetch]
-    #     step :merge, merger, depends_on: [:sentiment, :entities]
+    #     task :fetch, fetcher, depends_on: :none
+    #     task :sentiment, sentiment_bot, depends_on: [:fetch]
+    #     task :entities, entity_bot, depends_on: [:fetch]
+    #     task :merge, merger, depends_on: [:sentiment, :entities]
     #   end
     def create_network(name:, concurrency: :auto, config: nil, &)
       Network.new(name: name, concurrency: concurrency, config: config, &)

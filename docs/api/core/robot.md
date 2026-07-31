@@ -532,6 +532,69 @@ worker2 = bot.spawn(name: "worker", system_prompt: "Worker 2")
 # Messages sent to :worker are delivered to both
 ```
 
+### assign_bus_poller
+
+```ruby
+robot.assign_bus_poller(poller, group: :default)
+# => void — do not rely on the return value
+```
+
+Adopt a shared [`BusPoller`](../support.md#robotlabbuspoller) — normally the
+network's. `Network#task` calls this for every robot that responds to it, passing
+the task's `poller_group:`. Any private poller the robot auto-created is dropped
+first.
+
+**Parameters:**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `poller` | `BusPoller` | **required** | The shared poller to adopt |
+| `group` | `Symbol` | `:default` | Poller group label — informational only; groups share one drain mechanism |
+
+You only call this directly when wiring robots onto a shared poller outside a
+`Network`.
+
+### inherited_llm_settings
+
+```ruby
+robot.inherited_llm_settings
+# => { model: "llama3.2", provider: :ollama }
+```
+
+The model/provider pair a [`spawn`](#spawn)ed child inherits from this robot.
+Returns `{}` when neither is set — each key is included only when the
+corresponding reader is truthy. Exposed so an application building children by
+some route other than `spawn` can apply the same inheritance:
+
+```ruby
+child = RobotLab.build(name: "helper", bus: parent.bus, **parent.inherited_llm_settings)
+```
+
+### rerender_template
+
+```ruby
+robot.rerender_template(run_context)   # internal — see the warning below
+```
+
+Re-renders the robot's template with `run_context` merged over the build-time
+context (skill bodies included, when `skills:` are in play) and reinstalls the
+result as the system prompt, re-appending the inline `system_prompt`. `run` calls
+it automatically when the robot has a `template:` and the call carried extra
+keywords — every keyword except `:with` — which is the mechanism behind
+`robot.run("Help me", company: "Acme")`.
+
+`Robot::AgentSkillMatching` overrides it to re-prepend any matched AgentSkill
+instructions afterward, because a re-render replaces the whole system prompt and
+would otherwise discard them mid-run.
+
+!!! warning "Public only by accident — treat it as internal"
+    `rerender_template` is `private` in `Robot::TemplateRendering`, but the
+    prepended `Robot::AgentSkillMatching` redefines it **above** its own
+    `private` keyword, so the effective method on `Robot` is public. That is an
+    artifact of the override, not a supported entry point: the return value is
+    unspecified, and it mutates the chat's system prompt for the rest of the
+    conversation. Pass template context to `run` instead.
+
 ### with_bus
 
 ```ruby

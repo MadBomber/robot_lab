@@ -9,33 +9,59 @@ When you call `robot.run("message")`, several steps occur:
 ```mermaid
 sequenceDiagram
     participant App as Application
-    participant Robot
+    participant Skills as AgentSkillMatching<br/>(prepended)
+    participant Robot as Robot (Hooking run)
+    participant Hooks as Hooks / HookRegistry
     participant Memory
+    participant Ledger as Budget::Ledger
     participant Chat as @chat (RubyLLM)
     participant LLM
 
-    App->>Robot: run("message")
+    App->>Skills: run("message")
+    Skills->>Skills: match_agent_skills + inject (prompt & script tools)
+    Skills->>Robot: super
+
     Robot->>Memory: resolve_run_memory()
-    Robot->>Robot: prepare_tools()
-    Robot->>Robot: resolve_mcp_hierarchy()
-    Robot->>Robot: resolve_tools_hierarchy()
-    Robot->>Robot: ensure_mcp_clients()
-    Robot->>Robot: filtered_tools() + cap_tools()
+    Robot->>Memory: current_writer = name
+    Robot->>Hooks: Hooks.run(:run, RunHookContext)
+    Note over Hooks: before_run / around_run wrap everything below
+
+    Robot->>Robot: prepare_tools() — resolve_mcp_hierarchy,<br/>ensure_mcp_clients, resolve_tools_hierarchy,<br/>filtered_tools + cap_tools
     Robot->>Chat: with_tools(*filtered, replace: true)
-    Robot->>Chat: ask("message")
+    Robot->>Robot: rerender_template(kwargs) — when template + extra kwargs
+    Robot->>Ledger: reserve_budget! (raises BudgetExceeded if exhausted)
+
+    Robot->>Hooks: Hooks.run(:llm_generation, LlmGenerationHookContext)
+    Robot->>Robot: inject_learnings(request)
+    Robot->>Robot: maybe_compact — fires :compaction family
+    Robot->>Chat: install_circuit_breaker (when max_tool_rounds)
+    Robot->>Chat: install_doom_loop_detection (always)
+    Robot->>Chat: ask(message, &streaming_block)
     Chat->>LLM: API Request
 
-    loop Tool Calls
+    loop Tool loop (inside :llm_generation)
         LLM-->>Chat: tool_call response
-        Chat->>Chat: execute tool
+        Chat->>Hooks: Tool.call — Hooks.run(:tool_call)
         Chat->>LLM: tool result
     end
 
     LLM-->>Chat: final response
     Chat-->>Robot: RubyLLM::Response
-    Robot->>Robot: build_result(response)
-    Robot-->>App: RobotResult
+    Robot->>Robot: build_result(response) — result_text + token accounting
+    Robot->>Ledger: reconcile_budget!
+    Robot->>Robot: enforce_token_budget! / enforce_cost_budget!<br/>(raise InferenceError on overage)
+    Robot->>Hooks: after_run
+    Note over Robot,Memory: ensure: remove_doom_loop_detection,<br/>restore_tool_call_callback, restore current_writer
+    Robot-->>Skills: RobotResult
+    Skills->>Skills: ensure: restore_after_agent_skills
+    Skills-->>App: RobotResult
 ```
+
+The steps are described individually below. Two things this diagram makes
+explicit that the prose repeats: `Robot::AgentSkillMatching` is **prepended**, so
+its `run` wraps `Robot::Hooking#run` (which is the `run` everything else calls);
+and the `:llm_generation` family wraps the provider's *entire* tool loop, so
+`:tool_call` hooks fire nested inside it rather than between generations.
 
 ## Step-by-Step Flow
 
@@ -190,7 +216,7 @@ end
 
 Scoping the history fallback to the current turn is what prevents a previous turn's answer from being returned when a thinking-mode model emits nothing in `content`.
 
-`build_result` also does token accounting: it reads `response.tokens` (falling back to `input_tokens`/`output_tokens`), adds them to the robot's running totals, and stores them on the result. `run` then reconciles the budget reservation and enforces `token_budget` / `cost_budget`, raising `RobotLab::BudgetExceeded` when either is blown.
+`build_result` also does token accounting: it reads `response.tokens` (falling back to `input_tokens`/`output_tokens`), adds them to the robot's running totals, and stores them on the result. `run` then reconciles the budget reservation and enforces `token_budget` / `cost_budget`, raising **`RobotLab::InferenceError`** when this call's actual usage pushed cumulative usage over budget. (`RobotLab::BudgetExceeded` is the *other* budget error: it is raised by `reserve_budget!` **before** the call, when a prior call already exhausted the dimension. See [Budgets](../guides/observability.md#budgets-token-cost).)
 
 ## RobotResult
 

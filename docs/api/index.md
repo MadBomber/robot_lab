@@ -19,6 +19,40 @@ The fundamental building blocks of RobotLab:
 There is **no** `RobotLab::State` class and no `RobotLab::NetworkRun` class. Runtime
 state lives in `Memory`; `memory.data` returns a `StateProxy`.
 
+## Hooks
+
+The framework's extension seam — `Hooks.run` brackets every robot run, network
+run, task, LLM generation, tool call, compaction, and `learn` call:
+
+| Class | Description |
+|-------|-------------|
+| [Hook](hooks.md#robotlabhook) | Handler base class; subclasses implement hooks as class methods |
+| [HookRegistry](hooks.md#robotlabhookregistry) | The store behind `RobotLab.hooks`, `network.hooks`, `robot.hooks` |
+| [Hooks](hooks.md#robotlabhooks) | The dispatcher |
+| [HookContext](hooks.md#robotlabhookcontext) | Base context, plus one subclass per family |
+
+## Skills
+
+`SKILL.md` bundles, the scripts they expose as tools, and the sandbox that
+confines them:
+
+| Class | Description |
+|-------|-------------|
+| [AgentSkill](skills.md#robotlabagentskill) | One skill bundle: instructions + `scripts/` |
+| [AgentSkillCatalog](skills.md#robotlabagentskillcatalog) | Lazy registry over `~/.prompts/skills/` |
+| [Capabilities](skills.md#robotlabcapabilities) | Declared vs. ceiling filesystem / network / timeout grant |
+| [ScriptTool](skills.md#robotlabscripttool) | Wraps an executable script as a `Tool` |
+| [Sandbox](skills.md#robotlabsandbox) | macOS Seatbelt confinement, or a passthrough |
+
+## Support Classes
+
+Everything else with a public surface — `Task`, `Runnable`, `ToolConfig`,
+`ToolManifest`, `Budget::Ledger`, `DoomLoopDetector`, `HistoryCompressor`,
+`Convergence`, `TextAnalysis`, `DelegationFuture`, `RobotMessage`, `BusPoller`,
+`Waiter`, `Narrator`, `Config`, `MCP::ServerDiscovery`,
+`MCP::ConnectionPoller`, and `Streaming::SequenceCounter` — is documented on the
+[Support Classes](support.md) page.
+
 ## Messages
 
 Message types for LLM communication:
@@ -68,10 +102,14 @@ RobotLab.create_memory(data: {}, enable_cache: true, **options)
 # Rendering a template to a String (not a robot) -- see Building Robots guide
 RobotLab.render_template(name, **context)  # => String
 
-# Hooks
+# Hooks -- see the Hooks API page
 RobotLab.hooks                       # => HookRegistry
 RobotLab.on(HandlerClass, context: nil)
-RobotLab.clear_hooks!
+RobotLab.clear_hooks!                # => replaces the global registry with a fresh one
+
+# Hook scope (internal plumbing; read by Tool#call)
+RobotLab.with_hook_scope(registries, per_run_hooks) { ... }
+RobotLab.current_hook_scope          # => { registries:, per_run_hooks: } or nil
 
 # Extensions
 RobotLab.register_extension(name, mod)
@@ -79,6 +117,13 @@ RobotLab.extension_loaded?(:ractor)  # => Boolean
 RobotLab.extension(:ractor)
 RobotLab.loaded_extensions           # => Array<Symbol>
 ```
+
+`with_hook_scope` publishes the active run's registries in a `Thread.current`
+slot so a tool executing deep inside RubyLLM's tool loop resolves the same
+registries — including the network's and any per-run `hooks:` — instead of
+falling back to `[RobotLab.hooks, robot.hooks]`. It is thread-local, so it does
+not reach a tool that runs on another thread. See
+[Hooks: with_hook_scope](hooks.md#with_hook_scope-current_hook_scope).
 
 !!! warning "Tools and MCP are opt-in per call"
     `Robot#run` defaults to `tools: :none, mcp: :none`. A bare `robot.run("...")`
