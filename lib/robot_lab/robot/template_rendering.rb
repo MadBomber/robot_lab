@@ -64,6 +64,10 @@ module RobotLab
 
       # Re-render the template with run-time context merged into build-time context.
       # prompt_manager parameters may be required (null) and only available at run time.
+      #
+      # Re-rendering replaces the system message, so the inline system_prompt must be
+      # re-appended here exactly as apply_system_prompt does at construction --
+      # otherwise it would be silently dropped on any run that supplies context.
       def rerender_template(run_context)
         merged = (@build_context || {}).merge(run_context)
         resolved_ctx = resolve_context(merged, network: nil)
@@ -81,13 +85,22 @@ module RobotLab
             bodies << body if body
           end
 
-          combined = bodies.join("\n\n")
-          @chat.with_instructions(combined)
+          @chat.with_instructions(with_system_prompt_appended(bodies.join("\n\n")))
         else
           parsed = PM.parse(@template)
           rendered = parsed.to_s(**resolved_ctx)
-          @chat.with_instructions(rendered)
+          @chat.with_instructions(with_system_prompt_appended(rendered))
         end
+      end
+
+      # Append the inline system_prompt to freshly rendered template text.
+      #
+      # @param rendered [String] newly rendered template body
+      # @return [String] rendered text with system_prompt appended, if one is set
+      def with_system_prompt_appended(rendered)
+        return rendered unless @system_prompt
+
+        [rendered, @system_prompt].reject { |s| s.to_s.empty? }.join("\n\n")
       end
 
       # Orchestrate skill expansion and template application.

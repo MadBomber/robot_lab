@@ -666,8 +666,27 @@ module RobotLab
       end
     end
 
+    # Append the inline system prompt to whatever apply_template already set.
+    #
+    # The template renders first and establishes the base instructions; the
+    # inline system_prompt is appended so both survive. Combining into a single
+    # system message (rather than using with_instructions(append: true), which
+    # adds a second one) keeps readers that look at only the first system
+    # message -- notably AgentSkillMatching's snapshot/restore -- correct.
     def apply_system_prompt
-      @chat.with_instructions(@system_prompt) if @system_prompt
+      return unless @system_prompt
+
+      base     = current_system_instructions.to_s
+      combined = [base, @system_prompt].reject(&:empty?).join("\n\n")
+      @chat.with_instructions(combined)
+    end
+
+    # Content of the chat's system message, or nil when none is set.
+    #
+    # @return [String, nil]
+    def current_system_instructions
+      messages = @chat.instance_variable_get(:@messages)
+      messages&.find { |m| m.role.to_s == "system" }&.content
     end
 
     def apply_chat_params

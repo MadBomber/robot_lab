@@ -90,9 +90,7 @@ module RobotLab
       #
       # @return [String, nil]
       def current_agent_skill_instructions
-        messages = @chat.instance_variable_get(:@messages)
-        sys = messages&.find { |m| m.role.to_s == "system" }
-        sys&.content
+        current_system_instructions
       end
     end
   end

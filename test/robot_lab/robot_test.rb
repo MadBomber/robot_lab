@@ -112,6 +112,53 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 'Additional context for today.', robot.system_prompt
   end
 
+  def test_system_prompt_is_appended_to_template_not_replacing_it
+    robot = RobotLab::Robot.new(
+      name: 'enhanced_bot',
+      template: :assistant,
+      system_prompt: 'Additional context for today.'
+    )
+
+    instructions = system_instructions(robot)
+
+    assert_includes instructions, 'helpful assistant with access to tools',
+                    'template body must survive an inline system_prompt'
+    assert_includes instructions, 'Additional context for today.'
+    assert_operator instructions.index('helpful assistant with access to tools'),
+                    :<,
+                    instructions.index('Additional context for today.'),
+                    'template renders first, system_prompt is appended after it'
+  end
+
+  def test_system_prompt_survives_rerender_from_runtime_context
+    robot = RobotLab::Robot.new(
+      name: 'enhanced_bot',
+      template: :configurable,
+      system_prompt: 'DEBUG MODE: log all tool calls.'
+    )
+
+    robot.send(:rerender_template, { task_type: 'analysis' })
+    instructions = system_instructions(robot)
+
+    assert_includes instructions, 'DEBUG MODE: log all tool calls.',
+                    'system_prompt must be re-appended after a template rerender'
+    assert_equal 1, instructions.scan('DEBUG MODE').length,
+                 'system_prompt must not accumulate across rerenders'
+  end
+
+  def test_system_prompt_produces_single_system_message
+    robot = RobotLab::Robot.new(
+      name: 'enhanced_bot',
+      template: :assistant,
+      system_prompt: 'Additional context for today.'
+    )
+
+    messages = robot.chat.instance_variable_get(:@messages)
+    system_messages = messages.select { |m| m.role.to_s == 'system' }
+
+    assert_equal 1, system_messages.length
+  end
+
   def test_initialization_allows_bare_robot
     robot = RobotLab::Robot.new(name: 'bare_bot')
 
