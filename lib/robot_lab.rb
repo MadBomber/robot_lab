@@ -47,6 +47,7 @@ end
 
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
 loader.ignore("#{__dir__}/robot_lab/robot")
+loader.ignore("#{__dir__}/robot_lab/names.rb")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
 loader.inflector.inflect(
@@ -70,6 +71,11 @@ require_relative 'robot_lab/hook_registry'
 require_relative 'robot_lab/hooks'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
+
+# names.rb defines the NAMES data constant plus helper methods directly on
+# RobotLab, not a RobotLab::Names class/module, so Zeitwerk can't autoload it
+# by convention — ignored above and required explicitly instead.
+require_relative 'robot_lab/names'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
