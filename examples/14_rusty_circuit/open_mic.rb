@@ -23,14 +23,23 @@
 # Communication uses a shared :room channel — the comic publishes
 # performances there, and both the heckler and scout subscribe.
 # The heckler sends feedback directly to the comic's personal channel.
-# Room deliveries are routed through the core processing guard
-# (BusMessaging#handle_incoming_delivery), which serializes all
-# run() calls to prevent Async fiber interleaving from corrupting
-# chat history.
+# Room deliveries are handed to each robot's BusPoller via
+# BusMessaging#enqueue_delivery, which serializes all run() calls so
+# Async fiber interleaving can't corrupt chat history.
 #
 # Style reinventions are injected into the next round's user prompt
 # rather than modifying the chat's system messages, avoiding message
 # ordering issues while achieving genuine self-modification.
+#
+# RUNTIME: this is the most expensive example in the suite. A full show is
+# ~30 LLM calls (16 minimum, plus a round-trip per tool call and a full run
+# for every robot the comic or scout spawns). On a 20B+ local model at ~60s
+# per call that is 30+ minutes. Long silent stretches are the scout thinking,
+# not a hang — it writes notes to output/scout_notes.md rather than STDOUT,
+# so the "· Scout …" lines are your liveness signal.
+#
+# For a demo you can watch in a few minutes, point it at a smaller model:
+#   LLM_PROFILE=small bundle exec ruby examples/14_rusty_circuit/open_mic.rb
 #
 # Usage:
 #   bundle exec ruby examples/14_rusty_circuit/open_mic.rb
@@ -86,7 +95,8 @@ display.separator
 # The opening bit — comic performs, then enters the feedback loop
 opening = comic.run(
   "You just stepped on stage at The Rusty Circuit open mic. " \
-  "The crowd looks tough. Do your opening bit."
+  "The crowd looks tough. Do your opening bit.",
+  tools: :inherit
 ).reply.strip
 
 display.comic("Comic [Opening]", opening)
@@ -102,7 +112,8 @@ comic.send_message(to: :room, content: "OPENING: #{opening}")
 display.separator
 
 # Final verdict from the talent scout
-verdict = scout.run(scout.verdict_prompt).reply.strip
+display.working("Scout", "writing the final verdict")
+verdict = scout.run(scout.verdict_prompt, tools: :inherit).reply.strip
 
 display.verdict("Scout [FINAL VERDICT]", verdict)
 

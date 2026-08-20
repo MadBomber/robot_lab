@@ -15,20 +15,20 @@
 #   - RactorNetworkScheduler              — direct use for testing / custom wiring
 #   - Result Hash                         — run_pipeline returns { name => result }
 #
-# Part 1 — simulated scheduler, no API key needed.
+# Part 1 — simulated scheduler, no LLM traffic.
 #   Overrides execute_spec with a sleep-based stub so the wave ordering and
 #   timing characteristics are visible without real LLM calls.
 #
 # Part 2 — Network.new(parallel_mode: :ractor) API walkthrough.
 #   Shows how to configure the network and inspects the dependency graph.
-#   No run() call is made, so no API key is required.
+#   No run() call is made, so no LLM traffic either.
 #
-# Part 3 — live LLM run (optional).
-#   Executes automatically when ANTHROPIC_API_KEY is set.
+# Part 3 — live LLM run (opt-in via RUN_LIVE).
+#   Expected to fail against ruby_llm today; the rescue clauses explain why.
 #
 # Usage:
-#   bundle exec ruby examples/30_ractor_network.rb              # Parts 1 & 2
-#   ANTHROPIC_API_KEY=key ruby examples/30_ractor_network.rb    # Parts 1, 2 & 3
+#   bundle exec ruby examples/30_ractor_network.rb            # Parts 1 & 2
+#   RUN_LIVE=1 bundle exec ruby examples/30_ractor_network.rb # Parts 1, 2 & 3
 
 require_relative "common"
 require "robot_lab/ractor"
@@ -69,7 +69,7 @@ LATENCIES = {
 #
 #   Speedup    ≈ 1.7×
 
-section "Part 1: Simulated Parallel Run (no API key)"
+section "Part 1: Simulated Parallel Run (no LLM traffic)"
 
 # SimulatedScheduler overrides execute_spec so that instead of
 # constructing a real Robot and calling the LLM, it just sleeps for
@@ -141,27 +141,25 @@ section "Part 2: Network.new(parallel_mode: :ractor)"
 # routes through RactorNetworkScheduler instead of SimpleFlow::Pipeline.
 # The default mode is :async (unchanged SimpleFlow behavior).
 
-model = LLM[:default].model
-
 network = RobotLab::Network.new(name: "research_pipeline", parallel_mode: :ractor) do
   task :headline_finder,  RobotLab.build(name: "headline_finder",
                                           system_prompt: "Find the 3 most relevant news headlines. Be concise.",
-                                          model: model),
+                                          **llm_opts),
        depends_on: :none
 
   task :background_brief, RobotLab.build(name: "background_brief",
                                           system_prompt: "Provide a 2-sentence background on the topic.",
-                                          model: model),
+                                          **llm_opts),
        depends_on: :none
 
   task :fact_checker,     RobotLab.build(name: "fact_checker",
                                           system_prompt: "List 3 verifiable facts about the topic.",
-                                          model: model),
+                                          **llm_opts),
        depends_on: :none
 
   task :report_writer,    RobotLab.build(name: "report_writer",
                                           system_prompt: "Synthesize the provided context into a 3-sentence report.",
-                                          model: model),
+                                          **llm_opts),
        depends_on: ["headline_finder", "background_brief", "fact_checker"]
 end
 
@@ -187,21 +185,28 @@ puts "    • Return value is a Hash { robot_name => result_string }"
 puts
 
 # =============================================================================
-# Part 3: Live LLM run (optional — requires ANTHROPIC_API_KEY)
+# Part 3: Live LLM run (opt-in via RUN_LIVE=1)
 # =============================================================================
 
-unless ENV["ANTHROPIC_API_KEY"]
+unless ENV["RUN_LIVE"]
   section "Part 3: Live LLM Run"
-  puts "   Set ANTHROPIC_API_KEY to run the real pipeline."
+  puts "   Set RUN_LIVE=1 (with Ollama running) to attempt the real pipeline."
   puts "   Expected behavior: headline_finder, background_brief, and"
   puts "   fact_checker run in parallel; report_writer follows."
+  puts
+  puts "   Heads-up: this is expected to fail today — see the rescue clauses"
+  puts "   below. ruby_llm keeps Procs in class-level state, which cannot"
+  puts "   cross a Ractor boundary. Part 1 shows the wave ordering that Part 3"
+  puts "   will exercise once ruby_llm is Ractor-safe."
   puts
   hr
   puts "Example 30 complete."
   exit 0
 end
 
-section "Part 3: Live LLM Run (ANTHROPIC_API_KEY detected)"
+require_ollama!
+
+section "Part 3: Live LLM Run (RUN_LIVE set)"
 
 puts "  Running 4-robot research pipeline on:"
 puts "  \"#{topic}\""

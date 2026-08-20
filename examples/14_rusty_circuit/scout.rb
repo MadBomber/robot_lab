@@ -22,7 +22,7 @@ class RecruitAnalyst < RobotLab::Tool
       robot.analysts_spawned += 1
       robot.spawn(
         name: "#{specialty}_analyst",
-        model: LLM[:default].model,
+        **llm_opts,
         system_prompt:
           "You are an expert #{specialty.tr('_', ' ')} analyst " \
           "for stand-up comedy. You've studied the craft for decades. " \
@@ -30,6 +30,7 @@ class RecruitAnalyst < RobotLab::Tool
           "and insightful. 2-3 sentences max."
       )
     end
+    robot.display&.working("Scout", "consulting the #{specialty.tr('_', ' ')} analyst")
     analysis = analyst.run(robot.log.join("\n")).reply.strip
     robot.display&.scout_analyst(specialty, analysis)
     analysis
@@ -70,10 +71,9 @@ end
 # analysts when they see something worth examining closely.
 #
 # Subscribes to the :room channel to observe performances.
-# Room deliveries are routed through the core processing guard
-# (BusMessaging#handle_incoming_delivery), which serializes all
-# run() calls to prevent Async fiber interleaving from corrupting
-# chat history.
+# Room deliveries are handed to the robot's BusPoller via
+# BusMessaging#enqueue_delivery, which serializes all run() calls so
+# Async fiber interleaving can't corrupt chat history.
 #
 class Scout < RobotLab::Robot
   attr_accessor :log, :analysts_spawned, :pending_criteria, :display
@@ -86,7 +86,7 @@ class Scout < RobotLab::Robot
 
     super(
       name: "scout",
-      model: LLM[:default].model,
+      **llm_opts,
       template: :open_mic_scout,
       bus: bus,
       local_tools: [
@@ -103,10 +103,11 @@ class Scout < RobotLab::Robot
       observe_and_note(message.content.to_s)
     end
 
-    # Listen to the room for the comic's performances.
-    # Route through the core processing guard.
+    # Listen to the room for the comic's performances. Deliveries go to
+    # the robot's own BusPoller, which serializes them behind any run()
+    # already in flight before handing them to the on_message handler.
     @bus.subscribe(:room) do |delivery|
-      handle_incoming_delivery(delivery)
+      enqueue_delivery(delivery)
     end
   end
 
@@ -151,7 +152,13 @@ class Scout < RobotLab::Robot
               "patterns, consider recruiting an analyst or refining " \
               "your evaluation criteria."
 
-    notes = run(prompt).reply.strip
+    # The scout's notes go to a file, so announce the turn on STDOUT first —
+    # otherwise this is several minutes of silent terminal on a local model.
+    @display.working("Scout", "taking notes on round #{@log.size}")
+
+    # tools: :inherit — run() defaults to :none, which would leave
+    # recruit_analyst and refine_criteria attached but never offered.
+    notes = run(prompt, tools: :inherit).reply.strip
 
     @display.scout(@log.size, notes)
   end

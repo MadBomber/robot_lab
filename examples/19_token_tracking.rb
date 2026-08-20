@@ -14,24 +14,30 @@
 #   naturally increase as conversation context accumulates.
 #   Use a fresh robot.build when you need a genuinely fresh context.
 #
-# Anthropic and OpenAI both return token counts in every response.
-# Token counts are zero for providers that don't report usage data.
+# Ollama reports usage counts like the hosted providers do, so the tracking
+# API behaves identically — only the price per token differs. Token counts are
+# zero for providers that don't report usage data.
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/19_token_tracking.rb
+#   ruby examples/19_token_tracking.rb
 
 require_relative "common"
 
-# Anthropic claude-haiku-4-5 pricing (as of early 2026)
-HAIKU_INPUT_CPM  = 0.80   # $ per 1M input tokens
-HAIKU_OUTPUT_CPM = 4.00   # $ per 1M output tokens
+# Cost model. A local Ollama model bills nothing, so the interesting number is
+# what the same traffic WOULD have cost on a hosted model — set RATE_INPUT_CPM
+# and RATE_OUTPUT_CPM to your provider's $-per-1M-token rates to see it.
+# Defaults are zero: local inference is free.
+RATE_INPUT_CPM  = ENV.fetch("RATE_INPUT_CPM",  "0").to_f
+RATE_OUTPUT_CPM = ENV.fetch("RATE_OUTPUT_CPM", "0").to_f
 
 def token_summary(input, output)
   "in=#{input}  out=#{output}  total=#{input + output}"
 end
 
 def run_cost(input, output)
-  dollars = (input * HAIKU_INPUT_CPM + output * HAIKU_OUTPUT_CPM) / 1_000_000.0
+  return "$0.00000 (local)" if RATE_INPUT_CPM.zero? && RATE_OUTPUT_CPM.zero?
+
+  dollars = (input * RATE_INPUT_CPM + output * RATE_OUTPUT_CPM) / 1_000_000.0
   "$#{"%.5f" % dollars}"
 end
 
@@ -41,8 +47,18 @@ end
 
 banner "Per-Robot Token & Cost Tracking"
 
+puts "Model: #{LLM[:default].provider}/#{LLM[:default].model}"
+if RATE_INPUT_CPM.zero? && RATE_OUTPUT_CPM.zero?
+  puts "Rates: none set — local inference is free."
+  puts "       Set RATE_INPUT_CPM / RATE_OUTPUT_CPM to price the same traffic"
+  puts "       against a hosted provider."
+else
+  puts "Rates: $#{RATE_INPUT_CPM}/1M in, $#{RATE_OUTPUT_CPM}/1M out"
+end
+puts
+
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "analyst",
   system_prompt: "You are a concise technical analyst. Keep every reply under 40 words."
 )
@@ -106,7 +122,7 @@ puts "Fresh robot — genuinely zero context:"
 puts
 
 fresh = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "analyst2",
   system_prompt: "You are a concise technical analyst. Keep every reply under 40 words."
 )

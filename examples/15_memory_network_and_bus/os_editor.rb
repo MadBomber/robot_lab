@@ -7,7 +7,9 @@
 # extract_run_context mutation issue with parallel pipeline steps.
 class OsEditor < RobotLab::Robot
   attr_accessor :shared_memory
-  attr_reader :article
+  # article is writable so the chief's revision loop can install a revised
+  # draft without reaching for instance_variable_set.
+  attr_accessor :article
 
   def initialize(**opts)
     super(**opts)

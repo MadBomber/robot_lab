@@ -56,7 +56,7 @@ class GetCoaching < RobotLab::Tool
       robot.coaches_spawned += 1
       robot.spawn(
         name: "comedy_coach",
-        model: LLM[:default].model,
+        **llm_opts,
         system_prompt:
           "You are a veteran comedy coach backstage at a live show. " \
           "A comedian is struggling and needs quick, actionable advice. " \
@@ -64,6 +64,7 @@ class GetCoaching < RobotLab::Tool
           "exactly what to do differently in their next bit."
       )
     end
+    robot.display&.working("Comic", "backstage with the coach")
     advice = coach.run(situation).reply.strip
     robot.display&.comic_tool("[get_coaching] -> #{advice[0..70]}...")
     advice
@@ -101,7 +102,7 @@ class Comic < RobotLab::Robot
 
     super(
       name: "comic",
-      model: LLM[:default].model,
+      **llm_opts,
       template: :open_mic_comic,
       bus: bus,
       local_tools: [
@@ -133,7 +134,10 @@ class Comic < RobotLab::Robot
                 "use your tools to adapt — reinvent your style, adjust " \
                 "your energy, or get coaching. Then deliver your next bit."
 
-      result = run(prompt)
+      # tools: :inherit — without it run() defaults to :none and the comic's
+      # three self-modification tools are never offered to the model, which
+      # kills the whole point of the demo.
+      result = run(prompt, tools: :inherit)
       bit = result.reply.strip
 
       @display.comic("Comic [Round #{@round}]", bit)

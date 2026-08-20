@@ -3,14 +3,18 @@
 
 # Example 22: Context Window Compression
 #
-# Demonstrates robot.compress_history() for reducing token usage in long
-# conversations. Old turns are scored against the recent context using
-# stemmed term-frequency cosine similarity. High-relevance turns are kept
-# verbatim; irrelevant turns are dropped; medium-relevance turns can be
-# summarized by a second robot.
+# Drives RobotLab::HistoryCompressor directly over a synthetic transcript, so
+# the keep/drop/summarize decisions are visible without spending any tokens.
+# Old turns are scored against the recent context using stemmed
+# term-frequency cosine similarity. High-relevance turns are kept verbatim;
+# irrelevant turns are dropped; medium-relevance turns can be summarized.
+#
+# Robot#compress_history is the same algorithm applied in place to a live
+# robot's chat — it constructs a HistoryCompressor over robot.messages and
+# replaces them with the result. The final section shows that call.
 #
 # Demonstrates:
-#   - robot.compress_history() — drop/keep/summarize old turns in-place
+#   - HistoryCompressor.new(messages:, ...).call — pure, testable core
 #   - recent_turns: N — last N user+assistant pairs always protected
 #   - keep_threshold: / drop_threshold: — tunable relevance bands
 #   - summarizer: — optional lambda(text) -> String for medium-relevance
@@ -20,7 +24,7 @@
 #   gem 'classifier', '~> 2.3'   # add to your Gemfile
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/22_context_compression.rb
+#   ruby examples/22_context_compression.rb   # no LLM calls
 
 require_relative "common"
 
@@ -47,23 +51,15 @@ end
 
 banner "Context Window Compression"
 
-# ---------------------------------------------------------------------------
-# Build a robot and simulate a long conversation on two topics
-# ---------------------------------------------------------------------------
-bot = RobotLab.build(
-  model: LLM[:default].model,
-  name:          "assistant",
-  system_prompt: "You are a concise Ruby expert. Reply in 2-3 sentences."
-)
-
-puts "Simulating a long conversation (no real LLM calls)..."
+puts "Scoring a synthetic two-topic conversation (no LLM calls)..."
 puts
 
-# Simulate a conversation history with two distinct topics:
+# A conversation history with two distinct topics:
 # older turns: Ruby metaprogramming (will become irrelevant)
 # recent turns: Rails routing (current topic)
-
-require "ostruct"
+#
+# HistoryCompressor only reads role/content and the message predicates, so a
+# small Struct stands in for RubyLLM::Message and keeps the fixture readable.
 
 FakeMsg = Struct.new(:role, :content, :tool_calls, :stop_reason) do
   def text?      = true
@@ -151,13 +147,17 @@ puts "  Kept roles: #{result_b.map(&:role).join(', ')}"
 puts
 
 # ---------------------------------------------------------------------------
-# Show the LLM summarizer pattern (not executed — requires API key)
+# The in-place form on a live robot (not executed here — it would spend tokens
+# summarizing, and the interesting scoring behaviour is already shown above)
 # ---------------------------------------------------------------------------
-section "LLM Summarizer Pattern (requires API key)"
+section "In-Place Form: robot.compress_history"
+puts "Same algorithm, applied to a live robot's own chat history. A second,"
+puts "cheaper robot does the summarizing for the medium-relevance band."
 show_code <<~RUBY
   summarizer_bot = RobotLab.build(
-    model: "gpt-5.4",
     name:          "summarizer",
+    provider:      "ollama",
+    model:         "qwen2.5:7b",
     system_prompt: "Summarize the following text in one sentence."
   )
 

@@ -8,7 +8,7 @@
 # system with dynamic context injection using SimpleFlow's optional task routing.
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/06_prompt_templates.rb
+#   ruby examples/06_prompt_templates.rb
 #
 # Template Structure (prompt_manager .md files with YAML front matter):
 #   examples/prompts/
@@ -196,12 +196,12 @@ triage_robot = TriageRobot.new(
     company_name: COMPANY_NAME,
     categories: CATEGORIES
   },
-  model: LLM[:default].model
+  **llm_opts
 )
 
 # Order Support Robot
 order_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "order",
   description: "Handles order-related inquiries with full order history",
   template: :order_support,
@@ -215,7 +215,7 @@ order_robot = RobotLab.build(
 
 # Product Support Robot
 product_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "product",
   description: "Answers product questions with catalog knowledge",
   template: :product_support,
@@ -230,7 +230,7 @@ product_robot = RobotLab.build(
 
 # Escalation Robot
 escalation_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "escalation",
   description: "Handles complex cases requiring special authority",
   template: :escalation,
@@ -245,11 +245,15 @@ escalation_robot = RobotLab.build(
 # Create Network with Optional Task Routing
 # -----------------------------------------------------------------------------
 
+# tools: :inherit on each task. Task#to_run_params forwards it to robot.run,
+# which otherwise defaults to :none and would send the provider an empty tool
+# list — the AskUser tool would be attached to each robot but never offered
+# to the model.
 network = RobotLab.create_network(name: "ecommerce_support") do
-  task :triage, triage_robot, depends_on: :none
-  task :order, order_robot, depends_on: :optional
-  task :product, product_robot, depends_on: :optional
-  task :escalation, escalation_robot, depends_on: :optional
+  task :triage, triage_robot, depends_on: :none, tools: :inherit
+  task :order, order_robot, depends_on: :optional, tools: :inherit
+  task :product, product_robot, depends_on: :optional, tools: :inherit
+  task :escalation, escalation_robot, depends_on: :optional, tools: :inherit
 end
 
 # -----------------------------------------------------------------------------

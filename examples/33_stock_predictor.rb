@@ -14,12 +14,12 @@
 # Prerequisites:
 #   gem install redis
 #   Redis server running on localhost:6379
+#   Ollama running with the model from common.rb pulled
 #
 # Usage:
 #   ruby examples/33_stock_predictor.rb
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-require "robot_lab"
+require_relative "common"
 require "robot_lab/durable"
 require "redis"
 require "json"
@@ -204,12 +204,15 @@ puts "Warmup     : #{PredictorConfig.sma_window} ticks"
 puts "Press Ctrl-C to stop."
 puts "-" * 60
 
-redis      = Redis.new
-prices     = []
-robot      = RobotLab.build(
-  model: "gpt-5.4",
-               name:          "predictor_tuner",
-               system_prompt: <<~PROMPT,
+require_ollama!
+
+redis  = Redis.new
+prices = []
+
+robot = RobotLab.build(
+  **llm_opts,
+  name:          "predictor_tuner",
+  system_prompt: <<~PROMPT,
                  You are a quantitative analyst tuning an ensemble stock price range
                  predictor for ticker XYZZY. Each prediction covers the high and low
                  price over the next #{WINDOW_SIZE} ticks.
@@ -231,10 +234,21 @@ robot      = RobotLab.build(
                    4. If you observe a reliable pattern, call RecordKnowledge to preserve it.
                    5. When uncertain, do nothing rather than guess.
                PROMPT
-               local_tools:   [AdjustParameters],
-               learn:         true,
-               learn_domain:  "xyzzy stock prediction"
-             )
+  local_tools:   [AdjustParameters]
+)
+
+# Durable learning is enabled AFTER construction. Robot#initialize takes a
+# fixed keyword list with no **rest, so `learn:`/`learn_domain:` constructor
+# params raise ArgumentError; the Durable::Learning mixin exposes
+# setup_durable_learning instead. It seeds @learnings from
+# ~/.robot_lab/durable/<domain>.yml and appends the RecallKnowledge and
+# RecordKnowledge tools to local_tools.
+robot.setup_durable_learning(domain: "xyzzy stock prediction")
+
+puts "Durable domain : xyzzy stock prediction"
+puts "Tools          : #{robot.local_tools.map(&:name).join(', ')}"
+puts "Seeded learnings: #{robot.learnings.size}"
+puts "-" * 60
 
 warmed_up    = false
 pending_pred = nil  # { prediction: {high:, low:}, window_prices: [] }
@@ -291,10 +305,17 @@ redis.subscribe(CHANNEL) do |on|
     puts "#{"─" * 60}"
 
     print "  [tuner] analyzing window #{window_num}..."
-    tuner_response = robot.run(tuner_prompt(result))
+    # tools: :inherit is required — run() defaults to :none, which sends the
+    # provider an empty tool list, so AdjustParameters/RecallKnowledge/
+    # RecordKnowledge would never be callable.
+    tuner_response = robot.run(tuner_prompt(result), tools: :inherit)
     tuner_line     = tuner_response.reply.lines.first&.chomp || "(no response)"
     puts "\r  [tuner] #{tuner_line}#{" " * 20}"
     puts "  Params: #{PredictorConfig.summary}"
+
+    # Promote this session's learnings into the durable YAML store. Core
+    # Robot#run does not invoke the reflector, so the caller drives it.
+    robot.run_reflector
     puts
 
     # ── Start next window ──────────────────────────────────────────

@@ -7,7 +7,7 @@
 # using SimpleFlow's optional step activation.
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/03_network.rb
+#   ruby examples/03_network.rb
 
 require_relative "common"
 
@@ -38,32 +38,37 @@ class ClassifierRobot < RobotLab::Robot
   end
 end
 
-# Shared RunConfig — all robots in this network use the same model
-shared_config = RobotLab::RunConfig.new(model: LLM[:default].model)
+# Shared RunConfig — operational defaults every robot in this network inherits.
+#
+# RunConfig has no `provider` field (see RunConfig::FIELDS), and an Ollama
+# model is absent from RubyLLM's registry, so provider and model still travel
+# together on each robot via **llm_opts. The RunConfig carries the settings
+# that genuinely are shared.
+shared_config = RobotLab::RunConfig.new(temperature: 0.3, max_tool_rounds: 5)
 
-# Create specialized robots (no model: needed — inherited from RunConfig)
 classifier = ClassifierRobot.new(
+  **llm_opts,
   name: "classifier",
   template: :classifier,
   config: shared_config
 )
 
 billing_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "billing",
   template: :billing,
   config: shared_config
 )
 
 technical_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "technical",
   template: :technical,
   config: shared_config
 )
 
 general_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "general",
   template: :general,
   config: shared_config

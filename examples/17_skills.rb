@@ -29,7 +29,7 @@
 #   6. incident_responder   — "you are the on-call analyst for..."
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/17_skills.rb
+#   ruby examples/17_skills.rb
 #
 # Templates:
 #   examples/prompts/
@@ -136,7 +136,7 @@ puts
 # - sre_compliance:    Recursive skill — auto-expands to include pii_redactor
 #                      and audit_trail before its own compliance instructions
 responder = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "incident_responder",
   template: :incident_responder,
   skills: [:runbook_protocol, :structured_output, :sre_compliance],
@@ -147,17 +147,20 @@ responder = RobotLab.build(
   }
 )
 
-# Show what the robot got
+# Show what the robot got.
+#
+# `skills` is the DECLARED list. The expanded list (with sre_compliance's
+# nested skills spliced in ahead of it) has no public reader — but you don't
+# need one, because the expansion is visible in the assembled system prompt
+# printed below, which is the thing that actually reaches the model.
 puts "Robot: #{responder.name}"
-puts "Skills: #{responder.skills.inspect}"
-puts "Expanded skills: #{responder.instance_variable_get(:@expanded_skills).inspect}"
+puts "Declared skills: #{responder.skills.inspect}"
 puts "Model: #{responder.model}"
 puts
 
-# Display the assembled system prompt
-chat = responder.instance_variable_get(:@chat)
-messages = chat.instance_variable_get(:@messages)
-system_msg = messages.find { |m| m.role.to_s == "system" }
+# Display the assembled system prompt.
+# Robot#messages is a public reader over the chat's message list.
+system_msg = responder.messages.find { |m| m.role.to_s == "system" }
 if system_msg
   prompt = system_msg.content
   hr
@@ -174,7 +177,7 @@ end
 # =============================================================================
 
 plain_responder = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "plain_responder",
   template: :incident_responder,
   context: {
@@ -184,9 +187,7 @@ plain_responder = RobotLab.build(
   }
 )
 
-plain_chat = plain_responder.instance_variable_get(:@chat)
-plain_messages = plain_chat.instance_variable_get(:@messages)
-plain_msg = plain_messages.find { |m| m.role.to_s == "system" }
+plain_msg = plain_responder.messages.find { |m| m.role.to_s == "system" }
 if plain_msg
   puts
   puts "For comparison — plain responder (no skills): #{plain_msg.content.length} chars"

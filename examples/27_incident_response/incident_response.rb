@@ -60,7 +60,7 @@ class SREScout < RobotLab::Robot
   def initialize(name:, subsystem:, memory_key:, bus: nil)
     super(
       name: name,
-      model: LLM[:default].model,
+      **llm_opts,
       system_prompt: "You are a senior SRE responding to a production outage. " \
                      "Diagnose one infrastructure layer in 2 sentences: " \
                      "first sentence is root cause, second is customer impact.",
@@ -111,9 +111,8 @@ class WarRoom < RobotLab::Robot
   attr_reader :updates
 
   def initialize(bus:)
-    super(name: "war_room", model: LLM[:default].model, system_prompt: "SRE war-room coordinator.", bus: bus)
-    @updates        = []
-    @delivery_mutex = Mutex.new  # only for reading @updates outside Async
+    super(name: "war_room", **llm_opts, system_prompt: "SRE war-room coordinator.", bus: bus)
+    @updates = []
 
     on_message do |msg|
       # BusPoller ensures this block is never re-entered for the same robot.
@@ -137,15 +136,12 @@ end
 class IncidentCommander < RobotLab::Robot
   attr_writer :shared_memory
 
+  FINDING_KEYS = %i[db_finding net_finding app_finding].freeze
+
   def call(result)
     puts "  [commander] Blocking on reactive memory — waiting for all scout findings..."
 
-    findings = @shared_memory.get(:db_finding, :net_finding, :app_finding, wait: 60)
-
-    if findings.values.include?(:timeout)
-      timed_out = findings.select { |_k, v| v == :timeout }.keys
-      puts "  [commander] WARNING: scouts timed out: #{timed_out.join(", ")}"
-    end
+    findings = collect_findings
 
     prompt = <<~PROMPT
       Three SRE scouts have reported their findings for a payment-service outage.
@@ -167,6 +163,24 @@ class IncidentCommander < RobotLab::Robot
 
     result.with_context(:commander, report).continue(report)
   end
+
+  private
+
+  # Blocking multi-key read with a real degradation path.
+  #
+  # Memory#get(wait:) signals a timeout by RAISING RobotLab::AwaitTimeout — it
+  # never returns a :timeout sentinel value. Rescue it and re-read without
+  # wait:, which never blocks and simply omits keys that were never written,
+  # so a slow scout degrades the report instead of killing the commander.
+  def collect_findings
+    @shared_memory.get(*FINDING_KEYS, wait: 60)
+  rescue RobotLab::AwaitTimeout => e
+    puts "  [commander] WARNING: #{e.message}"
+    partial = @shared_memory.get(*FINDING_KEYS)
+    missing = FINDING_KEYS - partial.keys
+    puts "  [commander] Proceeding without: #{missing.join(', ')}" if missing.any?
+    partial
+  end
 end
 
 # ── Wire up ────────────────────────────────────────────────────────────────
@@ -177,7 +191,7 @@ db_scout  = SREScout.new(name: "db_scout",  subsystem: "database",    memory_key
 net_scout = SREScout.new(name: "net_scout", subsystem: "network",     memory_key: :net_finding, bus: bus)
 app_scout = SREScout.new(name: "app_scout", subsystem: "application", memory_key: :app_finding, bus: bus)
 war_room  = WarRoom.new(bus: bus)
-commander = IncidentCommander.new(name: "commander", model: LLM[:default].model, system_prompt: "SRE incident commander.")
+commander = IncidentCommander.new(name: "commander", **llm_opts, system_prompt: "SRE incident commander.")
 
 # Build the investigation network
 # poller_group: labels are registered on the network's shared BusPoller.
@@ -212,8 +226,12 @@ puts
 puts network.visualize
 puts
 
-puts "Poller groups registered on network BusPoller:"
-puts "  #{network.instance_variable_get(:@bus_poller).groups.inspect}"
+puts "Poller groups declared on the network's tasks:"
+puts "  :investigation — db_scout, net_scout, app_scout"
+puts "  :command       — commander"
+puts "(Network#task registers each group on the shared BusPoller; the poller"
+puts " itself is internal, so the groups are documented here rather than"
+puts " introspected.)"
 puts
 
 puts "INCIDENT: Payment service degraded — elevated error rates and timeouts"

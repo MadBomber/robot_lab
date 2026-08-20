@@ -23,17 +23,21 @@ CONVERSATION_TURNS = File.readlines(
 banner "Chat History Search"
 
 # ---------------------------------------------------------------------------
-# Minimal message stub — populates history without LLM calls
+# Build a robot and load the conversation fixture
+#
+# Robot#replace_messages is the supported way to install a saved conversation
+# — checkpoint restore, replaying a transcript, or seeding a fixture like this
+# one. It resets the chat and re-adds each message, so there is no need to
+# reach into @chat and overwrite @messages by hand.
 # ---------------------------------------------------------------------------
-FakeMsg = Struct.new(:role, :content, :tool_calls)
+robot = RobotLab.build(**llm_opts, name: "tech_lead", system_prompt: "You are a senior engineering advisor.")
 
-# ---------------------------------------------------------------------------
-# Build a robot and inject the conversation fixture
-# ---------------------------------------------------------------------------
-robot = RobotLab.build(model: LLM[:default].model, name: "tech_lead", system_prompt: "You are a senior engineering advisor.")
+messages = CONVERSATION_TURNS.map do |turn|
+  RubyLLM::Message.new(role: turn[:role].to_sym, content: turn[:content])
+end
+robot.replace_messages(messages)
 
-messages = CONVERSATION_TURNS.map { |t| FakeMsg.new(t[:role], t[:content], nil) }
-robot.instance_variable_get(:@chat).instance_variable_set(:@messages, messages)
+messages = robot.messages
 
 total_words = messages.sum { |m| m.content.to_s.split.size }
 puts "Conversation loaded: #{messages.size} messages, ~#{total_words} words"

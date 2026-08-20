@@ -14,10 +14,12 @@
 #   - robot.learnings — read the accumulated list
 #   - Learnings injected as "LEARNINGS FROM PREVIOUS RUNS:" prefix
 #   - Superset dedup: a broader learning replaces narrower earlier ones
-#   - Memory persistence: learnings survive rebuilding with the same Memory
+#   - robot.memory[:learnings] — where the list is actually stored
+#   - Scope: learnings are per-robot and in-process; see robot_lab-durable
+#     (and example 33) for cross-session persistence
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/21_learning_loop.rb
+#   ruby examples/21_learning_loop.rb
 
 require_relative "common"
 
@@ -67,7 +69,7 @@ SNIPPETS = [
 banner "Learning Accumulation Loop"
 
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "code_reviewer",
   system_prompt: <<~PROMPT
     You are a concise Ruby code reviewer. For each snippet:
@@ -120,7 +122,7 @@ puts
 # Demonstrate superset dedup: a broader learning replaces narrower ones
 # ---------------------------------------------------------------
 section "Deduplication Demo"
-robot2 = RobotLab.build(name: "reviewer2", system_prompt: "You review code.")
+robot2 = RobotLab.build(**llm_opts, name: "reviewer2", system_prompt: "You review code.")
 
 robot2.learn("avoid using puts")
 robot2.learn("avoid using puts and p in production code")  # covers the first
@@ -130,26 +132,50 @@ robot2.learnings.each_with_index { |l, i| puts "  #{i + 1}. #{l}" }
 puts
 
 # ---------------------------------------------------------------
-# Demonstrate persistence: learnings survive a robot rebuild using
-# the same Memory object
+# Where learnings actually live
+#
+# learn() writes through to the robot's own Memory under :learnings.
+# Memory is exposed by the public `memory` reader, so you can inspect
+# (or serialize) the list without touching instance variables.
 # ---------------------------------------------------------------
-section "Persistence Across Rebuild"
+section "Learnings Are Backed by Robot Memory"
 
-shared_memory = robot.instance_variable_get(:@memory)
+puts "robot.memory.get(:learnings):"
+Array(robot.memory.get(:learnings)).each_with_index { |l, i| puts "  #{i + 1}. #{l}" }
+puts
+puts "Same list as robot.learnings? #{robot.memory.get(:learnings) == robot.learnings}"
+puts
+
+# ---------------------------------------------------------------
+# Scope: learnings do NOT survive a rebuild
+#
+# Robot#initialize always constructs a fresh Memory and there is no
+# `memory:` constructor parameter, so a new robot — even with the same
+# name — starts with an empty learning list. learn() is a within-process
+# accumulator, not a persistence layer.
+# ---------------------------------------------------------------
+section "Scope: In-Process Only"
+
 rebuilt = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "code_reviewer",
   system_prompt: "You review code."
 )
-rebuilt.instance_variable_set(:@memory, shared_memory)
 
-# Trigger the memory restore path
-persisted = shared_memory.get(:learnings)
-rebuilt.instance_variable_set(:@learnings, Array(persisted))
-
-puts "Learnings on rebuilt robot (#{rebuilt.learnings.size}):"
-rebuilt.learnings.each_with_index { |l, i| puts "  #{i + 1}. #{l}" }
+puts "Learnings on a freshly built robot of the same name: #{rebuilt.learnings.size}"
+puts "(Robot#initialize builds a new Memory every time — nothing carries over.)"
 puts
+puts <<~PERSIST
+  To carry knowledge across processes, use the robot_lab-durable gem:
+
+    require "robot_lab/durable"
+    robot.setup_durable_learning(domain: "ruby code review")
+    # ... run the robot ...
+    robot.run_reflector   # promotes learnings to ~/.robot_lab/durable/<domain>.yml
+
+  On the next boot setup_durable_learning seeds robot.learnings from that
+  YAML store. See examples/33_stock_predictor.rb for a working loop.
+PERSIST
 
 hr
 puts "Learning loop demo complete."

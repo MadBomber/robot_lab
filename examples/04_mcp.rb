@@ -9,11 +9,10 @@
 # Prerequisites:
 #   1. Install the GitHub MCP server: brew install github-mcp-server
 #   2. Set environment variables:
-#      - ANTHROPIC_API_KEY: Your Anthropic API key
 #      - GITHUB_PERSONAL_ACCESS_TOKEN: Your GitHub personal access token
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
+#   GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
 #
 # The GitHub MCP server provides tools for:
 #   - Searching repositories, code, issues, and users
@@ -136,7 +135,7 @@ begin
   # connect_mcp! forces eager connection; without it MCP clients initialize
   # lazily on the first run() call, leaving mcp_clients empty until then.
   robot = RobotLab.build(
-    model: LLM[:default].model,
+    **llm_opts,
     name: "github_assistant",
     template: :github_assistant,
     mcp_servers: [github_server]
@@ -164,7 +163,15 @@ begin
   puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
   hr
 
-  result = robot.run("What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.")
+  # mcp: :inherit and tools: :inherit are both required. Both keywords default
+  # to :none on run(), which resolves to "no MCP servers this turn" and "send
+  # zero tools this turn" — the discovered MCP tools would never reach the
+  # provider and the model would answer from its training data.
+  result = robot.run(
+    "What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.",
+    mcp:   :inherit,
+    tools: :inherit
+  )
 
   puts
   puts "Robot Response:"

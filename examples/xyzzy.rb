@@ -13,7 +13,12 @@
 # stdout : one tagline per hook call  →  [xyzzy] HH:MM:SS.mmm hook_name
 # logfile: full context snapshot written to LOG_PATH via PP.pp
 #
+# The log destination is read from XYZZY_LOG_PATH at load time and frozen
+# into a constant. Set it BEFORE requiring this file to redirect the log;
+# there is deliberately no writer method, so the constant stays shareable.
+#
 # Usage (from any example that requires common):
+#   ENV["XYZZY_LOG_PATH"] = "/tmp/xyzzy.log"   # optional, must precede require
 #   require_relative "xyzzy"
 
 require "pp"
@@ -23,7 +28,9 @@ module RobotLab
   class Xyzzy < Hook
     self.namespace = :xyzzy
 
-    LOG_PATH = File.expand_path("~/.robot_lab/xyzzy_hooks.log").freeze
+    LOG_PATH = File.expand_path(
+      ENV.fetch("XYZZY_LOG_PATH", "~/.robot_lab/xyzzy_hooks.log")
+    ).freeze
     FileUtils.mkdir_p(File.dirname(LOG_PATH))
 
     class << self

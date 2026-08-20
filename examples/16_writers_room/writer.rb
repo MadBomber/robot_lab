@@ -20,13 +20,15 @@
 # In a bus-based SOG, writers receive many messages and each
 # triggers a run() call. When the LLM responds with only tool
 # calls (no text), RubyLLM appends an empty text content block
-# to the chat history. The Anthropic API rejects this on the
-# next call, permanently killing the writer.
+# to the chat history. Several providers reject that on the next
+# call, permanently killing the writer.
 #
-# Fix: reset the chat before each message. The writer doesn't
-# need persistent chat history — shared memory is the single
-# source of truth. Each message is processed with a fresh chat
-# that has the system prompt, tools, and current memory context.
+# Fix: reset the conversation before each message via the public
+# Robot#clear_messages(keep_system: true). The writer doesn't need
+# persistent chat history — shared memory is the single source of
+# truth. Rebuilding @chat by hand instead would drop the tool
+# callbacks and chat params that Robot#initialize installed, so
+# clear_messages is both shorter and safer.
 #
 class Writer < RobotLab::Robot
   attr_accessor :shared_memory, :display, :room
@@ -40,6 +42,7 @@ class Writer < RobotLab::Robot
 
     super(
       name:        name,
+      **llm_opts,
       template:    room.mode[:template],
       context:     { writer_name: name },
       bus:         bus,
@@ -69,24 +72,18 @@ class Writer < RobotLab::Robot
     ]
   end
 
+  # Room deliveries go to this robot's BusPoller, which serializes them
+  # behind any run() already in flight before invoking on_message.
   def setup_room_subscription
     @bus.subscribe(:room) do |delivery|
-      handle_incoming_delivery(delivery)
+      enqueue_delivery(delivery)
     end
   end
 
-  # Reset the chat to a clean state with system prompt and tools.
-  # Prevents history corruption from tool-only LLM responses
-  # (empty text content blocks that Anthropic rejects).
-  def fresh_chat!
-    resolved_model = @config&.model || RobotLab.config.ruby_llm.model
-    @chat = RubyLLM.chat(model: resolved_model)
-    apply_template_to_chat(@build_context) if @template
-    @chat.with_instructions(@system_prompt) if @system_prompt
-    @chat.with_temperature(@config.temperature) if @config&.temperature
-
-    filtered = filtered_tools([])
-    @chat.with_tools(*filtered) if filtered.any?
+  # Drop the turn history, keep the rendered system prompt. Model,
+  # temperature, tools and the tool callbacks all survive untouched.
+  def reset_conversation!
+    clear_messages(keep_system: true)
   end
 
   def setup_message_handler
@@ -98,8 +95,8 @@ class Writer < RobotLab::Robot
       log&.info("#{name} <- [#{message.from}] msg ##{@messages_processed} (#{message.content.to_s[0..80]}...)")
       @display&.incoming(name, message.from, message.content)
 
-      # Fresh chat for each message — shared memory is our persistence
-      fresh_chat!
+      # Fresh conversation for each message — shared memory is our persistence
+      reset_conversation!
 
       # Build prompt with current memory context
       memory_keys = shared_memory.keys
@@ -109,7 +106,10 @@ class Writer < RobotLab::Robot
       log&.info("#{name} -> run() starting (prompt: #{prompt.length} chars)")
 
       begin
-        result = run(prompt)
+        # tools: :inherit — run() defaults to :none. Without it the writer
+        # would have all seven tools attached and none of them offered to the
+        # model, so nothing would ever be written to shared memory.
+        result = run(prompt, tools: :inherit)
         reply_text = result.respond_to?(:reply) ? result.reply.to_s[0..120] : result.to_s[0..120]
         log&.info("#{name} <- run() finished (reply: #{reply_text}...)")
       rescue => e

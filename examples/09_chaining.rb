@@ -63,7 +63,7 @@ section "Section 1: Template Front Matter Config"
 # The 'configurable' template sets temperature: 0.3 and max_tokens: 200
 # via YAML front matter. These are applied automatically.
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "chameleon",
   template: :configurable,
   context: { task_type: "analysis" }
@@ -116,7 +116,7 @@ section "Section 4: Constructor Params Override Front Matter"
 # The configurable template sets temperature: 0.3 in front matter.
 # Passing temperature: 0.9 to the constructor overrides it.
 robot2 = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "override_demo",
   template: :configurable,
   context: { task_type: "creative" },
@@ -142,7 +142,7 @@ puts
 
 # Robot inherits from RunConfig; constructor kwargs still override
 robot3 = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "runconfig_demo",
   template: :configurable,
   context: { task_type: "analysis" },
@@ -214,7 +214,7 @@ puts
 # Build a robot with AskUser — the template's task_type default ("general")
 # is offered to the user, who can accept or override it.
 interactive = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "interactive_demo",
   template: :configurable,
   local_tools: [RobotLab::AskUser]

@@ -3,8 +3,12 @@
 
 # Example 32: Newsletter Issue Retriever
 #
+# NOTE: this is a plain utility script, not a RobotLab demo — it uses no part
+# of the library. It lives here as the content feeder for other experiments.
+# Read examples 01-31 for library capabilities.
+#
 # Fetches all unprocessed issues from multiple Ruby newsletters via RSS
-# and saves each as a Markdown file in the Obsidian Clippings folder.
+# and saves each as a Markdown file in a Markdown clippings folder.
 #
 # - Processes oldest unprocessed issue first (across all feeds)
 # - Filename: <newsletter-name>_YYYYMMDD.md
@@ -13,6 +17,7 @@
 #
 # Usage:
 #   ruby examples/32_newsletter_reader.rb
+#   CLIPPINGS_DIR=~/Notes/Clippings ruby examples/32_newsletter_reader.rb
 
 require "net/http"
 require "open3"
@@ -28,7 +33,7 @@ NEWSLETTER_RSS_URLS = [
   "https://cprss.s3.amazonaws.com/rubyweekly.com.xml"   # Ruby Weekly
 ].freeze
 
-CLIPPINGS_DIR        = File.expand_path("/Users/dewayne/Documents/obsidian_order_intelligence/PKM/Clippings")
+CLIPPINGS_DIR        = File.expand_path(ENV.fetch("CLIPPINGS_DIR", "~/Documents/Clippings"))
 PROCESSED_STATE_FILE = File.join(Dir.home, ".robot_lab", "newsletter_processed.yaml")
 
 # Tracks which newsletter issue URLs have been saved.

@@ -16,7 +16,7 @@
 #   - ToolError         — propagated when a tool raises inside a Ractor
 #   - Parallel batch    — many threads submitting concurrently vs sequentially
 #
-# Usage (no LLM API key required):
+# Usage (no LLM traffic — pure CPU work):
 #   bundle exec ruby examples/29_ractor_tools.rb
 #
 # Good to know:
@@ -157,7 +157,9 @@ puts "    Inner :tags array frozen?   #{frozen[:tags].frozen?}"
 puts "    Inner :meta hash frozen?    #{frozen[:meta].frozen?}"
 puts
 
-# A Proc cannot cross a Ractor boundary — freeze_deep raises immediately.
+# Non-shareable objects (IO handles, Procs, ...) cannot cross a Ractor
+# boundary — freeze_deep rejects them immediately rather than failing later
+# inside a worker.
 require "stringio"
 begin
   RobotLab::RactorBoundary.freeze_deep(StringIO.new("I cannot be frozen"))

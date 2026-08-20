@@ -56,9 +56,9 @@ shared_config = RobotLab::RunConfig.new(model: LLM[:default].model, temperature:
 creative_config = RobotLab::RunConfig.new(temperature: 0.9)
 
 # Build robots (no LLM calls, just instances)
-classifier = RobotLab.build(model: LLM[:default].model, name: "classifier", system_prompt: "Classify input")
-analyst    = RobotLab.build(model: LLM[:default].model, name: "analyst",    system_prompt: "Analyze data")
-writer     = RobotLab.build(model: LLM[:default].model, name: "writer",     system_prompt: "Write summary")
+classifier = RobotLab.build(**llm_opts, name: "classifier", system_prompt: "Classify input")
+analyst    = RobotLab.build(**llm_opts, name: "analyst",    system_prompt: "Analyze data")
+writer     = RobotLab.build(**llm_opts, name: "writer",     system_prompt: "Write summary")
 
 # Build network with RunConfig, dependencies, and per-task config
 network = RobotLab.create_network(name: "demo_pipeline", config: shared_config) do
@@ -140,7 +140,7 @@ puts
 
 section "Section 3: Dynamic Robot Addition"
 
-reviewer = RobotLab.build(model: LLM[:default].model, name: "reviewer", system_prompt: "Review output")
+reviewer = RobotLab.build(**llm_opts, name: "reviewer", system_prompt: "Review output")
 network.add_robot(reviewer)
 
 puts "After add_robot(reviewer):"

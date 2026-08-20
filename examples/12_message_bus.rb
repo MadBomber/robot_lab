@@ -19,7 +19,7 @@ class Comedian < RobotLab::Robot
   TEMP_STEP  = 0.2
 
   def initialize(bus:)
-    super(name: "bob", model: LLM[:default].model, template: :comedian, bus: bus, temperature: TEMP_START)
+    super(name: "bob", **llm_opts, template: :comedian, bus: bus, temperature: TEMP_START)
     @attempts = 0
     on_message do |message|
       @attempts += 1
@@ -36,7 +36,7 @@ end
 
 class ComedyCritic < RobotLab::Robot
   def initialize(bus:)
-    super(name: "alice", model: LLM[:default].model, template: :comedy_critic, bus: bus)
+    super(name: "alice", **llm_opts, template: :comedy_critic, bus: bus)
     @accepted = false
     @rounds   = 0
     on_message do |message|

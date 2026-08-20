@@ -11,10 +11,14 @@
 #   bundle exec ruby examples/35_hooks.rb
 
 require_relative "common"
-require_relative "xyzzy"
 
+# RobotLab::Hook has no logger accessor — handlers own their own output.
+# xyzzy.rb freezes its log destination into a constant at load time, so the
+# redirect has to happen before the require.
 XYZZY_LOG = File.join(__dir__, "xyzzy_hooks.log")
-RobotLab::Xyzzy.logger = Logger.new(XYZZY_LOG)
+ENV["XYZZY_LOG_PATH"] = XYZZY_LOG
+
+require_relative "xyzzy"
 
 # ---------------------------------------------------------------------------
 # Handler classes used in this demo
@@ -183,10 +187,13 @@ class HookDemo
 
     puts "  provider=#{LLM[:default].provider}  model=#{LLM[:default].model}\n\n"
 
+    # with_model alone would leave the provider unset, and an Ollama model is
+    # not in RubyLLM's registry — pass provider and model together.
     robot = RobotLab.build(
       name: "loop_demo_robot",
-      system_prompt: "You are a helpful assistant. Answer every question in one concise sentence."
-    ).with_model(LLM[:default].model)
+      system_prompt: "You are a helpful assistant. Answer every question in one concise sentence.",
+      **llm_opts
+    )
 
     robot.on(PerfHook)
     robot.on(GenerationTracerHook)
@@ -234,8 +241,9 @@ class HookDemo
 
   def run_error
     section "Error Hook"
-    failing_robot = RobotLab.build(name: "failing_hook_robot", system_prompt: "raise")
-    failing_robot.instance_variable_get(:@chat).define_singleton_method(:ask) do |_message = nil, **_kwargs|
+    failing_robot = RobotLab.build(name: "failing_hook_robot", system_prompt: "raise", **llm_opts)
+    # Robot#chat is a public reader — no need to reach for @chat.
+    failing_robot.chat.define_singleton_method(:ask) do |_message = nil, **_kwargs|
       raise "planned hook demo failure"
     end
 
@@ -244,9 +252,11 @@ class HookDemo
     puts "Caught expected error: #{e.message}"
   end
 
+  # Stubs the chat so the hook pipeline is exercised deterministically with no
+  # LLM traffic. Robot#chat is public, so this needs no ivar surgery.
   def hooked_robot(name)
-    RobotLab.build(name: name, system_prompt: "deterministic hook demo").tap do |robot|
-      robot.instance_variable_get(:@chat).define_singleton_method(:ask) do |message = nil, **_kwargs, &_block|
+    RobotLab.build(name: name, system_prompt: "deterministic hook demo", **llm_opts).tap do |robot|
+      robot.chat.define_singleton_method(:ask) do |message = nil, **_kwargs, &_block|
         HookDemoResponse.new(content: "deterministic response to #{message.inspect}")
       end
     end

@@ -6,7 +6,71 @@ Working demonstrations of RobotLab features, from single-robot basics to multi-r
 
 - Ruby >= 3.2
 - `bundle install` (from the project root)
-- An LLM API key (e.g., `ANTHROPIC_API_KEY`)
+- [Ollama](https://ollama.com) running locally with the demo model pulled:
+
+  ```bash
+  ollama serve
+  ollama pull qwen3.6
+  ```
+
+Every example runs against a **local** model — no API keys, no egress, no
+per-token cost. The model, provider and endpoint are set in one place,
+`examples/common.rb`:
+
+```ruby
+LLM = {
+  default: LlmConfig.new(provider: "ollama", model: "qwen3.6:latest"),
+  small:   LlmConfig.new(provider: "ollama", model: "qwen2.5:7b"),
+  large:   LlmConfig.new(provider: "ollama", model: "llama3.3:latest")
+}
+```
+
+Robots pick it up with the `llm_opts` helper:
+
+```ruby
+robot = RobotLab.build(name: "helper", **llm_opts)        # default model
+cheap = RobotLab.build(name: "helper", **llm_opts(:small)) # smaller model
+```
+
+`provider:` is not optional here. Ollama models are absent from RubyLLM's
+model registry, so passing `model:` alone raises `RubyLLM::ModelNotFoundError`
+— supplying `provider:` is what makes RubyLLM skip the registry lookup. Note
+also that `RunConfig` has no `provider` field, so provider and model travel
+together on the robot even when other settings come from a shared `RunConfig`.
+
+`common.rb` also raises `request_timeout` to 900s. A 20B+ model on consumer
+hardware routinely takes longer than robot_lab's 120s default on a long
+answer, which otherwise surfaces mid-example as `Net::ReadTimeout`. Override
+with `LLM_REQUEST_TIMEOUT`.
+
+## Runtime: pick your model with `LLM_PROFILE`
+
+Every example is a *sequence* of LLM calls, so wall-clock is dominated by
+`calls × seconds-per-call`. On `qwen3.6:latest` expect roughly **60-70s per
+call**. That is fine for the single-robot examples and painful for the
+multi-robot ones:
+
+| Example | LLM calls | `qwen3.6:latest` | `LLM_PROFILE=small` |
+|---------|-----------|------------------|---------------------|
+| 01, 02, 19, 20 | 1-6 | seconds to ~5 min | fast |
+| 03, 06, 07, 24, 27, 31 | 4-8 | ~5-10 min | ~2 min |
+| 13, 14, 15 | ~20-30 | **30-40 min** | ~5-10 min |
+| 16 | unbounded (600s cap) | usually hits the cap | often completes |
+
+`LLM_PROFILE` switches the model for any example without editing it:
+
+```bash
+LLM_PROFILE=small bundle exec ruby examples/14_rusty_circuit/open_mic.rb
+```
+
+Valid values are the keys of `LLM` in `common.rb`: `default`, `small`, `large`.
+
+**Long silences are not hangs.** In example 14 the scout writes its notes to
+`output/scout_notes.md` rather than STDOUT, and a scout turn is 1-4 sequential
+calls — minutes of blank terminal. The `· Scout …` lines exist so you can tell
+progress from a stall. Example 16 is the same idea at larger scale: writers
+coordinate through shared memory, and much of the work shows up in
+`output/room.log` rather than on screen.
 
 ## Running Examples
 
@@ -21,17 +85,36 @@ bundle exec rake examples:all
 bundle exec ruby examples/01_simple_robot.rb
 ```
 
+## Tools require `tools: :inherit` at run time
+
+This trips up everyone once. `Robot#run` defaults to `tools: :none`, which
+means *"send zero tools this turn"* — the robot still holds them in
+`local_tools`, but the provider never sees them and the model answers from
+memory instead of calling anything:
+
+```ruby
+robot = RobotLab.build(name: "bot", **llm_opts, local_tools: [Calculator])
+
+robot.run("What is 15 * 7?")                  # Calculator is NEVER offered
+robot.run("What is 15 * 7?", tools: :inherit) # Calculator is offered
+```
+
+The same applies to MCP (`mcp: :inherit`), to network tasks
+(`task :name, robot, tools: :inherit`), and to anything that forwards keywords
+into `run` — including `RobotLab::RailsIntegration::Job`. Examples 02, 04, 06,
+14, 15, 16, 20, 33 and the Rails app all pass it explicitly.
+
 ## Directory Structure
 
 ```
 examples/
-  27_incident_response/       # Phase 5 infra — BusPoller, reactive memory, poller groups
-    incident_response.rb      #   Main entrypoint — wires up the war room
+  common.rb                   # Shared LLM config (Ollama), llm_opts, output helpers
+  xyzzy.rb                    # Single-file hook extension used by 35
   01_simple_robot.rb          # Basic robot with template
   02_tools.rb                 # Robot with custom tools
   03_network.rb               # Multi-robot network with routing
   04_mcp.rb                   # MCP server integration (GitHub)
-  05_streaming.rb             # Real-time streaming events
+  05_streaming.rb             # Real-time streaming callbacks
   06_prompt_templates.rb      # Template-based e-commerce support
   07_network_memory.rb        # Shared memory with concurrent robots
   08_llm_config.rb            # Configuration hierarchy demo
@@ -47,18 +130,11 @@ examples/
     scout.rb                  #   Talent scout with analyst spawning
     display.rb                #   Terminal formatting (color, wrapping, file output)
     prompts/                  #   Templates for comic, heckler, and scout
-  19_token_tracking.rb        # Per-robot token & cost tracking
-  20_circuit_breaker.rb       # Tool loop circuit breaker with max_tool_rounds
-  21_learning_loop.rb         # Learning accumulation across runs with robot.learn
-  22_context_compression.rb   # Context window compression with HistoryCompressor
-  23_convergence.rb           # Debate convergence detection and reconciler fast-path
-  24_structured_delegation.rb # Structured delegation with duration and token tracking
-  25_history_search.rb        # Semantic search over a robot's conversation history
-  26_document_store.rb        # Embedding-based document store (RAG) via fastembed
-  29_ractor_tools.rb          # Ractor-safe tools: worker pool, freeze_deep, parallel batch
-  30_ractor_network.rb        # Ractor network scheduler: dependency waves, parallel_mode
-  31_launch_assessment.rb     # 6 parallel analysts, max_concurrent_robots: 4 semaphore cap
-  35_hooks.rb                 # Hook architecture demo using robot_lab-xyzzy
+  15_memory_network_and_bus/  # Network + memory + bus + spawn in one pipeline
+    editorial_pipeline.rb     #   Main entrypoint — three writers, editor, chief
+  16_writers_room/            # Self-organizing group: no orchestration at all
+    writers_room.rb           #   Main entrypoint — book and screenplay modes
+  17_skills.rb                # Composable skills, flat and recursive
   18_rails/                   # Minimal Rails 8 demo app (full integration)
     app/robots/chat_robot.rb  #   Robot factory with system prompt + TimeTool
     app/tools/time_tool.rb    #   Custom RobotLab::Tool subclass
@@ -68,6 +144,25 @@ examples/
     app/models/               #   RobotLabThread, RobotLabResult
     config/                   #   Minimal Rails 8 config (async adapters, no asset pipeline)
     db/migrate/               #   Migration from generator template
+  19_token_tracking.rb        # Per-robot token & cost tracking
+  20_circuit_breaker.rb       # Tool loop circuit breaker with max_tool_rounds
+  21_learning_loop.rb         # Learning accumulation across runs with robot.learn
+  22_context_compression.rb   # Context window compression with HistoryCompressor
+  23_convergence.rb           # Debate convergence detection and reconciler fast-path
+  24_structured_delegation.rb # Structured delegation with duration and token tracking
+  25_history_search.rb        # Semantic search over a robot's conversation history
+  26_document_store.rb        # Embedding-based document store (RAG) via fastembed
+  27_incident_response/       # BusPoller, reactive memory, poller groups
+    incident_response.rb      #   Main entrypoint — wires up the war room
+  28_mcp_discovery.rb         # Semantic MCP server selection before connecting
+  29_ractor_tools.rb          # Ractor-safe tools: worker pool, freeze_deep, parallel batch
+  30_ractor_network.rb        # Ractor network scheduler: dependency waves, parallel_mode
+  31_launch_assessment.rb     # 6 parallel analysts, max_concurrent_robots: 4 semaphore cap
+  32_newsletter_reader.rb     # Utility script (no RobotLab) — RSS to Markdown
+  33_stock_generator.rb       # Companion publisher for 33_stock_predictor (Redis)
+  33_stock_predictor.rb       # Durable cross-session learning via robot_lab-durable
+  34_agentskills.rb           # AgentSkills.io folder-format skills, matched per run
+  35_hooks.rb                 # Hook architecture demo using xyzzy.rb
   prompts/                    # Prompt templates (.md with YAML front matter)
 ```
 
@@ -77,43 +172,43 @@ examples/
 
 Create and run a basic robot using a prompt template. Sends a single message and displays the response.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 02 — Tools
 
 Give a robot custom tools (`Calculator`, `FortuneCookie`) defined as `RubyLLM::Tool` subclasses. The LLM decides when to call each tool based on the user's request.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 03 — Multi-Robot Network
 
 Build a customer support network with a classifier robot that routes requests to billing, technical, or general specialists. Uses SimpleFlow's optional task activation for conditional routing.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 04 — MCP Integration
 
 Connect to the GitHub MCP server via stdio transport. Part 1 demonstrates direct `MCP::Client` usage (listing tools, calling `search_repositories`). Part 2 wraps the MCP server inside a robot for natural-language queries.
 
-**Requires:** LLM API key, `GITHUB_PERSONAL_ACCESS_TOKEN`, `github-mcp-server` installed
+**Requires:** Ollama, `GITHUB_PERSONAL_ACCESS_TOKEN`, `github-mcp-server` installed
 
 ### 05 — Streaming
 
-Real-time streaming of robot responses using `RobotLab::Streaming::Context`. Simulates text deltas with timing to demonstrate the streaming event model, then shows the code pattern for streaming with a robot or network.
+Real-time streaming of robot responses through four routes: the stored `on_content:` callback wired at build time, a per-call block passed to `run()`, both together (stored fires first, then the block), and `on_content` arriving through a `RunConfig`.
 
-**Requires:** None (simulated events, no LLM calls)
+**Requires:** Ollama (makes four live calls)
 
 ### 06 — Prompt Templates
 
 Full e-commerce support system using prompt_manager templates with YAML front matter. A triage robot classifies customer requests and routes to order, product, or escalation specialists. Demonstrates build-time context (company info, policies) and run-time context (customer data, order history).
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 07 — Network Memory
 
 Reactive shared memory with concurrent robots. Multiple analysis robots (sentiment, entity extraction, keywords) run in parallel and write to shared memory. A synthesizer robot waits for all results using blocking reads, then produces a combined analysis. Demonstrates subscriptions, notifications, and network broadcast.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 08 — LLM Configuration
 
@@ -155,7 +250,7 @@ Bidirectional robot communication via TypedBus. A comedy critic (Alice) tasks a 
 
 Demonstrates: Robot subclasses, prompt templates, auto-ack `on_message`, `reply()` convenience, temperature ramping, convergence patterns.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 13 — Spawning Robots
 
@@ -163,7 +258,7 @@ Dynamic specialist creation at runtime. A dispatcher robot receives questions, a
 
 Demonstrates: `spawn` for dynamic robot creation, lazy bus creation, `on_message` for reply handling, LLM-driven delegation.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 14 — The Rusty Circuit (Open Mic Night)
 
@@ -171,27 +266,51 @@ A comedy club where three robots interact through a shared message bus. A comedi
 
 Terminal output is color-formatted: comic bits in cyan (left-aligned), heckler reactions in yellow (right-indented), tool annotations dimmed. Scout notes go to `scout_notes.md` instead of STDOUT. The final verdict appears in green on both STDOUT and the scout file.
 
-Demonstrates: Robot subclasses, self-modification via tool side effects, dynamic spawning (`spawn`), shared `:room` channel + personal channels, processing guards for async serialization, `[SILENCE]` opt-out pattern, style reinvention via user-prompt injection.
+Demonstrates: Robot subclasses, self-modification via tool side effects, dynamic spawning (`spawn`), shared `:room` channel + personal channels, `enqueue_delivery` for serializing async deliveries, `[SILENCE]` opt-out pattern, style reinvention via user-prompt injection.
 
-**Requires:** LLM API key
+**Requires:** Ollama. The most expensive example in the suite — ~30 LLM calls, 30+ minutes on `qwen3.6`. Use `LLM_PROFILE=small` to watch it in under ten.
+
+### 15 — Memory, Network, Bus & Spawn Together
+
+An editorial pipeline where three writers advocate for macOS, Windows, and Linux/BSD as a home AI research lab platform. The network runs the writers in parallel and hands their drafts to an editor through shared memory; the Linux writer spawns three distro specialists mid-pipeline; an editor-in-chief outside the pipeline reviews the combined article over the bus and can demand revisions.
+
+Demonstrates: all four coordination mechanisms in one program, plus the direct `shared_memory` reference pattern that parallel pipeline steps need (`extract_run_context` deletes from a shared hash, so only the first parallel step would otherwise see `network_memory`).
+
+**Requires:** Ollama
+
+### 16 — The Writers' Room (Self-Organizing Group)
+
+A team of identical writer robots produces a 10-chapter novella with no orchestration, no pipeline, and no assigned roles. Each writer subscribes to a `:room` broadcast channel and a personal channel, and has tools to read/write shared memory, broadcast, DM, spawn more writers, and mark the work complete. The script seeds the room with an assignment and waits.
+
+`--screenplay-from output/memory.json` re-runs the room in screenplay mode, adapting a finished book into a 4-act TV movie pilot at scene granularity.
+
+Demonstrates: emergent coordination, `clear_messages(keep_system: true)` as a per-message conversation reset, dynamic team growth, memory as the single source of truth.
+
+**Requires:** Ollama (long-running — `--timeout` defaults to 600s)
+
+### 17 — Composable Skills
+
+Skills are ordinary templates whose bodies are prepended to the main template. An SRE incident responder is composed from `runbook_protocol` and `structured_output` (flat skills) plus `sre_compliance`, which recursively expands to `pii_redactor` and `audit_trail`. The assembled system prompt is printed line-by-line so the depth-first expansion order is visible, and a skill-less robot is built alongside it for size comparison.
+
+**Requires:** Ollama
 
 ### 19 — Token & Cost Tracking
 
-Track token usage across runs using `result.input_tokens` / `result.output_tokens` for per-run counts and `robot.total_input_tokens` / `robot.total_output_tokens` for running totals. Demonstrates `reset_token_totals` to start a fresh batch and includes a simple cost estimate using per-provider pricing constants.
+Track token usage across runs using `result.input_tokens` / `result.output_tokens` for per-run counts and `robot.total_input_tokens` / `robot.total_output_tokens` for running totals. Demonstrates `reset_token_totals` to start a fresh batch. Local inference is free, so cost is reported as `$0.00000 (local)`; set `RATE_INPUT_CPM` / `RATE_OUTPUT_CPM` to price the same traffic against a hosted provider.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 20 — Tool Loop Circuit Breaker
 
 Guards against runaway tool call loops using `max_tool_rounds:`. A step processor tool is designed to always return "more steps remain", which would loop indefinitely without a guard. The circuit breaker fires after the configured limit and raises `RobotLab::ToolLoopError`. Shows how to rescue the error gracefully and confirms the robot is fully reusable after a breaker trip.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 21 — Learning Accumulation Loop
 
 Builds up cross-run observations with `robot.learn(text)`. A code reviewer accumulates one key insight after each review. On subsequent runs, learnings are automatically prepended to the user message as a "LEARNINGS FROM PREVIOUS RUNS:" block. Demonstrates bidirectional substring deduplication (broader learnings replace narrower ones), the `robot.learnings` accessor, and how learnings survive a robot rebuild via the shared `Memory` object.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 22 — Context Window Compression
 
@@ -199,23 +318,17 @@ Demonstrates `robot.compress_history()` for reducing token usage in long convers
 
 **Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
 
-### 24 — Structured Delegation
-
-A manager robot delegates sub-tasks to a summarizer and an analyst. Each `delegate()` call returns a `RobotResult` annotated with `delegated_by`, `duration`, and token counts. Includes a comparison table of when to use delegation vs. bus messaging vs. pipelines.
-
-**Requires:** LLM API key
-
 ### 23 — Debate Convergence Detection
 
-Demonstrates `RobotLab::Convergence` for detecting when two independent agents have reached the same conclusion. Scores pairs of texts from identical → semantically similar → partially related → unrelated, showing how the similarity metric varies. Includes the router fast-path pattern: when two verifier robots agree above a threshold, the expensive reconciler LLM call is skipped entirely.
+Demonstrates `RobotLab::Convergence` for detecting when two independent agents have reached the same conclusion. Scores pairs of texts from identical → semantically similar → partially related → unrelated, showing how the similarity metric varies. Includes the fast-path pattern: a gate robot compares two verifiers' replies and only activates the expensive reconciler — via SimpleFlow optional-task activation — when they disagree.
 
 **Requires:** `gem 'classifier', '~> 2.3'` in your Gemfile (no LLM calls in the demo itself)
 
 ### 24 — Structured Delegation
 
-Demonstrates `robot.delegate(to:, task:)` for synchronous and asynchronous inter-robot delegation. The manager robot delegates document analysis to a summarizer and an analyst. Shows synchronous (sequential, blocking) and asynchronous (parallel fan-out, `DelegationFuture`) modes with wall-time comparison.
+Demonstrates `robot.delegate(to:, task:)` for synchronous and asynchronous inter-robot delegation. The manager robot delegates document analysis to a summarizer and an analyst. Shows synchronous (sequential, blocking) and asynchronous (parallel fan-out, `DelegationFuture`) modes with wall-time comparison. Each result carries `delegated_by`, `duration`, and token counts.
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 25 — Chat History Search
 
@@ -249,7 +362,7 @@ bundle exec ruby examples/27_incident_response/incident_response.rb
 bundle exec rake examples:run[27]
 ```
 
-**Requires:** LLM API key
+**Requires:** Ollama
 
 ### 28 — MCP Server Discovery
 
@@ -297,7 +410,7 @@ and the `pipeline.step_dependencies` dependency graph inspection.
 
 **Part 3** — Live LLM run (enabled automatically when `ANTHROPIC_API_KEY` is set).
 
-**Requires:** None for Parts 1 & 2.  LLM API key for Part 3.
+**Requires:** None for Parts 1 & 2. `RUN_LIVE=1` plus Ollama for Part 3 (expected to fail — ruby_llm is not Ractor-safe yet).
 
 ### 31 — Product Launch Assessment (Concurrency Cap)
 
@@ -305,13 +418,37 @@ Six specialist robots evaluate a product launch simultaneously: market, competit
 
 Demonstrates: `max_concurrent_robots:` on `RunConfig`, `Async::Semaphore` back-pressure via `simple_flow`, six parallel `depends_on: :none` tasks, shared memory writes and blocking reads.
 
-**Requires:** LLM API key
+**Requires:** Ollama
+
+### 32 — Newsletter Reader
+
+A plain utility script that fetches unprocessed issues from Ruby newsletter RSS feeds and saves them as Markdown. **It uses no part of RobotLab** — it lives here as a content feeder for other experiments, not as a capability demo. Set `CLIPPINGS_DIR` to choose the output folder.
+
+**Requires:** `html2markdown` on `PATH`
+
+### 33 — Durable Cross-Session Learning
+
+`33_stock_generator.rb` publishes synthetic XYZZY prices to a Redis channel using geometric Brownian motion. `33_stock_predictor.rb` consumes them, predicts each window's high/low with an SMA + EMA ensemble, and after every window asks a tuner robot to adjust the predictor's parameters.
+
+The tuner uses `robot_lab-durable`. Note the API: `learn:` / `learn_domain:` are **not** constructor parameters (`Robot#initialize` takes a fixed keyword list with no `**rest`, so passing them raises `ArgumentError`). Call `robot.setup_durable_learning(domain:)` after `build`, which seeds `robot.learnings` from `~/.robot_lab/durable/<domain>.yml` and appends the `RecallKnowledge` / `RecordKnowledge` tools. Core `Robot#run` does not invoke the reflector, so the caller drives `robot.run_reflector` to promote learnings back to the store.
+
+Run the two scripts in separate terminals.
+
+**Requires:** Ollama, Redis on localhost:6379, `robot_lab-durable`
+
+### 34 — AgentSkills.io Integration
+
+Skills declared as `skills: [:code_reviewer]` are resolved from `~/.prompts/skills/<name>/SKILL.md` and matched per-run by embedding similarity — a code-review question activates the skill, an unrelated question does not. Run the two queries and compare.
+
+**Requires:** Ollama, `robot_lab-document_store` gem, a `SKILL.md` at `~/.prompts/skills/code_reviewer/`
 
 ### 35 — Hooks Architecture
 
-Loads the local `robot_lab-xyzzy` extension, which registers for every hook and logs each callback with the context it receives. Demonstrates robot run, LLM generation, tool call, network run, task, and error hooks with deterministic stubbed responses.
+Loads `xyzzy.rb`, a single-file `RobotLab::Hook` subclass that registers for every hook and logs each callback with the context it receives. Demonstrates robot run, LLM generation, tool call, network run, task, and error hooks. Stubs `robot.chat.ask` for the deterministic sections; the LLM-generation section makes four real calls to show `around_llm_generation` serving two of them from a cache.
 
-**Requires:** None (no LLM calls)
+`RobotLab::Hook` has no logger accessor — handlers own their output. `xyzzy.rb` freezes its log destination from `XYZZY_LOG_PATH` at load time, so the env var must be set before the `require`.
+
+**Requires:** Ollama (four calls in the LLM-loop section)
 
 ### 18 — Rails Integration Demo
 
@@ -326,13 +463,15 @@ A minimal, hand-built Rails 8 app that exercises every piece of RobotLab's Rails
 
 **No Redis, no Solid Queue, no asset pipeline.** Uses `:async` adapters for both ActiveJob and ActionCable. Turbo JS loaded via importmap from CDN (`@hotwired/turbo-rails`).
 
+**Two API details worth copying:** the job's superclass is `RobotLab::RailsIntegration::Job` (there is no `RobotLab::Job` alias), and the controller enqueues with `tools: :inherit` so that keyword reaches `robot.run` — otherwise `TimeTool` is never offered and the model guesses the time.
+
 ```bash
 cd examples/18_rails
 bin/setup              # bundle install + db:create + db:migrate
 bin/dev                # starts Puma on http://localhost:3000
 ```
 
-**Requires:** LLM API key, Ruby 3.2+
+**Requires:** Ollama, Ruby 3.2+
 
 ## Prompt Templates
 
@@ -377,3 +516,18 @@ Front matter keys like `model`, `temperature`, `top_p`, `max_tokens` are applied
 | `open_mic_comic.md` | 14 | Observational comedian with self-modification |
 | `open_mic_heckler.md` | 14 | Tough audience heckler (can stay silent or counter-joke) |
 | `open_mic_scout.md` | 14 | Talent scout with analyst recruitment |
+| `os_advocate.md` | 15 | Operating-system advocacy writer |
+| `os_editor.md` | 15 | Synthesizes the three advocacy drafts |
+| `os_chief.md` | 15 | Editor-in-chief (APPROVED / REVISE) |
+| `writer.md` | 16 | Self-organizing novella writer |
+| `screenplay_writer.md` | 16 | Self-organizing screenplay writer |
+| `incident_responder.md` | 17 | SRE on-call analyst (main template) |
+| `runbook_protocol.md` | 17 | Flat skill: 5-step incident protocol |
+| `structured_output.md` | 17 | Flat skill: JSON response format |
+| `sre_compliance.md` | 17 | Recursive skill: bundles the two leaves below |
+| `pii_redactor.md` | 17 | Leaf skill: redact PII |
+| `audit_trail.md` | 17 | Leaf skill: audit metadata |
+
+Templates matching `*_test.md` are fixtures for the test suite, not examples.
+
+Templates for 14, 15 and 16 live in those examples' own `prompts/` directories; each entrypoint sets `ROBOT_LAB_TEMPLATE_PATH` before requiring `common.rb`.

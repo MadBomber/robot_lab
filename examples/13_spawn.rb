@@ -25,7 +25,7 @@ class Dispatcher < RobotLab::Robot
   attr_reader :spawned
 
   def initialize(bus: nil)
-    super(name: "dispatcher", model: LLM[:default].model, template: :dispatcher, bus: bus)
+    super(name: "dispatcher", **llm_opts, template: :dispatcher, bus: bus)
     @spawned = {}
     @pending = {}
 
@@ -49,7 +49,7 @@ class Dispatcher < RobotLab::Robot
     # Spawn the specialist (reuse if already spawned)
     specialist = @spawned[role] ||= spawn(
       name: role,
-      model: LLM[:default].model,
+      **llm_opts,
       system_prompt: instruction
     )
 

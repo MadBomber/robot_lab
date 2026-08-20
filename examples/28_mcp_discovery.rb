@@ -12,7 +12,7 @@
 # == Key config
 #
 #   robot = RobotLab.build(
-#     model: "gpt-5.4",
+#     provider: "ollama", model: "qwen3.6:latest",
 #     mcp_discovery: true,    # ← enables semantic filtering
 #     mcp: [ ... ]            # ← candidate servers, each with :description
 #   )
@@ -55,8 +55,9 @@ def show_query(label, query)
   selected = RobotLab::MCP::ServerDiscovery.select(query, from: SERVERS)
   names    = selected.map { |s| s[:name] }
 
-  puts "  Query : #{query.inspect}"
-  puts "  Match : #{names.inspect}"
+  puts "  #{label}"
+  puts "    Query : #{query.inspect}"
+  puts "    Match : #{names.inspect}"
   puts
 end
 
@@ -91,19 +92,22 @@ puts "  High threshold  : returns all (#{result.size} servers) — no match abov
 
 puts
 section "mcp_discovery: true on a Robot"
-puts <<~NOTE
-  RobotLab.build(
-  model: "gpt-5.4",
-    name: "assistant",
+show_code <<~RUBY
+  robot = RobotLab.build(
+    name:          "assistant",
+    provider:      "ollama",
+    model:         "qwen3.6:latest",
     mcp_discovery: true,
     mcp: [
-      { name: "filesystem", description: "Read, write...", transport: { ... } },
-      { name: "github",     description: "GitHub repos...", transport: { ... } },
-      { name: "brew",       description: "Install packages...", transport: { ... } }
+      { name: "filesystem", description: "Read, write...",         transport: { } },
+      { name: "github",     description: "GitHub repos...",        transport: { } },
+      { name: "brew",       description: "Install packages...",    transport: { } }
     ]
   )
 
-  # Only the :brew server is connected for this message:
-  robot.run("install imagemagick")
-NOTE
+  # Only the :brew server is connected for this message.
+  # mcp: :inherit and tools: :inherit are both required — run() defaults
+  # both to :none, which connects no servers and sends no tools.
+  robot.run("install imagemagick", mcp: :inherit, tools: :inherit)
+RUBY
 hr

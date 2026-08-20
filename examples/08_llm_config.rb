@@ -20,14 +20,14 @@
 # Environment is determined by ROBOT_LAB_ENV, RAILS_ENV, or RACK_ENV.
 #
 # Environment variable examples:
-#   ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
-#   ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
+#   ROBOT_LAB_RUBY_LLM__MODEL=qwen3.6:latest
 #   ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
+#   OLLAMA_API_BASE=http://localhost:11434/v1
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/08_llm_config.rb
-#   ROBOT_LAB_ENV=test ANTHROPIC_API_KEY=your_key ruby examples/08_llm_config.rb
-#   ROBOT_LAB_ENV=production ANTHROPIC_API_KEY=your_key ruby examples/08_llm_config.rb
+#   ruby examples/08_llm_config.rb
+#   ROBOT_LAB_ENV=test ruby examples/08_llm_config.rb
+#   ROBOT_LAB_ENV=production ruby examples/08_llm_config.rb
 
 require_relative "common"
 
@@ -62,9 +62,9 @@ puts "  request_timeout:    #{config.ruby_llm.request_timeout}s"
 puts "  max_retries:        #{config.ruby_llm.max_retries}"
 puts "  log_level:          #{config.ruby_llm.log_level}"
 
-# Show API key status without revealing values
-api_key = config.ruby_llm.anthropic_api_key
-puts "  anthropic_api_key:  #{api_key ? '[SET via config]' : (ENV['ANTHROPIC_API_KEY'] ? '[SET via env]' : '(not set)')}"
+# Show where the LLM traffic actually goes
+puts "  ollama_api_base:    #{OLLAMA_API_BASE}"
+puts "  (local inference — no API key in play)"
 puts
 
 section "Configuration Hierarchy (highest priority first)"
@@ -89,8 +89,11 @@ puts "   1. Bundled defaults:      lib/robot_lab/config/defaults.yml + env overr
 section "RunConfig: Shared Operational Defaults"
 
 shared = RobotLab::RunConfig.new(model: LLM[:default].model, temperature: 0.5)
-puts "  shared = RunConfig.new(model: \"gpt-5.4\", temperature: 0.5)"
+puts "  shared = RunConfig.new(model: #{LLM[:default].model.inspect}, temperature: 0.5)"
 puts "  shared.to_h => #{shared.to_h.inspect}"
+puts
+puts "  Note: RunConfig carries no `provider` field, so an Ollama model still"
+puts "  needs provider: passed to each robot alongside the shared config."
 puts
 
 creative = RobotLab::RunConfig.new(temperature: 0.9)
@@ -103,14 +106,16 @@ puts
 
 # Create a robot using the configuration
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "config_demo",
   template: :llm_config_demo,
   local_tools: [RobotLab::AskUser],
+  # These are TEMPLATE parameters, not robot kwargs — the template renders
+  # them into its prompt text.
   context: {
     environment: env,
-    model: LLM[:default].model,
-    provider: LLM[:default].provider
+    model:       LLM[:default].model,
+    provider:    LLM[:default].provider
   }
 )
 
@@ -141,14 +146,14 @@ puts <<~FOOTER
     Per-Robot: RunConfig, template front matter, constructor params, with_*
 
   RunConfig lets you express shared defaults that flow through the hierarchy:
-    shared = RobotLab::RunConfig.new(model: "gpt-5.4", temperature: 0.5)
+    shared = RobotLab::RunConfig.new(model: #{LLM[:default].model.inspect}, temperature: 0.5)
     network = RobotLab.create_network(name: "team", config: shared) { ... }
     robot = RobotLab.build(name: "bot", config: shared, temperature: 0.9)
 
   Example environment variable overrides:
-    ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
+    ROBOT_LAB_RUBY_LLM__MODEL=#{LLM[:default].model}
     ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
-    ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
+    OLLAMA_API_BASE=http://localhost:11434/v1
 
   Try running with different environments:
     ROBOT_LAB_ENV=test ruby examples/08_llm_config.rb
