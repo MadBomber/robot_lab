@@ -716,11 +716,11 @@ module RobotLab
       {}
     end
 
-    def redis_available?
+    def redis_available?(config = RobotLab.config)
       return false unless defined?(Redis)
 
       # Check if Redis is configured in RobotLab
-      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
+      redis_config = config.respond_to?(:redis) ? config.redis : nil
       redis_config || ENV.fetch("REDIS_URL", nil)
     end
 
@@ -908,8 +908,8 @@ module RobotLab
   #
   # @api private
   class RedisBackend
-    def initialize
-      @redis = create_redis_connection
+    def initialize(config = RobotLab.config)
+      @redis = create_redis_connection(config)
       @namespace = "robot_lab:memory:#{SecureRandom.uuid}"
     end
 
@@ -945,8 +945,8 @@ module RobotLab
 
     private
 
-    def create_redis_connection
-      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
+    def create_redis_connection(config = RobotLab.config)
+      redis_config = config.respond_to?(:redis) ? config.redis : nil
 
       if redis_config.is_a?(Hash)
         Redis.new(**redis_config)

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "redis" # optional dependency; needed to exercise the RedisBackend tests below
 
 class RobotLab::MemoryTest < Minitest::Test
   def setup
@@ -886,6 +887,36 @@ class RobotLab::MemoryTest < Minitest::Test
     refute mem.redis?
     mem[:test_key] = "value"
     assert_equal "value", mem[:test_key]
+  end
+
+  # Regression: redis_available? and RedisBackend#create_redis_connection used to
+  # read the RobotLab.config global directly, making them impossible to test in
+  # isolation. Both now accept an injectable config, matching the default-param
+  # pattern already used by Sandbox.enabled? and Capabilities.ceiling.
+  def test_redis_available_honors_injected_config_over_global
+    fake_config = Struct.new(:redis).new("redis://injected-host:6390/0")
+    mem = RobotLab::Memory.new(backend: :hash)
+
+    assert_equal "redis://injected-host:6390/0", mem.send(:redis_available?, fake_config)
+  end
+
+  def test_redis_backend_connects_using_injected_config_hash
+    fake_config = Struct.new(:redis).new({ host: "injected-host", port: 6390 })
+    backend = RobotLab::RedisBackend.new(fake_config)
+
+    assert_equal "redis://injected-host:6390", backend.instance_variable_get(:@redis).id
+  end
+
+  def test_redis_backend_falls_back_to_env_redis_url_when_config_has_no_redis_value
+    fake_config = Struct.new(:redis).new(nil)
+    original_env = ENV.fetch("REDIS_URL", nil)
+    ENV["REDIS_URL"] = "redis://url-host:6391/2"
+
+    backend = RobotLab::RedisBackend.new(fake_config)
+
+    assert_equal "redis://url-host:6391/2", backend.instance_variable_get(:@redis).id
+  ensure
+    ENV["REDIS_URL"] = original_env
   end
 
   def test_memory_change_from_hash_without_timestamp
