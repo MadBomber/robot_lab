@@ -93,7 +93,12 @@ task :flay_check do
   end
 end
 
-desc "Run all quality checks: tests (with coverage), RuboCop, Flog, and Flay"
+desc "Check architecture boundaries with ArchSpec"
+task :archspec_check do
+  sh "bundle exec archspec check"
+end
+
+desc "Run all quality checks: tests (with coverage), RuboCop, Flog, Flay, and ArchSpec"
 task :quality do
   results = {}
 
@@ -116,6 +121,11 @@ task :quality do
   puts "Quality Gate: Flay Duplication"
   puts '=' * 60
   results[:flay] = system("bundle exec rake flay_check") ? :pass : :fail
+
+  puts "\n#{'=' * 60}"
+  puts "Quality Gate: ArchSpec Architecture"
+  puts '=' * 60
+  results[:archspec] = system("bundle exec rake archspec_check") ? :pass : :fail
 
   puts "\n#{'=' * 60}"
   puts "Quality Summary"
