@@ -1,3 +1,7 @@
+# rubocop:disable Naming/FileName -- archspec's own CLI hardcodes this exact
+# filename (`archspec init` creates it, `archspec check` looks for it); it
+# cannot be renamed to snake_case.
+
 component :robot,         in: "lib/robot_lab/robot.rb"
 component :robot_support, in: "lib/robot_lab/robot/**/*.rb"
 component :network,       in: ["lib/robot_lab/network.rb", "lib/robot_lab/bus_poller.rb"]
@@ -42,3 +46,4 @@ sandbox.cannot_reference_constants "RobotLab::Robot", "RobotLab::Network", "Robo
 # (RobotLab.config -> Network -> Robot -> template -> task -> runtime) and
 # must not depend upward on the objects it configures.
 config.cannot_reference_constants "RobotLab::Robot", "RobotLab::Network"
+# rubocop:enable Naming/FileName
