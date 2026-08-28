@@ -3547,7 +3547,7 @@ RobotLab objects directly — or an extension that adds its own hook family — 
 the contract.</p>
 <h3 id="run">run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">Hooks</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="ss">registries</span><span class="p">:,</span><span class="w"> </span><span class="ss">per_run_hooks</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">core_work</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; the block&#39;s return value</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># =&gt; the block's return value</span>
 </span></code></pre></div>
 <p>Execute a full hook family around a block. In order: every <code>before_&lt;family&gt;</code>,
 then the <code>around_&lt;family&gt;</code> chain wrapping the block, then

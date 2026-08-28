@@ -2813,7 +2813,7 @@
 </ul>
 <h2 id="install-via-bundler">Install via Bundler<a class="headerlink" href="#install-via-bundler" title="Permanent link">&para;</a></h2>
 <p>Add RobotLab to your <code>Gemfile</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab"</span>
 </span></code></pre></div>
 <p>Then install:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bundle<span class="w"> </span>install
@@ -2926,10 +2926,10 @@ whichever you need to your own <code>Gemfile</code>:</p>
 </tbody>
 </table>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Gemfile</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab-document_store&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;redis&quot;</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab-ractor&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"classifier"</span><span class="p">,</span><span class="w"> </span><span class="s2">"~&gt; 2.3"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab-document_store"</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"redis"</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab-ractor"</span>
 </span></code></pre></div>
 <blockquote>
 <p>[!NOTE]
@@ -2941,10 +2941,10 @@ gem is installed.</p>
 <h2 id="verify-installation">Verify Installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h2>
 <p>Create a test file to verify everything works:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># test_robot_lab.rb</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"robot_lab"</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;RobotLab version: </span><span class="si">#{</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Installation successful!&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"RobotLab version: </span><span class="si">#{</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">VERSION</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"Installation successful!"</span>
 </span></code></pre></div>
 <p>Run it:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>ruby<span class="w"> </span>test_robot_lab.rb
@@ -2964,8 +2964,8 @@ Rails integration lives in the separate
 <p>For generators, an <code>ActiveJob</code> base class, and Turbo Stream broadcasting, add the
 extension gem:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Gemfile</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab-rails&quot;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab"</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab-rails"</span>
 </span></code></pre></div>
 <p>Then follow that gem's own installation instructions for its generators and
 migrations.</p>
@@ -2974,15 +2974,15 @@ migrations.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Anthropic (Recommended)</label><label for="__tabbed_1_2">OpenAI</label><label for="__tabbed_1_3">Google Gemini</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-ant-...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">"sk-ant-..."</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY</span><span class="o">=</span><span class="s2">"sk-..."</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY</span><span class="o">=</span><span class="s2">&quot;...&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_RUBY_LLM__GEMINI_API_KEY</span><span class="o">=</span><span class="s2">"..."</span>
 </span></code></pre></div>
 </div>
 </div>
@@ -2991,7 +2991,7 @@ migrations.</p>
 <p class="admonition-title">Using dotenv</p>
 <p>For development, consider using the <a href="https://github.com/bkeepers/dotenv">dotenv</a> gem to manage environment variables:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Gemfile</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;dotenv&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">groups</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:development</span><span class="p">,</span><span class="w"> </span><span class="ss">:test</span><span class="o">]</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"dotenv"</span><span class="p">,</span><span class="w"> </span><span class="ss">groups</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="ss">:development</span><span class="p">,</span><span class="w"> </span><span class="ss">:test</span><span class="o">]</span>
 </span></code></pre></div>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># .env</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nv">ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
