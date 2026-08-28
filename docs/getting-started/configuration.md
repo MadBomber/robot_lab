@@ -278,7 +278,10 @@ robot = RobotLab.build(
 
 ### Skill-Script Sandboxing (`sandbox:` section)
 
-Opt-in confinement for the scripts a [skill bundle](../guides/using-tools.md#skill-scripts-and-sandboxing) exposes as tools. Disabled by default — scripts run exactly as before until you turn it on:
+Core declares this config schema but has no sandboxing behavior of its own — enforcement
+lives in the optional [`robot_lab-sandbox`](https://github.com/MadBomber/robot_lab-sandbox)
+gem. Without it, skill scripts always run unconfined regardless of these values; requiring
+it installs a `RobotLab::ScriptTool.executor` that honors them:
 
 | Key | Default | Description |
 |-----|---------|-------------|

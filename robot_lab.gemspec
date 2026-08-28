@@ -15,8 +15,9 @@ Gem::Specification.new do |spec|
     memory; networks for coordinating multiple robots with intelligent routing; MCP (Model
     Context Protocol) integration for external tool servers; and a memory system with Redis
     backend and semantic caching. Optional gems add Rails integration (robot_lab-rails),
-    durable learning (robot_lab-durable), Ractor concurrency (robot_lab-ractor), and
-    document storage (robot_lab-document_store).
+    durable learning (robot_lab-durable), Ractor concurrency (robot_lab-ractor), document
+    storage (robot_lab-document_store), and OS-level skill-script confinement
+    (robot_lab-sandbox). Core itself imposes no execution limitations.
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab"
   spec.license = "MIT"

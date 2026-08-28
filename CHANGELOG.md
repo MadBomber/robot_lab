@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without hand-wiring `on_message`.
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
+### Changed (BREAKING)
+- **Sandboxing extracted to `robot_lab-sandbox`.** `RobotLab::Sandbox`,
+  `RobotLab::Sandbox::Seatbelt`, and `RobotLab::Sandbox::Null` no longer live
+  in core; they moved verbatim to the new `robot_lab-sandbox` gem. Core has no
+  execution limitations of its own: `ScriptTool.execute` now delegates to an
+  optional `ScriptTool.executor` (`nil` by default, in which case it runs the
+  unconfined `Open3.capture2e` path with no timeout exactly as before).
+  Applications that want confined skill-script execution must add
+  `gem "robot_lab-sandbox"` and `require "robot_lab/sandbox"`, which installs
+  itself as the executor; `config.sandbox.*` behavior is unchanged from there.
+  `RobotLab::Capabilities` (the declarative fs_read/fs_write/network/timeout/
+  trust manifest parsed from `SKILL.md`) stays in core since `AgentSkill` needs
+  it regardless of whether sandboxing is enforced.
+- `ScriptTool.run_with_timeout` and `ScriptTool.terminate` moved to
+  `RobotLab::Sandbox::Executor` in `robot_lab-sandbox`.
+
 ### Fixed
 - `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
   concurrent sends and poller-thread reply correlation can't clobber each other.

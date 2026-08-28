@@ -842,5 +842,5 @@ Thread-safe monotonic counter for event ordering.
 
 - [Core Classes](core/index.md) — `Robot`, `Network`, `Memory`, `Tool`, `RobotResult`
 - [Hooks API](hooks.md) — the extension seam these classes are wired into
-- [Skills API](skills.md) — `AgentSkill`, `Capabilities`, `ScriptTool`, `Sandbox`
+- [Skills API](skills.md) — `AgentSkill`, `Capabilities`, `ScriptTool` (confinement lives in the optional `robot_lab-sandbox` gem)
 - [Errors](errors.md) — including `Errors.retryable?` and `Errors.retryable_classes`

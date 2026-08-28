@@ -335,12 +335,21 @@ trust: external   # or "core" for trusted, always-unconfined skills
 ---
 ```
 
-Sandboxing itself is **opt-in and off by default** — see the [`sandbox:` config section](../getting-started/configuration.md#skill-script-sandboxing-sandbox-section). When disabled, scripts run exactly as they always have, unconfined. When enabled:
+`Capabilities` (the declaration above) lives in core, but core itself has **no sandboxing
+behavior and no built-in limitations** — a script always runs unconfined via a plain
+`Open3.capture2e`, with no timeout, unless the optional
+[`robot_lab-sandbox`](https://github.com/MadBomber/robot_lab-sandbox) gem is required.
+Requiring it installs `RobotLab::Sandbox::Executor` as `RobotLab::ScriptTool.executor`;
+confinement still stays **opt-in and off by default** from there — see the
+[`sandbox:` config section](../getting-started/configuration.md#skill-script-sandboxing-sandbox-section).
+When enabled:
 
 - The global `sandbox:` config is a **ceiling** (`fs_read`, `fs_write`, `network`, `timeout`); each skill's front matter is its **declared** request. The script actually runs under the **intersection** of the two — a path outside the ceiling's roots is dropped even if the skill declares it, `network` requires both sides to allow it, and `timeout` is the smaller of the two.
 - On macOS, confinement is enforced with a generated `sandbox-exec` (Seatbelt) profile: deny-by-default, with narrow allowances for the interpreter to boot, the granted read/write paths, and (optionally) the network. Notably, `$HOME` is never implicitly readable — SSH keys and cloud credentials stay out of reach unless a path under `$HOME` is explicitly granted.
 - Off macOS, or for any skill declaring `trust: core`, sandboxing is a passthrough — confinement is currently macOS-only and is always skipped for trusted "core" skills regardless of platform.
 - A script that runs past its `timeout` is killed (its whole process group) and reported back to the LLM as a timed-out error rather than hanging the turn.
+
+Full API reference: [robot_lab-sandbox](https://github.com/MadBomber/robot_lab-sandbox).
 
 ## Parameter Types
 

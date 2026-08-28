@@ -8,6 +8,10 @@ module RobotLab
       '../fixtures/skills/scripted_skill/scripts/hello.sh', __dir__
     )
 
+    def teardown
+      ScriptTool.executor = nil
+    end
+
     def test_from_path_returns_tool_instance
       tool = ScriptTool.from_path(FIXTURE_SCRIPT)
       refute_nil tool
@@ -50,7 +54,7 @@ module RobotLab
       end
     end
 
-    def test_format_result_success_failure_and_timeout
+    def test_format_result_success_and_failure
       _o, ok   = Open3.capture2e('bash', '-c', 'exit 0')
       _o, fail = Open3.capture2e('bash', '-c', 'exit 3')
       assert_equal 'hi', ScriptTool.format_result('hi', ok)
@@ -58,35 +62,25 @@ module RobotLab
       assert_includes ScriptTool.format_result('partial', nil), 'timed out'
     end
 
-    def test_run_with_timeout_kills_long_command
-      output, status = ScriptTool.run_with_timeout(%w[sleep 5], 0.2)
-      assert_nil status
-      assert_includes output, 'killed'
-    end
-
-    def test_run_with_timeout_returns_output_within_budget
-      output, status = ScriptTool.run_with_timeout(['bash', '-c', 'echo quick'], 10)
-      assert status.success?
-      assert_includes output, 'quick'
-    end
-
-    def test_execute_unconfined_when_sandbox_disabled
-      # Default config: sandbox off -> unconfined, output unchanged.
-      refute RobotLab::Sandbox.enabled?
+    def test_execute_runs_unconfined_when_no_executor_installed
+      refute ScriptTool.executor
       out = ScriptTool.execute(['bash', '-c', 'echo plain'],
                                capabilities: RobotLab::Capabilities.new, skill_dir: Dir.pwd)
       assert_includes out, 'plain'
     end
 
-    def test_execute_confined_when_sandbox_enabled
-      skip 'Seatbelt is macOS-only' unless RobotLab::Sandbox.macos?
+    def test_execute_delegates_to_installed_executor
+      calls = []
+      ScriptTool.executor = lambda do |cmd, capabilities:, skill_dir:|
+        calls << [cmd, capabilities, skill_dir]
+        'from executor'
+      end
 
-      RobotLab.config.sandbox.enabled = true
-      tool   = ScriptTool.from_path(FIXTURE_SCRIPT)
-      output = tool.call({})
-      assert_includes output, 'Hello from AgentSkills script!'
-    ensure
-      RobotLab.config.sandbox.enabled = false
+      caps = RobotLab::Capabilities.new
+      out  = ScriptTool.execute(['bash', '-c', 'echo plain'], capabilities: caps, skill_dir: '/tmp')
+
+      assert_equal 'from executor', out
+      assert_equal [[['bash', '-c', 'echo plain'], caps, '/tmp']], calls
     end
   end
 end

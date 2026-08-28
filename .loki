@@ -23,32 +23,6 @@ class Tasks
     sh "bundle exec archspec check"
   end
 
-  # Overrides the shared dev/quality.loki `quality` task to add an ArchSpec
-  # gate. robot_lab core is (so far) the only RobotLab gem with an
-  # Archspec.rb, so this stays a robot_lab-local override rather than a
-  # change to the shared, universal quality.loki.
-  desc "Run all quality gates: tests + RuboCop + Flog + Flay + Reek + ArchSpec"
-  def quality
-    gates = [
-      ["Tests + Coverage",      "bundle exec rake test"],
-      ["RuboCop",               "bundle exec rubocop"],
-      ["Flog Complexity",       "bundle exec rake flog_check"],
-      ["Flay Duplication",      "bundle exec rake flay_check"],
-      ["Reek Smells",           -> { reek_gate }],
-      ["ArchSpec Architecture", "bundle exec archspec check"]
-    ]
-
-    results = gates.map do |label, command|
-      puts "\n#{"=" * 60}"
-      puts "Quality Gate: #{label}"
-      puts "=" * 60
-      ok = command.respond_to?(:call) ? command.call : system(command)
-      [label, ok ? :pass : :fail]
-    end
-
-    print_quality_summary(results)
-  end
-
   class DocsCommands < Tasks
     desc "Build YARD + MkDocs documentation"
     def build

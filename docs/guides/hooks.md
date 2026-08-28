@@ -1076,6 +1076,128 @@ RobotLab.on(RedactionHook)
 
 ---
 
+## Extension Registration
+
+Hooks inject *behavior* ("do this on these events"). A separate, lighter
+mechanism — **extension registration** — answers a different question: *"is
+optional feature X loaded?"* This is how core lights up conditional behavior
+without depending on, or probing for, the gem that provides it. The two
+mechanisms are orthogonal but commonly used together: a gem registers itself
+(discovery), then wires behavior in via a hook (injection).
+
+### The API
+
+```ruby
+RobotLab.register_extension(:audit, RobotLab::Audit)  # gem announces itself
+RobotLab.extension_loaded?(:audit)                     # => true/false — core's guard
+RobotLab.extension(:audit)                             # => RobotLab::Audit
+RobotLab.loaded_extensions                             # => [:audit, :ractor, ...]
+```
+
+It is deliberately tiny: a `Hash` and four methods. The registered value can be
+the extension's primary module, or just a sentinel when the gem only needs a
+presence flag:
+
+```ruby
+RobotLab.register_extension(:ractor, :ractor_extension_loaded)
+```
+
+### How an Extension Announces Itself
+
+At the bottom of the gem's entry file, after everything it provides is
+defined, guarded so the gem can also load standalone or against an older core:
+
+```ruby
+# robot_lab-audit/lib/robot_lab/audit.rb (tail)
+if defined?(RobotLab) && RobotLab.respond_to?(:register_extension)
+  RobotLab.register_extension(:audit, RobotLab::Audit)
+end
+```
+
+The same one-liner appears verbatim in `robot_lab-document_store`,
+`robot_lab-durable`, `robot_lab-discovery`, etc. Registration last, guarded
+always.
+
+### How Core Consumes It
+
+Core guards optional behavior with `extension_loaded?` instead of scattered
+`defined?` / `respond_to?` probes — one named question, asked in one style:
+
+```ruby
+# tool.rb — only use the Ractor pool when the gem is present
+self.class.ractor_safe? && !self.class.name.nil? && RobotLab.extension_loaded?(:ractor)
+
+# memory.rb — semantic features require the document_store gem
+unless RobotLab.extension_loaded?(:document_store)
+  …
+end
+```
+
+When a guarded feature is *requested* without its extension, core raises a
+helpful error naming the exact gem to add — not a cryptic `NoMethodError`:
+
+```ruby
+# network.rb — parallel_mode: :ractor needs the gem
+def run_with_ractor_scheduler(run_context)
+  unless RobotLab.extension_loaded?(:ractor)
+    raise RobotLab::DependencyError,
+          "parallel_mode: :ractor requires the robot_lab-ractor gem. " \
+          "Add `gem 'robot_lab-ractor'` to your Gemfile."
+  end
+  …
+end
+```
+
+### Version-Skew Tolerance
+
+`robot_lab-a2a` ships a fallback so it works even against a core too old to
+provide the registry API: if `register_extension` isn't defined, the gem
+**defines it** (plus `extension_loaded?`/`extension`) over its own private
+`@_extensions` hash, then registers itself:
+
+```ruby
+module RobotLab
+  @_extensions = {} unless instance_variable_defined?(:@_extensions)
+
+  class << self
+    unless method_defined?(:register_extension) || respond_to?(:register_extension)
+      def register_extension(name, mod) = @_extensions[name.to_sym] = mod
+    end
+    unless method_defined?(:extension_loaded?) || respond_to?(:extension_loaded?)
+      def extension_loaded?(name) = @_extensions.key?(name.to_sym)
+    end
+    # … extension(name) likewise …
+  end
+end
+
+RobotLab.register_extension(:a2a, RobotLab::A2A)
+```
+
+The gem never assumes the core's age; it provides the contract if it must.
+
+### How It Composes with Hooks
+
+- `register_extension(:audit, RobotLab::Audit)` — *"I exist"* (discovery).
+- Inside `Audit.enable(db_path:)` → `RobotLab.on(Hook)` — *"do this on these
+  events"* (behavior).
+
+Two common shapes:
+
+- **Auto-wire at load** — register the extension *and* `RobotLab.on(SomeHook)`
+  at require time (always-on features).
+- **Opt-in enable** — register the extension at load, but expose
+  `enable!`/`enable(...)` that registers the hook on demand
+  (`Audit.enable`, `Narrator.enable!`). Lets the user choose scope/config.
+
+> [!TIP]
+> Design decisions worth stealing: a named capability registry beats
+> duck-typing; core never `require`s an extension — the extension `require`s
+> core and announces itself; a sentinel value works when you only need a
+> presence flag; and using a guarded feature without its gem should raise a
+> helpful error naming the exact gem to add.
+
+---
+
 ## See Also
 
 - [examples/35_hooks.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/35_hooks.rb) — full demo with xyzzy extension, perf timer, LLM response cache, and tracer hooks

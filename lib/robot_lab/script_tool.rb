@@ -2,7 +2,6 @@
 
 require 'open3'
 require 'shellwords'
-require 'timeout'
 
 module RobotLab
   # Factory module for wrapping AgentSkills scripts as RobotLab::Tool instances.
@@ -10,7 +9,18 @@ module RobotLab
   # Given a path to an executable shell script, produces a Tool that shells
   # out to the script and returns its combined stdout+stderr output.
   # Non-executable scripts return nil with a logged warning.
+  #
+  # Core has no sandboxing of its own: by default every script runs unconfined
+  # with no timeout. An extension gem (e.g. robot_lab-sandbox) can install a
+  # confinement strategy by setting {.executor} to an object responding to
+  # +call(cmd, capabilities:, skill_dir:)+; when set, ScriptTool.execute
+  # delegates to it instead of running the command directly.
   module ScriptTool
+    class << self
+      # @return [#call, nil] optional executor installed by an extension gem
+      attr_accessor :executor
+    end
+
     # Wrap a script file as a RobotLab::Tool.
     #
     # @param script_path [String, Pathname] path to the script file
@@ -52,49 +62,18 @@ module RobotLab
       end
     end
 
-    # Run a command, optionally confined by the sandbox and a timeout.
+    # Run a command, delegating to the installed {.executor} if one is present.
     #
-    # When sandboxing is disabled (the default) this is the original, unconfined
-    # capture2e path with no timeout — behaviour is unchanged. When enabled, the
-    # command is wrapped by the sandbox strategy for the effective grant and
-    # bounded by the grant's timeout.
+    # With no executor installed (the default — core has no sandboxing), this
+    # is a plain, unconfined capture2e path with no timeout. An extension gem
+    # that sets {.executor} controls confinement and timeout behavior entirely.
     #
     # @return [String] combined stdout+stderr, or an error string on failure
     def self.execute(cmd, capabilities:, skill_dir:)
-      unless Sandbox.enabled?
-        output, status = Open3.capture2e(*cmd)
-        return format_result(output, status)
-      end
+      return executor.call(cmd, capabilities: capabilities, skill_dir: skill_dir) if executor
 
-      grant   = capabilities.intersect(Capabilities.ceiling)
-      sandbox = Sandbox.for(grant, skill_dir: skill_dir)
-      begin
-        output, status = run_with_timeout(sandbox.wrap(cmd), grant.timeout)
-        format_result(output, status)
-      ensure
-        sandbox.cleanup
-      end
-    end
-
-    # @return [Array(String, Process::Status|nil)] output and status (nil = timed out)
-    def self.run_with_timeout(cmd, timeout)
-      Open3.popen2e(*cmd, pgroup: true) do |stdin, out, wait|
-        stdin.close
-        output = +''
-        begin
-          Timeout.timeout(timeout) { output << out.read }
-        rescue Timeout::Error
-          terminate(wait.pid)
-          return ["#{output}\n[killed: exceeded #{timeout}s]", nil]
-        end
-        [output, wait.value]
-      end
-    end
-
-    def self.terminate(pid)
-      Process.kill('-TERM', Process.getpgid(pid))
-    rescue StandardError
-      nil
+      output, status = Open3.capture2e(*cmd)
+      format_result(output, status)
     end
 
     # @param status [Process::Status, nil] nil indicates a timeout kill

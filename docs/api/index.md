@@ -41,8 +41,8 @@ confines them:
 | [AgentSkill](skills.md#robotlabagentskill) | One skill bundle: instructions + `scripts/` |
 | [AgentSkillCatalog](skills.md#robotlabagentskillcatalog) | Lazy registry over `~/.prompts/skills/` |
 | [Capabilities](skills.md#robotlabcapabilities) | Declared vs. ceiling filesystem / network / timeout grant |
-| [ScriptTool](skills.md#robotlabscripttool) | Wraps an executable script as a `Tool` |
-| [Sandbox](skills.md#robotlabsandbox) | macOS Seatbelt confinement, or a passthrough |
+| [ScriptTool](skills.md#robotlabscripttool) | Wraps an executable script as a `Tool`; `ScriptTool.executor` is the confinement extension point |
+| [Sandbox](skills.md#confinement-robot_lab-sandbox) | macOS Seatbelt confinement, or a passthrough — ships in the optional `robot_lab-sandbox` gem |
 
 ## Support Classes
 

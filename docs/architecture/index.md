@@ -62,7 +62,7 @@ graph TB
         H[MCP Client]
         I[Tools &lt; RubyLLM::Tool]
         J[Templates / prompt_manager]
-        SK[AgentSkills + Sandbox]
+        SK[AgentSkills<br/>+ optional Sandbox]
     end
 
     subgraph "Execution Layer"
@@ -138,8 +138,9 @@ graph LR
     AS --> CAT[AgentSkillCatalog]
     AS --> CAP[Capabilities]
     AS --> ST[ScriptTool]
-    CAP --> SB[Sandbox<br/>Seatbelt or Null]
-    ST --> SB
+    ST --> EX{ScriptTool.executor}
+    EX -. "installed by<br/>robot_lab-sandbox" .-> SB[Sandbox<br/>Seatbelt or Null]
+    CAP -. "used if installed" .-> SB
 
     HC --> TA[TextAnalysis<br/>TF / TF-IDF]
     HS --> TA
@@ -165,7 +166,7 @@ dependency.
 | **Config** | MywayConfig-based global configuration with env var and file support | [Configuration](#configuration) |
 | **Hook** | Handler base class for the seven hook families — the framework's extension seam | [Hooks API](../api/hooks.md) |
 | **AgentSkill** | A `SKILL.md` bundle whose instructions and `scripts/` become prompt text and tools | [Skills API](../api/skills.md) |
-| **Sandbox** | Opt-in OS-level confinement (macOS Seatbelt) for skill scripts, derived from `Capabilities` | [Skills API](../api/skills.md) |
+| **Sandbox** | Opt-in OS-level confinement (macOS Seatbelt) for skill scripts, derived from `Capabilities`; ships in the optional `robot_lab-sandbox` gem, not core | [Skills API](../api/skills.md) |
 | **RobotMessage** | Immutable envelope for TypedBus inter-robot messaging, serialized per robot by `BusPoller` | [Support API](../api/support.md) |
 | **Budget::Ledger** | Thread-safe reserve/reconcile ledger behind `token_budget` / `cost_budget` | [Support API](../api/support.md) |
 

@@ -1,8 +1,12 @@
 # Skills API
 
 Class-level reference for the AgentSkills subsystem: skill bundles, the scripts
-they expose as tools, the capabilities those scripts declare, and the sandbox
-that confines them. For the how-to, see
+they expose as tools, and the capabilities those scripts declare. Core itself
+has **no sandboxing and no execution limitations** — every script runs
+unconfined until the optional
+[`robot_lab-sandbox`](https://github.com/MadBomber/robot_lab-sandbox) gem is
+required, at which point it installs a confinement strategy (see
+[ScriptTool.executor](#scripttoolexecutor) below). For the how-to, see
 [Using Tools: Skill Scripts and Sandboxing](../guides/using-tools.md#skill-scripts-and-sandboxing)
 and [Building Robots: Composable Skills](../guides/building-robots.md#composable-skills).
 
@@ -27,12 +31,16 @@ graph LR
         G[effective grant<br/>declared ∩ ceiling]
     end
 
-    subgraph "Execution"
+    subgraph "Execution (core)"
         T[ScriptTool.from_path<br/>-> RobotLab::Tool]
+        EX{ScriptTool.executor<br/>set?}
+        UN[Open3.capture2e<br/>unconfined, no timeout]
+    end
+
+    subgraph "robot_lab-sandbox (optional gem)"
         SB{Sandbox.enabled?}
         SE[Sandbox::Seatbelt<br/>macOS]
         NU[Sandbox::Null<br/>passthrough]
-        P[script process]
     end
 
     R[Robot<br/>AgentSkillMatching] --> C
@@ -41,12 +49,12 @@ graph LR
     S --> T
     D --> G
     CE --> G
-    T --> SB
+    T --> EX
+    EX -- "nil (default)" --> UN
+    EX -- "installed" --> SB
     SB -- "off, or trust: core,<br/>or non-macOS" --> NU
     SB -- "on + macOS" --> SE
     G --> SE
-    SE --> P
-    NU --> P
 ```
 
 ---
@@ -264,9 +272,9 @@ of the ceiling, and `intersect` keeps the declared value.
 capabilities.core?  # => trust == "core"
 ```
 
-A `core` skill is exempt from confinement: `Sandbox.for` returns a
-[`Null`](#robotlabsandboxnull) strategy for it regardless of platform or config.
-Reserve `trust: core` for bundles you wrote and audited.
+A `core` skill is exempt from confinement: when `robot_lab-sandbox` is loaded,
+`Sandbox.for` returns a `Null` strategy for it regardless of platform or
+config. Reserve `trust: core` for bundles you wrote and audited.
 
 ### intersect
 
@@ -314,6 +322,19 @@ The generated tool takes a single optional `args` string parameter, which is
 [`derive_name`](#scripttoolderive_name) and its description from
 [`extract_description`](#scripttoolextract_description).
 
+### ScriptTool.executor
+
+```ruby
+RobotLab::ScriptTool.executor          # => #call, or nil (the default)
+RobotLab::ScriptTool.executor = obj    # any object responding to
+                                        # call(cmd, capabilities:, skill_dir:)
+```
+
+The extension point core exposes for confinement. `nil` by default — core has
+no sandboxing of its own. `robot_lab-sandbox`, when required, sets this to
+`RobotLab::Sandbox::Executor`, which handles `capabilities`/timeout/cleanup
+itself. See that gem's docs for what it does when installed.
+
 ### ScriptTool.execute
 
 ```ruby
@@ -323,34 +344,10 @@ RobotLab::ScriptTool.execute(cmd, capabilities:, skill_dir:)  # => String
 Run a command array and return its combined stdout+stderr, or an error string.
 Two paths:
 
-- **Sandboxing off** (the default) — `Open3.capture2e`, unconfined, **no timeout**.
-- **Sandboxing on** — intersects `capabilities` with `Capabilities.ceiling`, wraps
-  the command with the strategy from `Sandbox.for`, runs it under the grant's
-  timeout, and cleans the strategy up in an `ensure`.
-
-The declared `timeout:` therefore only takes effect when sandboxing is enabled.
-
-### ScriptTool.run_with_timeout
-
-```ruby
-RobotLab::ScriptTool.run_with_timeout(cmd, timeout)
-# => [String, Process::Status | nil]
-```
-
-Run `cmd` in its own process group (`pgroup: true`), reading combined output
-until `timeout` seconds elapse. On expiry it terminates the group and returns
-`["<partial output>\n[killed: exceeded <N>s]", nil]` — a `nil` status is the
-timeout signal.
-
-### ScriptTool.terminate
-
-```ruby
-RobotLab::ScriptTool.terminate(pid)
-```
-
-`Process.kill('-TERM', ...)` against the process **group** of `pid`, so a script
-that spawned children takes them down with it. Swallows every error and returns
-`nil` — a process that already exited is not an error.
+- **`executor` is `nil`** (the default) — `Open3.capture2e`, unconfined, **no timeout**.
+- **`executor` is set** — delegates entirely to `executor.call(cmd, capabilities:, skill_dir:)`.
+  Core no longer knows or cares what the executor does with `capabilities` or
+  how (or whether) it bounds execution time.
 
 ### ScriptTool.format_result
 
@@ -393,121 +390,27 @@ cannot be read.
 
 ---
 
-## RobotLab::Sandbox
+## Confinement: robot_lab-sandbox
 
-Strategy selector for confining skill-script execution. Module functions.
+`RobotLab::Sandbox`, `RobotLab::Sandbox::Seatbelt`, and `RobotLab::Sandbox::Null`
+used to live here; they now ship in the separate
+[`robot_lab-sandbox`](https://github.com/MadBomber/robot_lab-sandbox) gem, which
+core has no dependency on. Requiring it installs `RobotLab::Sandbox::Executor`
+as [`ScriptTool.executor`](#scripttoolexecutor):
 
-### Sandbox.enabled?
+- `Sandbox.enabled?` — reads `config.sandbox.enabled` (default `false`).
+- `Sandbox.for(grant, skill_dir:, macos: macos?)` — picks `Sandbox::Seatbelt` on
+  macOS, `Sandbox::Null` (passthrough) elsewhere or for `trust: core` grants.
+- `Sandbox::Seatbelt` — generates a deny-by-default `sandbox-exec` profile from
+  the effective grant (`fs_read`/`fs_write`/`network`), wrapping the command as
+  `sandbox-exec -f <profile> <cmd...>`. `$HOME` is never implicitly readable.
+- `Sandbox::Null` — `wrap(cmd)` returns `cmd` unchanged; `cleanup` is a no-op.
+- `Sandbox::Executor` — the piece that plugs into core: intersects the skill's
+  `Capabilities` with `Capabilities.ceiling`, wraps and runs the command under
+  the chosen strategy, and bounds it with the grant's `timeout`
+  (`Process.kill('-TERM', ...)` on the process group on expiry).
 
-```ruby
-RobotLab::Sandbox.enabled?              # => Boolean
-RobotLab::Sandbox.enabled?(some_config)
-```
-
-`true` only when the config responds to `sandbox`, that section exists, and
-`sandbox.enabled == true`. **Sandboxing is off by default** — see the
-[`sandbox:` config section](../getting-started/configuration.md#skill-script-sandboxing-sandbox-section).
-
-### Sandbox.macos?
-
-```ruby
-RobotLab::Sandbox.macos?  # => RUBY_PLATFORM.include?("darwin")
-```
-
-### Sandbox.for
-
-```ruby
-strategy = RobotLab::Sandbox.for(grant, skill_dir:, macos: macos?)
-# => Sandbox::Seatbelt or Sandbox::Null
-```
-
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `grant` | `Capabilities` | **required** | The **already-intersected** effective grant |
-| `skill_dir` | `String` | **required** | Bundle root, always granted read access |
-| `macos` | `Boolean` | `macos?` | Injectable so both branches are testable on any host |
-
-Selection order: a `trust: core` grant gets `Null`; otherwise macOS gets
-`Seatbelt`; anything else warns once and gets `Null`.
-
-### Sandbox.warn_once_non_macos
-
-```ruby
-RobotLab::Sandbox.warn_once_non_macos
-```
-
-Emits `"Sandbox: OS-level confinement is only available on macOS; scripts run
-unconfined here"` at `warn`, at most once per process. Idempotent, so a run with
-many scripts does not flood the log.
-
----
-
-## RobotLab::Sandbox::Null
-
-Passthrough strategy — used off macOS and for `trust: core` skills.
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `wrap(cmd)` | `cmd` | Unchanged |
-| `cleanup` | `nil` | No-op |
-
----
-
-## RobotLab::Sandbox::Seatbelt
-
-macOS strategy: generates a deny-by-default `sandbox-exec` profile from the grant
-and wraps the command as `sandbox-exec -f <profile> <cmd...>`.
-
-### Constants
-
-| Constant | Description |
-|----------|-------------|
-| `SYSTEM_READ` | `/usr /bin /sbin /System /Library /opt /private/etc /dev /var/select` — the locations an interpreter needs to boot |
-| `DEV_WRITE` | `/dev/null /dev/stdout /dev/stderr /dev/dtracehelper /dev/tty` — always writable |
-
-### Constructor
-
-```ruby
-RobotLab::Sandbox::Seatbelt.new(grant, skill_dir:)
-```
-
-### wrap / cleanup
-
-```ruby
-cmd = strategy.wrap(["bash", "script.sh"])
-# => ["sandbox-exec", "-f", "/tmp/robot_lab-sandbox-xxxx.sb", "bash", "script.sh"]
-strategy.cleanup  # unlinks the generated profile
-```
-
-`wrap` writes the profile to a `Tempfile`; `cleanup` unlinks it and swallows any
-error (an already-removed file is fine). `ScriptTool.execute` always calls
-`cleanup` in an `ensure`.
-
-### profile_text
-
-```ruby
-strategy.profile_text  # => String
-```
-
-The generated Seatbelt profile. Public so the policy can be asserted in tests
-rather than inferred from behavior. It imports `bsd.sb` (without which a
-deny-default profile aborts the binary before it starts), denies by default, then
-allows: `process-fork`, `process-exec`, `sysctl-read`, `mach-lookup`,
-`file-read-metadata` on any path, `file-read*` on `SYSTEM_READ` + the skill
-directory + granted `fs_read` paths, `file-write*` on `DEV_WRITE` + granted
-`fs_write` paths, and `network*` only when the grant allows it.
-
-Every path is canonicalized to its symlink-free real path first, because macOS
-symlinks `/tmp` → `/private/tmp` and the kernel matches against the real path. For
-write targets that do not exist yet, the nearest existing ancestor is resolved and
-the remainder re-appended.
-
-!!! warning "`$HOME` is never implicitly readable"
-    Which is the point — SSH keys and cloud credentials stay out of reach. But it
-    also means an interpreter installed under `$HOME` (rbenv, asdf, mise, a
-    Homebrew prefix in `~`) is **invisible** to the sandboxed process and the
-    script fails to start. Grant that path explicitly in `fs_read`, or mark the
-    skill `trust: core`.
+Full reference lives in that gem's own docs.
 
 ---
 
@@ -515,5 +418,6 @@ the remainder re-appended.
 
 - [Using Tools: Skill Scripts and Sandboxing](../guides/using-tools.md#skill-scripts-and-sandboxing)
 - [Configuration: `sandbox:` section](../getting-started/configuration.md#skill-script-sandboxing-sandbox-section)
+- [robot_lab-sandbox](https://github.com/MadBomber/robot_lab-sandbox) — the optional confinement gem
 - [Robot: Skills](core/robot.md#skills) — template skills, the other meaning
 - [Tool](core/tool.md) — `Tool.create`, which `ScriptTool` builds on
