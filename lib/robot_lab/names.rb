@@ -2,10 +2,10 @@
 
 # A large curated word list, not application logic — kept as one inline
 # module for lookup speed, so the size/length cops below are false positives.
-# rubocop:disable Metrics/ModuleLength
+# rubocop:disable-next Metrics/ModuleLength
 module RobotLab
   # Fictional robot names
-  # rubocop:disable Metrics/CollectionLiteralLength
+  # rubocop:disable-next Metrics/CollectionLiteralLength
   NAMES = %w[
     R_7723
     R_790
@@ -394,9 +394,7 @@ module RobotLab
     Zhora
     Zoromes
   ].freeze
-  # rubocop:enable Metrics/CollectionLiteralLength
 
   def self.name = names.first
   def self.names(how_many = 1) = NAMES.sample(how_many).sort
 end
-# rubocop:enable Metrics/ModuleLength
