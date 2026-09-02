@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
-require "bundler/gem_tasks"
-require "rake/testtask"
+# Quality gates (quality, rubocop_check, flog_check, flay_check,
+# archspec_check, ...), doc *serving*, and the gem lifecycle (build, install,
+# release) live in asgard — see .loki and the shared dev/*.loki files it
+# imports. This Rakefile keeps the tasks asgard delegates to (tests,
+# integration, examples, docs:build).
 
-RUBOCOP_ENV = { "RUBOCOP_CACHE_ROOT" => "tmp/rubocop_cache" }.freeze
+require "rake/testtask"
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
@@ -34,110 +37,6 @@ Rake::TestTask.new(:integration) do |t|
   t.test_files = FileList["test/integration/**/*_test.rb"]
   t.verbose = true
   t.ruby_opts << "-rtest_helper"
-end
-
-desc "Check code complexity with Flog (warn ≥20, fail ≥50)"
-task :flog_check do
-  require 'flog'
-
-  # Target to work toward; methods above this are warned but don't fail the gate.
-  METHOD_WARN = 20.0
-  # Current baseline floor — established from first run. Reduce incrementally.
-  METHOD_FAIL = 50.0
-
-  flogger = Flog.new(all: true)
-  flogger.flog(*Dir.glob('lib/**/*.rb'))
-
-  warnings  = []
-  failures  = []
-
-  flogger.each_by_score do |method, score|
-    next if method.end_with?('#none')  # skip file-level non-method code
-    if score > METHOD_FAIL
-      failures  << "#{'%.1f' % score}: #{method}"
-    elsif score > METHOD_WARN
-      warnings  << "#{'%.1f' % score}: #{method}"
-    end
-  end
-
-  unless warnings.empty?
-    puts "\nFlog warnings (#{METHOD_WARN}–#{METHOD_FAIL}) — target for future refactoring:"
-    warnings.each { |v| puts "  #{v}" }
-  end
-
-  if failures.empty?
-    puts "\nFlog: no methods exceed the failure threshold (≥#{METHOD_FAIL})"
-  else
-    puts "\nFlog failures (≥#{METHOD_FAIL}) — must be refactored:"
-    failures.each { |v| puts "  #{v}" }
-    abort "\nFlog quality gate failed: #{failures.size} method(s) exceed #{METHOD_FAIL}"
-  end
-end
-
-desc "Check for structural code duplication with Flay (mass >= 50)"
-task :flay_check do
-  require 'flay'
-
-  mass_threshold = 50
-
-  flay = Flay.new({ mass: mass_threshold, diff: false, verbose: false, summary: false, timeout: 60 })
-  flay.process(*Dir.glob('lib/**/*.rb'))
-  flay.analyze
-
-  if flay.hashes.empty?
-    puts "\nFlay: no structural duplication detected (mass >= #{mass_threshold})"
-  else
-    puts "\nFlay found structural duplication (mass >= #{mass_threshold}):"
-    flay.report
-    abort "\nFlay quality gate failed: #{flay.hashes.length} pattern(s) detected"
-  end
-end
-
-desc "Check architecture boundaries with ArchSpec"
-task :archspec_check do
-  sh "bundle exec archspec check"
-end
-
-desc "Run all quality checks: tests (with coverage), RuboCop, Flog, Flay, and ArchSpec"
-task :quality do
-  results = {}
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Gate: Tests + Coverage"
-  puts '=' * 60
-  results[:tests] = system("bundle exec rake test") ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Gate: RuboCop"
-  puts '=' * 60
-  results[:rubocop] = system(RUBOCOP_ENV, "bundle exec rubocop") ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Gate: Flog Complexity"
-  puts '=' * 60
-  results[:flog] = system("bundle exec rake flog_check") ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Gate: Flay Duplication"
-  puts '=' * 60
-  results[:flay] = system("bundle exec rake flay_check") ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Gate: ArchSpec Architecture"
-  puts '=' * 60
-  results[:archspec] = system("bundle exec rake archspec_check") ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts "Quality Summary"
-  puts '=' * 60
-  results.each do |gate, status|
-    icon = status == :pass ? 'PASS' : 'FAIL'
-    puts "  [#{icon}] #{gate}"
-  end
-  puts '=' * 60
-
-  abort "\nQuality gate failed" if results.values.any?(:fail)
-  puts "\nAll quality gates passed."
 end
 
 namespace :examples do
@@ -287,22 +186,8 @@ namespace :docs do
     sh "yard doc"
   end
 
-  namespace :yard do
-    desc "Serve YARD documentation locally"
-    task :serve do
-      sh "yard server --reload"
-    end
-  end
-
   desc "Build MkDocs documentation"
   task :mkdocs do
     sh "mkdocs build"
-  end
-
-  namespace :mkdocs do
-    desc "Serve MkDocs documentation locally"
-    task :serve do
-      sh "mkdocs serve"
-    end
   end
 end
