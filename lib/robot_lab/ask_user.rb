@@ -37,6 +37,8 @@ module RobotLab
     param :choices,  type: "array",   desc: "Optional list of choices to present", required: false
     param :default,  type: "string",  desc: "Default value if user presses Enter",  required: false
 
+    # :reek:FeatureEnvy -- rendering and resolving the caller-supplied choices list is this tool's whole job.
+    # :reek:TooManyStatements -- linear prompt/read/resolve terminal interaction.
     def execute(question:, choices: nil, default: nil)
       out = output_io
       label = robot&.name || "Robot"

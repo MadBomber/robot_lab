@@ -59,6 +59,7 @@ module RobotLab
     # Execute compression and return the new message array.
     #
     # @return [Array] compressed message array
+    # :reek:TooManyStatements -- linear classify/score/rebuild pipeline; each early return is a documented no-op case.
     def call
       return @messages if @messages.empty?
 
@@ -113,6 +114,7 @@ module RobotLab
     # Determine the action for one compressible message.
     #
     # @return [Symbol, String] :keep, :drop, or a summary String
+    # :reek:TooManyStatements -- one linear score-then-threshold decision.
     def score_action(reference, msg)
       text = extract_text(msg)
 
@@ -133,6 +135,7 @@ module RobotLab
     end
 
     # Build the final message array from the decided actions.
+    # :reek:FeatureEnvy -- dispatching on the per-message action value (:keep/:drop/summary) is this method's purpose.
     def build_result(actions)
       result = []
 
@@ -157,6 +160,7 @@ module RobotLab
     # System messages and tool-related messages are always pinned.
     # Assistant messages with no text content (tool call dispatchers)
     # are also pinned to avoid breaking tool_use/tool_result pairing.
+    # :reek:FeatureEnvy -- classifying by a message's own role and text; Message stays a plain value object.
     def pinned_message?(msg)
       role = msg.role
 
@@ -187,6 +191,7 @@ module RobotLab
     #
     # @param vectors [Array<Hash{Symbol => Float}>]
     # @return [Hash{Symbol => Float}]
+    # :reek:NestedIterators -- 2-deep each over sparse vectors is the natural element-wise sum.
     def mean_vector(vectors)
       return {} if vectors.empty?
 

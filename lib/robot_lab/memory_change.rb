@@ -43,6 +43,7 @@ module RobotLab
     # @param timestamp [Time] when the change occurred (defaults to now)
     # @param correlation_id [String, nil] optional correlation ID
     #
+    # :reek:ControlParameter -- `timestamp || Time.now` is a nil-safe default, not behavior selection.
     def initialize(key:, value:, previous: nil, writer: nil, network_name: nil, timestamp: nil, correlation_id: nil)
       @key = key.to_sym
       @value = value

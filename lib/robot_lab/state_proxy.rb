@@ -147,6 +147,7 @@ module RobotLab
 
     # Respond to method calls as hash access
     #
+    # :reek:BooleanParameter -- include_private is Ruby's respond_to_missing? contract signature.
     def respond_to_missing?(method_name, include_private = false)
       key = method_name.to_s.chomp("=").to_sym
       @data.key?(key) || super

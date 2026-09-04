@@ -87,6 +87,7 @@ module RobotLab
     #     task :billing, billing_robot, context: { dept: "billing" }, depends_on: :optional
     #   end
     #
+    # :reek:ControlParameter -- `memory || ...` and `config || ...` are nil-safe defaults, not behavior selection.
     def initialize(name:, concurrency: :auto, memory: nil, config: nil, parallel_mode: :async, &)
       @name = name.to_s
       @robots = {}
@@ -125,6 +126,7 @@ module RobotLab
     # @example Task with dependencies
     #   task :writer, writer_robot, depends_on: [:analyst]
     #
+    # :reek:LongParameterList -- one keyword per documented per-task option.
     def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none,
              poller_group: :default)
       task_wrapper = Task.new(
@@ -180,6 +182,7 @@ module RobotLab
     #   result.value  # => RobotResult from last robot
     #   result.context[:classifier]  # => RobotResult from classifier
     #
+    # :reek:TooManyStatements -- linear assembly of run params and hook context before dispatch.
     def run(message = nil, **run_context)
       # Runnable protocol: accept a positional message like Robot#run does, so
       # callers can `run(msg, ...)` uniformly. `run(message: msg)` still works.
@@ -200,12 +203,13 @@ module RobotLab
       )
 
       RobotLab::Hooks.run(:network_run, context, registries: [RobotLab.hooks, @hooks]) do
+        run_params = context.context
         if @parallel_mode == :ractor
-          run_with_ractor_scheduler(context.context)
+          run_with_ractor_scheduler(run_params)
         else
           initial_result = SimpleFlow::Result.new(
-            context.context,
-            context: { run_params: context.context }
+            run_params,
+            context: { run_params: run_params }
           )
           @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
         end
@@ -329,11 +333,12 @@ module RobotLab
     # @raise [ArgumentError] if a robot with the same name already exists
     #
     def add_robot(robot)
-      if @robots.key?(robot.name)
-        raise ArgumentError, "Robot '#{robot.name}' already exists in network '#{@name}'"
+      name = robot.name
+      if @robots.key?(name)
+        raise ArgumentError, "Robot '#{name}' already exists in network '#{@name}'"
       end
 
-      @robots[robot.name] = robot
+      @robots[name] = robot
       self
     end
 
@@ -398,6 +403,7 @@ module RobotLab
 
     private
 
+    # :reek:TooManyStatements -- linear build-specs/run/shutdown sequence for the ractor scheduler.
     def run_with_ractor_scheduler(run_context)
       unless RobotLab.extension_loaded?(:ractor)
         raise RobotLab::DependencyError,
@@ -419,6 +425,7 @@ module RobotLab
       results
     end
 
+    # :reek:FeatureEnvy -- snapshotting a robot's identity fields into a Ractor-shareable spec is this method's job.
     def build_robot_spec(task_wrapper)
       robot = task_wrapper.robot
       RobotSpec.new(

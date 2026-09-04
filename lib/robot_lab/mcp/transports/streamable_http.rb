@@ -13,6 +13,8 @@ module RobotLab
       #     session_id: "abc123"
       #   )
       #
+      # :reek:InstanceVariableAssumption -- @config is assigned in Base#initialize (reek does not trace super).
+      # :reek:RepeatedConditional -- @connected is the connection-lifecycle guard; every operation must check it.
       class StreamableHTTP < Base
         # Creates a new StreamableHTTP transport.
         #
@@ -31,6 +33,7 @@ module RobotLab
         #
         # @return [self]
         # @raise [MCPError] if async-http gem is not available
+        # :reek:TooManyStatements -- linear require/connect/handshake sequence inside the Async block.
         def connect
           return self if @connected
 
@@ -60,6 +63,7 @@ module RobotLab
         # @param message [Hash] JSON-RPC message
         # @return [Hash] the response
         # @raise [MCPError] if not connected
+        # :reek:TooManyStatements -- header assembly and POST must stay inside the one Async block.
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 

@@ -27,6 +27,7 @@ module RobotLab
   #   effective.temperature  #=> 0.9
   #   effective.model        #=> "claude-sonnet-4"
   #
+  # :reek:RepeatedConditional -- `if value` guards in independent field loops; each skips unset fields.
   class RunConfig
     # LLM configuration fields (applied to chat via with_* methods)
     LLM_FIELDS = %i[
@@ -119,6 +120,8 @@ module RobotLab
     # @param chat [Object] a RubyLLM::Chat (or similar) that responds to with_model, with_temperature, etc.
     # @param provider [String, Symbol, nil] passed through to chat.with_model's provider: kwarg
     # @param assume_model_exists [Boolean] passed through to chat.with_model's assume_exists: kwarg
+    # :reek:BooleanParameter -- assume_model_exists is a pass-through to RubyLLM's with_model kwarg.
+    # :reek:FeatureEnvy -- configuring the chat object handed in is exactly what apply_to is for.
     def apply_to(chat, provider: nil, assume_model_exists: false)
       LLM_FIELDS.each do |field|
         value = @fields[field]
@@ -141,6 +144,7 @@ module RobotLab
     #
     # @param metadata [Object] a PM::Metadata object (responds to field names)
     # @return [RunConfig]
+    # :reek:TooManyStatements -- linear duck-typed extraction of LLM then tool fields from front matter.
     def self.from_front_matter(metadata)
       fields = {}
 
@@ -171,6 +175,7 @@ module RobotLab
 
     # @param other [RunConfig] the other RunConfig to compare
     # @return [Boolean]
+    # :reek:FeatureEnvy -- equality naturally reads the other operand.
     def ==(other)
       other.is_a?(RunConfig) && to_h == other.to_h
     end

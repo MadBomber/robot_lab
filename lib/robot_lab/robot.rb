@@ -41,6 +41,12 @@ module RobotLab
   #     local_tools: [OrderLookup, RefundProcessor]
   #   )
   #
+  # :reek:TooManyMethods :reek:TooManyInstanceVariables -- Robot is intentionally the central orchestrator
+  #   (see CLAUDE.md); behavior is split into the included modules below.
+  # :reek:InstanceVariableAssumption -- every ivar is assigned in #initialize via assign_identity_ivars/
+  #   extract_config_ivars/initialize_runtime_state/initialize_memory; reek does not trace those helpers.
+  # :reek:RepeatedConditional -- `@bus` presence gates optional bus wiring at each independent site.
+  # :reek:DataClump -- (context, system_prompt, template) travel together as the robot's identity triple across construction APIs.
   class Robot < RubyLLM::Agent
     include Robot::TemplateRendering
     include Robot::MCPManagement
@@ -155,6 +161,8 @@ module RobotLab
     # @param stop [String, Array, nil] stop sequences
     # @param skills [Symbol, Array<Symbol>, nil] skill templates to prepend
     # @param config [RunConfig, nil] shared configuration (merged with explicit kwargs)
+    # :reek:LongParameterList -- the documented public constructor: one keyword per robot capability.
+    # :reek:BooleanParameter -- enable_cache and mcp_discovery are documented feature toggles.
     def initialize(
       name:,
       template: nil,
@@ -230,6 +238,7 @@ module RobotLab
     # Returns the model identifier
     #
     # @return [String, nil] the LLM model ID string
+    # :reek:FeatureEnvy -- duck-type unwrapping of the chat's model object into an id string.
     def model
       return nil unless @chat.respond_to?(:model)
 
@@ -245,6 +254,8 @@ module RobotLab
     # @param model [String, nil] new model
     # @param temperature [Float, nil] new temperature
     # @return [self]
+    # :reek:LongParameterList :reek:TooManyStatements -- public reconfiguration API; one guarded with_* application per option.
+    # :reek:ControlParameter -- `context || @build_context` is a fallback default, not behavior selection.
     def update(template: nil, context: nil, system_prompt: nil, model: nil, temperature: nil, **kwargs)
       if template
         @template = template
@@ -268,6 +279,8 @@ module RobotLab
     #
     # @param result [SimpleFlow::Result] incoming result from previous step
     # @return [SimpleFlow::Result] result with robot output
+    # :reek:TooManyStatements -- SimpleFlow step: timing, run, and error-shielding belong together.
+    # :reek:DuplicateMethodCall -- each clock_gettime samples a different instant (start/stop/rescue); a local would be wrong.
     def call(result)
       run_context = extract_run_context(result)
 
@@ -369,6 +382,7 @@ module RobotLab
     #
     # @param keep_system [Boolean] whether to preserve the system message
     # @return [self]
+    # :reek:BooleanParameter :reek:ControlParameter -- keep_system is a documented public API toggle.
     def clear_messages(keep_system: true)
       if keep_system
         system_msg = @chat.messages.find { |m| m.role == :system }
@@ -448,6 +462,10 @@ module RobotLab
     # @param kwargs [Hash] additional keyword args forwarded to Robot#run
     # @return [RobotResult] when async: false
     # @return [DelegationFuture] when async: true
+    # :reek:BooleanParameter :reek:ControlParameter -- async is the documented sync/future API switch.
+    # :reek:TooManyStatements -- the sync and async timing/annotation paths read best side by side.
+    # :reek:DuplicateMethodCall -- clock_gettime pairs sample distinct start/stop instants in each branch.
+    # :reek:FeatureEnvy -- annotating the delegatee's result with duration and delegator is the point of delegate.
     def delegate(to:, task:, async: false, **)
       if async
         future = DelegationFuture.new(robot_name: to.name, delegated_by: @name)
@@ -478,6 +496,7 @@ module RobotLab
     # into chat internals.
     #
     # @return [String, nil]
+    # :reek:FeatureEnvy -- duck-type unwrapping of the chat's model object.
     def chat_provider
       m = @chat.model
       m.respond_to?(:provider) ? m.provider : nil
@@ -504,6 +523,7 @@ module RobotLab
     #
     # @param text [String] the insight to record
     # @return [self]
+    # :reek:TooManyStatements -- dedupe/store/hook sequence shares the learnings state throughout.
     def learn(text)
       text = text.to_s.strip
       return self if text.empty?
@@ -561,6 +581,7 @@ module RobotLab
     # `tools:` is a NAME allowlist (a filter over available tools), not a place
     # to attach tool instances — passing instances there silently attaches
     # nothing. Catch the mistake with a clear, actionable error.
+    # :reek:FeatureEnvy -- inspecting each offending entry to build an actionable error message.
     def validate_tools_filter!(tools)
       return unless tools.is_a?(Array)
 
@@ -574,6 +595,8 @@ module RobotLab
             "(e.g. RobotLab.build(local_tools: [MyTool.new]))."
     end
 
+    # :reek:LongParameterList :reek:TooManyStatements -- one keyword and one assignment per identity ivar;
+    #   a hash would lose keyword checking.
     def assign_identity_ivars(name:, template:, system_prompt:, context:, description:,
                               local_tools:, skills:, mcp_discovery:)
       @name = name.to_s
@@ -592,6 +615,8 @@ module RobotLab
 
     # Build RunConfig from explicit kwargs, merged on top of any passed-in config.
     # Explicit constructor kwargs always win.
+    # :reek:LongParameterList -- mirrors the constructor's LLM kwargs one-to-one so explicit values win over config.
+    # :reek:FeatureEnvy -- assembling the explicit_fields hash it just built is the merge itself.
     def build_effective_config(model:, temperature:, top_p:, top_k:, max_tokens:,
                                presence_penalty:, frequency_penalty:, stop:,
                                on_tool_call:, on_tool_result:, on_content:,
@@ -710,6 +735,7 @@ module RobotLab
 
     # Dynamically delegate all with_* methods from @chat, returning self for chaining.
     # Discovered from the actual Chat class to avoid maintenance sync issues.
+    # :reek:NestedIterators -- the inner block is the delegator method body being defined, not an iteration.
     def define_chat_delegators
       @chat.class.public_instance_methods(false)
            .select { |m| m.start_with?('with_') }
@@ -721,6 +747,7 @@ module RobotLab
            end
     end
 
+    # :reek:ControlParameter -- `network_memory || network&.memory || @memory` is the documented memory cascade.
     def resolve_active_memory(network: nil, network_memory: nil)
       network_memory || network&.memory || @memory
     end
@@ -782,13 +809,15 @@ module RobotLab
     #
     # @param tools [Array<Tool>] the resolved tools
     # @return [Array<Tool>] at most `max_tools` tools
+    # :reek:FeatureEnvy -- clamping the passed-in tool list against the provider limit is a pure filter.
     def cap_tools(tools)
-      max = effective_max_tools
-      return tools if max.nil? || tools.size <= max
+      max  = effective_max_tools
+      size = tools.size
+      return tools if max.nil? || size <= max
 
       RobotLab.config.logger.warn(
-        "[#{@name}] tool list (#{tools.size}) exceeds max_tools (#{max}); " \
-        "sending #{max}, dropping #{tools.size - max}"
+        "[#{@name}] tool list (#{size}) exceeds max_tools (#{max}); " \
+        "sending #{max}, dropping #{size - max}"
       )
       tools.first(max)
     end
@@ -802,10 +831,12 @@ module RobotLab
       configured&.positive? ? configured : DEFAULT_MAX_TOOLS
     end
 
+    # :reek:TooManyStatements -- builds the generation hook context then runs the pre-ask setup chain in order.
     def invoke_ask(context:, kwargs:, hooks:, block:)
+      network = context.network
       generation_context = LlmGenerationHookContext.new(
         robot: self,
-        network: context.network,
+        network: network,
         task: context.task,
         memory: context.memory,
         config: context.config,
@@ -814,9 +845,9 @@ module RobotLab
       )
 
       RobotLab::Hooks.run(:llm_generation, generation_context,
-                          registries: hook_registries(context.network), per_run_hooks: hooks) do
+                          registries: hook_registries(network), per_run_hooks: hooks) do
         effective_message = inject_learnings(generation_context.request)
-        maybe_compact(network: context.network)
+        maybe_compact(network: network)
         install_circuit_breaker if @config.max_tool_rounds
         install_doom_loop_detection
         ask_kwargs = kwargs.slice(:with)
@@ -830,6 +861,7 @@ module RobotLab
     end
 
     # Extract run context from SimpleFlow::Result
+    # :reek:TooManyStatements -- one delete/re-add per robot-specific run param; a loop would hide which keys are special.
     def extract_run_context(result)
       run_params = (result.context[:run_params] || {}).dup
 
@@ -846,15 +878,16 @@ module RobotLab
       base = run_params.dup
 
       # Merge current value into context
-      merged = case result.value
+      value  = result.value
+      merged = case value
                when Hash
-                 base.merge(result.value.transform_keys(&:to_sym))
+                 base.merge(value.transform_keys(&:to_sym))
                when RobotResult
-                 base.merge(message: result.value.last_text_content)
+                 base.merge(message: value.last_text_content)
                when String
-                 base.merge(message: result.value)
+                 base.merge(message: value)
                else
-                 base.merge(message: result.value.to_s)
+                 base.merge(message: value.to_s)
                end
 
       # Add back the special params
@@ -869,6 +902,8 @@ module RobotLab
       merged
     end
 
+    # :reek:TooManyStatements :reek:FeatureEnvy -- adapting a provider response's many optional fields into
+    #   a RobotResult is inherently response-centric.
     def build_result(response, _memory)
       text = result_text(response)
       output = text ? [TextMessage.new(role: 'assistant', content: text)] : []
@@ -876,11 +911,10 @@ module RobotLab
       tool_calls = response.respond_to?(:tool_calls) ? (response.tool_calls || []) : []
 
       # Extract token usage from the response
-      input_toks = 0
-      output_toks = 0
-      if response.respond_to?(:tokens) && response.tokens
-        input_toks = response.tokens.input.to_i
-        output_toks = response.tokens.output.to_i
+      input_toks = output_toks = 0
+      if response.respond_to?(:tokens) && (tokens = response.tokens)
+        input_toks = tokens.input.to_i
+        output_toks = tokens.output.to_i
       elsif response.respond_to?(:input_tokens)
         input_toks = response.input_tokens.to_i
         output_toks = response.respond_to?(:output_tokens) ? response.output_tokens.to_i : 0
@@ -909,6 +943,7 @@ module RobotLab
     # The chat-history fallback is scoped to messages AFTER the last user message
     # (the current turn) to prevent a previous turn's response from being returned
     # when a thinking-mode model emits nothing in response.content.
+    # :reek:TooManyStatements :reek:FeatureEnvy -- documented fallback chain over the response's optional content/thinking/history fields.
     def result_text(response)
       content = response.content if response.respond_to?(:content)
       return content if content && !content.to_s.empty?
@@ -987,6 +1022,8 @@ module RobotLab
     # Tracks tool call names; when a consecutive or cyclic repetition exceeds
     # the threshold, embeds a self-correction warning in the tool result so the
     # LLM can change strategy without requiring an external circuit breaker.
+    # :reek:TooManyStatements :reek:FeatureEnvy -- the singleton override closes over the detector;
+    #   tracking/checking it there is the design.
     def install_doom_loop_detection
       threshold = @config.doom_loop_threshold || DoomLoopDetector::DEFAULT_THRESHOLD
       detector = DoomLoopDetector.new(threshold: threshold)
@@ -1010,6 +1047,7 @@ module RobotLab
     end
 
     # Remove the doom loop detection singleton method from @chat.
+    # :reek:FeatureEnvy -- checking-then-removing on the chat's singleton class is one atomic operation.
     def remove_doom_loop_detection
       sc = @chat.singleton_class
       sc.remove_method(:execute_tool) if sc.method_defined?(:execute_tool)
@@ -1025,6 +1063,9 @@ module RobotLab
     # Fires the :compaction hook family (before/around/after_compaction).
     # An on_compaction handler can replace the default strategy entirely by
     # setting ctx.compacted_messages; the core algorithm is skipped when handled.
+    # :reek:TooManyStatements -- guard chain plus hook-wrapped strategy dispatch; splitting would separate the hook from its guards.
+    # :reek:DuplicateMethodCall -- @chat.messages is read at different lifecycle points
+    #   (guard, before-snapshot, after-snapshot); it mutates in between.
     def maybe_compact(network: nil)
       return if @chat.messages.empty?
 

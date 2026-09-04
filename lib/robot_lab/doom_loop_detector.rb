@@ -33,19 +33,21 @@ module RobotLab
       @sequence << tool_name.to_s
     end
 
+    # :reek:TooManyStatements -- self-contained cycle-detection algorithm; splitting the scan loses the shape of the check.
     def doom_loop?
       seq = @sequence
-      return false if seq.length < @threshold
+      length = seq.length
+      return false if length < @threshold
 
       # Consecutive identical calls: A, A, A
       tail = seq.last(@threshold)
       return true if tail.uniq.length == 1
 
       # Cyclic multi-step patterns: A,B,C, A,B,C, A,B,C
-      max_period = [MAX_PERIOD, seq.length / @threshold].min
+      max_period = [MAX_PERIOD, length / @threshold].min
       (2..max_period).each do |period|
         window = @threshold * period
-        next if seq.length < window
+        next if length < window
 
         chunk = seq.last(window)
         pattern = chunk.first(period)
@@ -79,6 +81,7 @@ module RobotLab
 
     private
 
+    # :reek:TooManyStatements -- mirrors doom_loop?'s scan to report which period matched.
     def detect_period(seq)
       return 1 if seq.last(@threshold).uniq.length == 1
 

@@ -13,6 +13,7 @@ module RobotLab
     #   tools = client.list_tools
     #   result = client.call_tool("createBranch", { project_id: "abc" })
     #
+    # :reek:RepeatedConditional -- @connected is the connection-lifecycle guard; every public operation must check it.
     class Client
       # @!attribute [r] server
       #   @return [Server] the MCP server configuration
@@ -45,6 +46,7 @@ module RobotLab
       #
       # @return [self]
       #
+      # :reek:TooManyStatements -- linear connect/register sequence with a best-effort rescue.
       def connect
         return self if @connected
 
@@ -204,8 +206,6 @@ module RobotLab
       end
 
       def parse_response(response)
-        return response[:result] if response.is_a?(Hash) && response[:result]
-
         case response
         when String
           parsed = JSON.parse(response, symbolize_names: true)

@@ -3,6 +3,9 @@
 module RobotLab
   class Robot < RubyLLM::Agent
     module Hooking
+      # :reek:LongParameterList -- the documented Robot#run public API: each keyword is a distinct run-scoped override.
+      # :reek:TooManyStatements -- the run lifecycle (memory writer swap, hook wrap, budget, cleanup) is one
+      #   deliberate orchestrator; flog gates its complexity.
       def run(message = nil, network: nil, task: nil, network_memory: nil, network_config: nil,
               memory: nil, mcp: :none, tools: :none, hooks: nil, **kwargs, &block)
         run_memory = resolve_run_memory(memory, network: network, network_memory: network_memory)

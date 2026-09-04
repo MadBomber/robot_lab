@@ -19,6 +19,8 @@ module RobotLab
       #     timeout: 10
       #   )
       #
+      # :reek:InstanceVariableAssumption -- @config and @timeout are assigned in Base#initialize (reek does not trace super).
+      # :reek:RepeatedConditional -- @connected is the connection-lifecycle guard; every IO operation must check it.
       class Stdio < Base
         # Creates a new Stdio transport.
         #
@@ -41,6 +43,7 @@ module RobotLab
         # @return [self]
         # @raise [MCPError] if the server process cannot be started or does not
         #   respond to the MCP initialize handshake within the timeout period
+        # :reek:TooManyStatements -- linear spawn/verify/handshake sequence with per-failure-mode rescues.
         def connect
           return self if @connected
 
@@ -76,6 +79,7 @@ module RobotLab
         # @param message [Hash] JSON-RPC message
         # @return [Hash] the response
         # @raise [MCPError] if not connected, no response, or timeout
+        # :reek:TooManyStatements -- write-then-read loop must stay inside the one Timeout block.
         def send_request(message)
           raise MCPError, "Not connected" unless @connected
 
@@ -148,6 +152,7 @@ module RobotLab
           @stdin.flush
         end
 
+        # :reek:TooManyStatements -- best-effort teardown; each handle is closed and nilled independently.
         def cleanup_process
           @connected = false
           @stdin&.close  rescue nil

@@ -29,6 +29,8 @@ module RobotLab
     # @param capabilities [Capabilities, nil] declared capabilities (from SKILL.md)
     # @param skill_dir [String, nil] skill bundle root (defaults to the script's dir)
     # @return [RobotLab::Tool, nil] nil if the script is not executable
+    # :reek:ControlParameter -- `capabilities || ...` and `skill_dir || ...` are nil-safe defaults, not behavior selection.
+    # :reek:TooManyStatements -- linear derive/validate/build factory; the closure needs every derived local.
     def self.from_path(script_path, capabilities: nil, skill_dir: nil)
       path = Pathname.new(script_path)
 

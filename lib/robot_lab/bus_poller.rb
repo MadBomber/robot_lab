@@ -67,6 +67,7 @@ module RobotLab
     # @param group    [Symbol]  poller group label (informational only)
     # @return [void]
     #
+    # :reek:TooManyStatements -- the queue-or-run decision must stay inside one mutex critical section.
     def enqueue(robot:, delivery:, group: :default)
       should_process = @mutex.synchronize do
         name = robot.name
@@ -124,6 +125,7 @@ module RobotLab
       RobotLab.config.logger.warn("BusPoller: unexpected error: #{e.message}")
     end
 
+    # :reek:TooManyStatements -- pop-under-mutex then process-outside-mutex loop; splitting it would separate the lock from its release.
     def drain_queued_deliveries(robot)
       loop do
         next_delivery = @mutex.synchronize do

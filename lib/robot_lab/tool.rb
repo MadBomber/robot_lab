@@ -27,6 +27,8 @@ module RobotLab
   # enabling tools that modify their robot's state (temperature,
   # system prompt, spawning, etc.).
   #
+  # :reek:InstanceVariableAssumption -- @custom_name/@mcp are set by Tool.create via instance_variable_set,
+  #   @raise_on_error/@ractor_safe are class-level DSL ivars; every read is defined?-guarded.
   class Tool < RubyLLM::Tool
     # @!attribute [rw] robot
     #   @return [Robot, nil] the robot that owns this tool
@@ -93,6 +95,7 @@ module RobotLab
     #
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
+    # :reek:TooManyStatements -- hook-wrapped dispatch with per-error-class handling; the rescue clauses are the method.
     def call(args)
       context = ToolCallHookContext.new(tool: self, tool_args: args, robot: @robot)
 
@@ -145,6 +148,7 @@ module RobotLab
     #     mcp: "brave_search"
     #   ) { |args| mcp_client.call_tool("search", args) }
     #
+    # :reek:TooManyStatements -- anonymous-class factory: DSL application and instance wiring form one linear build.
     def self.create(name:, description: nil, parameters: nil, mcp: nil, robot: nil, &handler)
       desc_text = description
       params_hash = parameters

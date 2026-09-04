@@ -11,6 +11,7 @@ module RobotLab
       private
 
       # Resolve MCP hierarchy: runtime -> robot build -> network -> config
+      # :reek:ControlParameter -- `network_config&.mcp || ...` is the documented fallback cascade, not a mode switch.
       def resolve_mcp_hierarchy(runtime_value, network: nil, network_config: nil)
         parent_value = network_config&.mcp || network_parent_config(network)&.mcp || RobotLab.config.mcp
         build_resolved = ToolConfig.resolve_mcp(@mcp_config, parent_value: parent_value)
@@ -18,6 +19,7 @@ module RobotLab
       end
 
       # Resolve tools hierarchy: runtime -> robot build -> network -> config
+      # :reek:ControlParameter -- `network_config&.tools || ...` is the documented fallback cascade, not a mode switch.
       def resolve_tools_hierarchy(runtime_value, network: nil, network_config: nil)
         parent_value = network_config&.tools || network_parent_config(network)&.tools || RobotLab.config.tools
         build_resolved = ToolConfig.resolve_tools(@tools_config, parent_value: parent_value)
@@ -32,6 +34,7 @@ module RobotLab
 
       # Ensure MCP clients are initialized for the given server configs.
       # On subsequent calls, retries any servers that previously failed to connect.
+      # :reek:TooManyStatements -- first-run init vs retry paths share the needed-server list; linear either way.
       def ensure_mcp_clients(mcp_servers)
         return if mcp_servers.empty?
 
@@ -54,6 +57,7 @@ module RobotLab
         @mcp_initialized = true
       end
 
+      # :reek:TooManyStatements -- connect success/failure bookkeeping plus the rescue path for one server.
       def init_mcp_client(server_config)
         client = MCP::Client.new(server_config)
         client.connect
@@ -78,6 +82,7 @@ module RobotLab
       end
 
       # Retry connecting to servers that previously failed
+      # :reek:TooManyStatements -- per-server retry with success bookkeeping and a best-effort rescue.
       def retry_failed_servers(_mcp_servers, needed_servers)
         return if @failed_mcp_configs.nil? || @failed_mcp_configs.empty?
 
@@ -85,8 +90,9 @@ module RobotLab
         to_retry = @failed_mcp_configs.slice(*needed_servers)
         return if to_retry.empty?
 
+        logger = RobotLab.config.logger
         to_retry.each do |name, server_config|
-          RobotLab.config.logger.info(
+          logger.info(
             "Robot '#{@name}' retrying MCP server: #{name}"
           )
 
@@ -97,17 +103,19 @@ module RobotLab
             @mcp_clients[name] = client
             @failed_mcp_configs.delete(name)
             discover_mcp_tools(client, name)
-            RobotLab.config.logger.info(
+            logger.info(
               "Robot '#{@name}' successfully connected to MCP server '#{name}' on retry"
             )
           end
         rescue StandardError => e
-          RobotLab.config.logger.warn(
+          logger.warn(
             "Robot '#{@name}' retry failed for MCP server '#{name}': #{e.message}"
           )
         end
       end
 
+      # :reek:FeatureEnvy -- adapting each MCP tool definition into a local Tool is exactly this method's purpose.
+      # :reek:NestedIterators -- the inner block is the tool's execution closure, not an iteration.
       def discover_mcp_tools(client, server_name)
         tools = client.list_tools
 

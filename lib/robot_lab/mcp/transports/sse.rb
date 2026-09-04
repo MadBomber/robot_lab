@@ -10,6 +10,8 @@ module RobotLab
       # @example
       #   transport = SSE.new(url: "http://localhost:8080/sse")
       #
+      # :reek:InstanceVariableAssumption -- @config is assigned in Base#initialize (reek does not trace super).
+      # :reek:RepeatedConditional -- @connected is the connection-lifecycle guard; every operation must check it.
       class SSE < Base
         # Creates a new SSE transport.
         #
@@ -26,6 +28,7 @@ module RobotLab
         #
         # @return [self]
         # @raise [MCPError] if async-http gem is not available
+        # :reek:TooManyStatements -- linear require/connect/handshake sequence inside the Async block.
         def connect
           return self if @connected
 

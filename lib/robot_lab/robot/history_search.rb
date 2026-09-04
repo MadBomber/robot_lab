@@ -32,6 +32,8 @@ module RobotLab
       # @param limit [Integer] maximum number of results to return (default 5)
       # @return [Array<HistoryResult>] results sorted by score descending
       # @raise [RobotLab::DependencyError] if the 'classifier' gem is not installed
+      # :reek:TooManyStatements -- linear vectorize/score/collect scan over the chat history.
+      # :reek:FeatureEnvy -- scoring each message's extracted text against the query is the search itself.
       def search_history(query, limit: 5)
         TextAnalysis.require_classifier!
 

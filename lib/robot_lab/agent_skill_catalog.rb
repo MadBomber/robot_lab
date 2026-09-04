@@ -52,6 +52,7 @@ module RobotLab
       @mutex.synchronize { load_skills! unless @loaded }
     end
 
+    # :reek:TooManyStatements -- linear directory scan; each guard clause skips a non-skill entry.
     def load_skills!
       @loaded = true
       return unless @skills_root.directory?

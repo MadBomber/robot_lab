@@ -132,14 +132,15 @@ module RobotLab
     end
 
     def with_hook_scope(registries, per_run_hooks)
-      previous = Thread.current[:robot_lab_hook_scope]
-      Thread.current[:robot_lab_hook_scope] = {
+      thread = Thread.current
+      previous = thread[:robot_lab_hook_scope]
+      thread[:robot_lab_hook_scope] = {
         registries: registries,
         per_run_hooks: per_run_hooks
       }
       yield
     ensure
-      Thread.current[:robot_lab_hook_scope] = previous
+      thread[:robot_lab_hook_scope] = previous
     end
 
     def current_hook_scope
@@ -233,6 +234,7 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
+    # :reek:LongParameterList :reek:BooleanParameter -- documented factory API mirroring Robot#initialize; enable_cache is a feature toggle.
     def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil,
               config: nil, **)
       Robot.new(
@@ -295,6 +297,7 @@ module RobotLab
     #
     # @example Memory with caching disabled
     #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
+    # :reek:BooleanParameter -- enable_cache is a documented feature toggle forwarded to Memory.new.
     def create_memory(data: {}, enable_cache: true, **)
       Memory.new(data: data, enable_cache: enable_cache, **)
     end

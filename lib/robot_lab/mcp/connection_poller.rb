@@ -104,15 +104,20 @@ module RobotLab
       # @param timeout [Numeric] seconds before raising MCPError
       # @return [Hash] parsed response
       # @raise [MCPError] on timeout or connection error
+      # :reek:TooManyStatements -- register/write/wait/cleanup must stay in one method so ensure releases the queue.
+      # :reek:DuplicateMethodCall -- the repeated @mutex.synchronize/@clients[io] pairs are deliberately separate short critical
+      #   sections; holding the lock across the blocking write/wait would deadlock the poll loop.
       def send_request(client, message, timeout:)
-        io      = client.transport.stdout
-        queue   = Thread::Queue.new
+        transport = client.transport
+        io        = transport.stdout
+        stdin     = transport.stdin
+        queue     = Thread::Queue.new
 
         @mutex.synchronize { @clients[io][:queue] = queue }
 
         begin
-          client.transport.stdin.puts(message.to_json)
-          client.transport.stdin.flush
+          stdin.puts(message.to_json)
+          stdin.flush
         rescue Errno::EPIPE, IOError => e
           @mutex.synchronize { @clients[io][:queue] = nil }
           raise MCPError.new("MCP connection lost: #{e.message}", retryable: true)
@@ -160,6 +165,7 @@ module RobotLab
         end
       end
 
+      # :reek:TooManyStatements -- read/parse/filter/route steps for each readable IO; each guard skips a non-response line.
       def dispatch(readable_ios)
         readable_ios.each do |io|
           line = io.gets rescue nil
@@ -177,10 +183,12 @@ module RobotLab
       end
 
       def stdio_client?(client)
-        client.respond_to?(:transport) &&
-          client.transport.is_a?(Transports::Stdio) &&
-          client.transport.respond_to?(:stdout) &&
-          !client.transport.stdout.nil?
+        return false unless client.respond_to?(:transport)
+
+        transport = client.transport
+        transport.is_a?(Transports::Stdio) &&
+          transport.respond_to?(:stdout) &&
+          !transport.stdout.nil?
       end
     end
   end

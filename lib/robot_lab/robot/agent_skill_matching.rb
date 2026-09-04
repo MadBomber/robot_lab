@@ -40,6 +40,8 @@ module RobotLab
       # @param message [String]
       # @param threshold [Float] cosine similarity cutoff (default SIMILARITY_THRESHOLD)
       # @return [Array<AgentSkill>]
+      # :reek:TooManyStatements -- linear search/filter with a best-effort rescue fallback.
+      # :reek:NestedIterators -- 2-deep filter_map/find joining search hits back to pending skills.
       def match_agent_skills(message, threshold: SIMILARITY_THRESHOLD)
         return [] if @pending_agent_skills.nil? || @pending_agent_skills.empty?
 

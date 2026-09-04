@@ -7,6 +7,7 @@ module RobotLab
     # Defines the structure and types of events emitted during
     # robot and network execution.
     #
+    # :reek:TooManyConstants -- deliberately a flat catalog of every streaming event name.
     module Events
       # Run lifecycle events
       RUN_STARTED = "run.started"

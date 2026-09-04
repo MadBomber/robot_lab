@@ -60,6 +60,7 @@ module RobotLab
       # @param threshold [Float]           minimum cosine score (default 0.05)
       # @return [Array<Hash, MCP::Server>] matching servers, or +from+ as
       #   fallback when no match is found
+      # :reek:TooManyStatements -- linear guard/score/filter pipeline; each early return is a documented fallback.
       def self.select(query, from:, threshold: DEFAULT_THRESHOLD)
         return from if from.empty?
         return from if query.to_s.strip.empty?

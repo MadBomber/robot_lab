@@ -91,6 +91,7 @@ module RobotLab
       # @param auto_reply [Boolean] send the responder's result back to the sender
       # @yield [message] the inbound task; return the reply content (nil => no reply)
       # @return [self]
+      # :reek:BooleanParameter :reek:ControlParameter -- auto_reply is a documented public API toggle for reply behavior.
       def respond_to_tasks(auto_reply: true, &responder)
         on_message do |message|
           next if message.reply?
@@ -107,6 +108,7 @@ module RobotLab
       #
       # @param auto_reply [Boolean]
       # @return [self]
+      # :reek:BooleanParameter -- auto_reply is a documented public API toggle, forwarded to respond_to_tasks.
       def serve(auto_reply: true)
         respond_to_tasks(auto_reply: auto_reply) { |message| run(bus_task_content(message)).reply }
       end
@@ -161,6 +163,7 @@ module RobotLab
       # @param bus [TypedBus::MessageBus, nil] bus to join (creates one if nil)
       # @return [self]
       #
+      # :reek:ControlParameter -- `bus || @bus || new` implements the documented join-or-create semantics.
       def with_bus(bus = nil)
         return self if bus && @bus == bus
 

@@ -4,9 +4,11 @@ module RobotLab
   class HookContext
     attr_reader :event, :metadata
 
+    # :reek:ControlParameter -- `metadata || ExtensionState.new` is a nil-safe default, not behavior selection.
     def initialize(event:, metadata: nil)
       @event = event.to_sym
       @metadata = metadata || ExtensionState.new
+      @namespace = nil # no hook namespace active until with_namespace
     end
 
     def ext(name)
@@ -46,6 +48,7 @@ module RobotLab
     attr_reader :robot, :network, :task, :memory, :config
     attr_accessor :request, :response, :error
 
+    # :reek:LongParameterList -- one keyword per run-context field; hooks read them all.
     def initialize(robot:, request:, network: nil, task: nil, memory: nil, config: nil, response: nil, error: nil, **)
       super(event: :run, **)
       @robot = robot
@@ -104,6 +107,7 @@ module RobotLab
     attr_reader :network, :task, :task_name, :robot, :memory, :config
     attr_accessor :result, :error
 
+    # :reek:ControlParameter -- `robot || task.robot` is a fallback default, not behavior selection.
     def initialize(task:, network: nil, robot: nil, memory: nil, config: nil, result: nil, error: nil, **)
       super(event: :task, **)
       @network = network
