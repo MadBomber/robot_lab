@@ -3301,7 +3301,7 @@
 <li>Reserved keys for structured data (<code>:data</code>, <code>:results</code>, <code>:messages</code>, <code>:session_id</code>, <code>:cache</code>)</li>
 <li>Reactive subscriptions and blocking reads for inter-robot communication</li>
 <li>Optional Redis backend for persistence</li>
-<li>Semantic caching via <code>RubyLLM::SemanticCache</code></li>
+<li>Semantic caching via <code>RubyLLM::SemanticCache</code> (optional ruby_llm-semantic_cache gem)</li>
 </ul>
 <h2 id="standalone-robot-memory">Standalone Robot Memory<a class="headerlink" href="#standalone-robot-memory" title="Permanent link">&para;</a></h2>
 <p>Every robot has its own inherent memory that persists across runs:</p>
@@ -3378,7 +3378,7 @@
 <tr>
 <td><code>:cache</code></td>
 <td><code>RubyLLM::SemanticCache</code> module, or <code>nil</code></td>
-<td>Semantic cache (read-only after init). Set at construction time; <code>nil</code> when built with <code>enable_cache: false</code></td>
+<td>Semantic cache (read-only after init). Set at construction time; <code>nil</code> when built with <code>enable_cache: false</code> or when the optional gem is absent</td>
 </tr>
 </tbody>
 </table>
