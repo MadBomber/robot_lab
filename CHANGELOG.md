@@ -6,6 +6,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.3.0] - 2026-09-18
+
+The ruby_llm 2.0 release. Core moves from ruby_llm 1.x to the official 2.0.0
+release; every `robot_lab-*` extension gem releases in lockstep at 0.3.0 and
+now requires `robot_lab ~> 0.3.0`.
+
+### Changed (BREAKING)
+- **ruby_llm 1.x → 2.0.** The gemspec now requires `ruby_llm "~> 2.0"`
+  (official release). Robot tools written with the 1.x DSL must migrate:
+  `param` → `parameter`, `desc:` → `description:`; `halt` is gone (the caller
+  controls the loop). Token counts moved to `response.tokens.input/.output`,
+  and `finish_reason` (Symbol) replaces `stop_reason`. The `claude-sonnet-4`
+  registry alias no longer resolves; the default models are now
+  `claude-sonnet-4-6` (production) and `claude-haiku-4-5` (test).
+- **Dropped hard dependencies** on `ruby_llm-mcp`, `ruby_llm-schema`, and
+  `ruby_llm-semantic_cache`. Semantic caching is now optional: `Memory#cache`
+  returns `nil` when `ruby_llm-semantic_cache` is not installed and Memory
+  runs with caching disabled. (Its released versions still pin ruby_llm 1.x,
+  so it cannot co-resolve with 2.0 yet.)
+
+### Added
+- `ruby_llm-providers-apfel` and `ruby_llm-providers-lms` (`~> 0.2.1`) as
+  runtime dependencies, consumed as released gems — the local `path:`
+  overrides for sibling checkouts are gone from the Gemfiles.
+- `Robot::ResultBuilding` — extracted module that adapts a ruby_llm response
+  into a `RobotResult` (token accounting, stop-reason normalization, message
+  coercion).
+- `examples/run_all.rb` — runs every executable `NN_*.rb` demo serially with
+  a banner between each; works from any cwd, and Ctrl-C terminates only the
+  demo currently running (the runner notes it and moves on).
+- READMEs for the subdirectory demos: `15_memory_network_and_bus`,
+  `26_document_store` (corpus), and `27_incident_response`.
+- Fasterer quality gate now actually runs: `fasterer` added to the
+  development group, with a `.fasterer.yml` documenting the disabled
+  speed-over-readability checks.
+
+### Changed
+- Robot, Tool, RunConfig, and the hook system adapted to the ruby_llm 2.0
+  API; docs and examples synced to match.
+- Examples run against a local LM Studio server through the `:lms` provider;
+  `examples/common.rb` anchors `BUNDLE_GEMFILE` to the gem root so demos run
+  from any directory, and `examples/README.md` notes that demo speed and
+  answer quality depend on the provider/model in use.
+- `.envrc` no longer exports `BUNDLE_GEMFILE`; it is inherited from the
+  project root (`asgard dev` / `asgard prod`).
+
+### Fixed
+- amazing_print 3.0 crash at demo startup (`undefined method 'try' for
+  module ActiveSupport`): robot_lab's dependencies load parts of
+  ActiveSupport, which tricked amazing_print into loading its Rails
+  extension; `examples/common.rb` now preloads
+  `active_support/core_ext/object/try` and `active_support/log_subscriber`.
+
 ## [0.2.8] - 2026-09-09
 
 ### Added
