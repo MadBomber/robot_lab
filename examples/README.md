@@ -2,6 +2,15 @@
 
 Working demonstrations of RobotLab features, from single-robot basics to multi-robot orchestration and message bus communication.
 
+> **A note on performance:** how fast (and how well) these demos run depends
+> almost entirely on which provider and model you point them at. A large model
+> served locally on consumer hardware can take a minute or more per LLM call,
+> while a small local model or a hosted API answers in seconds — and smaller
+> models may also give noticeably weaker answers on the multi-robot demos.
+> Wall-clock times you see will differ from anyone else's; tune the
+> provider/model in `common.rb` (or via `LLM_PROFILE`) to trade speed against
+> quality.
+
 ## Prerequisites
 
 - Ruby >= 3.2
@@ -83,7 +92,15 @@ bundle exec rake examples:all
 
 # Run directly
 bundle exec ruby examples/01_simple_robot.rb
+
+# Run every demo serially with a banner between each (works from any cwd)
+examples/run_all.rb
 ```
+
+`run_all.rb` executes every executable `NN_*.rb` demo in order, announcing
+each one with a banner so the outputs stay separated. Ctrl-C kills only the
+demo that is currently running — the runner notes the interruption and moves
+on to the next demo.
 
 ## Tools require `tools: :inherit` at run time
 

@@ -4,6 +4,15 @@
 # bundle exec. Without bundler/setup, bare requires let RubyGems activate the
 # newest installed json (3.x), which conflicts with ruby_llm's json (< 3) pin;
 # the lockfile pins json 2.x, so honor it in both invocation styles.
+#
+# The workspace .envrc exports BUNDLE_GEMFILE as a RELATIVE path ("Gemfile" or
+# "Gemfile.local"), which bundler resolves against the cwd — so a demo run
+# from examples/ or a subdirectory demo run from its own directory would look
+# for a Gemfile there. Anchor the basename to the gem root before bundler
+# sees it, preserving the prod/dev (Gemfile vs Gemfile.local) choice.
+ENV["BUNDLE_GEMFILE"] = File.expand_path(
+  "../#{File.basename(ENV.fetch("BUNDLE_GEMFILE", "Gemfile"))}", __dir__
+)
 require "bundler/setup"
 
 require "logger"

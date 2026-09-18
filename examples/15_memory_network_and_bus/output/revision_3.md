@@ -1,4 +1,4 @@
-# Final Article — NOT APPROVED (max revisions reached)
+# Revision 3
 
 **Choosing an Operating System for a Home AI Research Lab**
 
