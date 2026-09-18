@@ -14,6 +14,14 @@ ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 require_relative "../lib/robot_lab"
 require "ruby_llm/providers/lms"
 
+# robot_lab's dependencies load parts of ActiveSupport, so amazing_print 3.0
+# sees the constant and loads its ActiveSupport extension, which at require
+# time calls ActiveSupport.try and reads ActiveSupport::LogSubscriber —
+# neither of which those parts provide. Load both up front so any demo can
+# `require "amazing_print"` safely.
+require "active_support/core_ext/object/try"
+require "active_support/log_subscriber"
+
 # ── Local LLM Configuration ───────────────────────────────────────────────────
 #
 # Every example runs against a LOCAL model served by LM Studio through the
