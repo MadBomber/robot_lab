@@ -30,7 +30,7 @@ module RobotLab
 
     def test_tool_execution_returns_script_output
       tool = ScriptTool.from_path(FIXTURE_SCRIPT)
-      output = tool.call({})
+      output = tool.call
       assert_includes output, 'Hello from AgentSkills script!'
     end
 

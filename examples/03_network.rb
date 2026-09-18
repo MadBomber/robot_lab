@@ -40,7 +40,7 @@ end
 
 # Shared RunConfig — operational defaults every robot in this network inherits.
 #
-# RunConfig has no `provider` field (see RunConfig::FIELDS), and an Ollama
+# RunConfig has no `provider` field (see RunConfig::FIELDS), and an LM Studio
 # model is absent from RubyLLM's registry, so provider and model still travel
 # together on each robot via **llm_opts. The RunConfig carries the settings
 # that genuinely are shared.

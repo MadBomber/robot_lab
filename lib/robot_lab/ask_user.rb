@@ -33,9 +33,9 @@ module RobotLab
   #
   class AskUser < Tool
     description "Ask the user a question and wait for their typed response"
-    param :question, type: "string",  desc: "The question to ask the user"
-    param :choices,  type: "array",   desc: "Optional list of choices to present", required: false
-    param :default,  type: "string",  desc: "Default value if user presses Enter",  required: false
+    parameter :question, type: "string",  description: "The question to ask the user"
+    parameter :choices,  type: "array",   description: "Optional list of choices to present", required: false
+    parameter :default,  type: "string",  description: "Default value if user presses Enter",  required: false
 
     # :reek:FeatureEnvy -- rendering and resolving the caller-supplied choices list is this tool's whole job.
     # :reek:TooManyStatements -- linear prompt/read/resolve terminal interaction.

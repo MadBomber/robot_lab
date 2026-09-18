@@ -39,7 +39,7 @@ require 'typed_bus'
 #   # See lib/robot_lab/config/defaults.yml for all options
 #
 #   # Access configuration values:
-#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
 #   RobotLab.config.ruby_llm.request_timeout  #=> 120
 #
 module RobotLab
@@ -159,7 +159,7 @@ module RobotLab
     # @return [Config] the config instance
     #
     # @example
-    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
     #   RobotLab.config.ruby_llm.request_timeout  #=> 120
     #   RobotLab.config.development?              #=> true
     def config
@@ -173,7 +173,7 @@ module RobotLab
     #
     # @example
     #   RobotLab.configure do |c|
-    #     c.default_model = "claude-sonnet-4"
+    #     c.default_model = "claude-sonnet-4-6"
     #   end
     def configure
       yield config

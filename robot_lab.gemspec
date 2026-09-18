@@ -47,11 +47,10 @@ Gem::Specification.new do |spec|
   # Core dependencies
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
-  spec.add_dependency "ruby_llm", "~> 1.12"
-  spec.add_dependency "ruby_llm-mcp", "~> 1.0"
+  spec.add_dependency "ruby_llm", "~> 2.0"
+  spec.add_dependency "ruby_llm-providers-apfel", "~> 0.2.1"
+  spec.add_dependency "ruby_llm-providers-lms", "~> 0.2.1"
   spec.add_dependency "prompt_manager", "~> 1.0"
-  spec.add_dependency "ruby_llm-schema", "~> 0.3"
-  spec.add_dependency "ruby_llm-semantic_cache", "~> 0.1"
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus", "~> 0.0.1"
   spec.add_dependency "simple_flow", "~> 0.4"
@@ -65,4 +64,9 @@ Gem::Specification.new do |spec|
   # Add to your application's Gemfile to enable compress_history and
   # RobotLab::Convergence:
   #   gem "classifier", "~> 2.3"
+
+  # Optional semantic caching for Memory#cache:
+  #   gem "ruby_llm-semantic_cache"
+  # Its released versions pin ruby_llm 1.x, so it cannot co-resolve with
+  # ruby_llm 2.0 yet; Memory runs with caching disabled when it is absent.
 end

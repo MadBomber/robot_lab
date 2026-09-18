@@ -13,7 +13,7 @@ memory.data        # StateProxy - custom key-value data with method-style access
 memory.results     # Array<RobotResult> - execution history
 memory.messages    # Array<Message> - conversation history
 memory.session_id  # String - optional persistence identifier
-memory.cache       # RubyLLM::SemanticCache - semantic caching module
+memory.cache       # RubyLLM::SemanticCache when the optional gem is installed, else nil
 ```
 
 ## Standalone Robot Memory
@@ -108,7 +108,7 @@ Memory has five reserved keys with special behavior and dedicated accessors:
 | `:results` | `Array<RobotResult>` | Accumulated robot execution results |
 | `:messages` | `Array<Message>` | Conversation history |
 | `:session_id` | `String` | Conversation session identifier |
-| `:cache` | `RubyLLM::SemanticCache` | Semantic cache module (read-only after init) |
+| `:cache` | `RubyLLM::SemanticCache` or `nil` | Semantic cache module when the optional ruby_llm-semantic_cache gem is installed (read-only after init) |
 
 Reserved keys are accessed through dedicated methods and are excluded from `memory.keys`:
 
@@ -118,7 +118,7 @@ memory.data.category  #=> "billing"   (method-style via StateProxy)
 
 memory.results       #=> []
 memory.session_id    #=> nil
-memory.cache         #=> RubyLLM::SemanticCache (the module itself), or nil when enable_cache: false
+memory.cache         #=> RubyLLM::SemanticCache (the module itself), or nil when enable_cache: false or the optional gem is absent
 ```
 
 ## StateProxy
@@ -319,7 +319,7 @@ memory = Memory.from_hash(hash)
 
 ## Semantic Cache
 
-Memory includes a semantic cache via `RubyLLM::SemanticCache` that reduces costs and latency by returning cached responses for semantically equivalent queries:
+Memory includes a semantic cache via `RubyLLM::SemanticCache` (optional ruby_llm-semantic_cache gem; not yet ruby_llm 2.0-compatible, so `memory.cache` is `nil` without it) that reduces costs and latency by returning cached responses for semantically equivalent queries:
 
 ```ruby
 # Using the cache with fetch

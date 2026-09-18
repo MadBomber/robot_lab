@@ -156,7 +156,7 @@ puts "cheaper robot does the summarizing for the medium-relevance band."
 show_code <<~RUBY
   summarizer_bot = RobotLab.build(
     name:          "summarizer",
-    provider:      "ollama",
+    provider:      "lms",
     model:         "qwen2.5:7b",
     system_prompt: "Summarize the following text in one sentence."
   )

@@ -20,9 +20,9 @@
 # Environment is determined by ROBOT_LAB_ENV, RAILS_ENV, or RACK_ENV.
 #
 # Environment variable examples:
-#   ROBOT_LAB_RUBY_LLM__MODEL=qwen3.6:latest
+#   ROBOT_LAB_RUBY_LLM__MODEL=qwen/qwen3.8-27b
 #   ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
-#   OLLAMA_API_BASE=http://localhost:11434/v1
+#   LMS_API_BASE=http://localhost:1234/v1
 #
 # Usage:
 #   ruby examples/08_llm_config.rb
@@ -63,7 +63,7 @@ puts "  max_retries:        #{config.ruby_llm.max_retries}"
 puts "  log_level:          #{config.ruby_llm.log_level}"
 
 # Show where the LLM traffic actually goes
-puts "  ollama_api_base:    #{OLLAMA_API_BASE}"
+puts "  lms_api_base:       #{LMS_API_BASE}"
 puts "  (local inference — no API key in play)"
 puts
 
@@ -92,7 +92,7 @@ shared = RobotLab::RunConfig.new(model: LLM[:default].model, temperature: 0.5)
 puts "  shared = RunConfig.new(model: #{LLM[:default].model.inspect}, temperature: 0.5)"
 puts "  shared.to_h => #{shared.to_h.inspect}"
 puts
-puts "  Note: RunConfig carries no `provider` field, so an Ollama model still"
+puts "  Note: RunConfig carries no `provider` field, so an LM Studio model still"
 puts "  needs provider: passed to each robot alongside the shared config."
 puts
 
@@ -153,7 +153,7 @@ puts <<~FOOTER
   Example environment variable overrides:
     ROBOT_LAB_RUBY_LLM__MODEL=#{LLM[:default].model}
     ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT=180
-    OLLAMA_API_BASE=http://localhost:11434/v1
+    LMS_API_BASE=http://localhost:1234/v1
 
   Try running with different environments:
     ROBOT_LAB_ENV=test ruby examples/08_llm_config.rb

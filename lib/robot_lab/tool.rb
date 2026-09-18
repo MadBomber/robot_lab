@@ -9,7 +9,7 @@ module RobotLab
   #
   #   class GetWeather < RobotLab::Tool
   #     description "Get weather for a location"
-  #     param :location, type: "string", desc: "City name"
+  #     parameter :location, type: "string", description: "City name"
   #
   #     def execute(location:)
   #       WeatherService.fetch(location)
@@ -93,10 +93,11 @@ module RobotLab
     #
     # For non-Ractor-safe tools: runs execute directly in the calling thread.
     #
+    # @param tool_call [RubyLLM::ToolCall, nil] the originating tool call (supplied by the chat)
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
     # :reek:TooManyStatements -- hook-wrapped dispatch with per-error-class handling; the rescue clauses are the method.
-    def call(args)
+    def call(tool_call: nil, **args)
       context = ToolCallHookContext.new(tool: self, tool_args: args, robot: @robot)
 
       RobotLab::Hooks.run(:tool_call, context, **tool_hook_options) do
@@ -157,15 +158,9 @@ module RobotLab
       tool_class = Class.new(self) do
         description(desc_text) if desc_text
 
-        if params_hash.is_a?(Hash) && params_hash[:properties]
-          required_list = Array(params_hash[:required]).map(&:to_s)
-          params_hash[:properties].each do |pname, pdef|
-            param pname.to_sym,
-                  type: pdef[:type] || "string",
-                  desc: pdef[:description],
-                  required: required_list.include?(pname.to_s)
-          end
-        end
+        # ruby_llm 2.0's parameters() accepts a raw JSON Schema hash, so the
+        # full schema (including nested items/objects) survives verbatim.
+        parameters(params_hash) if params_hash.is_a?(Hash) && params_hash[:properties]
 
         define_method(:execute) do |**args|
           block.call(args)
@@ -183,7 +178,7 @@ module RobotLab
     #
     # @return [Hash] JSON Schema representation
     def to_json_schema
-      schema = params_schema || { "type" => "object", "properties" => {}, "required" => [] }
+      schema = parameters_schema || { "type" => "object", "properties" => {}, "required" => [] }
       {
         name: name,
         description: description,

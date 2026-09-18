@@ -21,7 +21,7 @@
 - <strong>Human-in-the-Loop</strong> - AskUser tool for interactive prompting<br>
 - <strong>Content Streaming</strong> - Stored callbacks, per-call blocks, or both<br>
 - <strong>MCP Integration</strong> - Connect to external tool servers with timeouts and retry<br>
-- <strong>Local LLM Providers</strong> - Ollama and GPUStack via provider passthrough<br>
+- <strong>Local LLM Providers</strong> - LM Studio (via ruby_llm-providers-lms), Ollama, and GPUStack via provider passthrough<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
@@ -82,17 +82,15 @@ puts result.last_text_content
 
 ### Local LLM Providers
 
-For local LLM providers, use the `provider:` parameter. RubyLLM's provider list is the authority on valid values — `:ollama` and `:gpustack` are the local ones (alongside `:anthropic`, `:azure`, `:bedrock`, `:deepseek`, `:gemini`, `:mistral`, `:openai`, `:openrouter`, `:perplexity`, `:vertexai`, and `:xai`). The provider's API base must be configured first, or building the robot raises `RubyLLM::ConfigurationError`:
-
-```bash
-export ROBOT_LAB_RUBY_LLM__OLLAMA_API_BASE=http://localhost:11434/v1
-```
+For local LLM providers, use the `provider:` parameter. RubyLLM's provider list is the authority on valid values — `:ollama` and `:gpustack` are built in, and provider gems add more (alongside `:anthropic`, `:azure`, `:bedrock`, `:deepseek`, `:gemini`, `:mistral`, `:openai`, `:openrouter`, `:perplexity`, `:vertexai`, and `:xai`). The examples in this repo use LM Studio through the [ruby_llm-providers-lms](https://github.com/madbomber/ruby_llm-providers-lms) gem, which registers the `:lms` provider (defaults to `http://localhost:1234/v1`, no API key needed):
 
 ```ruby
+require "ruby_llm/providers/lms"
+
 robot = RobotLab.build(
   name: "local_bot",
-  model: "llama3.2",
-  provider: :ollama,
+  model: "qwen/qwen3.8-27b",   # complex work; use "openai/gpt-oss-20b" for simple chat
+  provider: :lms,
   system_prompt: "You are a helpful assistant."
 )
 ```
@@ -113,12 +111,12 @@ RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layer
 # Set API keys via environment variables (double underscore for nesting)
 export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
-export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
+export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4-6
 ```
 
 ```ruby
 # Access configuration values
-RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
 RobotLab.config.ruby_llm.request_timeout  #=> 120
 ```
 
@@ -126,7 +124,7 @@ Or create a project config file at `./config/robot_lab.yml`:
 
 ```yaml
 ruby_llm:
-  model: claude-sonnet-4
+  model: claude-sonnet-4-6
   anthropic_api_key: sk-ant-...
   request_timeout: 180
 ```
@@ -202,7 +200,7 @@ mcp:
       type: stdio
       command: npx
       args: ["-y", "@modelcontextprotocol/server-github"]
-model: claude-sonnet-4
+model: claude-sonnet-4-6
 ---
 You are a GitHub assistant. Use available tools to help with repository tasks.
 ```
@@ -265,7 +263,7 @@ robot = RobotLab.build(
 ```ruby
 # Create a shared config
 shared = RobotLab::RunConfig.new(
-  model: "claude-sonnet-4",
+  model: "claude-sonnet-4-6",
   temperature: 0.7,
   max_tokens: 2000
 )
@@ -302,16 +300,16 @@ RunConfig supports keyword construction, block DSL, and merge semantics:
 ```ruby
 # Block DSL
 config = RobotLab::RunConfig.new do |c|
-  c.model "claude-sonnet-4"
+  c.model "claude-sonnet-4-6"
   c.temperature 0.7
 end
 
 # Merge (more-specific wins)
-network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4-6", temperature: 0.5)
 robot_config   = RobotLab::RunConfig.new(temperature: 0.9)
 effective      = network_config.merge(robot_config)
 effective.temperature  #=> 0.9
-effective.model        #=> "claude-sonnet-4"
+effective.model        #=> "claude-sonnet-4-6"
 ```
 
 ### Chaining Configuration
@@ -323,7 +321,7 @@ robot = RobotLab.build(name: "writer", system_prompt: "You are a creative writer
 
 result = robot
   .with_temperature(0.9)
-  .with_model("claude-sonnet-4")
+  .with_model("claude-sonnet-4-6")
   .run("Write a haiku about Ruby programming")
 ```
 

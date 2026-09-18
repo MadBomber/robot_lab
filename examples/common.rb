@@ -1,33 +1,47 @@
 # frozen_string_literal: true
 
+# The examples are runnable directly (./01_simple_robot.rb) as well as via
+# bundle exec. Without bundler/setup, bare requires let RubyGems activate the
+# newest installed json (3.x), which conflicts with ruby_llm's json (< 3) pin;
+# the lockfile pins json 2.x, so honor it in both invocation styles.
+require "bundler/setup"
+
 require "logger"
 
 # Fallback for when direnv has not activated examples/.envrc
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
+require "ruby_llm/providers/lms"
 
 # ── Local LLM Configuration ───────────────────────────────────────────────────
 #
-# Every example runs against a LOCAL model served by Ollama. No API keys, no
-# network egress, no per-token cost. Pull the model once before running:
+# Every example runs against a LOCAL model served by LM Studio through the
+# ruby_llm-providers-lms gem (provider :lms). No API keys, no network egress,
+# no per-token cost. Start the server and download the models once:
 #
-#   ollama pull qwen3.6
+#   lms server start
+#   lms get qwen/qwen3.8-27b
+#   lms get openai/gpt-oss-20b
 #
-# Ollama models are not in RubyLLM's model registry, so a `provider:` must be
-# supplied alongside `model:` — that is what makes RubyLLM skip the registry
-# lookup (see Robot#initialize, which sets assume_model_exists when provider is
-# given). Use the `llm_opts` helper below so every robot gets both.
+# Model choice: qwen/qwen3.8-27b for complex activities (tools, structured
+# output, multi-robot reasoning — it honors tool_choice and schemas), and
+# openai/gpt-oss-20b for simpler items (plain chat, streaming).
+#
+# LM Studio models are not in RubyLLM's model registry, so a `provider:` must
+# be supplied alongside `model:` — that is what makes RubyLLM skip the
+# registry lookup (see Robot#initialize, which sets assume_model_exists when
+# provider is given). Use the `llm_opts` helper below so every robot gets both.
 
 LlmConfig = Data.define(:provider, :model)
 
 LLM = {
-  default: LlmConfig.new(provider: "ollama", model: "qwen3.6:latest"),
-  small:   LlmConfig.new(provider: "ollama", model: "qwen2.5:7b"),
-  large:   LlmConfig.new(provider: "ollama", model: "llama3.3:latest")
+  default: LlmConfig.new(provider: "lms", model: "qwen/qwen3.8-27b"),
+  small:   LlmConfig.new(provider: "lms", model: "openai/gpt-oss-20b"),
+  large:   LlmConfig.new(provider: "lms", model: "qwen/qwen3.8-27b")
 }.freeze
 
-OLLAMA_API_BASE = ENV.fetch("OLLAMA_API_BASE", "http://localhost:11434/v1")
+LMS_API_BASE = ENV.fetch("LMS_API_BASE", "http://localhost:1234/v1")
 
 # ORDER MATTERS. The first touch of RobotLab.config runs Config#after_load,
 # which calls RubyLLM.configure itself and would clobber anything set before
@@ -37,9 +51,9 @@ RobotLab.configure do |c|
 end
 
 RubyLLM.configure do |c|
-  c.logger          = Logger.new(File::NULL)
-  c.default_model   = LLM[:default].model
-  c.ollama_api_base = OLLAMA_API_BASE
+  c.logger        = Logger.new(File::NULL)
+  c.default_model = LLM[:default].model
+  c.lms_api_base  = LMS_API_BASE
 
   # A large local model on consumer hardware is far slower than a hosted API,
   # and robot_lab's bundled 120s default is comfortably exceeded by a long
@@ -67,7 +81,7 @@ end
 
 # Provider + model keyword pair for RobotLab.build / Robot.new.
 #
-# Both are required for a local Ollama model. Splat it into any robot
+# Both are required for a local LM Studio model. Splat it into any robot
 # constructor:
 #
 #   RobotLab.build(name: "helper", **llm_opts)          # honors LLM_PROFILE
@@ -80,19 +94,20 @@ def llm_opts(key = nil)
   { provider: cfg.provider, model: cfg.model }
 end
 
-# Fail fast with an actionable message when Ollama isn't reachable, instead of
-# letting every example die inside an HTTP adapter.
-def require_ollama!
+# Fail fast with an actionable message when LM Studio isn't reachable,
+# instead of letting every example die inside an HTTP adapter.
+def require_lms!
   require "net/http"
-  uri = URI(OLLAMA_API_BASE.sub(%r{/v1/?$}, "") + "/api/tags")
+  uri = URI("#{LMS_API_BASE.sub(%r{/v1/?\z}, '')}/v1/models")
   Net::HTTP.start(uri.host, uri.port, open_timeout: 2, read_timeout: 2) { |h| h.get(uri.request_uri) }
 rescue StandardError => e
   abort <<~ERROR
-    Cannot reach Ollama at #{OLLAMA_API_BASE} (#{e.class}).
+    Cannot reach LM Studio at #{LMS_API_BASE} (#{e.class}).
 
-    Start it and pull the model used by the examples:
-      ollama serve
-      ollama pull #{LLM[:default].model.sub(/:latest\z/, "")}
+    Start the server and download the models used by the examples:
+      lms server start
+      lms get #{LLM[:default].model}
+      lms get #{LLM[:small].model}
   ERROR
 end
 

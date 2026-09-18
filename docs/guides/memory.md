@@ -10,7 +10,7 @@ Memory is a reactive key-value store that provides:
 - Reserved keys for structured data (`:data`, `:results`, `:messages`, `:session_id`, `:cache`)
 - Reactive subscriptions and blocking reads for inter-robot communication
 - Optional Redis backend for persistence
-- Semantic caching via `RubyLLM::SemanticCache`
+- Semantic caching via `RubyLLM::SemanticCache` (optional ruby_llm-semantic_cache gem)
 
 ## Standalone Robot Memory
 
@@ -86,7 +86,7 @@ Memory has reserved keys with special behavior:
 | `:results` | Array | Accumulated robot results |
 | `:messages` | Array | Conversation history |
 | `:session_id` | String | Session identifier for history persistence |
-| `:cache` | `RubyLLM::SemanticCache` module, or `nil` | Semantic cache (read-only after init). Set at construction time; `nil` when built with `enable_cache: false` |
+| `:cache` | `RubyLLM::SemanticCache` module, or `nil` | Semantic cache (read-only after init). Set at construction time; `nil` when built with `enable_cache: false` or when the optional gem is absent |
 
 ### The Data Hash
 

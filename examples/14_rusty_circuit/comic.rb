@@ -11,8 +11,8 @@ class ReinventStyle < RobotLab::Tool
               "Be bold — try something totally different. " \
               "The new style takes effect on your next bit."
 
-  param :new_persona, type: "string",
-        desc: "Your new comedy persona, style, and approach. " \
+  parameter :new_persona, type: "string",
+        description: "Your new comedy persona, style, and approach. " \
               "Be specific: what kind of humor, what voice, what attitude."
 
   def execute(new_persona:)
@@ -29,10 +29,10 @@ class AdjustEnergy < RobotLab::Tool
               "Higher (0.8-1.0) = wilder, riskier, more unpredictable. " \
               "Lower (0.2-0.4) = tighter, more controlled, precise."
 
-  param :level, type: "number",
-        desc: "Energy level from 0.1 (very controlled) to 1.0 (unhinged)"
-  param :reason, type: "string",
-        desc: "Why you're adjusting", required: false
+  parameter :level, type: "number",
+        description: "Energy level from 0.1 (very controlled) to 1.0 (unhinged)"
+  parameter :reason, type: "string",
+        description: "Why you're adjusting", required: false
 
   def execute(level:, reason: "tactical adjustment")
     clamped = [[level.to_f, 0.1].max, 1.0].min
@@ -47,8 +47,8 @@ class GetCoaching < RobotLab::Tool
               "Use when you're struggling with the crowd and need " \
               "an outside perspective on what to try next."
 
-  param :situation, type: "string",
-        desc: "Describe what's happening and what you need help with"
+  parameter :situation, type: "string",
+        description: "Describe what's happening and what you need help with"
 
   def execute(situation:)
     @coaches ||= {}

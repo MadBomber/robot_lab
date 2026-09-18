@@ -14,7 +14,7 @@
 # Prerequisites:
 #   gem install redis
 #   Redis server running on localhost:6379
-#   Ollama running with the model from common.rb pulled
+#   LM Studio running with the models from common.rb downloaded
 #
 # Usage:
 #   ruby examples/33_stock_predictor.rb
@@ -119,12 +119,12 @@ class AdjustParameters < RobotLab::Tool
   description "Adjust one predictor parameter to improve future prediction accuracy. " \
               "Make at most one or two targeted changes per window."
 
-  param :parameter, type: "string",
-    desc: "Parameter to adjust: sma_window, sma_std_multiplier, ema_alpha, ema_vol_multiplier, sma_weight"
-  param :value, type: "number",
-    desc: "New value (sma_window: 3-30 int; std/vol multipliers: 0.5-4.0; ema_alpha: 0.05-0.5; sma_weight: 0.0-1.0)"
-  param :reasoning, type: "string",
-    desc: "Why this change should reduce prediction error"
+  parameter :parameter, type: "string",
+    description: "Parameter to adjust: sma_window, sma_std_multiplier, ema_alpha, ema_vol_multiplier, sma_weight"
+  parameter :value, type: "number",
+    description: "New value (sma_window: 3-30 int; std/vol multipliers: 0.5-4.0; ema_alpha: 0.05-0.5; sma_weight: 0.0-1.0)"
+  parameter :reasoning, type: "string",
+    description: "Why this change should reduce prediction error"
 
   LIMITS = {
     "sma_window"         => { min: 3,    max: 30,  integer: true  },
@@ -204,7 +204,7 @@ puts "Warmup     : #{PredictorConfig.sma_window} ticks"
 puts "Press Ctrl-C to stop."
 puts "-" * 60
 
-require_ollama!
+require_lms!
 
 redis  = Redis.new
 prices = []

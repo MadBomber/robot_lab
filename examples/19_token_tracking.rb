@@ -14,7 +14,7 @@
 #   naturally increase as conversation context accumulates.
 #   Use a fresh robot.build when you need a genuinely fresh context.
 #
-# Ollama reports usage counts like the hosted providers do, so the tracking
+# LM Studio reports usage counts like the hosted providers do, so the tracking
 # API behaves identically — only the price per token differs. Token counts are
 # zero for providers that don't report usage data.
 #
@@ -23,7 +23,7 @@
 
 require_relative "common"
 
-# Cost model. A local Ollama model bills nothing, so the interesting number is
+# Cost model. A local LM Studio model bills nothing, so the interesting number is
 # what the same traffic WOULD have cost on a hosted model — set RATE_INPUT_CPM
 # and RATE_OUTPUT_CPM to your provider's $-per-1M-token rates to see it.
 # Defaults are zero: local inference is free.
