@@ -116,9 +116,7 @@ module RobotLab
         # Returns the session identifier.
         #
         # @return [String, nil] the session ID
-        def session_id
-          @session_id
-        end
+        attr_reader :session_id
 
         private
 

@@ -6,6 +6,7 @@ source "https://rubygems.org"
 
 gemspec
 
+# rubocop:disable-next Metrics/BlockLength -- a dependency list, not logic
 group :development, :test do
   gem 'aigcm'
   gem 'amazing_print'
@@ -13,6 +14,7 @@ group :development, :test do
   gem 'classifier', '~> 2.3'
   gem "debug"
   gem 'debug_me'
+  gem "fasterer"
   gem "flay"
   gem "flog"
   gem 'hashdiff'

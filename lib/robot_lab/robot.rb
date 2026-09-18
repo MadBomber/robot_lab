@@ -369,9 +369,7 @@ module RobotLab
     # access to conversation state.
     #
     # @return [RubyLLM::Chat]
-    def chat
-      @chat
-    end
+    attr_reader :chat
 
     # Return the conversation messages from the underlying chat.
     #
