@@ -39,9 +39,9 @@ class MultiStepProcessor < RubyLLM::Tool
     the status is "complete".
   DESC
 
-  param :step_number,
+  parameter :step_number,
         type: "integer",
-        desc: "Which step to execute. Start at 1, increment by 1 each call."
+        description: "Which step to execute. Start at 1, increment by 1 each call."
 
   TOTAL_STEPS = 50  # far more than any sensible max_tool_rounds
 
@@ -125,7 +125,7 @@ section "Part 3: No Circuit Breaker — Task Terminates Naturally"
 
 class SingleStep < RubyLLM::Tool
   description "Doubles a number and returns the result immediately."
-  param :value, type: "integer", desc: "The number to double"
+  parameter :value, type: "integer", description: "The number to double"
 
   def execute(value:)
     { result: value * 2, status: "complete" }

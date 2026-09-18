@@ -35,13 +35,10 @@ RobotLab automatically installs these core dependencies:
 
 | Gem | Purpose |
 |-----|---------|
-| `ruby_llm` (~> 1.12) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) |
+| `ruby_llm` (~> 2.0.0.rc3) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) |
 | `prompt_manager` (~> 1.0) | Template-based prompt management with YAML front matter |
 | `simple_flow` (~> 0.4) | Pipeline workflow execution for networks |
 | `myway_config` (~> 0.1) | Layered configuration (defaults, env vars, config files) |
-| `ruby_llm-mcp` (~> 1.0) | Model Context Protocol client for external tool servers |
-| `ruby_llm-schema` (~> 0.3) | Schema validation for structured outputs |
-| `ruby_llm-semantic_cache` (~> 0.1) | Semantic caching for LLM responses |
 | `zeitwerk` (~> 2.6) | Autoloading and eager loading |
 | `async` (~> 2.0) | Fiber-based concurrency |
 | `async-http` (~> 0.60) | MCP SSE and streamable-HTTP transports |

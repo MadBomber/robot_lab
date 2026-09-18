@@ -163,14 +163,16 @@ begin
   puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
   hr
 
-  # mcp: :inherit and tools: :inherit are both required. Both keywords default
-  # to :none on run(), which resolves to "no MCP servers this turn" and "send
-  # zero tools this turn" — the discovered MCP tools would never reach the
-  # provider and the model would answer from its training data.
+  # mcp: :inherit is required — run() defaults it to :none, which resolves to
+  # "no MCP servers this turn" and the discovered tools would never reach the
+  # provider. tools: takes an allowlist of tool names; :inherit would send all
+  # ~90 GitHub tools, whose JSON schemas alone exceed 13k tokens and overflow
+  # a local model's context window (LM Studio's default is 8192) before the
+  # query even arrives. Send only the one tool this query needs.
   result = robot.run(
     "What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.",
     mcp:   :inherit,
-    tools: :inherit
+    tools: %w[search_repositories]
   )
 
   puts

@@ -129,7 +129,7 @@ end
 
 class HookDemoTool < RobotLab::Tool
   description "Returns a deterministic hook demo value"
-  param :label, type: "string", desc: "The label to echo"
+  parameter :label, type: "string", description: "The label to echo"
 
   def execute(label:)
     { label: label, status: "handled by HookDemoTool" }
@@ -187,7 +187,7 @@ class HookDemo
 
     puts "  provider=#{LLM[:default].provider}  model=#{LLM[:default].model}\n\n"
 
-    # with_model alone would leave the provider unset, and an Ollama model is
+    # with_model alone would leave the provider unset, and an LM Studio model is
     # not in RubyLLM's registry — pass provider and model together.
     robot = RobotLab.build(
       name: "loop_demo_robot",
@@ -224,7 +224,7 @@ class HookDemo
   def run_tool
     section "Tool Call Hooks"
     tool   = HookDemoTool.new
-    result = tool.call({ "label" => "tool hook payload" })
+    result = tool.call(**{ "label" => "tool hook payload" })
     puts "Tool result: #{result.inspect}"
   end
 

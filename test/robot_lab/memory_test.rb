@@ -83,7 +83,7 @@ class RobotLab::MemoryTest < Minitest::Test
   end
 
   def test_cache_is_semantic_cache_module
-    assert_equal RubyLLM::SemanticCache, @memory.cache
+    assert_cache_state @memory.cache
   end
 
   def test_cache_nil_when_disabled
@@ -93,13 +93,13 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_cache_enabled_by_default
     memory = RobotLab::Memory.new
-    assert_equal RubyLLM::SemanticCache, memory.cache
+    assert_cache_state memory.cache
   end
 
   def test_clone_preserves_enable_cache_true
     memory = RobotLab::Memory.new(enable_cache: true)
     cloned = memory.clone
-    assert_equal RubyLLM::SemanticCache, cloned.cache
+    assert_cache_state cloned.cache
   end
 
   def test_clone_preserves_enable_cache_false
@@ -706,7 +706,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_set_cache_key_raises_argument_error
     assert_raises(ArgumentError) do
-      @memory[:cache] = RubyLLM::SemanticCache
+      @memory[:cache] = Object.new
     end
   end
 
@@ -786,7 +786,7 @@ class RobotLab::MemoryTest < Minitest::Test
   def test_reset_restores_cache
     mem = RobotLab::Memory.new(enable_cache: true)
     mem.reset
-    assert_equal RubyLLM::SemanticCache, mem.cache
+    assert_cache_state mem.cache
   end
 
   def test_memory_change_from_hash_restores_fields
@@ -1108,6 +1108,17 @@ class RobotLab::MemoryTest < Minitest::Test
   end
 
   private
+
+  # Semantic caching is optional under ruby_llm 2.0 (the semantic_cache gem
+  # has no 2.0-compatible release); when absent, Memory#cache is nil even
+  # with enable_cache: true.
+  def assert_cache_state(actual)
+    if defined?(RubyLLM::SemanticCache)
+      assert_equal RubyLLM::SemanticCache, actual
+    else
+      assert_nil actual
+    end
+  end
 
   def mock_robot_result(robot_name)
     RobotLab::RobotResult.new(

@@ -289,7 +289,7 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
 
     chat = robot.instance_variable_get(:@chat)
     chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
-      2.times { @on[:tool_call]&.call(Object.new) }
+      2.times { @callbacks[:before_tool_call].each { |cb| cb.call(Object.new) } }
       fake_response
     end
 
@@ -307,7 +307,7 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
 
     chat = robot.instance_variable_get(:@chat)
     chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
-      2.times { @on[:tool_call]&.call(Object.new) }
+      2.times { @callbacks[:before_tool_call].each { |cb| cb.call(Object.new) } }
       fake_response
     end
 

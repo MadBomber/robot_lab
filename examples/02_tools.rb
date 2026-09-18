@@ -14,17 +14,17 @@ require_relative "common"
 class Calculator < RubyLLM::Tool
   description "Performs basic arithmetic operations"
 
-  param :operation,
+  parameter :operation,
         type: "string",
-        desc: "The operation to perform (add, subtract, multiply, divide)"
+        description: "The operation to perform (add, subtract, multiply, divide)"
 
-  param :a,
+  parameter :a,
         type: "number",
-        desc: "First operand"
+        description: "First operand"
 
-  param :b,
+  parameter :b,
         type: "number",
-        desc: "Second operand"
+        description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation
@@ -40,9 +40,9 @@ end
 class FortuneCookie < RubyLLM::Tool
   description "Get a fortune cookie message with wisdom and lucky numbers"
 
-  param :category,
+  parameter :category,
         type: "string",
-        desc: "The category of fortune (wisdom, love, career, adventure)"
+        description: "The category of fortune (wisdom, love, career, adventure)"
 
   FORTUNES = {
     "wisdom" => [

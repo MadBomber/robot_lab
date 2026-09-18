@@ -233,9 +233,9 @@ interactive.output = output
 interactive.input  = StringIO.new("2\n")
 
 result = demo_tool.call(
-  "question" => "What type of task should I optimize for?",
-  "choices"  => %w[general analysis creative coding research],
-  "default"  => "general"
+  question: "What type of task should I optimize for?",
+  choices:  %w[general analysis creative coding research],
+  default:  "general"
 )
 
 puts output.string

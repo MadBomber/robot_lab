@@ -10,8 +10,8 @@ class RecruitAnalyst < RobotLab::Tool
               "of the comedian's performance. The analyst will " \
               "review your accumulated notes and provide insight."
 
-  param :specialty, type: "string",
-        desc: "What to analyze: timing, crowd_work, " \
+  parameter :specialty, type: "string",
+        description: "What to analyze: timing, crowd_work, " \
               "originality, adaptability, stage_presence, " \
               "material_evolution"
 
@@ -46,8 +46,8 @@ class RefineCriteria < RobotLab::Tool
               "important qualities aren't what you initially expected. " \
               "The update takes effect on your next evaluation."
 
-  param :updated_criteria, type: "string",
-        desc: "Your refined evaluation criteria and focus areas"
+  parameter :updated_criteria, type: "string",
+        description: "Your refined evaluation criteria and focus areas"
 
   def execute(updated_criteria:)
     robot.pending_criteria = updated_criteria

@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
-require "ruby_llm/semantic_cache"
+# Optional: ruby_llm-semantic_cache has not shipped a ruby_llm 2.0-compatible
+# release. When the gem is absent, Memory#cache returns nil and semantic
+# caching is silently disabled.
+begin
+  require "ruby_llm/semantic_cache"
+rescue LoadError
+  # Semantic caching unavailable; Memory runs without it.
+end
 
 module RobotLab
   # Raised when a blocking get times out
@@ -106,7 +113,7 @@ module RobotLab
       set_internal(:results, Array(results))
       set_internal(:messages, Array(messages).map { |m| normalize_message(m) })
       set_internal(:session_id, session_id)
-      set_internal(:cache, @enable_cache ? RubyLLM::SemanticCache : nil)
+      set_internal(:cache, @enable_cache ? create_semantic_cache : nil)
 
       # Data proxy for method-style access
       @data = nil
@@ -215,9 +222,11 @@ module RobotLab
 
     # Get the semantic cache module
     #
-    # The cache is always active and provides semantic similarity matching
-    # for LLM responses, reducing costs and latency by returning cached
-    # responses for semantically equivalent queries.
+    # When the optional ruby_llm-semantic_cache gem is installed (and
+    # enable_cache is true), provides semantic similarity matching for LLM
+    # responses, reducing costs and latency by returning cached responses
+    # for semantically equivalent queries. Returns nil when the gem is
+    # absent or caching is disabled.
     #
     # @example Using the cache with fetch
     #   response = memory.cache.fetch("What is Ruby?") do
@@ -228,7 +237,7 @@ module RobotLab
     #   chat = memory.cache.wrap(RubyLLM.chat(model: "gpt-4"))
     #   chat.ask("What is Ruby?")  # Cached on semantic similarity
     #
-    # @return [RubyLLM::SemanticCache] the semantic cache module
+    # @return [RubyLLM::SemanticCache, nil] the semantic cache module, or nil when unavailable
     #
     def cache
       get_internal(:cache)
@@ -702,7 +711,7 @@ module RobotLab
     end
 
     def create_semantic_cache
-      RubyLLM::SemanticCache
+      defined?(RubyLLM::SemanticCache) ? RubyLLM::SemanticCache : nil
     end
 
     # :reek:ControlParameter -- factory method; the preference symbol is exactly what selects the backend.

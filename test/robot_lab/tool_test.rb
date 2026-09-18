@@ -12,8 +12,8 @@ class RobotLab::ToolTest < Minitest::Test
   def test_subclass_with_description_and_params
     klass = Class.new(RobotLab::Tool) do
       description "Adds two numbers"
-      param :a, type: "number", desc: "First number"
-      param :b, type: "number", desc: "Second number"
+      parameter :a, type: "number", description: "First number"
+      parameter :b, type: "number", description: "Second number"
 
       def execute(a:, b:)
         a + b
@@ -22,14 +22,15 @@ class RobotLab::ToolTest < Minitest::Test
 
     tool = klass.new
     assert_equal "Adds two numbers", tool.description
-    assert tool.parameters.key?(:a)
-    assert tool.parameters.key?(:b)
+    props = tool.parameters_schema["properties"]
+    assert props.key?("a")
+    assert props.key?("b")
   end
 
   def test_subclass_execute
     klass = Class.new(RobotLab::Tool) do
       description "Doubles a value"
-      param :value, type: "number", desc: "Value to double"
+      parameter :value, type: "number", description: "Value to double"
 
       def execute(value:)
         value * 2
@@ -37,7 +38,7 @@ class RobotLab::ToolTest < Minitest::Test
     end
 
     tool = klass.new
-    result = tool.call({ "value" => 10 })
+    result = tool.call(**{ "value" => 10 })
     assert_equal 20, result
   end
 
@@ -66,7 +67,7 @@ class RobotLab::ToolTest < Minitest::Test
     captured_robot = nil
     klass = Class.new(RobotLab::Tool) do
       description "Captures robot"
-      param :x, type: "string", desc: "Ignored"
+      parameter :x, type: "string", description: "Ignored"
 
       define_method(:execute) do |**_args|
         captured_robot = robot
@@ -76,7 +77,7 @@ class RobotLab::ToolTest < Minitest::Test
 
     mock_robot = Object.new
     tool = klass.new(robot: mock_robot)
-    tool.call({ "x" => "test" })
+    tool.call(**{ "x" => "test" })
 
     assert_equal mock_robot, captured_robot
   end
@@ -112,7 +113,7 @@ class RobotLab::ToolTest < Minitest::Test
       }
     ) { |args| args }
 
-    schema = tool.params_schema
+    schema = tool.parameters_schema
     assert schema
     props = schema[:properties] || schema["properties"]
     assert props
@@ -125,7 +126,7 @@ class RobotLab::ToolTest < Minitest::Test
       description: "Adds numbers"
     ) { |args| args[:a] + args[:b] }
 
-    result = tool.call({ "a" => 2, "b" => 3 })
+    result = tool.call(**{ "a" => 2, "b" => 3 })
     assert_equal 5, result
   end
 
@@ -202,7 +203,7 @@ class RobotLab::ToolTest < Minitest::Test
       "ok"
     end
 
-    tool.call({ "key" => "value" })
+    tool.call(**{ "key" => "value" })
     assert_equal({ key: "value" }, received_args)
   end
 
@@ -213,7 +214,7 @@ class RobotLab::ToolTest < Minitest::Test
       "ok"
     end
 
-    tool.call({ key: "value" })
+    tool.call(key: "value")
     assert_equal({ key: "value" }, received_args)
   end
 
@@ -297,48 +298,48 @@ class RobotLab::ToolTest < Minitest::Test
     assert_equal "Test", parsed["description"]
   end
 
-  # ── params_schema (inherited) ──────────────────────────────
+  # ── parameters_schema (inherited) ──────────────────────────────
 
-  def test_params_schema_from_param_dsl
+  def test_parameters_schema_from_param_dsl
     klass = Class.new(RobotLab::Tool) do
-      param :x, type: "integer", desc: "An integer"
+      parameter :x, type: "integer", description: "An integer"
       def execute(x:) = x
     end
 
     tool = klass.new
-    schema = tool.params_schema
+    schema = tool.parameters_schema
 
     assert schema
     assert schema[:properties]&.key?(:x) || schema["properties"]&.key?("x")
   end
 
-  def test_params_schema_nil_without_parameters
+  def test_parameters_schema_nil_without_parameters
     klass = Class.new(RobotLab::Tool) { def execute(**); end }
     tool = klass.new
 
     # RubyLLM::Tool returns nil when no params defined
     # (or an empty schema depending on version)
-    schema = tool.params_schema
+    schema = tool.parameters_schema
     assert schema.nil? || schema.is_a?(Hash)
   end
 
-  # ── provider_params (inherited) ────────────────────────────
+  # ── provider_options (inherited) ────────────────────────────
 
-  def test_provider_params_defaults_to_empty_hash
+  def test_provider_options_defaults_to_empty_hash
     klass = Class.new(RobotLab::Tool) { def execute(**); end }
     tool = klass.new
 
-    assert_equal({}, tool.provider_params)
+    assert_equal({}, tool.provider_options)
   end
 
-  def test_provider_params_with_strict
+  def test_provider_options_with_strict
     klass = Class.new(RobotLab::Tool) do
-      with_params(strict: true)
+      provider_options(strict: true)
       def execute(**); end
     end
 
     tool = klass.new
-    assert tool.provider_params[:strict]
+    assert tool.provider_options[:strict]
   end
 
   # ── Error handling ─────────────────────────────────────────
@@ -348,7 +349,7 @@ class RobotLab::ToolTest < Minitest::Test
       raise StandardError, "Something went wrong"
     end
 
-    result = tool.call({})
+    result = tool.call
     assert_equal 'Error (error_tool): Something went wrong', result
   end
 
@@ -357,7 +358,7 @@ class RobotLab::ToolTest < Minitest::Test
       raise RobotLab::ToolError, "bad input"
     end
 
-    result = tool.call({})
+    result = tool.call
     assert_equal "Error (tool_error_tool): bad input", result
   end
 
@@ -366,7 +367,7 @@ class RobotLab::ToolTest < Minitest::Test
       raise RobotLab::ToolError.new("timeout", retryable: true)
     end
 
-    result = tool.call({})
+    result = tool.call
     assert_equal "Error (retryable_tool_error_tool): timeout (retryable)", result
   end
 
@@ -379,7 +380,7 @@ class RobotLab::ToolTest < Minitest::Test
     original_logger = RobotLab.config.logger
     RobotLab.config.logger = Logger.new(log_output)
 
-    tool.call({})
+    tool.call
 
     RobotLab.config.logger = original_logger
     assert_match(/Tool 'log_tool' error: RuntimeError: disk full/, log_output.string)
@@ -396,7 +397,7 @@ class RobotLab::ToolTest < Minitest::Test
     end
 
     tool = klass.new
-    assert_raises(StandardError) { tool.call({}) }
+    assert_raises(StandardError) { tool.call }
   ensure
     klass.raise_on_error = false
   end
@@ -408,7 +409,7 @@ class RobotLab::ToolTest < Minitest::Test
 
   def test_successful_execute_passes_through
     tool = RobotLab::Tool.create(name: "ok_tool") { |_args| "all good" }
-    assert_equal "all good", tool.call({})
+    assert_equal "all good", tool.call
   end
 
   def test_factory_tool_gets_error_wrapper
@@ -416,7 +417,7 @@ class RobotLab::ToolTest < Minitest::Test
       raise ArgumentError, "bad input"
     end
 
-    result = tool.call({})
+    result = tool.call
     assert_equal "Error (factory_fail): bad input", result
   end
 
@@ -425,14 +426,14 @@ class RobotLab::ToolTest < Minitest::Test
       raise IOError, "connection refused"
     end
 
-    result = tool.call({})
+    result = tool.call
     assert_equal "Error (mcp_fail): connection refused", result
   end
 
   def test_subclass_gets_error_wrapper
     klass = Class.new(RobotLab::Tool) do
       description "Failing subclass"
-      param :x, type: "string", desc: "ignored"
+      parameter :x, type: "string", description: "ignored"
 
       def execute(x:)
         raise TypeError, "wrong type"
@@ -440,7 +441,7 @@ class RobotLab::ToolTest < Minitest::Test
     end
 
     tool = klass.new
-    result = tool.call({ "x" => "test" })
+    result = tool.call(**{ "x" => "test" })
     assert_equal "Error (#{tool.name}): wrong type", result
   end
 
@@ -455,31 +456,19 @@ class RobotLab::ToolTest < Minitest::Test
     end
 
     # Safe class returns error string
-    result = safe_class.new.call({})
+    result = safe_class.new.call
     assert result.is_a?(String)
     assert result.start_with?("Error")
 
     # Critical class propagates
-    assert_raises(RuntimeError) { critical_class.new.call({}) }
+    assert_raises(RuntimeError) { critical_class.new.call }
   ensure
     critical_class.raise_on_error = false
   end
 
-  # ── halt (inherited) ───────────────────────────────────────
-
-  def test_halt_returns_halt_object
-    klass = Class.new(RobotLab::Tool) do
-      description "Halting tool"
-      def execute(**)
-        halt("Stop processing")
-      end
-    end
-
-    tool = klass.new
-    result = tool.call({})
-    assert result.is_a?(RubyLLM::Tool::Halt)
-    assert_equal "Stop processing", result.to_s
-  end
+  # NOTE: ruby_llm 2.0 removed Tool#halt — the caller controls the
+  # conversation loop (chat.step / chat.complete?) instead of a tool
+  # halting it from inside.
 
   # ── is_a? checks ───────────────────────────────────────────
 
@@ -530,10 +519,10 @@ class RobotLab::ToolTest < Minitest::Test
   def test_non_ractor_safe_tool_call_runs_inline
     klass = Class.new(RobotLab::Tool) do
       description "Inline tool"
-      param :x, type: "string", desc: "Input"
+      parameter :x, type: "string", description: "Input"
       def execute(x:) = "inline:#{x}"
     end
     tool = klass.new
-    assert_equal "inline:hello", tool.call({ "x" => "hello" })
+    assert_equal "inline:hello", tool.call(**{ "x" => "hello" })
   end
 end

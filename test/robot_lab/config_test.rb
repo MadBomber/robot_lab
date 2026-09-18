@@ -36,7 +36,7 @@ class RobotLab::ConfigTest < Minitest::Test
   end
 
   def test_default_model_from_config
-    assert_equal "claude-sonnet-4", RobotLab.config.ruby_llm.model
+    assert_equal "claude-sonnet-4-6", RobotLab.config.ruby_llm.model
   end
 
   def test_default_max_iterations_from_config

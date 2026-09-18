@@ -7,6 +7,7 @@ require_relative 'robot/history_search'
 require_relative 'robot/agent_skill_matching'
 require_relative 'robot/budget'
 require_relative 'robot/hooking'
+require_relative 'robot/result_building'
 
 module RobotLab
   # LLM-powered robot built on RubyLLM::Agent
@@ -54,6 +55,7 @@ module RobotLab
     include Robot::HistorySearch
     include Robot::Budget
     include Robot::Hooking
+    include Robot::ResultBuilding
     include Runnable
     prepend Robot::AgentSkillMatching
 
@@ -386,10 +388,10 @@ module RobotLab
     def clear_messages(keep_system: true)
       if keep_system
         system_msg = @chat.messages.find { |m| m.role == :system }
-        @chat.reset_messages!
+        @chat.messages = []
         @chat.add_message(system_msg) if system_msg
       else
-        @chat.reset_messages!
+        @chat.messages = []
       end
       self
     end
@@ -399,8 +401,8 @@ module RobotLab
     # @param messages [Array<RubyLLM::Message>] the messages to restore
     # @return [self]
     def replace_messages(messages)
-      @chat.reset_messages!
-      messages.each { |m| @chat.add_message(m) }
+      @chat.messages = []
+      messages.each { |m| @chat.add_message(coerce_replacement_message(m)) }
       self
     end
 
@@ -665,6 +667,8 @@ module RobotLab
       @learnings           = []
       @hooks               = HookRegistry.new
       @budget_ledger       = build_budget_ledger
+      @circuit_breaker_armed      = false
+      @circuit_breaker_call_count = 0
     end
 
     def initialize_memory
@@ -716,20 +720,33 @@ module RobotLab
 
     def apply_chat_params
       @chat.with_temperature(@config.temperature) if @config.temperature
+      @chat.with_max_output_tokens(@config.max_tokens) if @config.max_tokens
 
+      # ruby_llm 2.0 has no with_params; provider-specific sampling knobs are
+      # merged into the request payload via with_provider_options instead.
+      # with_provider_options replaces prior options, so merge with whatever
+      # the chat already carries (e.g. from template front matter).
       extra_params = {
         top_p: @config.top_p, top_k: @config.top_k,
-        max_tokens: @config.max_tokens,
         presence_penalty: @config.presence_penalty,
         frequency_penalty: @config.frequency_penalty,
         stop: @config.stop
       }.compact
-      @chat.with_params(**extra_params) if extra_params.any?
+      @chat.with_provider_options(@chat.provider_options.to_h.merge(extra_params)) if extra_params.any?
     end
 
+    # ruby_llm 2.0 callbacks (before_tool_call/after_tool_result) are additive
+    # and cannot be removed, so register a single dispatcher per chat that
+    # consults the robot's current state. The per-run circuit breaker arms and
+    # disarms a flag instead of swapping callbacks.
     def register_chat_callbacks
-      @chat.on_tool_call(&@on_tool_call)     if @on_tool_call
-      @chat.on_tool_result(&@on_tool_result) if @on_tool_result
+      @chat.before_tool_call do |tool_call|
+        enforce_circuit_breaker! if @circuit_breaker_armed
+        @on_tool_call&.call(tool_call)
+      end
+      @chat.after_tool_result do |result|
+        @on_tool_result&.call(result)
+      end
       setup_bus_channel if @bus
     end
 
@@ -761,6 +778,7 @@ module RobotLab
       end
     end
 
+    # :reek:TooManyStatements -- resolve/discover/connect/filter/attach is one linear per-turn tool pipeline.
     def prepare_tools(message:, mcp:, tools:, network:, network_config:)
       resolved_mcp   = resolve_mcp_hierarchy(mcp, network: network, network_config: network_config)
       resolved_tools = resolve_tools_hierarchy(tools, network: network, network_config: network_config)
@@ -779,12 +797,16 @@ module RobotLab
       # runtime value before resolution to honor the zero-tools intent.
       filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(resolved_tools))
 
-      # replace: true so the chat holds EXACTLY this turn's resolved+capped set.
-      # RubyLLM's with_tools appends by default; on a persistent chat that lets
-      # tools accumulate across turns, so a capped per-turn addition could still
-      # push the chat's total past the provider limit. An explicit none clears
-      # the chat's tools to zero (with_tools(replace: true) with no tools).
-      @chat.with_tools(*filtered, replace: true) if filtered.any? || explicit_none_tools?(tools)
+      # Clear-then-add so the chat holds EXACTLY this turn's resolved+capped
+      # set. RubyLLM's with_tools appends; on a persistent chat that lets tools
+      # accumulate across turns, so a capped per-turn addition could still push
+      # the chat's total past the provider limit. with_tools(nil) is ruby_llm
+      # 2.0's "clear the tool set"; an explicit none stops there, sending zero
+      # tools this turn.
+      return unless filtered.any? || explicit_none_tools?(tools)
+
+      @chat.with_tools(nil)
+      @chat.with_tools(*filtered) if filtered.any?
     end
 
     # True when the runtime tools value explicitly requests zero tools — `:none`
@@ -900,85 +922,6 @@ module RobotLab
       merged[:task] = task if task
 
       merged
-    end
-
-    # :reek:TooManyStatements :reek:FeatureEnvy -- adapting a provider response's many optional fields into
-    #   a RobotResult is inherently response-centric.
-    def build_result(response, _memory)
-      text = result_text(response)
-      output = text ? [TextMessage.new(role: 'assistant', content: text)] : []
-
-      tool_calls = response.respond_to?(:tool_calls) ? (response.tool_calls || []) : []
-
-      # Extract token usage from the response
-      input_toks = output_toks = 0
-      if response.respond_to?(:tokens) && (tokens = response.tokens)
-        input_toks = tokens.input.to_i
-        output_toks = tokens.output.to_i
-      elsif response.respond_to?(:input_tokens)
-        input_toks = response.input_tokens.to_i
-        output_toks = response.respond_to?(:output_tokens) ? response.output_tokens.to_i : 0
-      end
-
-      @total_input_tokens += input_toks
-      @total_output_tokens += output_toks
-
-      RobotResult.new(
-        robot_name: @name,
-        output: output,
-        tool_calls: normalize_tool_calls(tool_calls),
-        stop_reason: response.respond_to?(:stop_reason) ? response.stop_reason : nil,
-        raw: response,
-        input_tokens: input_toks,
-        output_tokens: output_toks
-      )
-    end
-
-    # Text for the result's output. Prefers the final response's content, then
-    # falls back in order to: (1) thinking text for models that route all output
-    # through reasoning_content (e.g. qwen3 on Ollama), (2) the most recent
-    # assistant text within the current turn for models that end on a tool call
-    # with no trailing text.
-    #
-    # The chat-history fallback is scoped to messages AFTER the last user message
-    # (the current turn) to prevent a previous turn's response from being returned
-    # when a thinking-mode model emits nothing in response.content.
-    # :reek:TooManyStatements :reek:FeatureEnvy -- documented fallback chain over the response's optional content/thinking/history fields.
-    def result_text(response)
-      content = response.content if response.respond_to?(:content)
-      return content if content && !content.to_s.empty?
-
-      # Ollama routes qwen3's reasoning to reasoning_content, which ruby_llm
-      # surfaces as response.thinking (a RubyLLM::Thinking object). When content
-      # is nil and thinking is present, the thinking IS the response for that turn.
-      if response.respond_to?(:thinking) && (thinking = response.thinking)
-        thinking_text = thinking.respond_to?(:text) ? thinking.text.to_s : thinking.to_s
-        return thinking_text unless thinking_text.empty?
-      end
-
-      return nil unless @chat.respond_to?(:messages)
-
-      messages = @chat.messages
-      last_user_idx = messages.rindex { |m| m.role == :user } || -1
-      current_turn = messages[(last_user_idx + 1)..]
-
-      last = current_turn.rfind { |m| m.role == :assistant && m.content && !m.content.to_s.empty? }
-      last&.content
-    end
-
-    def normalize_tool_calls(tool_calls)
-      return [] unless tool_calls
-
-      tool_calls.map do |tc|
-        if tc.is_a?(Hash)
-          ToolResultMessage.new(
-            tool: tc,
-            content: tc[:result] || tc['result']
-          )
-        else
-          tc
-        end
-      end
     end
 
     # Merge the stored on_content callback with a runtime streaming block.
@@ -1123,30 +1066,6 @@ module RobotLab
       rescue DependencyError => e
         RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
       end
-    end
-
-    # Install a per-run circuit breaker on the chat's on_tool_call hook.
-    # Raises ToolLoopError if tool calls exceed @config.max_tool_rounds.
-    # Stores the previous callback so restore_tool_call_callback can undo it.
-    def install_circuit_breaker
-      @circuit_breaker_call_count = 0
-      max = @config.max_tool_rounds
-      original = @on_tool_call
-
-      @chat.on_tool_call do |tool_call|
-        @circuit_breaker_call_count += 1
-        if @circuit_breaker_call_count > max
-          raise ToolLoopError,
-                "Circuit breaker triggered: #{@circuit_breaker_call_count} tool calls exceeded " \
-                "max_tool_rounds (#{max})"
-        end
-        original&.call(tool_call)
-      end
-    end
-
-    # Restore the original on_tool_call callback after a circuit-breaker run.
-    def restore_tool_call_callback
-      @chat.on_tool_call(&@on_tool_call)
     end
   end
 end

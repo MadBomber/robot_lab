@@ -226,7 +226,7 @@ end
 | `:results` | `Array` | Accumulated robot results |
 | `:messages` | `Array` | Conversation history |
 | `:session_id` | `String` | Session identifier |
-| `:cache` | `Module` | Semantic cache (RubyLLM::SemanticCache) |
+| `:cache` | `Module`, `nil` | Semantic cache (RubyLLM::SemanticCache when the optional gem is installed) |
 
 ### Reactive Features
 

@@ -338,7 +338,7 @@ robot.clear_messages(keep_system: true)
 | `:results` | Accumulated robot results |
 | `:messages` | Conversation history |
 | `:session_id` | Session identifier for history persistence |
-| `:cache` | Semantic cache instance (RubyLLM::SemanticCache) |
+| `:cache` | Semantic cache (RubyLLM::SemanticCache when the optional gem is installed, else nil) |
 
 ### Reactive Memory in Networks
 

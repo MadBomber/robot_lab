@@ -190,7 +190,7 @@ puts
 
 unless ENV["RUN_LIVE"]
   section "Part 3: Live LLM Run"
-  puts "   Set RUN_LIVE=1 (with Ollama running) to attempt the real pipeline."
+  puts "   Set RUN_LIVE=1 (with LM Studio running) to attempt the real pipeline."
   puts "   Expected behavior: headline_finder, background_brief, and"
   puts "   fact_checker run in parallel; report_writer follows."
   puts
@@ -204,7 +204,7 @@ unless ENV["RUN_LIVE"]
   exit 0
 end
 
-require_ollama!
+require_lms!
 
 section "Part 3: Live LLM Run (RUN_LIVE set)"
 

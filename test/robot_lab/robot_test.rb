@@ -74,10 +74,10 @@ class RobotLab::RobotTest < Minitest::Test
     robot = RobotLab::Robot.new(
       name: 'helper',
       template: :assistant,
-      model: 'claude-sonnet-4'
+      model: 'claude-sonnet-4-6'
     )
 
-    assert_includes robot.model, 'claude-sonnet-4'
+    assert_includes robot.model, 'claude-sonnet-4-6'
   end
 
   def test_initialization_uses_default_model
@@ -86,7 +86,7 @@ class RobotLab::RobotTest < Minitest::Test
       template: :assistant
     )
 
-    assert_includes robot.model, 'claude-sonnet-4'
+    assert_includes robot.model, 'claude-sonnet-4-6'
   end
 
   # system_prompt tests
@@ -310,7 +310,7 @@ class RobotLab::RobotTest < Minitest::Test
     )
 
     hash = robot.to_h
-    assert_includes hash[:model], 'claude-sonnet-4'
+    assert_includes hash[:model], 'claude-sonnet-4-6'
   end
 
   def test_to_h_excludes_nil_values
@@ -895,7 +895,7 @@ class RobotLab::RobotTest < Minitest::Test
     unless defined?(::FrontmatterTestTool)
       Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
         description "A test tool defined for frontmatter resolution"
-        param :input, type: "string", desc: "Test input"
+        parameter :input, type: "string", description: "Test input"
         define_method(:execute) { |input:| "test: #{input}" }
       end)
     end
@@ -910,7 +910,7 @@ class RobotLab::RobotTest < Minitest::Test
     unless defined?(::FrontmatterTestTool)
       Object.const_set(:FrontmatterTestTool, Class.new(RobotLab::Tool) do
         description "A test tool defined for frontmatter resolution"
-        param :input, type: "string", desc: "Test input"
+        parameter :input, type: "string", description: "Test input"
         define_method(:execute) { |input:| "test: #{input}" }
       end)
     end
@@ -1626,7 +1626,7 @@ class RobotLab::RobotTest < Minitest::Test
 
     # Stub ask to fire the tool_call hook 3 times (exceeds max of 2)
     chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
-      3.times { @on[:tool_call]&.call(Object.new) }
+      3.times { @callbacks[:before_tool_call].each { |cb| cb.call(Object.new) } }
       fake_response
     end
 
@@ -1641,7 +1641,7 @@ class RobotLab::RobotTest < Minitest::Test
     chat = robot.instance_variable_get(:@chat)
 
     chat.define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
-      3.times { @on[:tool_call]&.call(Object.new) }
+      3.times { @callbacks[:before_tool_call].each { |cb| cb.call(Object.new) } }
       fake_response
     end
 
@@ -1649,11 +1649,11 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "done", result.reply
   end
 
-  def test_circuit_breaker_restores_original_callback_after_run
+  def test_circuit_breaker_disarms_after_run
     called = []
     user_cb = ->(tc) { called << tc }
     robot = build_robot(name: "bot", system_prompt: "test",
-                        max_tool_rounds: 5, on_tool_call: user_cb)
+                        max_tool_rounds: 2, on_tool_call: user_cb)
     fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
       content: "ok", tool_calls: nil, stop_reason: "end_turn", tokens: nil
     )
@@ -1662,8 +1662,12 @@ class RobotLab::RobotTest < Minitest::Test
 
     robot.run("test")
 
-    # After run, the chat's on_tool_call should be the original user callback
-    assert_equal user_cb, chat.instance_variable_get(:@on)[:tool_call]
+    # After run the breaker is disarmed: firing the tool-call callback more
+    # than max_tool_rounds times outside a run raises nothing, and the user
+    # callback still fires through the dispatcher.
+    callbacks = chat.instance_variable_get(:@callbacks)[:before_tool_call]
+    3.times { callbacks.each { |cb| cb.call(:tc) } }
+    assert_equal %i[tc tc tc], called
   end
 
   def test_no_circuit_breaker_when_max_tool_rounds_not_set
@@ -1802,8 +1806,8 @@ class RobotLab::RobotTest < Minitest::Test
 
   def test_update_with_model
     robot = build_robot(name: "bot", template: :assistant)
-    robot.update(model: "claude-sonnet-4")
-    assert_includes robot.model, "claude-sonnet-4"
+    robot.update(model: "claude-sonnet-4-6")
+    assert_includes robot.model, "claude-sonnet-4-6"
   end
 
   def test_update_with_temperature

@@ -14,7 +14,7 @@ module RobotLab
   # - Automatic RubyLLM configuration application
   #
   # @example Access configuration values
-  #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+  #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
   #   RobotLab.config.ruby_llm.request_timeout  #=> 120
   #   RobotLab.config.development?              #=> true
   #
@@ -28,7 +28,7 @@ module RobotLab
   #   # defaults.yml. This file is NOT run through ERB, so keep secrets in
   #   # environment variables or in ./config/robot_lab.yml (which is).
   #   ruby_llm:
-  #     model: claude-sonnet-4
+  #     model: claude-sonnet-4-6
   #     request_timeout: 120
   #
   class Config < MywayConfig::Base

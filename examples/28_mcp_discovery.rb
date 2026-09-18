@@ -12,7 +12,7 @@
 # == Key config
 #
 #   robot = RobotLab.build(
-#     provider: "ollama", model: "qwen3.6:latest",
+#     provider: "lms", model: "qwen/qwen3.8-27b",
 #     mcp_discovery: true,    # ← enables semantic filtering
 #     mcp: [ ... ]            # ← candidate servers, each with :description
 #   )
@@ -95,7 +95,7 @@ section "mcp_discovery: true on a Robot"
 show_code <<~RUBY
   robot = RobotLab.build(
     name:          "assistant",
-    provider:      "ollama",
+    provider:      "lms",
     model:         "qwen3.6:latest",
     mcp_discovery: true,
     mcp: [

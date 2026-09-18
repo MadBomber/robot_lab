@@ -55,7 +55,7 @@ bundle exec rake examples:run[1]
 
 ### Memory System
 
-- **`Memory`** (`lib/robot_lab/memory.rb`): Key-value store with reserved keys (`:data`, `:results`, `:messages`, `:session_id`, `:cache`). Supports Redis backend. Includes semantic caching via RubyLLM::SemanticCache
+- **`Memory`** (`lib/robot_lab/memory.rb`): Key-value store with reserved keys (`:data`, `:results`, `:messages`, `:session_id`, `:cache`). Supports Redis backend. Semantic caching via RubyLLM::SemanticCache when the optional ruby_llm-semantic_cache gem is installed (`memory.cache` is nil otherwise)
 
 ### MCP (Model Context Protocol)
 
@@ -119,7 +119,9 @@ Router receives `Router::Args` with: `context`, `network`, `stack`, `call_count`
 
 ## Dependencies
 
-Core: zeitwerk, ruby_llm (~> 1.12), ruby_llm-mcp, prompt_manager, ruby_llm-schema, ruby_llm-semantic_cache, async, simple_flow, state_machines
+Core: zeitwerk, ruby_llm (~> 2.0.0.rc3), prompt_manager, async, simple_flow, state_machines
+
+Optional: ruby_llm-semantic_cache (Memory#cache; no ruby_llm 2.0-compatible release yet — Memory runs with caching disabled when absent), classifier (compress_history), ruby_llm-providers-lms (local LM Studio provider used by the examples: qwen/qwen3.8-27b for complex work, openai/gpt-oss-20b for simple demos)
 
 ### Templates
 
