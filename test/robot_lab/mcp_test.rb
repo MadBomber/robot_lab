@@ -162,6 +162,22 @@ class RobotLab::MCPTest < Minitest::Test
     assert_equal ['read'], klass.oauth_settings[:scopes]
   end
 
+  def test_http_oauth_string_grant_from_yaml_is_accepted
+    oauth = { 'grant' => 'client_credentials', 'client_id' => 'reports' }
+    klass = MCP.define(http(transport: { url: 'https://e.com/mcp', oauth: oauth }))
+    assert_equal :client_credentials, klass.oauth_settings[:grant]
+  end
+
+  def test_oauth_settings_leaves_symbol_grant_and_other_values_alone
+    settings = MCP.oauth_settings(grant: :jwt_bearer, 'owner' => 'ci')
+    assert_equal({ grant: :jwt_bearer, owner: 'ci' }, settings)
+  end
+
+  def test_http_oauth_unknown_string_grant_still_raises
+    oauth = { 'grant' => 'password' }
+    assert_raises(ArgumentError) { MCP.define(http(transport: { url: 'https://e.com/mcp', oauth: oauth })) }
+  end
+
   def test_http_without_url_raises
     error = assert_raises(RobotLab::MCPError) { MCP.define(name: 'x', transport: { type: 'http' }) }
     assert_match(/no url/, error.message)

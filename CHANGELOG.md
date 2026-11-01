@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **OAuth `grant:` from YAML.** An MCP server config such as `oauth: { grant: client_credentials }` raised `ArgumentError: Unknown OAuth grant`, because ruby_llm accepts the grant only as a Symbol. `RobotLab::MCP.define` now converts a String grant to a Symbol.
+
+## [0.5.0] - 2026-11-01
+
 robot_lab 0.4.0: MCP (Model Context Protocol) now runs on ruby_llm 2.1's
 built-in client. robot_lab's own JSON-RPC client, four transports and
 connection poller are gone; a robot's MCP servers are `RubyLLM::MCP`

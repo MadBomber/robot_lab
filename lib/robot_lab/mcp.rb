@@ -207,8 +207,16 @@ module RobotLab
       case oauth
       when nil, false then nil
       when true       then klass.oauth
-      else                 klass.oauth(**oauth.to_h.transform_keys(&:to_sym))
+      else                 klass.oauth(**oauth_settings(oauth))
       end
+    end
+
+    # Symbolize keys, and the grant: ruby_llm compares it against Symbols
+    # (:client_credentials, ...) but YAML configs give Strings.
+    def oauth_settings(oauth)
+      settings = oauth.to_h.transform_keys(&:to_sym)
+      settings[:grant] = settings[:grant].to_sym if settings[:grant].is_a?(String)
+      settings
     end
 
     def apply_extensions(klass, extensions)
