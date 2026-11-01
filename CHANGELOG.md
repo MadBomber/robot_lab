@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changed
+
+- **Minimum Ruby raised to 4.0.9.** `required_ruby_version` is now `>= 4.0.9` (was `>= 3.2.0`), and a `.ruby-version` file pins development to 4.0.9.
+- **Slimmer gem.** The gemspec now whitelists what ships in the `.gem`: `lib/`, `sig/`, `exe/`, README, CHANGELOG, and LICENSE. Previous releases packaged everything tracked by git — the docs site, examples with generated output, tooling config, and local design notes — which made 0.3.0 a 1.1 MB gem of 300+ files. 0.3.1 is ~130 KB and 65 files; the docs and examples remain on GitHub.
+- Verified against ruby_llm 2.1.1 (the newest release the `~> 2.0` constraint admits) in addition to 2.0.0; the full suite passes on both.
+
+### Fixed
+
+- `MCP::Transports::StreamableHTTP#connect` no longer raises inside its Async task when the initialize handshake returns no result; the session id is simply left unset.
+
 ## [0.3.0] - 2026-09-18
 
 The ruby_llm 2.0 release. Core moves from ruby_llm 1.x to the official 2.0.0

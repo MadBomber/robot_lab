@@ -4,7 +4,7 @@ This guide covers installing RobotLab in your Ruby project.
 
 ## Requirements
 
-- **Ruby**: 3.2 or higher
+- **Ruby**: 4.0.9 or higher
 - **Bundler**: 2.0 or higher (recommended)
 
 ## Install via Bundler

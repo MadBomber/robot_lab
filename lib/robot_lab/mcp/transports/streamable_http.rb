@@ -50,7 +50,7 @@ module RobotLab
 
             # Initialize MCP protocol
             result = send_initialize
-            @session_id ||= result.dig(:serverInfo, :sessionId)
+            @session_id ||= result&.dig(:serverInfo, :sessionId)
           end
 
           self

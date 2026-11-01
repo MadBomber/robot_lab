@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 4.0.9"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
@@ -31,13 +31,14 @@ Gem::Specification.new do |spec|
   spec.metadata["bug_tracker_uri"] = "https://github.com/MadBomber/robot_lab/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  gemspec = File.basename(__FILE__)
+  # Ship only what a consumer of the gem needs: the library, RBS signatures,
+  # executables, and the top-level README/CHANGELOG/LICENSE. Everything else in
+  # the repo (docs site, examples with generated output, tests, tooling config,
+  # design notes) lives on GitHub, not in the .gem.
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ Gemfile .gitignore test/])
+    ls.readlines("\x0", chomp: true).select do |f|
+      f.start_with?("lib/", "sig/", "exe/") ||
+        %w[README.md CHANGELOG.md LICENSE.txt].include?(f)
     end
   end
   spec.bindir = "exe"

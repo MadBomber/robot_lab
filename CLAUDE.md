@@ -100,15 +100,21 @@ robot.with_temperature(0.9).with_model("claude-sonnet-4").run("Be creative!")
 
 ### Creating Networks
 
+Networks are declared with a task DSL; there is no `robots:`/`router:` form.
+`depends_on:` is `:none` (entry point), `:optional` (routed to only when a
+prior robot selects it), or a list of task names (runs after those finish;
+siblings sharing a dependency run in parallel).
+
 ```ruby
-router = ->(args) { args.call_count.zero? ? ["classifier"] : nil }
-network = RobotLab.create_network(name: "support", robots: [robot1, robot2], router: router)
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing,    billing_robot,    depends_on: :optional
+  task :technical,  technical_robot,  depends_on: :optional
+end
 result = network.run(message: "Hello")
 ```
 
-### Router Args
-
-Router receives `Router::Args` with: `context`, `network`, `stack`, `call_count`, `last_result`
+`create_network` also accepts `concurrency:` (`:auto`, `:threads`, `:async`) and `config:`.
 
 ## Testing
 
