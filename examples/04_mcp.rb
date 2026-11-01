@@ -1,215 +1,184 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Example 4: MCP (Model Context Protocol) Integration with GitHub
+# Example 4: MCP (Model Context Protocol) Integration
 #
-# Demonstrates connecting to the GitHub MCP server and using its tools
-# to interact with GitHub repositories.
+# robot_lab 0.4 uses ruby_llm's built-in MCP client. A server is described
+# once, as a config Hash or a RubyLLM::MCP subclass, and gives a robot the
+# server's tools, resources, and prompts.
+#
+# This example talks to the reference filesystem server, which needs only
+# Node (npx) and is scoped to the directory you hand it.
 #
 # Prerequisites:
-#   1. Install the GitHub MCP server: brew install github-mcp-server
-#   2. Set environment variables:
-#      - GITHUB_PERSONAL_ACCESS_TOKEN: Your GitHub personal access token
+#   - Node.js with npx on PATH
+#   - For Part 2, LM Studio running (see examples/common.rb); Part 1 needs no LLM
 #
 # Usage:
-#   GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
-#
-# The GitHub MCP server provides tools for:
-#   - Searching repositories, code, issues, and users
-#   - Creating and managing issues and pull requests
-#   - Reading file contents and repository information
-#   - Managing branches and commits
+#   bundle exec ruby examples/04_mcp.rb
 
 require_relative "common"
 
-# GitHub MCP server configuration using StdIO transport
-github_server = {
-  name: "github",
+# One config Hash is all a server needs. The same shape works in
+# RobotLab.build(mcp: [...]), template front matter, Network#task(mcp:),
+# RunConfig#mcp, and RobotLab::MCP.build.
+filesystem = {
+  name:        "filesystem",
+  description: "Read, write, and search files under the examples directory",
   transport: {
-    type: "stdio",
-    command: "github-mcp-server",
-    args: ["stdio"],
-    env: {
-      "GITHUB_PERSONAL_ACCESS_TOKEN" => ENV.fetch("GITHUB_PERSONAL_ACCESS_TOKEN", "")
-    }
-  }
+    type:    "stdio",
+    command: "npx",
+    args:    ["-y", "@modelcontextprotocol/server-filesystem", __dir__]
+  },
+  timeout: 60 # seconds; the first npx run downloads the server
 }
 
-banner "MCP Integration Example: GitHub"
+banner "MCP Integration"
 
-puts "This example demonstrates using the GitHub MCP server to interact"
-puts "with GitHub repositories through the Model Context Protocol."
+puts "A server described as a Hash, used directly and then through a robot."
 puts
 
-# Verify prerequisites
-unless ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
-  puts <<~ERROR
-    ERROR: GITHUB_PERSONAL_ACCESS_TOKEN environment variable not set.
-
-    To use this example:
-      1. Create a GitHub Personal Access Token at https://github.com/settings/tokens
-      2. Grant appropriate permissions (repo, read:user, etc.)
-      3. Run: GITHUB_PERSONAL_ACCESS_TOKEN=your_token ruby examples/04_mcp.rb
-  ERROR
-  exit 1
-end
-
-# ============================================================================
-# Part 1: Direct MCP Client Usage
-# ============================================================================
-
-section "Part 1: Direct MCP Client Usage"
-puts "Connecting to GitHub MCP server..."
-
+robot = nil
 begin
-  # Create MCP client and connect
-  client = RobotLab::MCP::Client.new(github_server)
-  client.connect
+  # ==========================================================================
+  # Part 1: A server on its own
+  # ==========================================================================
 
-  unless client.connected?
-    puts <<~ERROR
+  section "Part 1: A server on its own"
+  puts "Building the server (connects lazily on first use)..."
 
-      ERROR: Failed to connect to the GitHub MCP server.
+  server = RobotLab::MCP.build(filesystem) # => a RubyLLM::MCP
+  tools  = server.tools                    # connects, lists tools
 
-      Make sure you have installed it:
-        brew install github-mcp-server
-    ERROR
-    exit 1
-  end
-
-  puts "Connected successfully!"
+  puts "Connected: #{server.name} (protocol #{server.version})"
+  puts "Instructions: #{server.instructions.lines.first.strip}" if server.instructions
   puts
 
-  # List available tools
-  puts "Available GitHub Tools:"
+  puts "Tools (#{tools.size}):"
   hr
-
-  tools = client.list_tools
-  if tools.empty?
-    puts "  (No tools returned - check server connection)"
-  else
-    tools.each do |tool|
-      puts "  #{tool[:name]}"
-      puts "    #{tool[:description]}" if tool[:description]
-    end
+  tools.first(10).each do |tool|
+    puts "  #{tool.name}"
+    puts "    #{tool.description.lines.first.strip}" if tool.description
   end
+  puts "  ... and #{tools.size - 10} more" if tools.size > 10
+  puts
 
+  puts "Calling list_directory directly:"
   hr
-  puts "Total: #{tools.size} tools available"
+  result = server.call(:list_directory, path: __dir__)
+  puts result.error? ? "  error: #{result.text}" : result.text.lines.first(8).map { |l| "  #{l}" }.join
   puts
 
-  # Demonstrate a simple tool call: search for repositories
-  puts "Demo: Searching for popular Ruby repositories..."
-  puts
-
-  result = client.call_tool("search_repositories", {
-    query: "language:ruby stars:>1000",
-    per_page: 5
-  })
-
-  # Extract and pretty print the JSON result
-  if result.is_a?(Array) && result.first.is_a?(Hash) && result.first[:text]
-    data = JSON.parse(result.first[:text])
-    puts JSON.pretty_generate(data)
-  else
-    puts JSON.pretty_generate(result)
+  # Resources and prompts are part of the same object. A server that does not
+  # implement them answers with a JSON-RPC "method not found" error.
+  offered = lambda do |label|
+    "#{server.public_send(label).size} #{label}"
+  rescue RubyLLM::MCP::Error => e
+    "#{label} not offered (#{e.message})"
   end
-
+  puts "Resources: #{offered.call(:resources)}"
+  puts "Prompts:   #{offered.call(:prompts)}"
   puts
 
-  # Clean up direct client
-  client.disconnect
-  puts "Disconnected from direct MCP client."
+  server.close
+  puts "Closed (the next request would reconnect)."
 
-  # ============================================================================
-  # Part 2: Robot + MCP Integration
-  # ============================================================================
+  # ==========================================================================
+  # Part 2: Robot + MCP
+  # ==========================================================================
 
+  section "Part 2: Robot + MCP"
 
-  section "Part 2: Robot + MCP Integration"
+  # The server part above needs no LLM; the robot part does.
+  require_lms!
 
-  puts "Creating Robot with MCP server integration..."
-  puts
-
-  # Create a Robot with MCP server - tools are automatically discovered.
-  # connect_mcp! forces eager connection; without it MCP clients initialize
-  # lazily on the first run() call, leaving mcp_clients empty until then.
+  # mcp: registers the server with the robot. tool_approval: :approve lets
+  # tools the server marks as requiring approval run unattended; the default
+  # is :deny, or pass on_tool_approval: to decide per call.
   robot = RobotLab.build(
     **llm_opts,
-    name: "github_assistant",
-    template: :github_assistant,
-    mcp_servers: [github_server]
+    name:          "fs_assistant",
+    system_prompt: "You answer questions about files using the tools you are given. Be brief.",
+    mcp:           [filesystem],
+    tool_approval: :approve
   )
+
+  # Connections are made on the first run that selects a server; connect_mcp!
+  # connects now so status can be shown up front.
   robot.connect_mcp!
 
-  puts "Robot created: #{robot.name}"
-  puts "  Model: #{robot.model}"
-  puts "  MCP Servers: #{robot.mcp_clients.keys.join(", ")}"
-  puts "  MCP Tools discovered: #{robot.mcp_tools.size}"
+  puts "Robot: #{robot.name} (#{robot.model})"
+  puts "  MCP servers:  #{robot.mcp.names.join(', ')}"
+  puts "  Failed:       #{robot.failed_mcp_server_names.inspect}"
+  puts "  MCP tools:    #{robot.mcp_tools.size}"
+  puts "  Same object:  robot.mcp[:filesystem].tools.size == #{robot.mcp[:filesystem].tools.size}"
   puts
 
-  # Show discovered MCP tools
-  puts "Discovered MCP Tools:"
-  hr
-  robot.mcp_tools.first(10).each do |tool|
-    puts "  #{tool.name}"
-    puts "    #{tool.description&.slice(0, 60)}..." if tool.description
-  end
-  puts "  ... and #{robot.mcp_tools.size - 10} more" if robot.mcp_tools.size > 10
-  puts
-
-  # Run the robot with a query that will use MCP tools
-  puts "Running Robot with a GitHub query..."
-  puts "Query: 'What are the top 3 most starred Ruby web frameworks on GitHub?'"
+  # run() defaults to mcp: :none / tools: :none, which sends the model no
+  # tools at all. mcp: :inherit selects the robot's servers for this turn;
+  # tools: takes a name allowlist (or :inherit for every tool). Allowlisting
+  # keeps the tool schemas small for local models.
+  question = "Which Ruby files in this directory have 'network' in their name? Just list them."
+  puts "Query: #{question}"
   hr
 
-  # mcp: :inherit is required — run() defaults it to :none, which resolves to
-  # "no MCP servers this turn" and the discovered tools would never reach the
-  # provider. tools: takes an allowlist of tool names; :inherit would send all
-  # ~90 GitHub tools, whose JSON schemas alone exceed 13k tokens and overflow
-  # a local model's context window (LM Studio's default is 8192) before the
-  # query even arrives. Send only the one tool this query needs.
-  result = robot.run(
-    "What are the top 3 most starred Ruby web frameworks on GitHub? Just list their names and star counts.",
-    mcp:   :inherit,
-    tools: %w[search_repositories]
-  )
+  result = robot.run(question, mcp: :inherit, tools: %w[list_directory search_files])
 
   puts
   puts "Robot Response:"
   hr
-  result.output.each do |msg|
-    puts msg.content if msg.respond_to?(:content)
-  end
+  result.output.each { |msg| puts msg.content if msg.respond_to?(:content) }
   puts
 
-  # Show tool calls if any were made
   if result.tool_calls.any?
-    puts "Tool Calls Made:"
-    hr
-    result.tool_calls.each do |tc|
-      tool_info = tc.respond_to?(:tool) ? tc.tool : tc
-      puts "  #{tool_info[:name] || tool_info}"
-    end
+    puts "Tool calls made: #{result.tool_calls.size}"
     puts
   end
 
-  # Clean up robot's MCP connections
+  # Closes every server (stopping the npx process); servers stay registered
+  # and would reconnect on the next run.
   robot.disconnect
-  puts "Robot MCP connections disconnected."
+  puts "Robot disconnected."
 
-rescue RobotLab::MCPError => e
-  puts "MCP Error: #{e.message}"
+  # ==========================================================================
+  # Part 3: Servers as classes
+  # ==========================================================================
+
+  section "Part 3: Servers as classes"
+  puts "Anything RubyLLM::MCP's class DSL offers works on a robot too:"
+  puts
+  show_code <<~RUBY
+    class GitHub < RubyLLM::MCP
+      command "github-mcp-server", "stdio"
+      env GITHUB_PERSONAL_ACCESS_TOKEN: ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
+      only "search_repositories", "get_file_contents", "create_issue"
+      requires_approval "create_issue"     # paused until approved
+    end
+
+    robot = RobotLab.build(
+      name: "dev",
+      mcp:  [GitHub],
+      on_tool_approval: ->(call) { call.name != "create_issue" || ask_the_user(call) }
+    )
+
+    robot.run("Open an issue about the flaky test", mcp: :inherit, tools: :inherit)
+    robot.run(robot.mcp[:git_hub].prompt("code_review", code: diff), mcp: :inherit)
+  RUBY
+rescue RobotLab::MCPError, RubyLLM::MCP::Error => e
+  puts "MCP error: #{e.message}"
   exit 1
-rescue Errno::ENOENT
+rescue Errno::ENOENT => e
   puts <<~ERROR
 
-    ERROR: Could not find the github-mcp-server command.
+    ERROR: #{e.message}
 
-    Install it with:
-      brew install github-mcp-server
+    This example runs the filesystem MCP server with npx. Install Node.js
+    (https://nodejs.org) so that `npx` is on your PATH.
   ERROR
   exit 1
+ensure
+  # Stops the npx server process on every exit path, including an abort above.
+  robot&.disconnect
 end
 
 puts

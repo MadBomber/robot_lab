@@ -43,6 +43,7 @@ class FakeSkillStore
 end
 require 'minitest/autorun'
 require 'minitest/reporters'
+require_relative 'support/fake_mcp_transport'
 
 # rubocop:disable Style/FileOpen, Style/GlobalStdStream, Layout/LineLength
 $stdout = File.open('test_output.txt', 'w').tap { |f| f.sync = true }
@@ -106,6 +107,24 @@ module RobotLabTestHelpers
       description: description,
       &
     )
+  end
+
+  # An MCP tool definition as a server lists it (tools/list).
+  def fake_tool_def(name, description: "#{name} tool", properties: {}, required: [])
+    {
+      'name' => name.to_s,
+      'description' => description,
+      'inputSchema' => { 'type' => 'object', 'properties' => properties, 'required' => required }
+    }
+  end
+
+  # A RubyLLM::MCP backed by an in-process FakeMCPTransport. Pass +tools:+ as
+  # names or full definitions; any other keyword goes to RobotLab::MCP.build
+  # (description:, only:, prefix:, requires_approval:, defer:, ...).
+  def fake_mcp_server(name: 'fake', tools: [], transport: nil, **config)
+    defs = tools.map { |t| t.is_a?(Hash) ? t : fake_tool_def(t) }
+    transport ||= FakeMCPTransport.new(name: name, tools: defs)
+    RobotLab::MCP.build(name: name, transport: transport, **config)
   end
 end
 

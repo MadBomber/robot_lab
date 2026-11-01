@@ -48,7 +48,8 @@ Gem::Specification.new do |spec|
   # Core dependencies
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
-  spec.add_dependency "ruby_llm", "~> 2.0"
+  # 2.1 ships the built-in RubyLLM::MCP client that RobotLab::MCP builds on.
+  spec.add_dependency "ruby_llm", ">= 2.1.1", "< 3"
   spec.add_dependency "ruby_llm-providers-apfel", "~> 0.2.1"
   spec.add_dependency "ruby_llm-providers-lms", "~> 0.2.1"
   spec.add_dependency "prompt_manager", "~> 1.0"
@@ -57,9 +58,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "simple_flow", "~> 0.4"
   # Required by Network's BusPoller (lib/robot_lab/bus_poller.rb requires it).
   spec.add_dependency "ractor_queue", "~> 0.2"
-  # Optional MCP transport dependencies (loaded on demand)
-  spec.add_dependency "async-http", "~> 0.60"
-  spec.add_dependency "async-websocket", "~> 0.30"
 
   # Optional text analysis dependencies.
   # Add to your application's Gemfile to enable compress_history and

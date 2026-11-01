@@ -2,12 +2,108 @@
 
 module RobotLab
   class Robot < RubyLLM::Agent
-    # MCP client lifecycle and hierarchical tool/MCP resolution.
+    # MCP servers: the robot's registry, per-run server selection, tool
+    # collection, and connection failures.
     #
-    # Owns:    @mcp_clients, @mcp_tools, @mcp_initialized, @failed_mcp_configs
-    # Reads:   @mcp_config, @tools_config, @name, @chat, @local_tools
-    # Contract: ivars initialized by initialize_runtime_state; lazy init on first run
+    # Servers are +RubyLLM::MCP+ instances (see RobotLab::MCP). They connect
+    # lazily on the first +tools+ request and stay connected across runs
+    # until #disconnect. Each run attaches the selected servers' tools to the
+    # chat with +with_tools+, so the per-run +tools:+ allowlist, +max_tools+
+    # cap and +:none+ apply to MCP tools exactly as to local ones.
+    #
+    # Owns:    @mcp_registry, @mcp_failures, @mcp_tool_owners, @run_mcp_servers
+    # Reads:   @mcp_config, @tools_config, @name, @mcp_discovery, @bus
+    # Contract: ivars initialized by initialize_runtime_state
     module MCPManagement
+      # The robot's MCP servers, keyed by name. Each entry is a
+      # +RubyLLM::MCP+ with the full protocol surface: +tools+, +call+,
+      # +resources+, +resource(uri)+, +prompts+, +prompt(name)+,
+      # +instructions+, +close+, and the OAuth flow.
+      #
+      # @return [MCP::Registry]
+      #
+      # @example
+      #   robot.mcp[:github].resources.map(&:uri)
+      #   robot.run(robot.mcp[:github].prompt("code_review", code: diff))
+      def mcp
+        @mcp_registry
+      end
+
+      # Register MCP servers on this robot. Accepts config Hashes,
+      # +RubyLLM::MCP+ instances and +RubyLLM::MCP+ subclasses, in any mix.
+      # Registering a spec already known returns the same server, so hosts
+      # may call this on every request. +with_mcp(nil)+ closes and forgets
+      # every server.
+      #
+      # Registered servers are available to runs that select them through
+      # the +mcp:+ cascade (+run(..., mcp: :inherit)+ picks up the build-time
+      # list; a run-time Array picks exactly those).
+      #
+      # @param servers [Array<Hash, RubyLLM::MCP, Class<RubyLLM::MCP>>, nil]
+      # @return [self]
+      def with_mcp(*servers)
+        if servers == [nil]
+          @mcp_registry.clear
+        else
+          servers.flatten.compact.each { |spec| @mcp_registry.add(spec) }
+        end
+        self
+      end
+
+      # Eagerly register the build-time MCP servers and connect to each.
+      # Connections are otherwise made on the first run that selects a
+      # server. Failures are recorded in #mcp_failures, not raised.
+      #
+      # @return [self]
+      def connect_mcp!
+        collect_mcp_tools(servers_for(resolve_mcp_hierarchy(@mcp_config)))
+        self
+      end
+
+      # The MCP tools offered by the given servers (default: every
+      # registered server). Connects servers that are not connected yet and
+      # skips, with a warning, any that cannot be reached.
+      #
+      # @param servers [Enumerable<RubyLLM::MCP>]
+      # @return [Array<RubyLLM::MCP::Tool>]
+      def mcp_tools(servers = @mcp_registry)
+        collect_mcp_tools(servers.to_a)
+      end
+
+      # Names of servers whose last connection attempt failed. A server is
+      # retried on the next run that selects it and leaves this list once it
+      # answers.
+      #
+      # @return [Array<String>]
+      def failed_mcp_server_names
+        @mcp_failures.keys
+      end
+
+      # The last connection error per failed server name.
+      #
+      # @return [Hash{String => Exception}]
+      def mcp_failures
+        @mcp_failures.dup
+      end
+
+      # The server that owns +tool+, or nil for a local tool.
+      #
+      # @param tool [RubyLLM::Tool]
+      # @return [RubyLLM::MCP, nil]
+      def mcp_server_for(tool)
+        @mcp_tool_owners[tool]
+      end
+
+      # Close every MCP server (stopping stdio processes) and the bus channel.
+      # Servers stay registered and reconnect on their next use.
+      #
+      # @return [self]
+      def disconnect
+        @mcp_registry.each(&:close)
+        teardown_bus_channel if @bus
+        self
+      end
+
       private
 
       # Resolve MCP hierarchy: runtime -> robot build -> network -> config
@@ -32,121 +128,79 @@ module RobotLab
         network&.network
       end
 
-      # Ensure MCP clients are initialized for the given server configs.
-      # On subsequent calls, retries any servers that previously failed to connect.
-      # :reek:TooManyStatements -- first-run init vs retry paths share the needed-server list; linear either way.
-      def ensure_mcp_clients(mcp_servers)
-        return if mcp_servers.empty?
-
-        needed_servers = mcp_servers.map { |s| s.is_a?(Hash) ? s[:name] : s.to_s }.compact
-
-        if @mcp_initialized
-          # Already initialized — retry any servers that are needed but not connected
-          retry_failed_servers(mcp_servers, needed_servers)
-          return
-        end
-
-        @mcp_clients = {}
-        @mcp_tools = []
-        @failed_mcp_configs = {}
-
-        mcp_servers.each do |server_config|
-          init_mcp_client(server_config)
-        end
-
-        @mcp_initialized = true
+      # The registered server instances a run's resolved +mcp+ value names.
+      # Specs not registered yet are registered here. With +mcp_discovery+,
+      # the candidates are narrowed to those relevant to +message+ first.
+      #
+      # @param resolved [Array<Hash, RubyLLM::MCP, Class>] output of resolve_mcp_hierarchy
+      # @param message [String, RubyLLM::MCP::Prompt, nil] this run's request
+      # @return [Array<RubyLLM::MCP>]
+      def servers_for(resolved, message: nil)
+        specs = Array(resolved)
+        specs = MCP::ServerDiscovery.select(discovery_query(message), from: specs) if @mcp_discovery && message
+        specs.map { |spec| @mcp_registry.add(spec) }
       end
 
-      # :reek:TooManyStatements -- connect success/failure bookkeeping plus the rescue path for one server.
-      def init_mcp_client(server_config)
-        client = MCP::Client.new(server_config)
-        client.connect
+      # The text ServerDiscovery scores servers against.
+      def discovery_query(message)
+        return message.to_s unless message.is_a?(RubyLLM::MCP::Prompt)
 
-        if client.connected?
-          server_name = client.server.name
-          @mcp_clients[server_name] = client
-          discover_mcp_tools(client, server_name)
-        else
-          server_name = extract_server_name(server_config)
-          @failed_mcp_configs[server_name] = server_config
-          RobotLab.config.logger.warn(
-            "Robot '#{@name}' failed to connect to MCP server: #{server_name}"
-          )
-        end
-      rescue StandardError => e
-        server_name = extract_server_name(server_config)
-        @failed_mcp_configs[server_name] = server_config
+        message.messages.map { |prompt_message| prompt_message.content.to_s }.join(' ')
+      end
+
+      # The tools of +servers+, connecting each as needed. A server that
+      # cannot be reached is recorded in @mcp_failures, warned about, and
+      # contributes no tools; the run goes on with the rest.
+      #
+      # @param servers [Array<RubyLLM::MCP>]
+      # @return [Array<RubyLLM::MCP::Tool>]
+      def collect_mcp_tools(servers)
+        servers.flat_map { |server| tools_from(server) }
+      end
+
+      # One server's tools, or [] (recorded and warned) when it cannot be reached.
+      def tools_from(server)
+        tools = server.tools
+        @mcp_failures.delete(server.name)
+        tools.each { |tool| @mcp_tool_owners[tool] = server }
+        tools
+      rescue *MCP::CONNECT_ERRORS => e
+        record_mcp_failure(server, e)
+        []
+      end
+
+      def record_mcp_failure(server, error)
+        @mcp_failures[server.name] = error
         RobotLab.config.logger.warn(
-          "Robot '#{@name}' error connecting to MCP server '#{server_name}': #{e.message}"
+          "Robot '#{@name}' could not reach MCP server '#{server.name}': #{error.class}: #{error.message}"
         )
       end
 
-      # Retry connecting to servers that previously failed
-      # :reek:TooManyStatements -- per-server retry with success bookkeeping and a best-effort rescue.
-      def retry_failed_servers(_mcp_servers, needed_servers)
-        return if @failed_mcp_configs.nil? || @failed_mcp_configs.empty?
+      # Whether +tool+ is an MCP tool its server declared deferred (offered to
+      # the provider's tool search instead of the model's context).
+      def deferred_mcp_tool?(tool)
+        server = mcp_server_for(tool)
+        return false unless server
 
-        # Only retry servers that are still needed and still failed
-        to_retry = @failed_mcp_configs.slice(*needed_servers)
-        return if to_retry.empty?
-
-        logger = RobotLab.config.logger
-        to_retry.each do |name, server_config|
-          logger.info(
-            "Robot '#{@name}' retrying MCP server: #{name}"
-          )
-
-          client = MCP::Client.new(server_config)
-          client.connect
-
-          if client.connected?
-            @mcp_clients[name] = client
-            @failed_mcp_configs.delete(name)
-            discover_mcp_tools(client, name)
-            logger.info(
-              "Robot '#{@name}' successfully connected to MCP server '#{name}' on retry"
-            )
-          end
-        rescue StandardError => e
-          logger.warn(
-            "Robot '#{@name}' retry failed for MCP server '#{name}': #{e.message}"
-          )
-        end
+        server.defers?(tool)
       end
 
-      # :reek:FeatureEnvy -- adapting each MCP tool definition into a local Tool is exactly this method's purpose.
-      # :reek:NestedIterators -- the inner block is the tool's execution closure, not an iteration.
-      def discover_mcp_tools(client, server_name)
-        tools = client.list_tools
-
-        tools.each do |tool_def|
-          tool_name = tool_def[:name]
-          mcp_client = client
-
-          tool = Tool.create(
-            name: tool_name,
-            description: tool_def[:description],
-            parameters: tool_def[:inputSchema],
-            mcp: server_name
-          ) { |args| mcp_client.call_tool(tool_name, args) }
-
-          @mcp_tools << tool
-        end
-
-        RobotLab.config.logger.info(
-          "Robot '#{@name}' discovered #{tools.size} tools from MCP server '#{server_name}'"
-        )
+      # Whether the chat currently holds MCP tools from an earlier run.
+      def mcp_tools_attached?
+        @chat.tools.each_value.any?(RubyLLM::MCP::Tool)
       end
 
-      def extract_server_name(server_config)
-        case server_config
-        when Hash
-          server_config[:name] || server_config['name'] || server_config.to_s
-        when MCP::Server
-          server_config.name
-        else
-          server_config.to_s
-        end
+      # Two tools with one name cannot both be offered; ruby_llm raises when
+      # it builds the tool list, so catch it here with the fix spelled out.
+      #
+      # @param tools [Array<RubyLLM::Tool>]
+      # @raise [MCPError]
+      def check_unique_tool_names!(tools)
+        duplicates = tools.group_by { |tool| tool.name.to_s }.select { |_, same| same.size > 1 }.keys
+        return if duplicates.empty?
+
+        raise MCPError, "Robot '#{@name}' has more than one tool named #{duplicates.join(', ')}. " \
+                        'Give one of the MCP servers a prefix:, or rename the local tool.'
       end
     end
   end

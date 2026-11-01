@@ -121,14 +121,13 @@ stateless: they are instantiated fresh inside the worker for each call.
 
 ### Tool.create
 
-Factory for dynamic tools (MCP wrappers, inline tools).
+Factory for dynamic, inline tools.
 
 ```ruby
 Tool.create(
   name:,
   description: nil,
   parameters: nil,
-  mcp: nil,
   robot: nil,
   &handler
 )
@@ -141,7 +140,6 @@ Tool.create(
 | `name` | `String, Symbol` | Tool identifier |
 | `description` | `String` | What the tool does |
 | `parameters` | `Hash` | JSON Schema parameter definition |
-| `mcp` | `String` | MCP server name; makes `mcp?` true |
 | `robot` | `Robot` | Owning robot instance |
 | `&handler` | `Block` | Receives the `args` hash, returns the result |
 
@@ -230,13 +228,11 @@ tool.robot = some_robot
 
 Read/write accessor for the owning robot. Set via constructor or assigned later.
 
-### mcp
-
-```ruby
-tool.mcp  # => String or nil
-```
-
-The MCP server name, set via `Tool.create(mcp: "server_name")`.
+> [!NOTE]
+> MCP tools are not `RobotLab::Tool`s. Since 0.4 they are `RubyLLM::MCP::Tool`
+> instances owned by a `RubyLLM::MCP` server; `Tool.create(mcp:)`, `Tool#mcp`
+> and `Tool#mcp?` no longer exist. Ask `robot.mcp_server_for(tool)` or
+> `ToolCallHookContext#mcp_server` / `#mcp?` instead.
 
 ## Methods
 
@@ -259,14 +255,6 @@ Sub1.new.name                # => "sub1"   (top-level class, no namespace)
 
 This matters when writing a `tools:` name allowlist: the allowlist must contain
 the fully-derived name (`"robot_lab--ask_user"`), not the short one.
-
-### mcp?
-
-```ruby
-tool.mcp?  # => Boolean
-```
-
-Whether this is an MCP-provided tool.
 
 ### call
 
@@ -338,15 +326,15 @@ Inherited. Returns provider-specific parameters (e.g., `{ strict: true }`).
 tool.to_h  # => Hash
 ```
 
-Hash representation with `:name`, `:description`, `:mcp` — `.compact`ed, so
-`:description` and `:mcp` are absent when nil:
+Hash representation with `:name` and `:description` — `.compact`ed, so
+`:description` is absent when nil:
 
 ```ruby
 class T4 < RobotLab::Tool
   description "t"
   def execute(**) = nil
 end
-T4.new.to_h   # => { name: "t4", description: "t" }   -- no :mcp key
+T4.new.to_h   # => { name: "t4", description: "t" }
 ```
 
 ### to_json

@@ -20,7 +20,7 @@
 - <strong>Extensible Tools</strong> - Custom capabilities with graceful error handling<br>
 - <strong>Human-in-the-Loop</strong> - AskUser tool for interactive prompting<br>
 - <strong>Content Streaming</strong> - Stored callbacks, per-call blocks, or both<br>
-- <strong>MCP Integration</strong> - Connect to external tool servers with timeouts and retry<br>
+- <strong>MCP Integration</strong> - Tools, resources and prompts from MCP servers through ruby_llm's built-in client<br>
 - <strong>Local LLM Providers</strong> - LM Studio (via ruby_llm-providers-lms), Ollama, and GPUStack via provider passthrough<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
@@ -347,7 +347,7 @@ result = tool.call({})
 # => "Error (fetch_data): connection refused"
 ```
 
-This applies to all tools — subclasses, factory tools, and MCP tools. For critical tools where you want exceptions to propagate, opt out per class:
+This applies to every `RobotLab::Tool` — subclasses and factory tools. (MCP tools are `RubyLLM::MCP::Tool` instances; a `RubyLLM::MCP::Error` raised during one of their calls becomes an `{ error: }` tool result through the robot's tool-call bridge instead.) For critical tools where you want exceptions to propagate, opt out per class:
 
 ```ruby
 class CriticalTool < RobotLab::Tool
@@ -394,13 +394,13 @@ result = robot.run("Should I start learning Rust?", tools: :inherit)
 ```
 
 > [!WARNING]
-> `run()` defaults to `tools: :none` and `mcp: :none`, and `:none` means **send zero tools this turn**. Attaching tools with `local_tools:` (or servers with `mcp:`) is therefore not enough on its own — a plain `robot.run("...")` sends the LLM no tools at all and connects no MCP servers.
+> `run()` defaults to `tools: :none` and `mcp: :none`, and `:none` means **send zero tools this turn**. Attaching tools with `local_tools:` (or servers with `mcp:`) is therefore not enough on its own — a plain `robot.run("...")` sends the LLM no tools at all and contacts no MCP servers.
 >
 > Pass `tools: :inherit` / `mcp: :inherit` on each run to use what the robot has attached:
 >
 > ```ruby
 > robot.run("...", tools: :inherit)              # send attached tools
-> robot.run("...", mcp: :inherit, tools: :inherit)  # connect MCP + send its tools
+> robot.run("...", mcp: :inherit, tools: :inherit)  # select MCP servers + send their tools
 > ```
 >
 > `:inherit` means "no filter, use everything attached"; an explicit array acts as a name allowlist. Note that `tools: :inherit` at *build* time behaves differently — it resolves against the parent level, so keep `:inherit` on the `run()` call.
@@ -510,39 +510,49 @@ Results are keyed in `result.context` by the **robot's** `name`, not by the task
 
 ## MCP Integration
 
-Connect to external tool servers via Model Context Protocol:
+RobotLab uses ruby_llm's built-in MCP client (`RubyLLM::MCP`, stdio and Streamable HTTP). A server is a config Hash, a `RubyLLM::MCP` subclass, or an instance:
 
 ```ruby
-# Configure MCP server (with optional timeout)
-filesystem_server = {
+# A config Hash — the same shape works in template front matter and Network#task(mcp:)
+filesystem = {
   name: "filesystem",
   transport: {
     type: "stdio",
-    command: "mcp-server-filesystem",
-    args: ["/path/to/allowed/directory"]
+    command: "npx",
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"]
   },
-  timeout: 30  # seconds (default: 15)
+  timeout: 30  # seconds; absent means ruby_llm's request_timeout
 }
 
-# Create robot with MCP server - tools are auto-discovered
+# Or anything RubyLLM::MCP's class DSL offers
+class GitHub < RubyLLM::MCP
+  command "github-mcp-server", "stdio"
+  env GITHUB_PERSONAL_ACCESS_TOKEN: ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
+  requires_approval if: :destructive?
+end
+
 robot = RobotLab.build(
   name: "developer",
   template: :developer,
-  mcp: [filesystem_server]
+  mcp: [filesystem, GitHub],
+  tool_approval: :approve   # approval-gated tools are denied unless allowed here or via on_tool_approval:
 )
 
-# Connect. Do this explicitly — run() defaults to mcp: :none, so a plain
-# run() never connects the servers configured above.
+# Servers connect on the first run that selects them; connect_mcp! connects now
 robot.connect_mcp!
-
-# Check connection status
 puts "Failed: #{robot.failed_mcp_server_names}" if robot.failed_mcp_server_names.any?
 
-# Robot can now use filesystem tools — :inherit is required on the run
+# run() defaults to mcp: :none / tools: :none — ask for the servers and their tools per run
 result = robot.run("List the files in the current directory", mcp: :inherit, tools: :inherit)
+
+# The full ruby_llm surface is one lookup away
+robot.mcp[:filesystem].resources
+robot.run(robot.mcp[:git_hub].prompt("code_review", code: diff), mcp: :inherit)
+
+robot.disconnect   # closes every server (stopping stdio processes); they reconnect on next use
 ```
 
-MCP connections are resilient: failed servers are automatically retried on subsequent `run(mcp: :inherit)` calls, and one failing server does not prevent others from connecting. Connection failures are logged and recorded in `failed_mcp_server_names` rather than raised, so a robot whose servers all failed still builds and runs — just without those tools.
+Connection failures are logged, recorded in `robot.mcp_failures` and retried on the next run that selects the server; they are not raised, and one failing server does not stop the others. A `RubyLLM::MCP::Error` during a tool call becomes an `{ error: }` tool result rather than aborting the run. See the [MCP Integration guide](docs/guides/mcp-integration.md), including its "Migrating from 0.3" section.
 
 ## Message Bus
 

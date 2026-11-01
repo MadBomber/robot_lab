@@ -385,24 +385,20 @@ robot = RobotLab.build(
 robot.run("List the Ruby files in ./lib", mcp: :inherit, tools: :inherit)
 ```
 
+The client is ruby_llm's built-in `RubyLLM::MCP` (stdio and Streamable HTTP;
+`sse`/`ws` configs raise `RobotLab::MCPError`). A server spec is a config Hash
+like the ones above (`transport:` may be nested or flat), a `RubyLLM::MCP`
+subclass, or an instance. `robot.mcp[:github]` is the server object, with
+`tools`, `resources`, `prompts` and the rest of ruby_llm's surface.
+
 > [!IMPORTANT]
-> `transport:` must be a **nested hash** — `transport: { type: "stdio", command: ..., args: [...] }`.
-> A flat `transport: stdio` with sibling `command:`/`args:` keys raises
-> `NoMethodError: undefined method 'transform_keys' for an instance of String`,
-> and that exception is **swallowed** rather than raised: the robot builds
-> successfully with zero tools. It is not silent, though — a line is logged at
-> `WARN` through `RobotLab.config.logger` (`Robot 'dev' error connecting to MCP
-> server 'fs': undefined method 'transform_keys' for an instance of String`) and
-> the server name lands in `robot.failed_mcp_server_names`. An *invalid* transport
-> type is swallowed the same way; only a direct `MCP::Server.new` raises
-> `ArgumentError`. Valid transport types are `stdio`, `sse`, `ws`,
-> `websocket`, `streamable-http`, and `http` (`streamable_http` with an
-> underscore is invalid).
->
-> `mcp:` also defaults to `:none` on `run`. `mcp: :inherit` triggers the
-> connection attempt; `tools: :inherit` is additionally required for the MCP
-> tools to reach the model. MCP connection failures are logged and recorded in
-> `robot.failed_mcp_server_names` — they are not raised.
+> `mcp:` defaults to `:none` on `run`. `mcp: :inherit` selects the robot's
+> servers (connecting them on first use); `tools: :inherit` or an allowlist is
+> additionally required for the MCP tools to reach the model. Connection
+> failures are logged and recorded in `robot.mcp_failures` /
+> `robot.failed_mcp_server_names` — they are not raised — and retried on the
+> next run that selects the server. Tools a server marks `requires_approval`
+> are denied unless `tool_approval: :approve` or `on_tool_approval:` is set.
 
 MCP configuration follows a hierarchical resolution: `runtime > robot > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays.
 
@@ -617,12 +613,8 @@ model: claude-sonnet-4
 You are a GitHub assistant. Use available tools to help with repository tasks.
 ```
 
-> [!IMPORTANT]
-> Note the **nested** `transport:` mapping above. A flat
-> `transport: stdio` with sibling `command:`/`args:` keys raises a `NoMethodError`
-> that is swallowed rather than propagated, leaving you with a robot that has no
-> tools. Look for the `WARN` line on `RobotLab.config.logger` and check
-> `robot.failed_mcp_server_names` — both record the failure.
+The nested `transport:` mapping above and the flat form (`transport: stdio`
+with sibling `command:`/`args:` keys) are both accepted.
 
 ```ruby
 # Template provides everything — minimal constructor

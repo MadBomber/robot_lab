@@ -194,9 +194,9 @@ nav:
           - ToolResultMessage: api/messages/tool-result-message.md
       - MCP:
           - api/mcp/index.md
-          - Client: api/mcp/client.md
+          - Factory: api/mcp/factory.md
           - Server: api/mcp/server.md
-          - Transports: api/mcp/transports.md
+          - Registry: api/mcp/registry.md
       - Streaming:
           - api/streaming/index.md
           - Context: api/streaming/context.md

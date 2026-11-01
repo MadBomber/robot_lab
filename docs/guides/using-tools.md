@@ -547,7 +547,7 @@ result = tool.call({ "id" => "missing" })
 # => "Error (fetch_resource): connection refused"
 ```
 
-This applies to all `RobotLab::Tool` variants — subclasses, `Tool.create` factory tools, and MCP tools.
+This applies to all `RobotLab::Tool` variants — subclasses and `Tool.create` factory tools. MCP tools are `RubyLLM::MCP::Tool` instances, not `RobotLab::Tool`s; a `RubyLLM::MCP::Error` raised during one of their calls is turned into an `{ error: }` tool result by the robot's tool-call bridge instead (see [MCP Integration](mcp-integration.md#hooks-and-mcp-tools)).
 
 ### RobotLab::ToolError and Retryability
 

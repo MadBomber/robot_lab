@@ -13,7 +13,7 @@ RubyLLM::Agent
 `Robot` inherits from `RubyLLM::Agent`, which creates a persistent `@chat` on initialization. The robot adds template-based prompts, shared memory, hierarchical MCP configuration, and SimpleFlow pipeline integration on top of the base agent.
 
 `Robot` also includes `RobotLab::Runnable` and the mixins
-`Robot::TemplateRendering`, `Robot::MCPManagement`, `Robot::BusMessaging`,
+`Robot::TemplateRendering`, `Robot::MCPManagement`, `Robot::ToolCallGating`, `Robot::BusMessaging`,
 `Robot::HistorySearch`, `Robot::Budget`, and `Robot::Hooking`, and prepends
 `Robot::AgentSkillMatching`.
 
@@ -35,12 +35,14 @@ Robot.new(
   local_tools: [],
   model: nil,
   provider: nil,
-  mcp_servers: [],
   mcp: :none,
   tools: :none,
   on_tool_call: nil,
   on_tool_result: nil,
   on_content: nil,
+  tool_approval: nil,
+  on_tool_approval: nil,
+  on_input_request: nil,
   enable_cache: true,
   bus: nil,
   skills: nil,
@@ -79,12 +81,14 @@ Robot.new(
 | `local_tools` | `Array` | `[]` | Tools defined locally (`RubyLLM::Tool` subclasses or `RobotLab::Tool` instances) |
 | `model` | `String`, `nil` | `nil` | LLM model ID (falls back to `RobotLab.config.ruby_llm.model`) |
 | `provider` | `String`, `Symbol`, `nil` | `nil` | LLM provider for local providers (e.g., `:ollama`, `:gpustack`). Automatically sets `assume_model_exists: true` |
-| `mcp_servers` | `Array` | `[]` | Legacy MCP server configurations |
-| `mcp` | `Symbol`, `Array` | `:none` | Hierarchical MCP config (`:none`, `:inherit`, or server array) |
+| `mcp` | `Symbol`, `Array` | `:none` | Hierarchical MCP config: `:none`, `:inherit`, or an Array of specs — config Hashes, `RubyLLM::MCP` instances and `RubyLLM::MCP` subclasses, mixed freely (see [MCP](../mcp/index.md)). Specs are not validated here; they are built on `connect_mcp!`, `with_mcp`, or the first run that selects them |
 | `tools` | `Symbol`, `Array` | `:none` | Hierarchical tools config (`:none`, `:inherit`, or tool name **array**). Must be tool *names* (String/Symbol) — `validate_tools_filter!` raises `ArgumentError` for an instance or class, telling you to use `local_tools:` instead. **For a standalone robot, leave this unset at build time**: `tools: :inherit` here resolves against the global parent `:none` and yields an allowlist that matches nothing. Inside a network whose `config:` sets `tools:`, build-time `:inherit` is the correct way to opt in. See [Runtime Tool Filtering](../../guides/using-tools.md#runtime-tool-filtering) |
 | `on_tool_call` | `Proc`, `nil` | `nil` | Callback invoked when a tool is called |
 | `on_tool_result` | `Proc`, `nil` | `nil` | Callback invoked when a tool returns a result |
 | `on_content` | `Proc`, `nil` | `nil` | Stored streaming callback invoked with each content chunk (see [Streaming](#streaming)) |
+| `tool_approval` | `Symbol`, `nil` | `nil` (= `:deny`) | What to do with tool calls that require approval when no `on_tool_approval` is given: `:deny` refuses them with a warning, `:approve` lets them run |
+| `on_tool_approval` | `Proc`, `nil` | `nil` | Called with each `RubyLLM::ToolCall` that requires approval; a truthy return approves it. Takes precedence over `tool_approval` |
+| `on_input_request` | `Proc`, `nil` | `nil` | Called with each `RubyLLM::MCP::InputRequest` a server raises mid-call; return a Hash of field values (or `true` for a URL request) to answer, anything else declines |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
@@ -92,7 +96,7 @@ Robot.new(
 | `token_budget` | `Integer`, `nil` | `nil` | Raise `InferenceError` if cumulative tokens exceed this limit after a call; raise `BudgetExceeded` up front if already exhausted (see [Budgets](#budgets)) |
 | `cost_budget` | `Float`, `nil` | `nil` | Same enforcement as `token_budget`, tracked in cumulative dollar cost instead of tokens (requires provider pricing data) |
 | `doom_loop_threshold` | `Integer`, `nil` | `nil` | Tunes the always-on doom-loop detector (default threshold 3). See [Doom Loop Detection](#doom-loop-detection) |
-| `mcp_discovery` | `Boolean` | `false` | When true, the first run narrows the configured MCP server list to those `MCP::ServerDiscovery` judges relevant to the message |
+| `mcp_discovery` | `Boolean` | `false` | When true, every run narrows the selected MCP servers to those `MCP::ServerDiscovery` judges relevant to the message |
 | `config` | `RunConfig`, `nil` | `nil` | Shared config merged with explicit kwargs (see [RunConfig](#runconfig)) |
 | `temperature` | `Float`, `nil` | `nil` | Controls randomness — applied via `chat.with_temperature` |
 | `top_p` | `Float`, `nil` | `nil` | Nucleus sampling threshold — applied via `chat.with_params` |
@@ -142,8 +146,7 @@ option raises `ArgumentError`.
 | `skills` | `Array<Symbol>`, `nil` | Constructor-provided skill template IDs (nil if none) |
 | `provider` | `String`, `nil` | LLM provider name (e.g., `"ollama"`) — set when using local providers |
 | `local_tools` | `Array` | Locally defined tools |
-| `mcp_clients` | `Hash<String, MCP::Client>` | Connected MCP clients, keyed by server name |
-| `mcp_tools` | `Array<Tool>` | Tools discovered from MCP servers |
+| `mcp` | `MCP::Registry` | The robot's MCP servers (`RubyLLM::MCP` instances) by name — see [mcp](#mcp) |
 | `memory` | `Memory` | Inherent memory (used when standalone, not in network) |
 | `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance (nil if not configured) |
 | `outbox` | `Hash` | Sent messages tracked by composite key with status and replies |
@@ -188,7 +191,7 @@ Primary execution method. Sends a message to the LLM with memory/MCP/tools resol
 | `network_memory` | `Memory`, `nil` | `nil` | Shared network memory (passed internally) |
 | `network_config` | `RunConfig`, `nil` | `nil` | Network-level config used when resolving `:inherit` for `mcp`/`tools` (passed internally) |
 | `memory` | `Memory`, `Hash`, `nil` | `nil` | A `Memory` replaces the active memory for this run; a `Hash` is merged into it |
-| `mcp` | `Symbol`, `Array` | `:none` | Runtime MCP override — `:inherit` (all attached servers), `:none`/`[]` (zero this turn), or an explicit array |
+| `mcp` | `Symbol`, `Array` | `:none` | Runtime MCP override — `:inherit` (the robot's build-time servers), `:none`/`[]` (no MCP tools this turn; servers stay registered and connected), or an explicit array of specs (new ones are registered and connected now) |
 | `tools` | `Symbol`, `Array` | `:none` | Runtime tools override — `:inherit` (all attached tools), `:none`/`[]` (zero this turn), or an explicit name array. See [Runtime Tool Filtering](../../guides/using-tools.md#runtime-tool-filtering) |
 | `hooks` | `Array`, `nil` | `nil` | Per-run hook handler classes, active only for this call |
 | `**kwargs` | `Hash` | `{}` | See below — **not** a passthrough to `Agent#ask` |
@@ -209,11 +212,12 @@ robot.run("Describe this", with: image)   # forwarded to Agent#ask as attachment
 When both a stored `on_content` callback and a runtime block are provided, both fire (stored first, then runtime block).
 
 !!! warning "`tools:`/`mcp:` default to `:none` here"
-    A bare `robot.run(message)` sends **zero** tools and connects **no** MCP
+    A bare `robot.run(message)` sends **zero** tools and contacts **no** MCP
     servers for that call, even when `local_tools:`/`mcp:` were supplied at
     build time. Pass `tools: :inherit` (and/or `mcp: :inherit`) explicitly to
-    use what is attached. `mcp: :inherit` triggers the connection attempt;
-    `tools: :inherit` is additionally required for the MCP tools to be sent.
+    use what is attached. `mcp: :inherit` selects (and, first time, connects)
+    the servers; `tools: :inherit` or an allowlist is additionally required for
+    their tools to be sent.
 
 Each call's resolved tool set *replaces* the chat's tools rather than accumulating, so a subsequent `:none` call correctly clears whatever a prior call attached, and the fully-resolved set is clamped to `max_tools` (`DEFAULT_MAX_TOOLS = 128` by default) right before being handed to the provider — see [Tool Capping](../../guides/using-tools.md#tool-capping-and-per-turn-filtering).
 
@@ -222,14 +226,17 @@ Each call's resolved tool set *replaces* the chat's tools rather than accumulati
 **Examples:**
 
 ```ruby
-# Simple message — sends no tools, connects no MCP servers
+# Simple message — sends no tools, contacts no MCP servers
 result = robot.run("What is 2+2?")
 
 # Send the tools attached via local_tools:
 result = robot.run("What is 15 * 7?", tools: :inherit)
 
-# Connect MCP servers and send their tools
+# Select the robot's MCP servers (connecting on first use) and send their tools
 result = robot.run("Search the repo", mcp: :inherit, tools: :inherit)
+
+# Run an MCP prompt instead of a String
+result = robot.run(robot.mcp[:github].prompt("code_review", code: diff), mcp: :inherit)
 
 # Restrict this turn to a named subset
 result = robot.run("Look it up", tools: %w[order_lookup])
@@ -627,6 +634,45 @@ bot.with_bus(bus1)  # joins bus1
 bot.with_bus(bus2)  # leaves bus1, joins bus2
 ```
 
+### mcp
+
+```ruby
+robot.mcp
+# => RobotLab::MCP::Registry
+```
+
+The robot's MCP servers, keyed by name. Each entry is a `RubyLLM::MCP` with
+the full protocol surface: `tools`, `call`, `resources`, `resource(uri)`,
+`prompts`, `prompt(name, **args)`, `instructions`, `close`, and the OAuth
+flow. Overrides `RubyLLM::Agent`'s `mcp` delegate. See [Registry](../mcp/registry.md).
+
+```ruby
+robot.mcp.names                       # => ["github", "filesystem"]
+robot.mcp[:github].resources.map(&:uri)
+robot.run(robot.mcp[:github].prompt("code_review", code: diff), mcp: :inherit)
+```
+
+### with_mcp
+
+```ruby
+robot.with_mcp(*servers)   # => self
+robot.with_mcp(nil)        # => self; closes and forgets every server
+```
+
+Register MCP servers on this robot. Accepts config Hashes, `RubyLLM::MCP`
+instances and `RubyLLM::MCP` subclasses, in any mix (nested Arrays are
+flattened, `nil`s dropped). Registering a spec already known returns the same
+server, so hosts may call this on every request. Overrides the `RubyLLM::Agent`
+delegate of the same name.
+
+Registered servers are available to runs that select them through the `mcp:`
+cascade (`run(..., mcp: :inherit)` picks up the build-time list; a run-time
+Array picks exactly those). Registration alone sends nothing to the model.
+
+```ruby
+recruit.with_mcp(*chief.mcp)   # share another robot's server instances
+```
+
 ### connect_mcp!
 
 ```ruby
@@ -634,9 +680,25 @@ robot.connect_mcp!
 # => self
 ```
 
-Eagerly connect to configured MCP servers and discover tools. Normally MCP connections are lazy (established on first `run`). Call this to connect early, e.g., to display connection status at startup.
+Eagerly register the build-time MCP servers and connect to each (by listing
+its tools). Connections are otherwise made on the first run that selects a
+server. Failures are recorded in [`mcp_failures`](#mcp_failures), not raised.
+Call this to connect early, e.g. to display connection status at startup. A
+later plain `run()` still sends no tools.
 
-**Returns:** `self`
+**Raises:** `RobotLab::MCPError` when a build-time spec cannot be built (no
+name, no `command`/`url`, unsupported transport).
+
+### mcp_tools
+
+```ruby
+robot.mcp_tools                 # => Array<RubyLLM::MCP::Tool>
+robot.mcp_tools([robot.mcp[:github]])
+```
+
+The MCP tools offered by the given servers (default: every registered
+server). Connects servers that are not connected yet and skips, with a
+warning, any that cannot be reached.
 
 ### failed_mcp_server_names
 
@@ -645,46 +707,29 @@ robot.failed_mcp_server_names
 # => Array<String>
 ```
 
-Returns server names that failed to connect. Useful for displaying connection status or deciding whether to retry.
+Names of servers whose last connection attempt failed. A server is retried on
+the next run that selects it and leaves this list once it answers.
 
-### inject_mcp!
-
-```ruby
-robot.inject_mcp!(clients: mcp_clients, tools: mcp_tools)
-# => self
-```
-
-Inject pre-connected MCP clients and their tools into this robot. Used by host applications that manage MCP connections externally and need to pass them to robots without re-connecting.
-
-**Parameters:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `clients` | `Hash<String, MCP::Client>` | Connected MCP clients keyed by server name |
-| `tools` | `Array<Tool>` | Tools discovered from the MCP servers |
-
-**Returns:** `self`
-
-**Example:**
+### mcp_failures
 
 ```ruby
-# Host app manages MCP connections
-clients = { "github" => github_client }
-
-# There is no Tool.from_mcp — MCP wrappers are built with Tool.create,
-# exactly as RobotLab's own discover_mcp_tools does.
-tools = github_client.list_tools.map do |tool_def|
-  name = tool_def[:name]
-  RobotLab::Tool.create(
-    name:        name,
-    description: tool_def[:description],
-    parameters:  tool_def[:inputSchema],
-    mcp:         "github"
-  ) { |args| github_client.call_tool(name, args) }
-end
-
-robot.inject_mcp!(clients: clients, tools: tools)
+robot.mcp_failures
+# => { "filesystem" => #<Errno::ENOENT: ...> }
 ```
+
+The last connection error per failed server name (a copy).
+
+### mcp_server_for
+
+```ruby
+robot.mcp_server_for(tool)
+# => RubyLLM::MCP or nil
+```
+
+The server that owns `tool`, or `nil` for a local tool. Known for tools the
+robot has collected from a server (through a run, `connect_mcp!` or
+`mcp_tools`). Inside a `:tool_call` hook the same value is
+`ToolCallHookContext#mcp_server`.
 
 ### chat
 
@@ -898,23 +943,6 @@ robot.chat_provider
 
 Return the provider for this robot's chat. Useful for displaying model/provider info without reaching into chat internals.
 
-### mcp_client
-
-```ruby
-robot.mcp_client("github")
-# => MCP::Client or nil
-```
-
-Find an MCP client by server name.
-
-**Parameters:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `server_name` | `String` | The MCP server name |
-
-**Returns:** `MCP::Client` or `nil`
-
 ### disconnect
 
 ```ruby
@@ -922,7 +950,8 @@ robot.disconnect
 # => self
 ```
 
-Disconnect from all MCP servers and bus channels.
+Close every MCP server (stopping stdio processes) and the bus channel.
+Servers stay registered and reconnect on their next use.
 
 ### to_h
 
@@ -933,21 +962,23 @@ robot.to_h
 
 Returns a hash representation of the robot. Keys, in order: `name`,
 `description`, `template`, `skills`, `system_prompt`, `local_tools` (tool names),
-`mcp_tools` (tool names), `mcp_config`, `tools_config`, `mcp_servers` (connected
-client names), `model`, `config` (the `RunConfig` as a JSON-safe hash, omitted
-when the config is empty), and `bus` (`true` if configured, omitted otherwise).
-The whole hash is `.compact`ed, so nil values are dropped.
+`mcp_config`, `tools_config`, `mcp_servers` (registered server names),
+`mcp_failed` (names of servers whose last connection attempt failed; present
+only when there are any), `model`, `config` (the `RunConfig` as a JSON-safe
+hash, omitted when the config is empty), and `bus` (`true` if configured,
+omitted otherwise). The whole hash is `.compact`ed, so nil values are dropped.
+There is no `mcp_tools` key: listing tools would force connections.
 
 ```ruby
 RobotLab.build(name: "x", max_tokens: 100).to_h
-# => { name: "x", local_tools: [], mcp_tools: [], mcp_config: :none,
+# => { name: "x", local_tools: [], mcp_config: :none,
 #      tools_config: :none, mcp_servers: [], model: "claude-sonnet-4-20250514",
 #      config: { max_tokens: 100, enable_cache: true } }
 ```
 
 The `config` value comes from `RunConfig#to_json_hash`, which omits the
-non-serializable fields (`on_tool_call`, `on_tool_result`, `on_content`, `bus`,
-`auto_compact`).
+non-serializable fields (`on_tool_call`, `on_tool_result`, `on_content`,
+`on_tool_approval`, `on_input_request`, `bus`, `auto_compact`).
 
 ## Memory Behavior
 
@@ -994,7 +1025,7 @@ Front matter supports two categories of keys.
 | `robot_name` | `String` | Override robot name — applied only when the constructor name is still the default `"robot"` |
 | `description` | `String` | Human-readable description; applied only when the constructor passed no `description:` |
 | `tools` | `Array` | Tool entries; applied only when `local_tools:` is empty (see below) |
-| `mcp` | `Array<Hash>` | MCP server configurations; applied only when the constructor `mcp:` is `:none` |
+| `mcp` | `Array` | MCP server specs (config Hashes, flat or nested `transport:`); applied only when the constructor `mcp:` is `:none` |
 | `skills` | `Array<Symbol>` | Skill templates to prepend (recursive, with cycle detection) |
 
 Templates render with ERB — write `<%= var %>`. `{{ var }}` is not interpolated
@@ -1083,8 +1114,8 @@ robot.config  #=> RunConfig with model: "claude-sonnet-4", temperature: 0.9, ...
 |-------|----------|--------|
 | LLM | `LLM_FIELDS` | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | Tools | `TOOL_FIELDS` | `mcp`, `tools` |
-| Callbacks | `CALLBACK_FIELDS` | `on_tool_call`, `on_tool_result`, `on_content` |
-| Infrastructure | `INFRA_FIELDS` | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`, `max_tools` |
+| Callbacks | `CALLBACK_FIELDS` | `on_tool_call`, `on_tool_result`, `on_content`, `on_tool_approval`, `on_input_request` |
+| Infrastructure | `INFRA_FIELDS` | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`, `max_tools`, `tool_approval` |
 
 Five of those infrastructure fields are `RunConfig`-only — they are **not**
 `Robot.new` keywords: `ractor_pool_size`, `max_concurrent_robots`,
@@ -1324,13 +1355,18 @@ robot = RobotLab.build(
   ]
 )
 
-# mcp: :inherit triggers the connection; tools: :inherit sends the discovered tools
+# mcp: :inherit selects the server (connecting on first use); tools: :inherit sends its tools
 result = robot.run("Search for popular Ruby repos", mcp: :inherit, tools: :inherit)
+
+# The same server as a RubyLLM::MCP, for resources and prompts
+robot.mcp[:github].resources
 robot.disconnect
 ```
 
-`transport:` must be a nested hash. MCP connection failures are logged and
-recorded in `robot.failed_mcp_server_names` — they are not raised.
+MCP connection failures are logged and recorded in `robot.mcp_failures` /
+`robot.failed_mcp_server_names` — they are not raised. Tools a server marks
+`requires_approval` are denied unless `tool_approval: :approve` or
+`on_tool_approval:` is set. See the [MCP guide](../../guides/mcp-integration.md).
 
 ### Robot with Skills
 

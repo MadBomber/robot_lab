@@ -49,8 +49,8 @@ confines them:
 Everything else with a public surface — `Task`, `Runnable`, `ToolConfig`,
 `ToolManifest`, `Budget::Ledger`, `DoomLoopDetector`, `HistoryCompressor`,
 `Convergence`, `TextAnalysis`, `DelegationFuture`, `RobotMessage`, `BusPoller`,
-`Waiter`, `Narrator`, `Config`, `MCP::ServerDiscovery`,
-`MCP::ConnectionPoller`, and `Streaming::SequenceCounter` — is documented on the
+`Waiter`, `Narrator`, `Config`, `MCP::ServerDiscovery`, and
+`Streaming::SequenceCounter` — is documented on the
 [Support Classes](support.md) page.
 
 ## Messages
@@ -66,13 +66,13 @@ Message types for LLM communication:
 
 ## MCP (Model Context Protocol)
 
-Connect to external tool servers:
+Connect to MCP servers through ruby_llm's built-in `RubyLLM::MCP` client:
 
 | Class | Description |
 |-------|-------------|
-| [Client](mcp/client.md) | MCP server connection |
-| [Server](mcp/server.md) | Server configuration |
-| [Transports](mcp/transports.md) | Connection transports |
+| [Factory](mcp/factory.md) | `RobotLab::MCP.build` / `define`: config Hash to `RubyLLM::MCP` |
+| [Server](mcp/server.md) | `RobotLab::MCP::Server < RubyLLM::MCP` with `description` and `connected?` |
+| [Registry](mcp/registry.md) | A robot's servers by name, reused across runs |
 
 ## Streaming
 

@@ -171,7 +171,7 @@ ruby_llm:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `template_path` | `null` (auto-detected) | Directory for prompt templates |
-| `mcp` | `:none` | Global MCP server configuration |
+| `mcp` | `:none` | Global MCP server list (`:none` or an array of specs — config Hashes, `RubyLLM::MCP` instances or subclasses) |
 | `tools` | `:none` | Global tool allowlist |
 | `sandbox.*` | see below | Skill-script confinement ceiling |
 
@@ -514,10 +514,10 @@ effective.temperature  #=> 0.9 (overridden)
 |----------|--------|
 | **LLM** | `model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop` |
 | **Tools** | `mcp`, `tools` |
-| **Callbacks** | `on_tool_call`, `on_tool_result`, `on_content` |
-| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `max_tools`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold` |
+| **Callbacks** | `on_tool_call`, `on_tool_result`, `on_content`, `on_tool_approval`, `on_input_request` |
+| **Infrastructure** | `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `cost_budget`, `max_tools`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`, `tool_approval` |
 
-`cost_budget` mirrors `token_budget` for cumulative dollar spend — see [Budgets](../guides/observability.md#budgets-token-cost). `max_tools` overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see [Tool Capping](../guides/using-tools.md#tool-capping-and-per-turn-filtering).
+`tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `tool_approval` (`:deny` default, `:approve`), `on_tool_approval` and `on_input_request` settle what ruby_llm pauses a run for — see [Approvals, Input Requests and Tasks](../guides/mcp-integration.md#approvals-input-requests-and-tasks). `cost_budget` mirrors `token_budget` for cumulative dollar spend — see [Budgets](../guides/observability.md#budgets-token-cost). `max_tools` overrides the default 128-tool ceiling enforced on every turn before tools are handed to the provider — see [Tool Capping](../guides/using-tools.md#tool-capping-and-per-turn-filtering).
 
 ### RunConfig vs RobotLab.config
 
@@ -570,14 +570,14 @@ MCP servers and tools use a hierarchical configuration: `runtime > robot > netwo
 > **`tools:` and `mcp:` both default to `:none` — including on `run()` itself.**
 > `Robot#run` is declared `run(message = nil, ..., mcp: :none, tools: :none, ...)`,
 > and an explicit `:none` means "send zero tools this turn". So a plain
-> `robot.run("...")` sends the LLM **no tools and connects no MCP servers**, even
+> `robot.run("...")` sends the LLM **no tools and contacts no MCP servers**, even
 > when you passed `local_tools:` or `mcp:` at build time.
 >
 > The fix goes on the **run**, not the build:
 >
 > ```ruby
 > robot.run("...", tools: :inherit)                  # send the attached local tools
-> robot.run("...", mcp: :inherit, tools: :inherit)   # connect MCP and send its tools
+> robot.run("...", mcp: :inherit, tools: :inherit)   # select MCP servers and send their tools
 > ```
 >
 > `mcp: :inherit` triggers the connection; `tools: :inherit` is additionally

@@ -56,9 +56,9 @@ module RobotLab
       # Select MCP servers relevant to the given query.
       #
       # @param query     [String]          user message or intent
-      # @param from      [Array<Hash, MCP::Server>] candidate server configs
+      # @param from      [Array<Hash, RubyLLM::MCP, Class>] candidate server specs
       # @param threshold [Float]           minimum cosine score (default 0.05)
-      # @return [Array<Hash, MCP::Server>] matching servers, or +from+ as
+      # @return [Array<Hash, RubyLLM::MCP, Class>] matching servers, or +from+ as
       #   fallback when no match is found
       # :reek:TooManyStatements -- linear guard/score/filter pipeline; each early return is a documented fallback.
       def self.select(query, from:, threshold: DEFAULT_THRESHOLD)
@@ -77,29 +77,42 @@ module RobotLab
         from
       end
 
-      # @param servers [Array<Hash, MCP::Server>]
+      # @param servers [Array<Hash, RubyLLM::MCP, Class>]
       def self.any_descriptions?(servers)
         servers.any? { |s| !description_for(s).empty? }
       end
 
       # Build the topic string used for similarity scoring: name + description.
       #
-      # @param server [Hash, MCP::Server]
+      # @param server [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
       # @return [String]
       def self.topic_text(server)
-        name = server.is_a?(Hash) ? server[:name].to_s : server.name.to_s
-        "#{name} #{description_for(server)}".strip
+        "#{name_for(server)} #{description_for(server)}".strip
       end
 
-      # @param server [Hash, MCP::Server]
+      # @param server [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
+      # @return [String] server name or empty string
+      def self.name_for(server)
+        name = case server
+               when Hash  then server[:name] || server['name']
+               when Class then server.default_name
+               else            server.name
+               end
+        name.to_s.strip
+      end
+
+      # @param server [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
       # @return [String] description or empty string
       def self.description_for(server)
-        desc = server.is_a?(Hash) ? server[:description] : server.respond_to?(:description) && server.description
+        desc = case server
+               when Hash then server[:description] || server['description']
+               else           (server.description if server.respond_to?(:description))
+               end
         desc.to_s.strip
       end
 
       # @param query  [String]
-      # @param server [Hash, MCP::Server]
+      # @param server [Hash, RubyLLM::MCP, Class]
       # @return [Float] cosine similarity in [0.0, 1.0]
       def self.score(query, server)
         TextAnalysis.tf_cosine_similarity(query, topic_text(server))

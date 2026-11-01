@@ -164,7 +164,7 @@ The following YAML front matter keys are applied to the robot's chat automatical
 | `robot_name` | Override the robot's name (when constructor uses the default) |
 | `description` | Human-readable description of the robot |
 | `tools` | Array of tool class names (resolved via `Object.const_get`) |
-| `mcp` | Array of MCP server configurations |
+| `mcp` | Array of MCP server specs (config Hashes; `transport:` nested or flat) |
 | `skills` | Array of skill template symbols to prepend (see [Composable Skills](#composable-skills)) |
 
 Constructor-provided values always take precedence over frontmatter values.
@@ -211,15 +211,12 @@ robot = RobotLab.build(template: :my_github_assistant)
 robot.run("What are the open issues?", mcp: :inherit, tools: :inherit)
 ```
 
-> [!WARNING]
-> `transport:` **must be a nested hash**. The shipped
-> `examples/prompts/github_assistant.md` uses the flat form
-> (`transport: stdio` with sibling `command:`/`args:` keys), which raises
-> `NoMethodError: undefined method 'transform_keys' for an instance of String`
-> internally. The error is swallowed and logged as a warning, the server lands in
-> `robot.failed_mcp_server_names`, and the robot builds with **zero tools**. That
-> shipped template also declares no `model:` or `temperature:`, so it does not
-> demonstrate the full self-contained pattern shown here.
+> [!NOTE]
+> Both the nested `transport:` mapping above and the flat form the shipped
+> `examples/prompts/github_assistant.md` uses (`transport: stdio` with sibling
+> `command:`/`args:` keys) are accepted. That shipped template declares no
+> `model:` or `temperature:`, so it does not demonstrate the full
+> self-contained pattern shown here.
 
 ### Tools in Front Matter
 
@@ -279,13 +276,13 @@ robot.run("List the files in lib/", mcp: :inherit, tools: :inherit)
 
 Constructor `mcp:` overrides frontmatter `mcp:` when provided.
 
-> [!WARNING]
-> `transport:` takes a nested hash — `type:` plus the transport's own keys. A flat
-> `transport: stdio` with sibling `command:`/`args:` keys fails silently (the
-> `transform_keys` NoMethodError is swallowed) and the robot ends up with no MCP
-> tools. Valid `type:` values are `stdio`, `sse`, `ws`, `websocket`,
-> `streamable-http`, and `http`; the underscored `streamable_http` raises
-> `ArgumentError`.
+> [!NOTE]
+> `transport:` may be a nested mapping (`type:` plus the transport's own keys)
+> or the flat form (`transport: stdio` with sibling `command:`/`args:` keys).
+> Transports are `stdio` and Streamable HTTP (`streamable-http`,
+> `streamable_http`, `http`, `https`); `sse`, `ws` and `websocket` raise
+> `RobotLab::MCPError` when the server is built. See the
+> [config key table](../api/mcp/factory.md#config-hash-keys).
 
 ### Template with System Prompt
 
@@ -542,17 +539,17 @@ MCP configuration supports hierarchical resolution:
 |-------|----------|
 | `:none` | No MCP servers (default) |
 | `:inherit` | Use parent network/config MCP servers |
-| `[...]` | Explicit array of server configurations |
+| `[...]` | Explicit array of specs: config Hashes, `RubyLLM::MCP` instances or subclasses |
 
-`run` also defaults to `mcp: :none`, so the servers configured above are not connected by a plain `run`:
+`run` also defaults to `mcp: :none`, so the servers configured above are not selected by a plain `run`:
 
 ```ruby
 robot.run("Read config/database.yml", mcp: :inherit, tools: :inherit)
 ```
 
-`robot.connect_mcp!` connects eagerly if you want the handshake to happen up front, but a later plain `run()` still sends no tools — `tools: :inherit` is what puts the MCP tools in the request. Connection failures are logged and recorded in `robot.failed_mcp_server_names`; they are never raised.
+`robot.connect_mcp!` connects eagerly if you want the handshake to happen up front, but a later plain `run()` still sends no tools — `tools: :inherit` is what puts the MCP tools in the request. Connection failures are logged and recorded in `robot.mcp_failures` / `robot.failed_mcp_server_names`; they are never raised. Tools a server marks `requires_approval` are denied unless you pass `tool_approval: :approve` or `on_tool_approval:`.
 
-See the [MCP Integration](mcp-integration.md) guide for transport types and advanced patterns.
+See the [MCP Integration](mcp-integration.md) guide for `RubyLLM::MCP` subclasses, approvals, resources and prompts.
 
 ## Chaining Configuration
 

@@ -459,4 +459,31 @@ class RobotLab::RunConfigTest < Minitest::Test
     merged   = base.merge(override)
     assert_equal :context_window, merged.auto_compact
   end
+
+  # --- MCP approval / input fields (0.4) ---
+
+  def test_tool_approval_is_an_infra_field
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :tool_approval
+    config = RobotLab::RunConfig.new(tool_approval: :approve)
+    assert_equal :approve, config.tool_approval
+    assert_equal({ tool_approval: :approve }, config.to_h)
+  end
+
+  def test_tool_approval_defaults_to_nil_and_merges
+    assert_nil RobotLab::RunConfig.new.tool_approval
+    merged = RobotLab::RunConfig.new(tool_approval: :deny).merge(RobotLab::RunConfig.new(tool_approval: :approve))
+    assert_equal :approve, merged.tool_approval
+  end
+
+  def test_on_tool_approval_and_on_input_request_are_callback_fields
+    assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_tool_approval
+    assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_input_request
+    approve = ->(_call) { true }
+    answer  = ->(_req) { {} }
+    config  = RobotLab::RunConfig.new(on_tool_approval: approve, on_input_request: answer)
+    assert_same approve, config.on_tool_approval
+    assert_same answer,  config.on_input_request
+    assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_tool_approval
+    assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_input_request
+  end
 end

@@ -28,6 +28,10 @@ module RobotLab
         error.respond_to?(:retryable) && error.retryable == true
       when RobotLab::InferenceError
         true
+      when RubyLLM::MCP::Error
+        # A JSON-RPC error code means the server answered and rejected the
+        # request; no code means the transport failed (timeout, closed pipe).
+        error.code.nil?
       else
         false
       end

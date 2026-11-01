@@ -27,16 +27,12 @@ module RobotLab
   # enabling tools that modify their robot's state (temperature,
   # system prompt, spawning, etc.).
   #
-  # :reek:InstanceVariableAssumption -- @custom_name/@mcp are set by Tool.create via instance_variable_set,
+  # :reek:InstanceVariableAssumption -- @custom_name is set by Tool.create via instance_variable_set,
   #   @raise_on_error/@ractor_safe are class-level DSL ivars; every read is defined?-guarded.
   class Tool < RubyLLM::Tool
     # @!attribute [rw] robot
     #   @return [Robot, nil] the robot that owns this tool
     attr_accessor :robot
-
-    # @!attribute [r] mcp
-    #   @return [String, nil] the MCP server name if this is an MCP-provided tool
-    attr_reader :mcp
 
     class << self
       # When true, exceptions from #execute propagate instead of being caught.
@@ -111,26 +107,18 @@ module RobotLab
       context.tool_result
     end
 
-    # Override name to support explicit names for dynamic/MCP tools.
+    # Override name to support explicit names for dynamic tools.
     #
     # @return [String] the tool name
     def name
       defined?(@custom_name) && @custom_name ? @custom_name : super
     end
 
-    # Check if this is an MCP-provided tool.
-    #
-    # @return [Boolean]
-    def mcp?
-      !@mcp.nil?
-    end
-
-    # Factory for dynamic tools (MCP wrappers, inline tools).
+    # Factory for dynamic (inline) tools.
     #
     # @param name [String, Symbol] the tool name
     # @param description [String, nil] what the tool does
     # @param parameters [Hash, nil] JSON Schema parameter definition
-    # @param mcp [String, nil] MCP server name
     # @param robot [Robot, nil] the owning robot
     # @yield [args] block that executes the tool logic
     # @return [Tool] a new tool instance
@@ -141,16 +129,15 @@ module RobotLab
     #     description: "Get the current time"
     #   ) { |args| Time.now.to_s }
     #
-    # @example MCP tool wrapper
+    # @example With a parameter schema
     #   tool = RobotLab::Tool.create(
     #     name: "search",
     #     description: "Search the web",
-    #     parameters: { type: "object", properties: { q: { type: "string" } }, required: ["q"] },
-    #     mcp: "brave_search"
-    #   ) { |args| mcp_client.call_tool("search", args) }
+    #     parameters: { type: "object", properties: { q: { type: "string" } }, required: ["q"] }
+    #   ) { |args| WebSearch.run(args[:q]) }
     #
     # :reek:TooManyStatements -- anonymous-class factory: DSL application and instance wiring form one linear build.
-    def self.create(name:, description: nil, parameters: nil, mcp: nil, robot: nil, &handler)
+    def self.create(name:, description: nil, parameters: nil, robot: nil, &handler)
       desc_text = description
       params_hash = parameters
       block = handler
@@ -169,7 +156,6 @@ module RobotLab
 
       instance = tool_class.new(robot: robot)
       instance.instance_variable_set(:@custom_name, name.to_s)
-      instance.instance_variable_set(:@mcp, mcp)
       instance
     end
 
@@ -192,8 +178,7 @@ module RobotLab
     def to_h
       {
         name: name,
-        description: description,
-        mcp: mcp
+        description: description
       }.compact
     end
 

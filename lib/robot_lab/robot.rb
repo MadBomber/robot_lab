@@ -2,6 +2,7 @@
 
 require_relative 'robot/template_rendering'
 require_relative 'robot/mcp_management'
+require_relative 'robot/tool_call_gating'
 require_relative 'robot/bus_messaging'
 require_relative 'robot/history_search'
 require_relative 'robot/agent_skill_matching'
@@ -51,6 +52,7 @@ module RobotLab
   class Robot < RubyLLM::Agent
     include Robot::TemplateRendering
     include Robot::MCPManagement
+    include Robot::ToolCallGating
     include Robot::BusMessaging
     include Robot::HistorySearch
     include Robot::Budget
@@ -74,10 +76,6 @@ module RobotLab
     #   @return [String, nil] inline system prompt (used alone or appended to template)
     # @!attribute [r] local_tools
     #   @return [Array] the locally defined tools for this robot
-    # @!attribute [r] mcp_clients
-    #   @return [Hash<String, MCP::Client>] connected MCP clients by server name
-    # @!attribute [r] mcp_tools
-    #   @return [Array<Tool>] tools discovered from MCP servers
     # @!attribute [r] memory
     #   @return [Memory] the robot's inherent memory (used when standalone, not in network)
     # @!attribute [rw] input
@@ -87,7 +85,7 @@ module RobotLab
     attr_accessor :input, :output
 
     attr_reader :name, :description, :template, :system_prompt,
-                :local_tools, :mcp_clients, :mcp_tools, :memory,
+                :local_tools, :memory,
                 :bus, :outbox, :config, :skills, :provider, :hooks,
                 :total_input_tokens, :total_output_tokens, :learnings,
                 :budget_ledger
@@ -133,7 +131,8 @@ module RobotLab
         auto_compact:        @config.auto_compact,
         compact_threshold:   @config.compact_threshold,
         token_budget:        @config.token_budget,
-        cost_budget:         @config.cost_budget
+        cost_budget:         @config.cost_budget,
+        tool_approval:       @config.tool_approval
       }.compact
     end
 
@@ -146,12 +145,19 @@ module RobotLab
     # @param description [String, nil] optional description
     # @param local_tools [Array] tools defined locally
     # @param model [String, nil] the LLM model to use
-    # @param mcp_servers [Array] legacy parameter for MCP server configurations
-    # @param mcp [Symbol, Array] hierarchical MCP config
+    # @param mcp [Symbol, Array] hierarchical MCP config: :none, :inherit, or an Array of
+    #   config Hashes, RubyLLM::MCP instances and RubyLLM::MCP subclasses (see RobotLab::MCP)
     # @param tools [Symbol, Array] hierarchical tools config
     # @param on_tool_call [Proc, nil] callback invoked when a tool is called
     # @param on_tool_result [Proc, nil] callback invoked when a tool returns a result
     # @param on_content [Proc, nil] callback invoked with each streaming content chunk
+    # @param tool_approval [Symbol, nil] what to do with tool calls that require approval when no
+    #   on_tool_approval is given: :deny (default) or :approve
+    # @param on_tool_approval [Proc, nil] called with each RubyLLM::ToolCall that requires approval;
+    #   a truthy return approves it
+    # @param on_input_request [Proc, nil] called with each RubyLLM::MCP::InputRequest an MCP server
+    #   raises; return a Hash of field values (or true for a URL request) to answer, anything else declines
+    # @param mcp_discovery [Boolean] select only the MCP servers relevant to each message (see MCP::ServerDiscovery)
     # @param enable_cache [Boolean] whether to enable semantic caching
     # @param bus [TypedBus::MessageBus, nil] optional message bus for inter-robot communication
     # @param temperature [Float, nil] controls randomness
@@ -174,12 +180,14 @@ module RobotLab
       local_tools: [],
       model: nil,
       provider: nil,
-      mcp_servers: [],
       mcp: :none,
       tools: :none,
       on_tool_call: nil,
       on_tool_result: nil,
       on_content: nil,
+      tool_approval: nil,
+      on_tool_approval: nil,
+      on_input_request: nil,
       enable_cache: true,
       bus: nil,
       skills: nil,
@@ -210,7 +218,8 @@ module RobotLab
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
         max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
-        doom_loop_threshold: doom_loop_threshold, mcp_servers: mcp_servers,
+        doom_loop_threshold: doom_loop_threshold, tool_approval: tool_approval,
+        on_tool_approval: on_tool_approval, on_input_request: on_input_request,
         mcp: mcp, tools: tools, config: config
       )
 
@@ -319,50 +328,9 @@ module RobotLab
       self
     end
 
-    # Eagerly connect to configured MCP servers and discover tools.
-    # Normally MCP connections are lazy (established on first run).
-    # Call this to connect early, e.g. to display connection status at startup.
-    #
-    # @return [self]
-    def connect_mcp!
-      resolved_mcp = resolve_mcp_hierarchy(@mcp_config)
-      ensure_mcp_clients(resolved_mcp) if resolved_mcp.is_a?(Array) && resolved_mcp.any?
-      self
-    end
-
-    # Returns server names that failed to connect.
-    #
-    # @return [Array<String>]
-    def failed_mcp_server_names
-      return [] unless @failed_mcp_configs
-
-      @failed_mcp_configs.keys
-    end
-
-    # Disconnect all MCP clients and bus channel.
-    #
-    # @return [self]
-    def disconnect
-      @mcp_clients.each_value(&:disconnect)
-      teardown_bus_channel if @bus
-      self
-    end
-
-    # --- Public APIs for external MCP and history management (A4) ---
-
-    # Inject pre-connected MCP clients and their tools into this robot.
-    # Used by host applications (e.g. AIA) that manage MCP connections
-    # externally and need to pass them to robots without re-connecting.
-    #
-    # @param clients [Hash<String, MCP::Client>] connected MCP clients by server name
-    # @param tools [Array<Tool>] tools discovered from the MCP servers
-    # @return [self]
-    def inject_mcp!(clients:, tools:)
-      @mcp_clients = clients
-      @mcp_tools = tools
-      @mcp_initialized = true
-      self
-    end
+    # --- Public APIs for external history management (A4) ---
+    # (MCP server management lives in Robot::MCPManagement: #mcp, #with_mcp,
+    # #connect_mcp!, #mcp_tools, #failed_mcp_server_names, #disconnect.)
 
     # Access the underlying RubyLLM::Chat instance.
     # Useful for checkpoint/restore operations that need direct
@@ -504,14 +472,6 @@ module RobotLab
       nil
     end
 
-    # Find an MCP client by server name.
-    #
-    # @param server_name [String] the MCP server name
-    # @return [MCP::Client, nil]
-    def mcp_client(server_name)
-      @mcp_clients[server_name]
-    end
-
     # Add a learning to this robot's accumulation store.
     #
     # Deduplicates by bidirectional substring matching: a new learning is
@@ -566,10 +526,10 @@ module RobotLab
         skills: @skills,
         system_prompt: system_prompt,
         local_tools: local_tools.map { |t| t.respond_to?(:name) ? t.name : t.to_s },
-        mcp_tools: mcp_tools.map(&:name),
         mcp_config: @mcp_config,
         tools_config: @tools_config,
-        mcp_servers: @mcp_clients.keys,
+        mcp_servers: mcp.names,
+        mcp_failed: (failed_mcp_server_names if @mcp_failures.any?),
         model: model,
         config: (@config.empty? ? nil : @config.to_json_hash),
         bus: @bus ? true : nil
@@ -621,7 +581,8 @@ module RobotLab
                                presence_penalty:, frequency_penalty:, stop:,
                                on_tool_call:, on_tool_result:, on_content:,
                                bus:, enable_cache:, max_tool_rounds:, token_budget:, cost_budget:,
-                               doom_loop_threshold:, mcp_servers:, mcp:, tools:, config:)
+                               doom_loop_threshold:, tool_approval:, on_tool_approval:, on_input_request:,
+                               mcp:, tools:, config:)
       explicit_fields = {
         model: model, temperature: temperature, top_p: top_p, top_k: top_k,
         max_tokens: max_tokens, presence_penalty: presence_penalty,
@@ -629,29 +590,33 @@ module RobotLab
         on_tool_call: on_tool_call, on_tool_result: on_tool_result,
         on_content: on_content, bus: bus, enable_cache: enable_cache,
         max_tool_rounds: max_tool_rounds, token_budget: token_budget, cost_budget: cost_budget,
-        doom_loop_threshold: doom_loop_threshold
+        doom_loop_threshold: doom_loop_threshold, tool_approval: tool_approval,
+        on_tool_approval: on_tool_approval, on_input_request: on_input_request
       }.compact
 
-      resolved_mcp = mcp_servers.any? ? mcp_servers : mcp
-      explicit_fields[:mcp]   = resolved_mcp unless ToolConfig.none_value?(resolved_mcp)
-      explicit_fields[:tools] = tools        unless ToolConfig.none_value?(tools)
+      explicit_fields[:mcp]   = mcp   unless ToolConfig.none_value?(mcp)
+      explicit_fields[:tools] = tools unless ToolConfig.none_value?(tools)
 
       explicit_config = RunConfig.new(**explicit_fields)
       @config = config ? config.merge(explicit_config) : explicit_config
     end
 
     def extract_config_ivars
-      @on_tool_call   = @config.on_tool_call
-      @on_tool_result = @config.on_tool_result
-      @on_content     = @config.on_content
-      @mcp_config     = @config.mcp   || :none
-      @tools_config   = @config.tools || :none
+      @on_tool_call     = @config.on_tool_call
+      @on_tool_result   = @config.on_tool_result
+      @on_content       = @config.on_content
+      @on_tool_approval = @config.on_tool_approval
+      @on_input_request = @config.on_input_request
+      @tool_approval    = @config.tool_approval || :deny
+      @mcp_config       = @config.mcp   || :none
+      @tools_config     = @config.tools || :none
     end
 
     def initialize_runtime_state
-      @mcp_clients         = {}
-      @mcp_tools           = []
-      @mcp_initialized     = false
+      @mcp_registry        = MCP::Registry.new
+      @mcp_failures        = {}
+      @mcp_tool_owners     = {}.compare_by_identity
+      @run_mcp_servers     = []
       @bus                 = @config.bus
       @message_counter     = 0
       @outbox              = {}
@@ -745,15 +710,17 @@ module RobotLab
       @chat.after_tool_result do |result|
         @on_tool_result&.call(result)
       end
+      install_tool_hook_bridge
       setup_bus_channel if @bus
     end
 
     # Dynamically delegate all with_* methods from @chat, returning self for chaining.
     # Discovered from the actual Chat class to avoid maintenance sync issues.
+    # with_mcp is the robot's own (Robot::MCPManagement), not the chat's.
     # :reek:NestedIterators -- the inner block is the delegator method body being defined, not an iteration.
     def define_chat_delegators
       @chat.class.public_instance_methods(false)
-           .select { |m| m.start_with?('with_') }
+           .select { |m| m.start_with?('with_') && m != :with_mcp }
            .each do |method_name|
              define_singleton_method(method_name) do |*args, **kwargs, &block|
                @chat.public_send(method_name, *args, **kwargs, &block)
@@ -776,16 +743,15 @@ module RobotLab
       end
     end
 
-    # :reek:TooManyStatements -- resolve/discover/connect/filter/attach is one linear per-turn tool pipeline.
+    # :reek:TooManyStatements -- resolve/select/connect/filter/attach is one linear per-turn tool pipeline.
     def prepare_tools(message:, mcp:, tools:, network:, network_config:)
       resolved_mcp   = resolve_mcp_hierarchy(mcp, network: network, network_config: network_config)
       resolved_tools = resolve_tools_hierarchy(tools, network: network, network_config: network_config)
 
-      if @mcp_discovery && !@mcp_initialized && resolved_mcp.is_a?(Array)
-        resolved_mcp = MCP::ServerDiscovery.select(message.to_s, from: resolved_mcp)
-      end
-
-      ensure_mcp_clients(resolved_mcp)
+      # This turn's MCP servers: registered (and connected) on demand, chosen
+      # by the cascade and, with mcp_discovery, by relevance to the message.
+      @run_mcp_servers = servers_for(resolved_mcp, message: message)
+      available        = @local_tools + collect_mcp_tools(@run_mcp_servers)
 
       # An EXPLICIT `:none` (or literal `[]`) means "send zero tools this turn" —
       # e.g. a relevance filter judged no tool useful for the prompt. That is
@@ -793,18 +759,22 @@ module RobotLab
       # tool". Both collapse to `[]` once resolved, and `filtered_tools([])`
       # treats an empty allowlist as "all tools", so we must branch on the raw
       # runtime value before resolution to honor the zero-tools intent.
-      filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(resolved_tools))
+      filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(available, resolved_tools))
+      check_unique_tool_names!(filtered)
 
       # Clear-then-add so the chat holds EXACTLY this turn's resolved+capped
       # set. RubyLLM's with_tools appends; on a persistent chat that lets tools
       # accumulate across turns, so a capped per-turn addition could still push
-      # the chat's total past the provider limit. with_tools(nil) is ruby_llm
-      # 2.0's "clear the tool set"; an explicit none stops there, sending zero
-      # tools this turn.
-      return unless filtered.any? || explicit_none_tools?(tools)
+      # the chat's total past the provider limit. with_tools(nil) is ruby_llm's
+      # "clear the tool set"; an explicit none stops there, sending zero tools
+      # this turn. MCP tools a previous turn attached are cleared too, so a
+      # turn that selects no MCP servers sends none of their tools.
+      return unless filtered.any? || explicit_none_tools?(tools) || mcp_tools_attached?
 
+      deferred, offered = filtered.partition { |tool| deferred_mcp_tool?(tool) }
       @chat.with_tools(nil)
-      @chat.with_tools(*filtered) if filtered.any?
+      @chat.with_tools(*offered)               if offered.any?
+      @chat.with_tools(*deferred, defer: true) if deferred.any?
     end
 
     # True when the runtime tools value explicitly requests zero tools — `:none`
@@ -872,7 +842,8 @@ module RobotLab
         install_doom_loop_detection
         ask_kwargs = kwargs.slice(:with)
         streaming  = effective_streaming_block(block)
-        ask(effective_message, **ask_kwargs, &streaming)
+        response   = ask(effective_message, **ask_kwargs, &streaming)
+        settle_pending_tool_calls(response, &streaming)
       end
     end
 
@@ -938,20 +909,22 @@ module RobotLab
       }
     end
 
-    def all_tools
-      @local_tools + @mcp_tools
-    end
-
-    def filtered_tools(allowed_names)
-      available = all_tools
+    # Apply a name allowlist to this turn's available tools; an empty
+    # allowlist means "no filter".
+    #
+    # @param available [Array<RubyLLM::Tool>] local tools plus this turn's MCP tools
+    # @param allowed_names [Array<String>]
+    # @return [Array<RubyLLM::Tool>]
+    def filtered_tools(available, allowed_names)
       return available if allowed_names.empty?
 
       ToolConfig.filter_tools(available, allowed_names: allowed_names)
     end
 
     # Prepend accumulated learnings to a user message when learnings exist.
+    # Non-String requests (an MCP prompt, for instance) pass through untouched.
     def inject_learnings(message)
-      return message if @learnings.empty? || message.nil?
+      return message if @learnings.empty? || !message.is_a?(String)
 
       learning_block = "LEARNINGS FROM PREVIOUS RUNS:\n" +
                        @learnings.map { |l| "- #{l}" }.join("\n") +
@@ -991,7 +964,7 @@ module RobotLab
     # :reek:FeatureEnvy -- checking-then-removing on the chat's singleton class is one atomic operation.
     def remove_doom_loop_detection
       sc = @chat.singleton_class
-      sc.remove_method(:execute_tool) if sc.method_defined?(:execute_tool)
+      sc.remove_method(:execute_tool) if sc.method_defined?(:execute_tool, false)
     end
 
     # Compact conversation history before an ask() call if auto_compact is set.

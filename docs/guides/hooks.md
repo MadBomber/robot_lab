@@ -425,8 +425,10 @@ Passed to `:tool_call` hooks (`before_tool_call`, `around_tool_call`, `after_too
 | `tool` | Tool | The tool instance being called |
 | `tool_name` | String | |
 | `tool_args` | Hash | Arguments passed to the tool |
+| `mcp_server` | RubyLLM::MCP\|nil | The server that owns the tool when it is an MCP tool; `nil` for local tools |
+| `mcp?` | Boolean | Whether the tool comes from an MCP server |
 | `tool_result` | Object\|nil | Set after the tool executes; readable in `after_tool_call` |
-| `tool_error` | Exception\|nil | Set if the tool raised an exception |
+| `tool_error` | Exception\|nil | Set if the tool raised an exception (for MCP tools, a `RubyLLM::MCP::Error` mid-call, which the robot turns into an `{ error: }` result) |
 | `metadata` | ExtensionState | |
 
 ### NetworkRunHookContext

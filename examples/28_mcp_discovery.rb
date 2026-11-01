@@ -7,7 +7,9 @@
 # upfront is wasteful — some servers may be irrelevant to a particular query.
 #
 # MCP Server Discovery uses TF cosine similarity to select only the servers
-# semantically relevant to the user's query, then connects only those.
+# semantically relevant to the user's query, then connects only those. The
+# selection is made on every run, so one robot can talk to different servers
+# on different messages while every server stays registered and connected.
 #
 # == Key config
 #
@@ -105,9 +107,11 @@ show_code <<~RUBY
     ]
   )
 
-  # Only the :brew server is connected for this message.
+  # Only the :brew server's tools are offered for this message; the others
+  # stay registered (robot.mcp.names) and are picked when a message fits.
   # mcp: :inherit and tools: :inherit are both required — run() defaults
-  # both to :none, which connects no servers and sends no tools.
+  # both to :none, which selects no servers and sends no tools.
   robot.run("install imagemagick", mcp: :inherit, tools: :inherit)
+  robot.run("read my config file", mcp: :inherit, tools: :inherit)  # -> :filesystem
 RUBY
 hr

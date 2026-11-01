@@ -8,11 +8,15 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
   # ── helpers ──────────────────────────────────────────────────────────────
 
   def server(name, description = nil)
-    MCP::Server.new(
+    MCP.build(
       name: name,
       description: description,
       transport: { type: "stdio", command: "echo" }
     )
+  end
+
+  def server_class(name, description = nil)
+    MCP.define(name: name, description: description, transport: { type: "stdio", command: "echo" })
   end
 
   def hash_server(name, description = nil)
@@ -150,5 +154,30 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
   def test_description_for_returns_empty_string_when_absent
     s = hash_server("x")
     assert_equal "", MCP::ServerDiscovery.send(:description_for, s)
+  end
+
+  # ── classes and string-keyed hashes ──────────────────────────────────────
+
+  def test_topic_text_for_server_class
+    klass = server_class("brew", "manage packages")
+    assert_equal "brew manage packages", MCP::ServerDiscovery.send(:topic_text, klass)
+  end
+
+  def test_topic_text_for_string_keyed_hash
+    s = { "name" => "brew", "description" => "manage packages", "transport" => { "type" => "stdio", "command" => "echo" } }
+    assert_equal "brew manage packages", MCP::ServerDiscovery.send(:topic_text, s)
+  end
+
+  def test_works_with_server_classes
+    classes = SERVERS.map { |s| server_class(s[:name], s[:description]) }
+    result  = MCP::ServerDiscovery.select("install imagemagick", from: classes)
+    assert(result.any? { |k| k.default_name == "brew" })
+  end
+
+  def test_name_for_plain_ruby_llm_mcp_subclass
+    klass = Class.new(RubyLLM::MCP) { command "echo" }
+    klass.default_name = "echo_server"
+    assert_equal "echo_server", MCP::ServerDiscovery.send(:name_for, klass)
+    assert_equal "", MCP::ServerDiscovery.send(:description_for, klass)
   end
 end

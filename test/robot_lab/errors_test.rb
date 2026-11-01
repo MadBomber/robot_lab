@@ -45,4 +45,12 @@ class RobotLab::ErrorsTest < Minitest::Test
     assert_includes classes, RobotLab::InferenceError
     assert classes.frozen?
   end
+
+  def test_ruby_llm_mcp_transport_error_without_code_is_retryable
+    assert RobotLab::Errors.retryable?(RubyLLM::MCP::Error.new("timed out"))
+  end
+
+  def test_ruby_llm_mcp_protocol_error_with_code_is_not_retryable
+    refute RobotLab::Errors.retryable?(RubyLLM::MCP::Error.new("bad params", code: -32_602))
+  end
 end

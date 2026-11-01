@@ -22,7 +22,6 @@ the guides; this page is the API surface, so nothing public is left undocumented
 | [`Narrator`](#robotlabnarrator) | Live console narration | [Live Narration](../guides/observability.md#live-narration-robotlabnarrator) |
 | [`Config`](#robotlabconfig) | `RobotLab.config` | [Configuration](../getting-started/configuration.md) |
 | [`MCP::ServerDiscovery`](#robotlabmcpserverdiscovery) | `mcp_discovery: true` | [MCP Integration](../guides/mcp-integration.md) |
-| [`MCP::ConnectionPoller`](#robotlabmcpconnectionpoller) | Multiplexed stdio MCP I/O | [Transports](mcp/transports.md) |
 | [`Streaming::SequenceCounter`](#robotlabstreamingsequencecounter) | Event ordering (unused by core) | [Streaming](streaming/index.md) |
 
 ---
@@ -222,7 +221,7 @@ entry.
 | `ToolManifest.from_hash(hash)` | `ToolManifest` | Rebuilds each entry with `Tool.create(name:, description:, parameters:, &handler)` |
 
 !!! warning "`from_hash` is not the inverse of `to_h`"
-    `to_h` emits `Tool#to_h` (`name`, `description`, `mcp`), while `from_hash`
+    `to_h` emits `Tool#to_h` (`name`, `description`), while `from_hash`
     expects each value to carry `:parameters` and a `:handler` Proc. Round-tripping
     a manifest through `to_h` → `from_hash` yields tools with no parameters and a
     `nil` handler.
@@ -758,8 +757,11 @@ small even for a clearly on-topic query.
 
 ```ruby
 RobotLab::MCP::ServerDiscovery.select(query, from: servers, threshold: 0.05)
-# => Array<Hash, MCP::Server>
+# => Array<Hash, RubyLLM::MCP, Class>
 ```
+
+Runs on **every** robot run that selects servers (not only the first), before
+the selected servers are registered and connected.
 
 **Returns `from` unchanged** — connecting everything — whenever discovery cannot
 make a confident call: an empty list, a blank query, no server carrying a
@@ -776,48 +778,12 @@ ServerDiscovery.description_for(server)   # => String ("" when absent)
 ServerDiscovery.any_descriptions?(servers) # => Boolean
 ```
 
-All four accept either a config `Hash` (`server[:name]`, `server[:description]`)
-or an `MCP::Server` instance. `topic_text` is `"<name> <description>"` — the name
-participates in matching, so a well-named server scores even with a thin
-description.
-
----
-
-## RobotLab::MCP::ConnectionPoller
-
-Multiplexes I/O across multiple **stdio** MCP transports with a single
-`IO.select` loop, instead of each client blocking independently behind its own
-`Timeout.timeout`. Async-based transports (SSE, WebSocket, StreamableHTTP) are
-unaffected — they already yield to the fiber scheduler. See
-[Transports](mcp/transports.md).
-
-Unlike [`BusPoller`](#robotlabbuspoller), this one **does** own a background
-thread.
-
-### POLL_INTERVAL
-
-```ruby
-RobotLab::MCP::ConnectionPoller::POLL_INTERVAL  # => 0.1  (seconds)
-```
-
-### Methods
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `start` | `self` | Spawn the multiplexing thread (named `RobotLab::MCP::ConnectionPoller`). Idempotent |
-| `stop(timeout: 5)` | `self` | Stop the thread and cancel every pending request with an `MCPError`. Idempotent |
-| `running?` | `Boolean` | Whether the thread is live |
-| `register(client)` | — | Add the client's `transport.stdout` to the select set. **Silently ignores a non-stdio client** |
-| `unregister(client)` | — | Remove it; likewise a no-op for non-stdio clients |
-| `send_request(client, message, timeout:)` | response | Write `message.to_json` to the client's stdin and block on that client's queue for the matching response. `timeout:` is required |
-
-```ruby
-poller = RobotLab::MCP::ConnectionPoller.new.start
-client = RobotLab::MCP::Client.new(server_config, poller: poller)
-client.connect
-# ...
-poller.stop
-```
+All four accept a config `Hash` (`server[:name]`/`server["name"]`,
+`server[:description]`), a `RubyLLM::MCP` instance, or a `RubyLLM::MCP`
+subclass; a class or instance contributes a description only when it responds
+to `description` (`RobotLab::MCP::Server` does). `topic_text` is
+`"<name> <description>"` — the name participates in matching, so a well-named
+server scores even with a thin description.
 
 ---
 

@@ -59,7 +59,7 @@ graph TB
     end
 
     subgraph "Integration Layer"
-        H[MCP Client]
+        H[RubyLLM::MCP + MCP::Registry]
         I[Tools &lt; RubyLLM::Tool]
         J[Templates / prompt_manager]
         SK[AgentSkills<br/>+ optional Sandbox]
@@ -198,7 +198,7 @@ end
 
 1. **Input**: User calls `robot.run("message")` or `network.run(message: "...")`
 2. **Memory**: Robot resolves active memory (standalone or network-shared)
-3. **MCP**: Robot resolves MCP servers from hierarchical config and connects clients. `run` defaults to `mcp: :none`, so a plain `run` connects nothing
+3. **MCP**: Robot resolves MCP servers from hierarchical config, registers them in its `MCP::Registry` and lists their tools (connecting on first use). `run` defaults to `mcp: :none`, so a plain `run` contacts nothing
 4. **Tools**: Robot resolves and filters tools from hierarchical config. `run` defaults to `tools: :none`, so a plain `run` sends the LLM zero tools; pass `tools: :inherit` to send the robot's attached tools
 5. **Execution**: Robot delegates to `Agent#ask` which calls `@chat.ask` on RubyLLM
 6. **Tool Loop**: LLM may invoke tools; RubyLLM handles the tool call/result loop

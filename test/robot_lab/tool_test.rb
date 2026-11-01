@@ -148,26 +148,10 @@ class RobotLab::ToolTest < Minitest::Test
 
   # ── MCP ──────────────────────────────────────────────────────
 
-  def test_mcp_flag_true_when_set
-    tool = RobotLab::Tool.create(
-      name: "mcp_tool",
-      mcp: "github"
-    ) { |_args| "ok" }
-
-    assert tool.mcp?
-    assert_equal "github", tool.mcp
-  end
-
-  def test_mcp_flag_false_when_nil
-    tool = RobotLab::Tool.create(name: "local_tool") { |_args| "ok" }
-    refute tool.mcp?
-  end
-
-  def test_mcp_nil_on_subclass
-    klass = Class.new(RobotLab::Tool) { def execute(**); end }
-    tool = klass.new
-    refute tool.mcp?
-    assert_nil tool.mcp
+  def test_create_no_longer_takes_an_mcp_marker
+    # MCP tools are RubyLLM::MCP::Tool instances owned by their server (see RobotLab::MCP).
+    assert_raises(ArgumentError) { RobotLab::Tool.create(name: "mcp_tool", mcp: "github") { |_args| "ok" } }
+    refute RobotLab::Tool.method_defined?(:mcp?)
   end
 
   # ── name ─────────────────────────────────────────────────────
@@ -269,20 +253,12 @@ class RobotLab::ToolTest < Minitest::Test
     assert_equal "Full tool", hash[:description]
   end
 
-  def test_to_h_includes_mcp
-    tool = RobotLab::Tool.create(name: "mcp_tool", mcp: "server") { |_args| "ok" }
-
-    hash = tool.to_h
-
-    assert_equal "server", hash[:mcp]
-  end
-
   def test_to_h_excludes_nil_values
     tool = RobotLab::Tool.create(name: "minimal") { |_args| "ok" }
 
     hash = tool.to_h
 
-    refute hash.key?(:mcp)
+    assert_equal({ name: "minimal" }, hash)
   end
 
   # ── to_json ─────────────────────────────────────────────────
@@ -419,15 +395,6 @@ class RobotLab::ToolTest < Minitest::Test
 
     result = tool.call
     assert_equal "Error (factory_fail): bad input", result
-  end
-
-  def test_mcp_tool_gets_error_wrapper
-    tool = RobotLab::Tool.create(name: "mcp_fail", mcp: "github") do |_args|
-      raise IOError, "connection refused"
-    end
-
-    result = tool.call
-    assert_equal "Error (mcp_fail): connection refused", result
   end
 
   def test_subclass_gets_error_wrapper

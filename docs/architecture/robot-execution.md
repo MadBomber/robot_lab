@@ -26,8 +26,8 @@ sequenceDiagram
     Robot->>Hooks: Hooks.run(:run, RunHookContext)
     Note over Hooks: before_run / around_run wrap everything below
 
-    Robot->>Robot: prepare_tools() — resolve_mcp_hierarchy,<br/>ensure_mcp_clients, resolve_tools_hierarchy,<br/>filtered_tools + cap_tools
-    Robot->>Chat: with_tools(*filtered, replace: true)
+    Robot->>Robot: prepare_tools() — resolve_mcp_hierarchy,<br/>servers_for + collect_mcp_tools, resolve_tools_hierarchy,<br/>filtered_tools + cap_tools
+    Robot->>Chat: with_tools(nil); with_tools(*filtered)
     Robot->>Robot: rerender_template(kwargs) — when template + extra kwargs
     Robot->>Ledger: reserve_budget! (raises BudgetExceeded if exhausted)
 
@@ -105,28 +105,32 @@ Values at each level:
 
 - `:none` -- no MCP servers at this level
 - `:inherit` -- use parent level's MCP config
-- `Array` -- explicit list of server configurations
+- `Array` -- explicit list of specs: config Hashes, `RubyLLM::MCP` instances, `RubyLLM::MCP` subclasses
 
-`run`'s default for `mcp:` is `:none`, so a plain `robot.run("...")` resolves to an empty server list and connects nothing, even when `mcp:` was supplied at build time. Pass `mcp: :inherit` to trigger the connection. (`robot.connect_mcp!` connects eagerly against the build-time config, which is useful for reporting connection status at startup.)
+`run`'s default for `mcp:` is `:none`, so a plain `robot.run("...")` resolves to an empty server list and contacts nothing, even when `mcp:` was supplied at build time. Pass `mcp: :inherit` to select the build-time servers. (`robot.connect_mcp!` connects eagerly against the build-time config, which is useful for reporting connection status at startup.)
 
-### 3. MCP Client Initialization
+### 3. Server Selection and Connection
 
-If MCP servers need to be connected (or reconnected), the robot initializes clients:
+The resolved specs become `RubyLLM::MCP` instances through the robot's `MCP::Registry`, and each selected server is asked for its tools:
 
 ```ruby
-# Connect to each MCP server (ensure_mcp_clients -> init_mcp_client)
-client = MCP::Client.new(server_config)   # config is POSITIONAL
-client.connect
+# servers_for: narrow by relevance (mcp_discovery), then register
+specs = MCP::ServerDiscovery.select(discovery_query(message), from: specs) if @mcp_discovery && message
+@run_mcp_servers = specs.map { |spec| @mcp_registry.add(spec) }   # add returns the existing server for a known spec
 
-if client.connected?
-  @mcp_clients[client.server.name] = client
-  discover_mcp_tools(client, server_name)  # each remote tool becomes a Tool.create wrapper
-else
-  @failed_mcp_configs[server_name] = server_config
+# collect_mcp_tools: connect on first use, skip what cannot be reached
+servers.flat_map do |server|
+  tools = server.tools                       # RubyLLM::MCP::Tool instances; connects lazily
+  @mcp_failures.delete(server.name)
+  tools.each { |tool| @mcp_tool_owners[tool] = server }
+  tools
+rescue *MCP::CONNECT_ERRORS => e
+  record_mcp_failure(server, e)              # warn + @mcp_failures[name] = e
+  []
 end
 ```
 
-Connection failures are logged and recorded, never raised — they surface through `robot.failed_mcp_server_names`. A later run retries only the servers that are still needed and still failed.
+Connection failures are logged and recorded, never raised — they surface through `robot.mcp_failures` / `robot.failed_mcp_server_names`. A later run that selects the server retries it. Servers are never closed by selection; `robot.disconnect` (or `with_mcp(nil)`) closes them.
 
 ### 4. Tools Resolution
 
@@ -135,14 +139,22 @@ Tools are resolved through the same hierarchy, filtered, capped, and applied to 
 ```ruby
 # Explicit :none (or a literal []) means "send zero tools this turn"; otherwise
 # filter the local + MCP tools by the resolved allowlist and clamp to max_tools.
-filtered = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(resolved_tools))
+available = @local_tools + collect_mcp_tools(@run_mcp_servers)
+filtered  = explicit_none_tools?(tools) ? [] : cap_tools(filtered_tools(available, resolved_tools))
+check_unique_tool_names!(filtered)          # MCPError: suggest prefix: on one server
 
-@chat.with_tools(*filtered, replace: true) if filtered.any? || explicit_none_tools?(tools)
+return unless filtered.any? || explicit_none_tools?(tools) || mcp_tools_attached?
+
+deferred, offered = filtered.partition { |tool| deferred_mcp_tool?(tool) }
+@chat.with_tools(nil)
+@chat.with_tools(*offered)               if offered.any?
+@chat.with_tools(*deferred, defer: true) if deferred.any?
 ```
 
-Two details here are load-bearing:
+Three details here are load-bearing:
 
-- **`replace: true`** — RubyLLM's `with_tools` appends by default. On a persistent chat that would let tools accumulate across turns, so the chat is made to hold exactly this turn's resolved set. An explicit `:none` therefore clears the chat's tools to zero.
+- **Clear, then add** — RubyLLM's `with_tools` appends. On a persistent chat that would let tools accumulate across turns, so `with_tools(nil)` empties the set and the chat is made to hold exactly this turn's resolved set. An explicit `:none` therefore clears the chat's tools to zero, and a turn that selects no MCP servers drops the MCP tools a previous turn attached (the servers stay connected).
+- **MCP tools are attached per run, not per server** — the robot never calls `chat.with_mcp`. Attaching the selected servers' `RubyLLM::MCP::Tool`s individually is what lets the `tools:` allowlist, `max_tools` and `:none` apply to MCP tools exactly as to local ones. Tools a server declared with `defer` are attached with `defer: true`.
 - **`cap_tools`** — the resolved list is clamped to `RunConfig#max_tools`, which defaults to `DEFAULT_MAX_TOOLS` (128) because most providers reject longer tool arrays. Setting `max_tools` to nil, 0, or a negative number falls back to 128; the cap cannot be disabled. Dropped tools are logged at `warn`.
 
 Because `run` defaults to `tools: :none`, a plain `robot.run("...")` sends the LLM no tools at all. Pass `tools: :inherit` to send the robot's attached tools; pass an explicit array of names to use it as an allowlist.

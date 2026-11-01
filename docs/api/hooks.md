@@ -346,7 +346,7 @@ Readers are read-only unless marked **rw**.
 | `task` | | The `Task` wrapper, when run from a pipeline |
 | `memory` | | The resolved run memory |
 | `config` | | The robot's effective `RunConfig` |
-| `request` | rw | The user message. **Writable** — assign in `before_run` to rewrite the prompt |
+| `request` | rw | The user message — a `String`, or a `RubyLLM::MCP::Prompt` when the run was given one. **Writable** — assign in `before_run` to rewrite the prompt |
 | `response` | rw | The `RobotResult`; set by `Hooks.set_result` before `after_run` |
 | `error` | rw | Set by `Hooks.run` before `on_error` |
 
@@ -364,8 +364,10 @@ name comes from the hook method names, not from `event`.
 | `tool_name` | | `tool.name`, falling back to `tool.class.name` |
 | `tool_args` | | Arguments the LLM supplied |
 | `robot` | | Owning robot, or `nil` |
+| `mcp_server` | | The `RubyLLM::MCP` that owns `tool` when it is an MCP tool; `nil` for local tools |
+| `mcp?` | | `!mcp_server.nil?` |
 | `tool_result` | rw | The result. Assign it in `around_tool_call` **without** calling the block to block a tool |
-| `tool_error` | rw | Set by `Tool#call` when `execute` raised |
+| `tool_error` | rw | Set by `Tool#call` when `execute` raised, or by the robot's tool-call bridge when a `RubyLLM::MCP::Error` interrupted an MCP tool call (the result is then `{ error: }`) |
 
 #### NetworkRunHookContext (`event: :network_run`)
 

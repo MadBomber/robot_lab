@@ -74,10 +74,11 @@ module RobotLab
   end
 
   class ToolCallHookContext < HookContext
-    attr_reader :tool, :tool_name, :tool_args, :robot
+    attr_reader :tool, :tool_name, :tool_args, :robot, :mcp_server
     attr_accessor :tool_result, :tool_error
 
-    def initialize(tool:, tool_args:, robot: nil, tool_result: nil, tool_error: nil, **)
+    # @param mcp_server [RubyLLM::MCP, nil] the server that owns +tool+ when it is an MCP tool
+    def initialize(tool:, tool_args:, robot: nil, tool_result: nil, tool_error: nil, mcp_server: nil, **)
       super(event: :tool_call, **)
       @tool = tool
       @tool_name = tool.respond_to?(:name) ? tool.name : tool.class.name
@@ -85,6 +86,12 @@ module RobotLab
       @robot = robot
       @tool_result = tool_result
       @tool_error = tool_error
+      @mcp_server = mcp_server
+    end
+
+    # @return [Boolean] whether the tool being called comes from an MCP server
+    def mcp?
+      !@mcp_server.nil?
     end
   end
 

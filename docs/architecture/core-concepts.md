@@ -72,8 +72,7 @@ The persistent `@chat` maintains conversation history across multiple `run` call
 | `template` | `Symbol`, `nil` | Prompt template identifier |
 | `system_prompt` | `String`, `nil` | Inline system prompt |
 | `local_tools` | `Array` | Locally defined tools |
-| `mcp_clients` | `Hash` | Connected MCP clients by server name |
-| `mcp_tools` | `Array` | Tools discovered from MCP servers |
+| `mcp` | `MCP::Registry` | The robot's MCP servers (`RubyLLM::MCP` instances) by name |
 | `memory` | `Memory` | Inherent key-value memory |
 | `bus` | `TypedBus::MessageBus`, `nil` | Message bus instance |
 | `outbox` | `Hash` | Sent messages tracked with status and replies |
@@ -89,11 +88,11 @@ result = robot.run("What is the weather in Berlin?")
 puts result.last_text_content
 ```
 
-`run` defaults to `mcp: :none, tools: :none`. Those defaults are *explicit* "send nothing this turn" values, not "unset" — so a plain `run` connects no MCP servers and sends the LLM zero tools even when `local_tools:`/`mcp:` were supplied at build time. Opt in per run:
+`run` defaults to `mcp: :none, tools: :none`. Those defaults are *explicit* "send nothing this turn" values, not "unset" — so a plain `run` contacts no MCP servers and sends the LLM zero tools even when `local_tools:`/`mcp:` were supplied at build time. Opt in per run:
 
 ```ruby
 robot.run("...", tools: :inherit)                 # send the attached local tools
-robot.run("...", mcp: :inherit, tools: :inherit)  # connect MCP servers and send their tools
+robot.run("...", mcp: :inherit, tools: :inherit)  # select MCP servers (connecting on first use) and send their tools
 ```
 
 With other runtime overrides:

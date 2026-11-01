@@ -149,12 +149,12 @@ sequenceDiagram
     Memory-->>Robot: active memory
 
     Robot->>MCP: resolve_mcp_hierarchy
-    MCP-->>Robot: resolved MCP config
-    Robot->>Robot: ensure_mcp_clients
+    MCP-->>Robot: resolved MCP specs
+    Robot->>MCP: servers_for (Registry#add) + collect_mcp_tools (server.tools)
 
     Robot->>Tools: resolve_tools_hierarchy
     Tools-->>Robot: filtered + capped tools
-    Robot->>Chat: @chat.with_tools(*filtered, replace: true)
+    Robot->>Chat: @chat.with_tools(nil); @chat.with_tools(*filtered)
 
     Robot->>Agent: ask("message")
     Agent->>Chat: @chat.ask("message")
@@ -188,13 +188,13 @@ sequenceDiagram
 
 4. **Set Current Writer**: Sets `memory.current_writer = robot.name` so subscription callbacks know which robot wrote a value.
 
-5. **Resolve MCP Hierarchy**: Resolves MCP server configuration through the hierarchy: `runtime (run/task) > robot build-time > network > global config`. `run` defaults `mcp:` to `:none`, so nothing is connected unless you pass `mcp: :inherit` or an explicit list.
+5. **Resolve MCP Hierarchy**: Resolves MCP server specs through the hierarchy: `runtime (run/task) > robot build-time > network > global config`. `run` defaults `mcp:` to `:none`, so no server is selected unless you pass `mcp: :inherit` or an explicit list.
 
-6. **Ensure MCP Clients**: Initializes or updates MCP client connections and discovers tools from them. Connection failures are logged and recorded in `failed_mcp_server_names`, never raised.
+6. **Select and Connect Servers**: Each resolved spec is registered in the robot's `MCP::Registry` (`add` returns the existing `RubyLLM::MCP` for a spec seen before, so one server object serves every run), narrowed by `MCP::ServerDiscovery` when `mcp_discovery` is on, and asked for its `tools` (which connects it on first use). Connection failures are logged and recorded in `mcp_failures`, never raised; the run goes on without that server.
 
 7. **Resolve Tools Hierarchy**: Resolves which tools are available through the same hierarchy. `run` defaults `tools:` to `:none`, which means "send zero tools this turn" — pass `tools: :inherit` to send the robot's attached tools.
 
-8. **Filter Tools**: Filters by the resolved allowlist, clamps to `max_tools` (128 by default), and applies the set with `@chat.with_tools(*filtered, replace: true)` so the persistent chat holds exactly this turn's tools.
+8. **Filter Tools**: Filters local and MCP tools together by the resolved allowlist, raises `MCPError` on a duplicate tool name, clamps to `max_tools` (128 by default), and applies the set clear-then-add (`@chat.with_tools(nil)` then `@chat.with_tools(*offered)`, plus `with_tools(*deferred, defer: true)` for tools a server declared deferred) so the persistent chat holds exactly this turn's tools.
 
 9. **Agent#ask**: Delegates to the parent class `RubyLLM::Agent#ask`, which calls `@chat.ask(message)`.
 

@@ -73,4 +73,17 @@ class RobotLab::NarratorTest < Minitest::Test
   ensure
     RobotLab.clear_hooks!
   end
+
+  def test_tool_call_hook_context_knows_its_mcp_server
+    server  = fake_mcp_server(name: "fake", tools: ["echo"])
+    tool    = server.tools.first
+    context = RobotLab::ToolCallHookContext.new(tool: tool, tool_args: {}, mcp_server: server)
+    assert context.mcp?
+    assert_same server, context.mcp_server
+    assert_equal "echo", context.tool_name
+
+    plain = RobotLab::ToolCallHookContext.new(tool: Struct.new(:name).new("local"), tool_args: {})
+    refute plain.mcp?
+    assert_nil plain.mcp_server
+  end
 end

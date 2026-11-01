@@ -1,70 +1,51 @@
-# MCP Server Configuration
+# MCP Server
 
-Data structure for MCP server connection configuration.
+The `RubyLLM::MCP` subclass that `RobotLab::MCP.build` creates from a config Hash.
 
-## Class: `RobotLab::MCP::Server`
+## Class: `RobotLab::MCP::Server < RubyLLM::MCP`
 
-`Server` is a configuration object that defines how to connect to an MCP server. It holds the server name and transport settings, and validates the configuration on construction.
+Everything a server can do comes from ruby_llm: `tools`, `call`, `resources`,
+`resource`, `resource_templates`, `prompts`, `prompt`, `instructions`,
+`version`, `listen`, `close`, the OAuth flow, and the class-level DSL
+(`command`, `url`, `transport`, `env`, `directory`, `header`, `bearer_token`,
+`oauth`, `timeout`, `only`, `except`, `prefix`, `tool`, `requires_approval`,
+`defer`, `input_requests`, `before_input_request`, `extension`, `log_level`).
+This subclass adds only:
 
-This is **not** an MCP server implementation -- it is the configuration used by `MCP::Client` to establish a connection to an external MCP server.
+- a class-level `description`, used by `MCP::ServerDiscovery` to pick servers
+  relevant to a message;
+- `connected?`, true once the server has answered a `tools` request and false
+  again after `close`.
 
-```ruby
-server = RobotLab::MCP::Server.new(
-  name: "filesystem",
-  description: "Read, write, and search local files and directories",
-  transport: { type: "stdio", command: "mcp-server-filesystem", args: ["--root", "/data"] }
-)
-
-# With custom timeout
-server = RobotLab::MCP::Server.new(
-  name: "slow_server",
-  transport: { type: "stdio", command: "heavy-mcp-server" },
-  timeout: 30
-)
-```
-
-## Constructor
+`RobotLab::MCP.define(config)` returns an anonymous subclass of this class;
+`RobotLab::MCP.build(config)` returns an instance of one. Subclass it directly
+when you want the description macro:
 
 ```ruby
-Server.new(name:, transport:, timeout: nil, description: nil, **_extra)
+class Brew < RobotLab::MCP::Server
+  description "Install, update, and manage macOS packages via Homebrew"
+  command "mcp-server-brew"
+end
+
+robot = RobotLab.build(name: "ops", mcp: [Brew], mcp_discovery: true)
 ```
 
-**Parameters:**
+A plain `RubyLLM::MCP` subclass works everywhere a `Server` does; it just has
+no description for discovery to score.
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `name` | `String` | **required** | Unique server identifier |
-| `transport` | `Hash` | **required** | Transport configuration (must include `type`) |
-| `timeout` | `Numeric`, `nil` | `15` | Request timeout in seconds. Values >= 1000 are auto-converted from milliseconds. Minimum 1 second |
-| `description` | `String`, `nil` | `""` | Human-readable summary of what the server does; scored by `MCP::ServerDiscovery` |
+## Class Methods
 
-Any other keyword is absorbed by `**_extra` and silently discarded, so a
-misspelled key raises nothing.
-
-**Raises:** `ArgumentError` if:
-- The transport type is not one of the valid types
-- A stdio transport is missing the `:command` key
-- A network transport (ws, websocket, sse, streamable-http, http) is missing the `:url` key
-
-## Constants
+### description
 
 ```ruby
-RobotLab::MCP::Server::VALID_TRANSPORT_TYPES
-# => ["stdio", "sse", "ws", "websocket", "streamable-http", "http"]
-
-RobotLab::MCP::Server::DEFAULT_TIMEOUT
-# => 15  (seconds)
+Server.description            # => String or nil
+Server.description("text")    # => "text"
 ```
 
-## Attributes
+Sets or reads a short description of what the server offers. Inherited by
+subclasses (a subclass may override it).
 
-### name
-
-```ruby
-server.name  # => String
-```
-
-The server identifier string.
+## Instance Methods
 
 ### description
 
@@ -72,181 +53,61 @@ The server identifier string.
 server.description  # => String
 ```
 
-Human-readable summary of the server's capabilities. Always a String — a `nil`
-or omitted `description:` becomes `""`. Used by `MCP::ServerDiscovery`, which
-scores `"#{name} #{description}"` against the user's message when a robot is
-built with `mcp_discovery: true`. Discovery falls back to the full server list
-when no server in the list has a non-empty description.
+The class-level description, or `""` when none was set.
 
-### transport
+### connected?
 
 ```ruby
-server.transport  # => Hash
+server.connected?  # => Boolean
 ```
 
-The normalized transport configuration hash (keys are symbols, type is downcased).
+Whether the server has answered a `tools` request since the last `close`. A
+freshly built server is not connected; `tools` (directly, through
+`robot.connect_mcp!`, or through a run that selects the server) connects it;
+`close` (directly or through `robot.disconnect`) resets it. The next request
+after a `close` reconnects.
 
-### timeout
+### tools
 
 ```ruby
-server.timeout  # => Numeric
+server.tools  # => Array<RubyLLM::MCP::Tool>
 ```
 
-Request timeout in seconds. Defaults to `DEFAULT_TIMEOUT` (15). Values >= 1000 passed to the constructor are auto-converted from milliseconds to seconds. The minimum is 1 second.
+ruby_llm's `tools`, connecting on the first call and marking the server
+connected. The list is shaped by `only`, `except`, `prefix` and `tool`
+declarations, cached, and refreshed when the server announces a change.
 
-## Methods
-
-### transport_type
+### close
 
 ```ruby
-server.transport_type  # => String
+server.close
 ```
 
-Returns the transport type string (e.g., `"stdio"`, `"ws"`, `"sse"`).
+ruby_llm's `close` (stops a stdio server's process, ends a Streamable HTTP
+session, stops listening), after clearing the connected flag.
 
-### to_h
+## The ruby_llm Surface
 
-```ruby
-server.to_h
-# => { name: "y", description: "", transport: { type: "sse", url: "http://x" }, timeout: 30.0 }
-```
+For reference, the instance methods you will reach through `robot.mcp[:name]`.
+See ruby_llm's own documentation for details.
 
-Converts the server configuration to a hash representation. The hash is **not**
-compacted — all four keys are always present, and `description` is `""` when it
-was never set. Note that `timeout` is normalized to a Float unless it defaulted
-(`DEFAULT_TIMEOUT` is the Integer `15`).
+| Method | Returns |
+|--------|---------|
+| `name` | `String` — the registry key |
+| `tools` | `Array<RubyLLM::MCP::Tool>` (`name`, `server_name`, `description`, `requires_approval?`, `read_only?`, `destructive?`, ...) |
+| `call(name, **args)` | `RubyLLM::MCP::Result` (`text`, `structured`, `attachments`, `error?`, `content`) |
+| `resources` / `resource(uri, **vars)` / `resource_templates` | `RubyLLM::MCP::Resource` objects |
+| `prompts` / `prompt(name, **args)` | `RubyLLM::MCP::Prompt`; pass a prompt to `robot.run` |
+| `instructions` / `version` | the server's usage notes / reported version, or `nil` |
+| `authorized?` / `authorization_url(redirect_uri:)` / `authorize(params)` / `deauthorize` | OAuth flow, for servers declared with `oauth` |
+| `listen(resources:, tasks:)` | subscribe to changes in a background thread until `close` |
 
-## Transport Configuration Options
-
-### Stdio Transport
-
-For local MCP servers running as subprocesses:
-
-```ruby
-Server.new(
-  name: "filesystem",
-  transport: {
-    type: "stdio",
-    command: "mcp-server-filesystem",  # Required
-    args: ["--root", "/data"],          # Optional
-    env: { "DEBUG" => "true" }          # Optional
-  }
-)
-```
-
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `type` | `String` | Yes | Must be `"stdio"` |
-| `command` | `String` | Yes | Executable command |
-| `args` | `Array<String>` | No | Command arguments |
-| `env` | `Hash` | No | Environment variables |
-
-### WebSocket Transport
-
-For bidirectional real-time communication:
-
-```ruby
-Server.new(
-  name: "neon",
-  transport: {
-    type: "ws",
-    url: "ws://localhost:8080"  # Required
-  }
-)
-```
-
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `type` | `String` | Yes | `"ws"` or `"websocket"` |
-| `url` | `String` | Yes | WebSocket endpoint URL |
-
-### SSE Transport
-
-For server-sent events streaming:
-
-```ruby
-Server.new(
-  name: "streaming",
-  transport: {
-    type: "sse",
-    url: "http://localhost:8080/sse"  # Required
-  }
-)
-```
-
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `type` | `String` | Yes | Must be `"sse"` |
-| `url` | `String` | Yes | SSE endpoint URL |
-
-### Streamable HTTP Transport
-
-For HTTP-based communication with session management:
-
-```ruby
-Server.new(
-  name: "api",
-  transport: {
-    type: "streamable-http",
-    url: "https://server.smithery.ai/neon/mcp",  # Required
-    session_id: "abc123",                         # Optional
-    auth_provider: -> { "Bearer #{token}" }       # Optional
-  }
-)
-```
-
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `type` | `String` | Yes | `"streamable-http"` or `"http"` |
-| `url` | `String` | Yes | HTTP endpoint URL |
-| `session_id` | `String` | No | Session identifier |
-| `auth_provider` | `Proc` | No | Authentication callback returning auth header value |
-
-## Examples
-
-### Multiple Server Configurations
-
-```ruby
-servers = [
-  {
-    name: "filesystem",
-    transport: { type: "stdio", command: "mcp-server-filesystem", args: ["/data"] }
-  },
-  {
-    name: "github",
-    transport: { type: "stdio", command: "mcp-server-github" }
-  },
-  {
-    name: "database",
-    transport: { type: "ws", url: "ws://localhost:9090" }
-  }
-]
-
-# Pass directly to a robot
-robot = Robot.new(
-  name: "dev_assistant",
-  system_prompt: "You help with development tasks.",
-  mcp: servers
-)
-
-# `run` defaults to `mcp: :none, tools: :none` — opt in per run
-robot.run("What changed in the repo?", mcp: :inherit, tools: :inherit)
-```
-
-### Creating a Client from a Server
-
-```ruby
-server = RobotLab::MCP::Server.new(
-  name: "tools",
-  transport: { type: "ws", url: "ws://localhost:8080" }
-)
-
-client = RobotLab::MCP::Client.new(server)
-client.connect
-```
+Direct calls raise ruby_llm's errors (`RubyLLM::MCP::Error`, `Errno::*`, ...)
+to the caller. Only inside a robot run are connection failures rescued and
+recorded.
 
 ## See Also
 
 - [MCP Overview](index.md)
-- [MCP Client](client.md)
-- [Transports](transports.md)
+- [Factory](factory.md) - the config Hash to DSL mapping
+- [Registry](registry.md)

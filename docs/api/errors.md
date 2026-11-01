@@ -140,17 +140,35 @@ Raised when a tool name is referenced but cannot be found in the `ToolManifest`.
 
 ## RobotLab::MCPError
 
-Raised when MCP server communication fails (connection refused, timeout, protocol error).
+Raised for MCP configuration and run-level problems:
+
+- a server spec that cannot be built: no `name`, no `command`/`url`, an
+  unknown transport type, an unsupported one (`sse`, `ws`, `websocket`), or a
+  class that is not a `RubyLLM::MCP` subclass — raised by `RobotLab::MCP.build`,
+  and therefore by `connect_mcp!`, `with_mcp`, or the first `run` that selects
+  the spec;
+- two tools sharing one name across local tools and MCP servers (the message
+  suggests `prefix:`);
+- a long-running MCP task not finishing within
+  `Robot::ToolCallGating::MCP_TASK_TIMEOUT` (300 s) — raised with `retryable: true`.
 
 ```ruby
 begin
   robot.run("hello", mcp: :inherit, tools: :inherit)
 rescue RobotLab::MCPError => e
-  puts "MCP failed: #{e.message}"
+  puts "MCP configuration problem: #{e.message}"
 end
 ```
 
-`MCPError.new(message, retryable: true)` marks a specific instance as safe to retry (see [Retryable Errors](#retryable-errors) below). The connection-lost and timeout errors raised internally by `MCP::ConnectionPoller` are always constructed with `retryable: true`.
+**Connection failures are not `MCPError`s and are not raised** from a robot
+run. A server that cannot be reached while listing tools (any of
+`RobotLab::MCP::CONNECT_ERRORS`) is logged at `warn`, recorded in
+`robot.mcp_failures`, skipped for that run, and retried on the next run that
+selects it. A `RubyLLM::MCP::Error` raised while a tool call is executing is
+turned into an `{ error: }` tool result so the model can recover. Direct calls
+on a server (`robot.mcp[:name].tools`, `.call`) raise ruby_llm's own errors.
+
+`MCPError.new(message, retryable: true)` marks a specific instance as safe to retry (see [Retryable Errors](#retryable-errors) below).
 
 ---
 
@@ -285,6 +303,12 @@ Not retryable per `RobotLab::Errors.retryable?` — it falls into the
 | `InferenceError` (and subclasses, except `ToolLoopError`) | Always |
 | `ToolLoopError` | Never — it's a circuit breaker; retrying immediately re-triggers the same loop |
 | `MCPError` / `ToolError` | Only when raised with `retryable: true` at the raise site |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
+| `RubyLLM::MCP::Error` | When `code` is `nil` (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never |
 | Everything else (`ConfigurationError`, `ToolNotFoundError`, `DependencyError`, `RactorBoundaryError`, `BusError`, `BudgetExceeded`, `AwaitTimeout`, `DelegationTimeout`, non-RobotLab errors) | Never |
 
 ```ruby

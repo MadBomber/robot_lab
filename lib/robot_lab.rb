@@ -53,10 +53,7 @@ loader.ignore("#{__dir__}/robot_lab/names.rb")
 loader.inflector.inflect(
   'robot_lab' => 'RobotLab',
   'mcp' => 'MCP',
-  'openai' => 'OpenAI',
-  'sse' => 'SSE',
-  'streamable_http' => 'StreamableHTTP',
-  'websocket' => 'WebSocket'
+  'openai' => 'OpenAI'
 )
 
 loader.setup

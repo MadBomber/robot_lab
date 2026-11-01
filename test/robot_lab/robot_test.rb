@@ -207,17 +207,24 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal :none, robot.mcp_config
   end
 
-  def test_initialization_with_mcp_servers_legacy
+  def test_initialization_with_mcp_specs_keeps_the_raw_config
     servers = [{ name: 'server1', command: 'npx server1' }]
 
     robot = RobotLab::Robot.new(
       name: 'helper',
       template: :assistant,
-      mcp_servers: servers
+      mcp: servers
     )
 
-    # mcp_servers takes precedence over mcp
+    # Specs are kept as given; servers are registered on first use.
     assert_equal servers, robot.mcp_config
+    assert robot.mcp.empty?
+  end
+
+  def test_mcp_servers_is_no_longer_a_constructor_keyword
+    assert_raises(ArgumentError) do
+      RobotLab::Robot.new(name: 'helper', template: :assistant, mcp_servers: [])
+    end
   end
 
   def test_initialization_with_tools_config
@@ -260,14 +267,17 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
   # MCP state
-  def test_mcp_clients_initially_empty
+  def test_mcp_registry_initially_empty
     robot = RobotLab::Robot.new(
       name: 'helper',
       template: :assistant
     )
 
-    assert_equal({}, robot.mcp_clients)
+    assert_kind_of RobotLab::MCP::Registry, robot.mcp
+    assert robot.mcp.empty?
     assert_equal [], robot.mcp_tools
+    assert_equal [], robot.failed_mcp_server_names
+    assert_equal({}, robot.mcp_failures)
   end
 
   # Disconnect
@@ -603,25 +613,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [existing_message], result
   end
 
-  # Private method: all_tools
-  def test_all_tools_combines_local_and_mcp_tools
-    tool = build_tool(name: 'local') { |i| i }
-    robot = RobotLab::Robot.new(
-      name: 'test',
-      template: :assistant,
-      local_tools: [tool]
-    )
-
-    # Simulate adding an MCP tool
-    mcp_tool = build_tool(name: 'mcp_tool') { |i| i }
-    robot.instance_variable_get(:@mcp_tools) << mcp_tool
-
-    all = robot.send(:all_tools)
-    assert_equal 2, all.size
-    assert_includes all.map(&:name), 'local'
-    assert_includes all.map(&:name), 'mcp_tool'
-  end
-
   # Private method: filtered_tools
   def test_filtered_tools_returns_all_when_empty_whitelist
     tool1 = build_tool(name: 'tool1') { |i| i }
@@ -632,7 +623,7 @@ class RobotLab::RobotTest < Minitest::Test
       local_tools: [tool1, tool2]
     )
 
-    result = robot.send(:filtered_tools, [])
+    result = robot.send(:filtered_tools, robot.local_tools, [])
     assert_equal 2, result.size
   end
 
@@ -645,7 +636,7 @@ class RobotLab::RobotTest < Minitest::Test
       local_tools: [tool1, tool2]
     )
 
-    result = robot.send(:filtered_tools, ['search'])
+    result = robot.send(:filtered_tools, robot.local_tools, ['search'])
     assert_equal 1, result.size
     assert_equal 'search', result.first.name
   end
@@ -720,15 +711,6 @@ class RobotLab::RobotTest < Minitest::Test
   def test_effective_max_tools_defaults_when_unset
     robot = RobotLab::Robot.new(name: 'test', template: :assistant)
     assert_equal RobotLab::Robot::DEFAULT_MAX_TOOLS, robot.send(:effective_max_tools)
-  end
-
-  # Private method: ensure_mcp_clients
-  def test_ensure_mcp_clients_with_empty_servers
-    robot = RobotLab::Robot.new(name: 'test', template: :assistant)
-    robot.send(:ensure_mcp_clients, [])
-
-    # Should not modify mcp state
-    refute robot.instance_variable_get(:@mcp_initialized)
   end
 
   # MCP hierarchy resolution
@@ -1906,7 +1888,7 @@ class RobotLab::RobotTest < Minitest::Test
   end
 
   # =========================================================================
-  # chat_provider, inject_mcp!, clear_messages, replace_messages
+  # chat_provider, with_mcp, clear_messages, replace_messages
   # =========================================================================
 
   def test_chat_provider_returns_provider_or_nil
@@ -1916,22 +1898,31 @@ class RobotLab::RobotTest < Minitest::Test
     assert result.nil? || result.is_a?(String)
   end
 
-  def test_inject_mcp_sets_clients_and_tools
-    robot = build_robot(name: "bot", template: :assistant)
-    mock_client = Object.new
-    mock_tool = build_tool(name: "injected_tool") { |i| i }
+  def test_with_mcp_registers_hashes_instances_and_classes
+    robot  = build_robot(name: "bot", template: :assistant)
+    server = fake_mcp_server(name: "fake")
+    klass  = RobotLab::MCP.define(name: "cls", transport: { command: "echo" })
 
-    robot.inject_mcp!(clients: { "test_server" => mock_client }, tools: [mock_tool])
+    result = robot.with_mcp({ name: "hash", transport: { command: "echo" } }, server, klass)
 
-    assert_equal({ "test_server" => mock_client }, robot.mcp_clients)
-    assert_equal [mock_tool], robot.mcp_tools
-    assert robot.instance_variable_get(:@mcp_initialized)
+    assert_same robot, result
+    assert_equal %w[hash fake cls], robot.mcp.names
+    assert_same server, robot.mcp[:fake]
+    assert_instance_of klass, robot.mcp["cls"]
   end
 
-  def test_inject_mcp_returns_self
+  def test_with_mcp_is_the_robots_not_the_chats
     robot = build_robot(name: "bot", template: :assistant)
-    result = robot.inject_mcp!(clients: {}, tools: [])
-    assert_equal robot, result
+    assert_equal RobotLab::Robot::MCPManagement, robot.method(:with_mcp).owner
+    assert_equal RobotLab::Robot::MCPManagement, robot.method(:mcp).owner
+    refute robot.singleton_methods.include?(:with_mcp)
+  end
+
+  def test_with_mcp_nil_clears_the_registry
+    robot = build_robot(name: "bot", template: :assistant)
+    robot.with_mcp(fake_mcp_server(name: "fake"))
+    robot.with_mcp(nil)
+    assert robot.mcp.empty?
   end
 
   def test_clear_messages_removes_non_system
@@ -1980,15 +1971,16 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal [], robot.failed_mcp_server_names
   end
 
-  def test_mcp_client_returns_nil_for_unknown_server
+  def test_mcp_lookup_returns_nil_for_unknown_server
     robot = build_robot(name: "bot", template: :assistant)
-    assert_nil robot.mcp_client("nonexistent_server")
+    assert_nil robot.mcp["nonexistent_server"]
   end
 
-  def test_failed_mcp_server_names_with_failed_configs
+  def test_failed_mcp_server_names_lists_recorded_failures
     robot = build_robot(name: "bot", template: :assistant)
-    robot.instance_variable_set(:@failed_mcp_configs, { "dead_server" => { name: "dead_server" } })
+    robot.instance_variable_set(:@mcp_failures, { "dead_server" => RuntimeError.new("down") })
     assert_equal ["dead_server"], robot.failed_mcp_server_names
+    assert_equal ["dead_server"], robot.to_h[:mcp_failed]
   end
 
   def test_connect_mcp_returns_self
@@ -2281,151 +2273,6 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "ollama", provider
   ensure
     RubyLLM.configure { |c| c.ollama_api_base = nil }
-  end
-
-  def test_ensure_mcp_clients_with_failing_server_stores_failed_config
-    # mcp_management.rb lines 34, 36, 42-50, 55-56, 58, 62-68
-    robot = build_robot(name: "bot", template: :assistant)
-    failing_config = [{ name: "bad_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
-    robot.send(:ensure_mcp_clients, failing_config)
-    # Failed connection should be stored
-    assert_equal ["bad_server"], robot.failed_mcp_server_names
-  end
-
-  def test_ensure_mcp_clients_second_call_retries_failed
-    # mcp_management.rb lines 36-39: second call with already-initialized retries failed servers
-    robot = build_robot(name: "bot", template: :assistant)
-    failing_config = [{ name: "bad_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
-    robot.send(:ensure_mcp_clients, failing_config)
-    # Second call with same config should hit the retry path (line 36-38)
-    robot.send(:ensure_mcp_clients, failing_config)
-    assert_equal ["bad_server"], robot.failed_mcp_server_names
-  end
-
-  def test_ensure_mcp_clients_success_path
-    # mcp_management.rb lines 59-61, 113-115, 117, 122, 124, 127: success path when client connects
-    robot = build_robot(name: "bot", template: :assistant)
-    server_config = { name: "ok_server", transport: { type: "stdio", command: "nonexistent" } }
-
-    # Build a mock client that reports connected and has tools
-    tool_defs = [
-      { name: "search", description: "Search tool", inputSchema: { type: "object", properties: {} } }
-    ]
-    mock_client = Object.new
-    mock_client.define_singleton_method(:connect) {}
-    mock_client.define_singleton_method(:connected?) { true }
-    mock_client.define_singleton_method(:list_tools) { tool_defs }
-    mock_client.define_singleton_method(:server) do
-      s = Object.new
-      s.define_singleton_method(:name) { "ok_server" }
-      s
-    end
-
-    # Stub MCP::Client.new to return our mock
-    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs| mock_client }
-
-    robot.send(:ensure_mcp_clients, [server_config])
-
-    # The client should be registered in @mcp_clients
-    clients = robot.instance_variable_get(:@mcp_clients)
-    assert_equal mock_client, clients["ok_server"]
-    # Tools should be discovered
-    mcp_tools = robot.instance_variable_get(:@mcp_tools)
-    assert_equal 1, mcp_tools.size
-
-    # Call the discovered tool to cover mcp_management.rb line 122 (the call_tool block)
-    mock_client.define_singleton_method(:call_tool) { |_name, _args| "tool_result" }
-    result = mcp_tools.first.execute
-    assert_equal "tool_result", result
-  ensure
-    # Restore MCP::Client.new
-    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
-  end
-
-  def test_ensure_mcp_clients_exception_path
-    # mcp_management.rb lines 70-72: rescue StandardError in init_mcp_client
-    robot = build_robot(name: "bot", template: :assistant)
-    # Pass invalid transport type to trigger exception in MCP::Client.new
-    invalid_config = [{ name: "bad_server", transport: { type: "invalid_transport_xyz" } }]
-    # This should not raise, just store the failure
-    robot.send(:ensure_mcp_clients, invalid_config)
-    assert_equal ["bad_server"], robot.failed_mcp_server_names
-  end
-
-  def test_retry_failed_servers_success_path
-    # mcp_management.rb lines 95-98: retry succeeds and registers client
-    robot = build_robot(name: "bot", template: :assistant)
-    failing_config = [{ name: "retry_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
-
-    # First call: fails and records
-    robot.send(:ensure_mcp_clients, failing_config)
-    assert_equal ["retry_server"], robot.failed_mcp_server_names
-
-    # Build a mock client that reports connected for the retry
-    tool_defs = [{ name: "retry_tool", description: "Retry tool", inputSchema: { type: "object", properties: {} } }]
-    mock_client = Object.new
-    mock_client.define_singleton_method(:connect) {}
-    mock_client.define_singleton_method(:connected?) { true }
-    mock_client.define_singleton_method(:list_tools) { tool_defs }
-    mock_client.define_singleton_method(:server) do
-      s = Object.new
-      s.define_singleton_method(:name) { "retry_server" }
-      s
-    end
-
-    RobotLab::MCP::Client.define_singleton_method(:new) { |*_args, **_kwargs| mock_client }
-    # Second call: should hit retry path and succeed
-    robot.send(:ensure_mcp_clients, failing_config)
-    # After successful retry, not in failed list anymore
-    assert_equal [], robot.failed_mcp_server_names
-    # Tool should be discovered from the retry
-    mcp_tools = robot.instance_variable_get(:@mcp_tools)
-    assert_equal 1, mcp_tools.size
-  ensure
-    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
-  end
-
-  def test_retry_failed_servers_exception_path
-    # mcp_management.rb lines 103-105: rescue in retry_failed_servers when retry itself fails
-    robot = build_robot(name: "bot", template: :assistant)
-    failing_config = [{ name: "retry_fail_server", transport: { type: "stdio", command: "nonexistent-xyz" } }]
-
-    # First call: fails and records as failed
-    robot.send(:ensure_mcp_clients, failing_config)
-    assert_equal ["retry_fail_server"], robot.failed_mcp_server_names
-
-    # Make MCP::Client.new raise during retry
-    RobotLab::MCP::Client.define_singleton_method(:new) do |*_args, **_kwargs|
-      raise StandardError, "retry connection error"
-    end
-
-    # Second call: retry path should rescue and log warn
-    robot.send(:ensure_mcp_clients, failing_config)
-    # Server remains in failed list since retry failed
-    assert_equal ["retry_fail_server"], robot.failed_mcp_server_names
-  ensure
-    RobotLab::MCP::Client.singleton_class.remove_method(:new) rescue nil
-  end
-
-  def test_extract_server_name_with_mcp_server_object
-    # mcp_management.rb line 138: MCP::Server branch in extract_server_name
-    robot = build_robot(name: "bot", template: :assistant)
-    server = RobotLab::MCP::Server.new(
-      name: "my_mcp_server",
-      transport: { type: "stdio", command: "echo" }
-    )
-    name = robot.send(:extract_server_name, server)
-    assert_equal "my_mcp_server", name
-  end
-
-  def test_extract_server_name_with_other_type
-    # mcp_management.rb line 140: else branch in extract_server_name
-    robot = build_robot(name: "bot", template: :assistant)
-    # Pass an object that isn't a Hash or MCP::Server
-    custom = Object.new
-    custom.define_singleton_method(:to_s) { "custom_server" }
-    name = robot.send(:extract_server_name, custom)
-    assert_equal "custom_server", name
   end
 
   def test_chat_provider_returns_nil_on_error

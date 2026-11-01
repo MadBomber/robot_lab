@@ -35,20 +35,14 @@ RobotLab automatically installs these core dependencies:
 
 | Gem | Purpose |
 |-----|---------|
-| `ruby_llm` (~> 2.0.0.rc3) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) |
+| `ruby_llm` (>= 2.1.1, < 3) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) and the built-in `RubyLLM::MCP` client |
 | `prompt_manager` (~> 1.0) | Template-based prompt management with YAML front matter |
 | `simple_flow` (~> 0.4) | Pipeline workflow execution for networks |
 | `myway_config` (~> 0.1) | Layered configuration (defaults, env vars, config files) |
 | `zeitwerk` (~> 2.6) | Autoloading and eager loading |
 | `async` (~> 2.0) | Fiber-based concurrency |
-| `async-http` (~> 0.60) | MCP SSE and streamable-HTTP transports |
-| `async-websocket` (~> 0.30) | MCP WebSocket transport |
 | `typed_bus` (~> 0.0.1) | Typed message bus for robot-to-robot messaging |
 | `ractor_queue` (~> 0.2) | Queue used by the Network bus poller |
-
-> [!NOTE]
-> `async-http` and `async-websocket` are hard runtime dependencies, not optional
-> extras — they install with the gem whether or not you use MCP.
 
 ### Optional Dependencies
 
