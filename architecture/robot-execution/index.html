@@ -897,10 +897,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-mcp-client-initialization" class="md-nav__link">
+  <a href="#3-server-selection-and-connection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. MCP Client Initialization
+        3. Server Selection and Connection
       
     </span>
   </a>
@@ -2198,14 +2198,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2254,14 +2254,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -2689,10 +2689,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-mcp-client-initialization" class="md-nav__link">
+  <a href="#3-server-selection-and-connection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. MCP Client Initialization
+        3. Server Selection and Connection
       
     </span>
   </a>
@@ -2893,8 +2893,8 @@
     Robot-&gt;&gt;Hooks: Hooks.run(:run, RunHookContext)
     Note over Hooks: before_run / around_run wrap everything below
 
-    Robot-&gt;&gt;Robot: prepare_tools() — resolve_mcp_hierarchy,&lt;br/&gt;ensure_mcp_clients, resolve_tools_hierarchy,&lt;br/&gt;filtered_tools + cap_tools
-    Robot-&gt;&gt;Chat: with_tools(*filtered, replace: true)
+    Robot-&gt;&gt;Robot: prepare_tools() — resolve_mcp_hierarchy,&lt;br/&gt;servers_for + collect_mcp_tools, resolve_tools_hierarchy,&lt;br/&gt;filtered_tools + cap_tools
+    Robot-&gt;&gt;Chat: with_tools(nil); with_tools(*filtered)
     Robot-&gt;&gt;Robot: rerender_template(kwargs) — when template + extra kwargs
     Robot-&gt;&gt;Ledger: reserve_budget! (raises BudgetExceeded if exhausted)
 
@@ -2958,34 +2958,46 @@ and the <code>:llm_generation</code> family wraps the provider's <em>entire</em>
 <ul>
 <li><code>:none</code> -- no MCP servers at this level</li>
 <li><code>:inherit</code> -- use parent level's MCP config</li>
-<li><code>Array</code> -- explicit list of server configurations</li>
+<li><code>Array</code> -- explicit list of specs: config Hashes, <code>RubyLLM::MCP</code> instances, <code>RubyLLM::MCP</code> subclasses</li>
 </ul>
-<p><code>run</code>'s default for <code>mcp:</code> is <code>:none</code>, so a plain <code>robot.run("...")</code> resolves to an empty server list and connects nothing, even when <code>mcp:</code> was supplied at build time. Pass <code>mcp: :inherit</code> to trigger the connection. (<code>robot.connect_mcp!</code> connects eagerly against the build-time config, which is useful for reporting connection status at startup.)</p>
-<h3 id="3-mcp-client-initialization">3. MCP Client Initialization<a class="headerlink" href="#3-mcp-client-initialization" title="Permanent link">&para;</a></h3>
-<p>If MCP servers need to be connected (or reconnected), the robot initializes clients:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Connect to each MCP server (ensure_mcp_clients -&gt; init_mcp_client)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">MCP</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">server_config</span><span class="p">)</span><span class="w">   </span><span class="c1"># config is POSITIONAL</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">client</span><span class="o">.</span><span class="n">connect</span>
+<p><code>run</code>'s default for <code>mcp:</code> is <code>:none</code>, so a plain <code>robot.run("...")</code> resolves to an empty server list and contacts nothing, even when <code>mcp:</code> was supplied at build time. Pass <code>mcp: :inherit</code> to select the build-time servers. (<code>robot.connect_mcp!</code> connects eagerly against the build-time config, which is useful for reporting connection status at startup.)</p>
+<h3 id="3-server-selection-and-connection">3. Server Selection and Connection<a class="headerlink" href="#3-server-selection-and-connection" title="Permanent link">&para;</a></h3>
+<p>The resolved specs become <code>RubyLLM::MCP</code> instances through the robot's <code>MCP::Registry</code>, and each selected server is asked for its tools:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># servers_for: narrow by relevance (mcp_discovery), then register</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">specs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">MCP</span><span class="o">::</span><span class="no">ServerDiscovery</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">discovery_query</span><span class="p">(</span><span class="n">message</span><span class="p">),</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@mcp_discovery</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">message</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="vi">@run_mcp_servers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">specs</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">spec</span><span class="o">|</span><span class="w"> </span><span class="vi">@mcp_registry</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># add returns the existing server for a known spec</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">if</span><span class="w"> </span><span class="n">client</span><span class="o">.</span><span class="n">connected?</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="vi">@mcp_clients</span><span class="o">[</span><span class="n">client</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">name</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="n">discover_mcp_tools</span><span class="p">(</span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="n">server_name</span><span class="p">)</span><span class="w">  </span><span class="c1"># each remote tool becomes a Tool.create wrapper</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">else</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="vi">@failed_mcp_configs</span><span class="o">[</span><span class="n">server_name</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">server_config</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">end</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># collect_mcp_tools: connect on first use, skip what cannot be reached</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">servers</span><span class="o">.</span><span class="n">flat_map</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">server</span><span class="o">|</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="n">tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">server</span><span class="o">.</span><span class="n">tools</span><span class="w">                       </span><span class="c1"># RubyLLM::MCP::Tool instances; connects lazily</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="vi">@mcp_failures</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">server</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="n">tools</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">tool</span><span class="o">|</span><span class="w"> </span><span class="vi">@mcp_tool_owners</span><span class="o">[</span><span class="n">tool</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">server</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="n">tools</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">rescue</span><span class="w"> </span><span class="o">*</span><span class="no">MCP</span><span class="o">::</span><span class="no">CONNECT_ERRORS</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="n">record_mcp_failure</span><span class="p">(</span><span class="n">server</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w">              </span><span class="c1"># warn + @mcp_failures[name] = e</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="o">[]</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">end</span>
 </span></code></pre></div>
-<p>Connection failures are logged and recorded, never raised — they surface through <code>robot.failed_mcp_server_names</code>. A later run retries only the servers that are still needed and still failed.</p>
+<p>Connection failures are logged and recorded, never raised — they surface through <code>robot.mcp_failures</code> / <code>robot.failed_mcp_server_names</code>. A later run that selects the server retries it. Servers are never closed by selection; <code>robot.disconnect</code> (or <code>with_mcp(nil)</code>) closes them.</p>
 <h3 id="4-tools-resolution">4. Tools Resolution<a class="headerlink" href="#4-tools-resolution" title="Permanent link">&para;</a></h3>
 <p>Tools are resolved through the same hierarchy, filtered, capped, and applied to the chat:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Explicit :none (or a literal []) means "send zero tools this turn"; otherwise</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># filter the local + MCP tools by the resolved allowlist and clamp to max_tools.</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="o">[]</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">cap_tools</span><span class="p">(</span><span class="n">filtered_tools</span><span class="p">(</span><span class="n">resolved_tools</span><span class="p">))</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="o">*</span><span class="n">filtered</span><span class="p">,</span><span class="w"> </span><span class="ss">replace</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">filtered</span><span class="o">.</span><span class="n">any?</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">available</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@local_tools</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">collect_mcp_tools</span><span class="p">(</span><span class="vi">@run_mcp_servers</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">filtered</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="o">[]</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">cap_tools</span><span class="p">(</span><span class="n">filtered_tools</span><span class="p">(</span><span class="n">available</span><span class="p">,</span><span class="w"> </span><span class="n">resolved_tools</span><span class="p">))</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">check_unique_tool_names!</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span><span class="w">          </span><span class="c1"># MCPError: suggest prefix: on one server</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">return</span><span class="w"> </span><span class="k">unless</span><span class="w"> </span><span class="n">filtered</span><span class="o">.</span><span class="n">any?</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">explicit_none_tools?</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">mcp_tools_attached?</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">deferred</span><span class="p">,</span><span class="w"> </span><span class="n">offered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filtered</span><span class="o">.</span><span class="n">partition</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">tool</span><span class="o">|</span><span class="w"> </span><span class="n">deferred_mcp_tool?</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="o">*</span><span class="n">offered</span><span class="p">)</span><span class="w">               </span><span class="k">if</span><span class="w"> </span><span class="n">offered</span><span class="o">.</span><span class="n">any?</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="vi">@chat</span><span class="o">.</span><span class="n">with_tools</span><span class="p">(</span><span class="o">*</span><span class="n">deferred</span><span class="p">,</span><span class="w"> </span><span class="ss">defer</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">deferred</span><span class="o">.</span><span class="n">any?</span>
 </span></code></pre></div>
-<p>Two details here are load-bearing:</p>
+<p>Three details here are load-bearing:</p>
 <ul>
-<li><strong><code>replace: true</code></strong> — RubyLLM's <code>with_tools</code> appends by default. On a persistent chat that would let tools accumulate across turns, so the chat is made to hold exactly this turn's resolved set. An explicit <code>:none</code> therefore clears the chat's tools to zero.</li>
+<li><strong>Clear, then add</strong> — RubyLLM's <code>with_tools</code> appends. On a persistent chat that would let tools accumulate across turns, so <code>with_tools(nil)</code> empties the set and the chat is made to hold exactly this turn's resolved set. An explicit <code>:none</code> therefore clears the chat's tools to zero, and a turn that selects no MCP servers drops the MCP tools a previous turn attached (the servers stay connected).</li>
+<li><strong>MCP tools are attached per run, not per server</strong> — the robot never calls <code>chat.with_mcp</code>. Attaching the selected servers' <code>RubyLLM::MCP::Tool</code>s individually is what lets the <code>tools:</code> allowlist, <code>max_tools</code> and <code>:none</code> apply to MCP tools exactly as to local ones. Tools a server declared with <code>defer</code> are attached with <code>defer: true</code>.</li>
 <li><strong><code>cap_tools</code></strong> — the resolved list is clamped to <code>RunConfig#max_tools</code>, which defaults to <code>DEFAULT_MAX_TOOLS</code> (128) because most providers reject longer tool arrays. Setting <code>max_tools</code> to nil, 0, or a negative number falls back to 128; the cap cannot be disabled. Dropped tools are logged at <code>warn</code>.</li>
 </ul>
 <p>Because <code>run</code> defaults to <code>tools: :none</code>, a plain <code>robot.run("...")</code> sends the LLM no tools at all. Pass <code>tools: :inherit</code> to send the robot's attached tools; pass an explicit array of names to use it as an allowlist.</p>

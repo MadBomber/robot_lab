@@ -2271,14 +2271,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/mcp/client/" class="md-nav__link">
+      <a href="../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2327,14 +2327,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/mcp/transports/" class="md-nav__link">
+      <a href="../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3415,24 +3415,20 @@ so <code>get(:a, :b, :c, wait: 60)</code> can block for up to 180 seconds.</p>
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="c1"># Connect the servers AND expose their tools for this run</span>
 </span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"List the Ruby files in ./lib"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
+<p>The client is ruby_llm's built-in <code>RubyLLM::MCP</code> (stdio and Streamable HTTP;
+<code>sse</code>/<code>ws</code> configs raise <code>RobotLab::MCPError</code>). A server spec is a config Hash
+like the ones above (<code>transport:</code> may be nested or flat), a <code>RubyLLM::MCP</code>
+subclass, or an instance. <code>robot.mcp[:github]</code> is the server object, with
+<code>tools</code>, <code>resources</code>, <code>prompts</code> and the rest of ruby_llm's surface.</p>
 <blockquote>
 <p>[!IMPORTANT]
-<code>transport:</code> must be a <strong>nested hash</strong> — <code>transport: { type: "stdio", command: ..., args: [...] }</code>.
-A flat <code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys raises
-<code>NoMethodError: undefined method 'transform_keys' for an instance of String</code>,
-and that exception is <strong>swallowed</strong> rather than raised: the robot builds
-successfully with zero tools. It is not silent, though — a line is logged at
-<code>WARN</code> through <code>RobotLab.config.logger</code> (<code>Robot 'dev' error connecting to MCP
-server 'fs': undefined method 'transform_keys' for an instance of String</code>) and
-the server name lands in <code>robot.failed_mcp_server_names</code>. An <em>invalid</em> transport
-type is swallowed the same way; only a direct <code>MCP::Server.new</code> raises
-<code>ArgumentError</code>. Valid transport types are <code>stdio</code>, <code>sse</code>, <code>ws</code>,
-<code>websocket</code>, <code>streamable-http</code>, and <code>http</code> (<code>streamable_http</code> with an
-underscore is invalid).</p>
-<p><code>mcp:</code> also defaults to <code>:none</code> on <code>run</code>. <code>mcp: :inherit</code> triggers the
-connection attempt; <code>tools: :inherit</code> is additionally required for the MCP
-tools to reach the model. MCP connection failures are logged and recorded in
-<code>robot.failed_mcp_server_names</code> — they are not raised.</p>
+<code>mcp:</code> defaults to <code>:none</code> on <code>run</code>. <code>mcp: :inherit</code> selects the robot's
+servers (connecting them on first use); <code>tools: :inherit</code> or an allowlist is
+additionally required for the MCP tools to reach the model. Connection
+failures are logged and recorded in <code>robot.mcp_failures</code> /
+<code>robot.failed_mcp_server_names</code> — they are not raised — and retried on the
+next run that selects the server. Tools a server marks <code>requires_approval</code>
+are denied unless <code>tool_approval: :approve</code> or <code>on_tool_approval:</code> is set.</p>
 </blockquote>
 <p>MCP configuration follows a hierarchical resolution: <code>runtime &gt; robot &gt; network &gt; global config</code>. Values can be <code>:none</code>, <code>:inherit</code>, or explicit arrays.</p>
 <h2 id="execution-flow">Execution Flow<a class="headerlink" href="#execution-flow" title="Permanent link">&para;</a></h2>
@@ -3611,14 +3607,8 @@ a chat with empty params.</p>
 </span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="gu">---</span>
 </span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>You are a GitHub assistant. Use available tools to help with repository tasks.
 </span></code></pre></div>
-<blockquote>
-<p>[!IMPORTANT]
-Note the <strong>nested</strong> <code>transport:</code> mapping above. A flat
-<code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys raises a <code>NoMethodError</code>
-that is swallowed rather than propagated, leaving you with a robot that has no
-tools. Look for the <code>WARN</code> line on <code>RobotLab.config.logger</code> and check
-<code>robot.failed_mcp_server_names</code> — both record the failure.</p>
-</blockquote>
+<p>The nested <code>transport:</code> mapping above and the flat form (<code>transport: stdio</code>
+with sibling <code>command:</code>/<code>args:</code> keys) are both accepted.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Template provides everything — minimal constructor</span>
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:github_assistant</span><span class="p">)</span>
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>

@@ -2658,14 +2658,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2714,14 +2714,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -4307,6 +4307,16 @@ themselves before assigning.</p>
 <td>Arguments passed to the tool</td>
 </tr>
 <tr>
+<td><code>mcp_server</code></td>
+<td>RubyLLM::MCP|nil</td>
+<td>The server that owns the tool when it is an MCP tool; <code>nil</code> for local tools</td>
+</tr>
+<tr>
+<td><code>mcp?</code></td>
+<td>Boolean</td>
+<td>Whether the tool comes from an MCP server</td>
+</tr>
+<tr>
 <td><code>tool_result</code></td>
 <td>Object|nil</td>
 <td>Set after the tool executes; readable in <code>after_tool_call</code></td>
@@ -4314,7 +4324,7 @@ themselves before assigning.</p>
 <tr>
 <td><code>tool_error</code></td>
 <td>Exception|nil</td>
-<td>Set if the tool raised an exception</td>
+<td>Set if the tool raised an exception (for MCP tools, a <code>RubyLLM::MCP::Error</code> mid-call, which the robot turns into an <code>{ error: }</code> result)</td>
 </tr>
 <tr>
 <td><code>metadata</code></td>

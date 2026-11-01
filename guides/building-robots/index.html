@@ -2641,14 +2641,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2697,14 +2697,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3937,7 +3937,7 @@ which route through <code>with_params</code>:</p>
 </tr>
 <tr>
 <td><code>mcp</code></td>
-<td>Array of MCP server configurations</td>
+<td>Array of MCP server specs (config Hashes; <code>transport:</code> nested or flat)</td>
 </tr>
 <tr>
 <td><code>skills</code></td>
@@ -3977,15 +3977,12 @@ which route through <code>with_params</code>:</p>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"What are the open issues?"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
 <blockquote>
-<p>[!WARNING]
-<code>transport:</code> <strong>must be a nested hash</strong>. The shipped
-<code>examples/prompts/github_assistant.md</code> uses the flat form
-(<code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys), which raises
-<code>NoMethodError: undefined method 'transform_keys' for an instance of String</code>
-internally. The error is swallowed and logged as a warning, the server lands in
-<code>robot.failed_mcp_server_names</code>, and the robot builds with <strong>zero tools</strong>. That
-shipped template also declares no <code>model:</code> or <code>temperature:</code>, so it does not
-demonstrate the full self-contained pattern shown here.</p>
+<p>[!NOTE]
+Both the nested <code>transport:</code> mapping above and the flat form the shipped
+<code>examples/prompts/github_assistant.md</code> uses (<code>transport: stdio</code> with sibling
+<code>command:</code>/<code>args:</code> keys) are accepted. That shipped template declares no
+<code>model:</code> or <code>temperature:</code>, so it does not demonstrate the full
+self-contained pattern shown here.</p>
 </blockquote>
 <h3 id="tools-in-front-matter">Tools in Front Matter<a class="headerlink" href="#tools-in-front-matter" title="Permanent link">&para;</a></h3>
 <p>Declare tool classes by name in the <code>tools:</code> key. RobotLab resolves each string to a Ruby constant and instantiates it:</p>
@@ -4029,13 +4026,13 @@ demonstrate the full self-contained pattern shown here.</p>
 </span></code></pre></div>
 <p>Constructor <code>mcp:</code> overrides frontmatter <code>mcp:</code> when provided.</p>
 <blockquote>
-<p>[!WARNING]
-<code>transport:</code> takes a nested hash — <code>type:</code> plus the transport's own keys. A flat
-<code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys fails silently (the
-<code>transform_keys</code> NoMethodError is swallowed) and the robot ends up with no MCP
-tools. Valid <code>type:</code> values are <code>stdio</code>, <code>sse</code>, <code>ws</code>, <code>websocket</code>,
-<code>streamable-http</code>, and <code>http</code>; the underscored <code>streamable_http</code> raises
-<code>ArgumentError</code>.</p>
+<p>[!NOTE]
+<code>transport:</code> may be a nested mapping (<code>type:</code> plus the transport's own keys)
+or the flat form (<code>transport: stdio</code> with sibling <code>command:</code>/<code>args:</code> keys).
+Transports are <code>stdio</code> and Streamable HTTP (<code>streamable-http</code>,
+<code>streamable_http</code>, <code>http</code>, <code>https</code>); <code>sse</code>, <code>ws</code> and <code>websocket</code> raise
+<code>RobotLab::MCPError</code> when the server is built. See the
+<a href="../../api/mcp/factory/#config-hash-keys">config key table</a>.</p>
 </blockquote>
 <h3 id="template-with-system-prompt">Template with System Prompt<a class="headerlink" href="#template-with-system-prompt" title="Permanent link">&para;</a></h3>
 <p>You can combine a template and an inline system prompt. Both are applied to the chat -- the template first, then the system prompt is appended as additional instructions:</p>
@@ -4270,15 +4267,15 @@ tool was attached — a tool attached as a class matches its class name
 </tr>
 <tr>
 <td><code>[...]</code></td>
-<td>Explicit array of server configurations</td>
+<td>Explicit array of specs: config Hashes, <code>RubyLLM::MCP</code> instances or subclasses</td>
 </tr>
 </tbody>
 </table>
-<p><code>run</code> also defaults to <code>mcp: :none</code>, so the servers configured above are not connected by a plain <code>run</code>:</p>
+<p><code>run</code> also defaults to <code>mcp: :none</code>, so the servers configured above are not selected by a plain <code>run</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Read config/database.yml"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
-<p><code>robot.connect_mcp!</code> connects eagerly if you want the handshake to happen up front, but a later plain <code>run()</code> still sends no tools — <code>tools: :inherit</code> is what puts the MCP tools in the request. Connection failures are logged and recorded in <code>robot.failed_mcp_server_names</code>; they are never raised.</p>
-<p>See the <a href="../mcp-integration/">MCP Integration</a> guide for transport types and advanced patterns.</p>
+<p><code>robot.connect_mcp!</code> connects eagerly if you want the handshake to happen up front, but a later plain <code>run()</code> still sends no tools — <code>tools: :inherit</code> is what puts the MCP tools in the request. Connection failures are logged and recorded in <code>robot.mcp_failures</code> / <code>robot.failed_mcp_server_names</code>; they are never raised. Tools a server marks <code>requires_approval</code> are denied unless you pass <code>tool_approval: :approve</code> or <code>on_tool_approval:</code>.</p>
+<p>See the <a href="../mcp-integration/">MCP Integration</a> guide for <code>RubyLLM::MCP</code> subclasses, approvals, resources and prompts.</p>
 <h2 id="chaining-configuration">Chaining Configuration<a class="headerlink" href="#chaining-configuration" title="Permanent link">&para;</a></h2>
 <p>Robots support <code>with_*</code> method chaining for runtime reconfiguration. Each method returns <code>self</code> for fluent usage:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"bot"</span><span class="p">)</span>

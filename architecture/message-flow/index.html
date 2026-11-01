@@ -2238,14 +2238,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2294,14 +2294,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3084,12 +3084,12 @@
     Memory--&gt;&gt;Robot: active memory
 
     Robot-&gt;&gt;MCP: resolve_mcp_hierarchy
-    MCP--&gt;&gt;Robot: resolved MCP config
-    Robot-&gt;&gt;Robot: ensure_mcp_clients
+    MCP--&gt;&gt;Robot: resolved MCP specs
+    Robot-&gt;&gt;MCP: servers_for (Registry#add) + collect_mcp_tools (server.tools)
 
     Robot-&gt;&gt;Tools: resolve_tools_hierarchy
     Tools--&gt;&gt;Robot: filtered + capped tools
-    Robot-&gt;&gt;Chat: @chat.with_tools(*filtered, replace: true)
+    Robot-&gt;&gt;Chat: @chat.with_tools(nil); @chat.with_tools(*filtered)
 
     Robot-&gt;&gt;Agent: ask("message")
     Agent-&gt;&gt;Chat: @chat.ask("message")
@@ -3128,16 +3128,16 @@
 <p><strong>Set Current Writer</strong>: Sets <code>memory.current_writer = robot.name</code> so subscription callbacks know which robot wrote a value.</p>
 </li>
 <li>
-<p><strong>Resolve MCP Hierarchy</strong>: Resolves MCP server configuration through the hierarchy: <code>runtime (run/task) &gt; robot build-time &gt; network &gt; global config</code>. <code>run</code> defaults <code>mcp:</code> to <code>:none</code>, so nothing is connected unless you pass <code>mcp: :inherit</code> or an explicit list.</p>
+<p><strong>Resolve MCP Hierarchy</strong>: Resolves MCP server specs through the hierarchy: <code>runtime (run/task) &gt; robot build-time &gt; network &gt; global config</code>. <code>run</code> defaults <code>mcp:</code> to <code>:none</code>, so no server is selected unless you pass <code>mcp: :inherit</code> or an explicit list.</p>
 </li>
 <li>
-<p><strong>Ensure MCP Clients</strong>: Initializes or updates MCP client connections and discovers tools from them. Connection failures are logged and recorded in <code>failed_mcp_server_names</code>, never raised.</p>
+<p><strong>Select and Connect Servers</strong>: Each resolved spec is registered in the robot's <code>MCP::Registry</code> (<code>add</code> returns the existing <code>RubyLLM::MCP</code> for a spec seen before, so one server object serves every run), narrowed by <code>MCP::ServerDiscovery</code> when <code>mcp_discovery</code> is on, and asked for its <code>tools</code> (which connects it on first use). Connection failures are logged and recorded in <code>mcp_failures</code>, never raised; the run goes on without that server.</p>
 </li>
 <li>
 <p><strong>Resolve Tools Hierarchy</strong>: Resolves which tools are available through the same hierarchy. <code>run</code> defaults <code>tools:</code> to <code>:none</code>, which means "send zero tools this turn" — pass <code>tools: :inherit</code> to send the robot's attached tools.</p>
 </li>
 <li>
-<p><strong>Filter Tools</strong>: Filters by the resolved allowlist, clamps to <code>max_tools</code> (128 by default), and applies the set with <code>@chat.with_tools(*filtered, replace: true)</code> so the persistent chat holds exactly this turn's tools.</p>
+<p><strong>Filter Tools</strong>: Filters local and MCP tools together by the resolved allowlist, raises <code>MCPError</code> on a duplicate tool name, clamps to <code>max_tools</code> (128 by default), and applies the set clear-then-add (<code>@chat.with_tools(nil)</code> then <code>@chat.with_tools(*offered)</code>, plus <code>with_tools(*deferred, defer: true)</code> for tools a server declared deferred) so the persistent chat holds exactly this turn's tools.</p>
 </li>
 <li>
 <p><strong>Agent#ask</strong>: Delegates to the parent class <code>RubyLLM::Agent#ask</code>, which calls <code>@chat.ask(message)</code>.</p>

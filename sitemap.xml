@@ -61,15 +61,15 @@
          <lastmod>2026-11-01</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/robot_lab/api/mcp/client/</loc>
+         <loc>https://madbomber.github.io/robot_lab/api/mcp/factory/</loc>
+         <lastmod>2026-11-01</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/robot_lab/api/mcp/registry/</loc>
          <lastmod>2026-11-01</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/robot_lab/api/mcp/server/</loc>
-         <lastmod>2026-11-01</lastmod>
-    </url>
-    <url>
-         <loc>https://madbomber.github.io/robot_lab/api/mcp/transports/</loc>
          <lastmod>2026-11-01</lastmod>
     </url>
     <url>

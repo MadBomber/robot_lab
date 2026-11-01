@@ -2548,14 +2548,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2604,14 +2604,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -4022,7 +4022,7 @@ allowed values in the description instead, and validate in <code>execute</code>:
 </span><span id="__span-34-12"><a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a><span class="c1"># If ExternalAPI.fetch raises, result is:</span>
 </span><span id="__span-34-13"><a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a><span class="c1"># =&gt; "Error (fetch_resource): connection refused"</span>
 </span></code></pre></div>
-<p>This applies to all <code>RobotLab::Tool</code> variants — subclasses, <code>Tool.create</code> factory tools, and MCP tools.</p>
+<p>This applies to all <code>RobotLab::Tool</code> variants — subclasses and <code>Tool.create</code> factory tools. MCP tools are <code>RubyLLM::MCP::Tool</code> instances, not <code>RobotLab::Tool</code>s; a <code>RubyLLM::MCP::Error</code> raised during one of their calls is turned into an <code>{ error: }</code> tool result by the robot's tool-call bridge instead (see <a href="../mcp-integration/#hooks-and-mcp-tools">MCP Integration</a>).</p>
 <h3 id="robotlabtoolerror-and-retryability">RobotLab::ToolError and Retryability<a class="headerlink" href="#robotlabtoolerror-and-retryability" title="Permanent link">&para;</a></h3>
 <p><code>RobotLab::ToolError</code> is handled on a separate path from ordinary
 <code>StandardError</code>s. Raising one with <code>retryable: true</code> appends <code>" (retryable)"</code>

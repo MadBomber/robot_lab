@@ -2440,45 +2440,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotlabmcpconnectionpoller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::MCP::ConnectionPoller
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RobotLab::MCP::ConnectionPoller">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#poll_interval" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        POLL_INTERVAL
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#robotlabstreamingsequencecounter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2808,14 +2769,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/client/" class="md-nav__link">
+      <a href="../mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2864,14 +2825,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/transports/" class="md-nav__link">
+      <a href="../mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3991,45 +3952,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotlabmcpconnectionpoller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        RobotLab::MCP::ConnectionPoller
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="RobotLab::MCP::ConnectionPoller">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#poll_interval" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        POLL_INTERVAL
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#robotlabstreamingsequencecounter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4182,11 +4104,6 @@ the guides; this page is the API surface, so nothing public is left undocumented
 <td><a href="#robotlabmcpserverdiscovery"><code>MCP::ServerDiscovery</code></a></td>
 <td><code>mcp_discovery: true</code></td>
 <td><a href="../../guides/mcp-integration/">MCP Integration</a></td>
-</tr>
-<tr>
-<td><a href="#robotlabmcpconnectionpoller"><code>MCP::ConnectionPoller</code></a></td>
-<td>Multiplexed stdio MCP I/O</td>
-<td><a href="../mcp/transports/">Transports</a></td>
 </tr>
 <tr>
 <td><a href="#robotlabstreamingsequencecounter"><code>Streaming::SequenceCounter</code></a></td>
@@ -4520,7 +4437,7 @@ entry.</p>
 </table>
 <div class="admonition warning">
 <p class="admonition-title"><code>from_hash</code> is not the inverse of <code>to_h</code></p>
-<p><code>to_h</code> emits <code>Tool#to_h</code> (<code>name</code>, <code>description</code>, <code>mcp</code>), while <code>from_hash</code>
+<p><code>to_h</code> emits <code>Tool#to_h</code> (<code>name</code>, <code>description</code>), while <code>from_hash</code>
 expects each value to carry <code>:parameters</code> and a <code>:handler</code> Proc. Round-tripping
 a manifest through <code>to_h</code> → <code>from_hash</code> yields tools with no parameters and a
 <code>nil</code> handler.</p>
@@ -5090,8 +5007,10 @@ so a robot with many servers connects only what it needs. Activated with
 small even for a clearly on-topic query.</p>
 <h3 id="select">select<a class="headerlink" href="#select" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">ServerDiscovery</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">servers</span><span class="p">,</span><span class="w"> </span><span class="ss">threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mo">05</span><span class="p">)</span>
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="c1"># =&gt; Array&lt;Hash, MCP::Server&gt;</span>
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="c1"># =&gt; Array&lt;Hash, RubyLLM::MCP, Class&gt;</span>
 </span></code></pre></div>
+<p>Runs on <strong>every</strong> robot run that selects servers (not only the first), before
+the selected servers are registered and connected.</p>
 <p><strong>Returns <code>from</code> unchanged</strong> — connecting everything — whenever discovery cannot
 make a confident call: an empty list, a blank query, no server carrying a
 <code>description</code>, no server scoring at or above <code>threshold</code>, or the <code>classifier</code> gem
@@ -5103,70 +5022,12 @@ therefore only ever <em>narrow</em> a run, never break one.</p>
 </span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a><span class="no">ServerDiscovery</span><span class="o">.</span><span class="n">description_for</span><span class="p">(</span><span class="n">server</span><span class="p">)</span><span class="w">   </span><span class="c1"># =&gt; String ("" when absent)</span>
 </span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a><span class="no">ServerDiscovery</span><span class="o">.</span><span class="n">any_descriptions?</span><span class="p">(</span><span class="n">servers</span><span class="p">)</span><span class="w"> </span><span class="c1"># =&gt; Boolean</span>
 </span></code></pre></div>
-<p>All four accept either a config <code>Hash</code> (<code>server[:name]</code>, <code>server[:description]</code>)
-or an <code>MCP::Server</code> instance. <code>topic_text</code> is <code>"&lt;name&gt; &lt;description&gt;"</code> — the name
-participates in matching, so a well-named server scores even with a thin
-description.</p>
-<hr />
-<h2 id="robotlabmcpconnectionpoller">RobotLab::MCP::ConnectionPoller<a class="headerlink" href="#robotlabmcpconnectionpoller" title="Permanent link">&para;</a></h2>
-<p>Multiplexes I/O across multiple <strong>stdio</strong> MCP transports with a single
-<code>IO.select</code> loop, instead of each client blocking independently behind its own
-<code>Timeout.timeout</code>. Async-based transports (SSE, WebSocket, StreamableHTTP) are
-unaffected — they already yield to the fiber scheduler. See
-<a href="../mcp/transports/">Transports</a>.</p>
-<p>Unlike <a href="#robotlabbuspoller"><code>BusPoller</code></a>, this one <strong>does</strong> own a background
-thread.</p>
-<h3 id="poll_interval">POLL_INTERVAL<a class="headerlink" href="#poll_interval" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">ConnectionPoller</span><span class="o">::</span><span class="no">POLL_INTERVAL</span><span class="w">  </span><span class="c1"># =&gt; 0.1  (seconds)</span>
-</span></code></pre></div>
-<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Returns</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>start</code></td>
-<td><code>self</code></td>
-<td>Spawn the multiplexing thread (named <code>RobotLab::MCP::ConnectionPoller</code>). Idempotent</td>
-</tr>
-<tr>
-<td><code>stop(timeout: 5)</code></td>
-<td><code>self</code></td>
-<td>Stop the thread and cancel every pending request with an <code>MCPError</code>. Idempotent</td>
-</tr>
-<tr>
-<td><code>running?</code></td>
-<td><code>Boolean</code></td>
-<td>Whether the thread is live</td>
-</tr>
-<tr>
-<td><code>register(client)</code></td>
-<td>—</td>
-<td>Add the client's <code>transport.stdout</code> to the select set. <strong>Silently ignores a non-stdio client</strong></td>
-</tr>
-<tr>
-<td><code>unregister(client)</code></td>
-<td>—</td>
-<td>Remove it; likewise a no-op for non-stdio clients</td>
-</tr>
-<tr>
-<td><code>send_request(client, message, timeout:)</code></td>
-<td>response</td>
-<td>Write <code>message.to_json</code> to the client's stdin and block on that client's queue for the matching response. <code>timeout:</code> is required</td>
-</tr>
-</tbody>
-</table>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="n">poller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">ConnectionPoller</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">start</span>
-</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">server_config</span><span class="p">,</span><span class="w"> </span><span class="ss">poller</span><span class="p">:</span><span class="w"> </span><span class="n">poller</span><span class="p">)</span>
-</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="n">client</span><span class="o">.</span><span class="n">connect</span>
-</span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="c1"># ...</span>
-</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="n">poller</span><span class="o">.</span><span class="n">stop</span>
-</span></code></pre></div>
+<p>All four accept a config <code>Hash</code> (<code>server[:name]</code>/<code>server["name"]</code>,
+<code>server[:description]</code>), a <code>RubyLLM::MCP</code> instance, or a <code>RubyLLM::MCP</code>
+subclass; a class or instance contributes a description only when it responds
+to <code>description</code> (<code>RobotLab::MCP::Server</code> does). <code>topic_text</code> is
+<code>"&lt;name&gt; &lt;description&gt;"</code> — the name participates in matching, so a well-named
+server scores even with a thin description.</p>
 <hr />
 <h2 id="robotlabstreamingsequencecounter">RobotLab::Streaming::SequenceCounter<a class="headerlink" href="#robotlabstreamingsequencecounter" title="Permanent link">&para;</a></h2>
 <p>Thread-safe monotonic counter for event ordering.</p>

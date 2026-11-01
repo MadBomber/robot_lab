@@ -1961,14 +1961,14 @@
   
   
     <li class="md-nav__item">
-      <a href="mcp/client/" class="md-nav__link">
+      <a href="mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2017,14 +2017,14 @@
   
   
     <li class="md-nav__item">
-      <a href="mcp/transports/" class="md-nav__link">
+      <a href="mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -2660,8 +2660,8 @@ confines them:</p>
 <p>Everything else with a public surface — <code>Task</code>, <code>Runnable</code>, <code>ToolConfig</code>,
 <code>ToolManifest</code>, <code>Budget::Ledger</code>, <code>DoomLoopDetector</code>, <code>HistoryCompressor</code>,
 <code>Convergence</code>, <code>TextAnalysis</code>, <code>DelegationFuture</code>, <code>RobotMessage</code>, <code>BusPoller</code>,
-<code>Waiter</code>, <code>Narrator</code>, <code>Config</code>, <code>MCP::ServerDiscovery</code>,
-<code>MCP::ConnectionPoller</code>, and <code>Streaming::SequenceCounter</code> — is documented on the
+<code>Waiter</code>, <code>Narrator</code>, <code>Config</code>, <code>MCP::ServerDiscovery</code>, and
+<code>Streaming::SequenceCounter</code> — is documented on the
 <a href="support/">Support Classes</a> page.</p>
 <h2 id="messages">Messages<a class="headerlink" href="#messages" title="Permanent link">&para;</a></h2>
 <p>Message types for LLM communication:</p>
@@ -2692,7 +2692,7 @@ confines them:</p>
 </tbody>
 </table>
 <h2 id="mcp-model-context-protocol">MCP (Model Context Protocol)<a class="headerlink" href="#mcp-model-context-protocol" title="Permanent link">&para;</a></h2>
-<p>Connect to external tool servers:</p>
+<p>Connect to MCP servers through ruby_llm's built-in <code>RubyLLM::MCP</code> client:</p>
 <table>
 <thead>
 <tr>
@@ -2702,16 +2702,16 @@ confines them:</p>
 </thead>
 <tbody>
 <tr>
-<td><a href="mcp/client/">Client</a></td>
-<td>MCP server connection</td>
+<td><a href="mcp/factory/">Factory</a></td>
+<td><code>RobotLab::MCP.build</code> / <code>define</code>: config Hash to <code>RubyLLM::MCP</code></td>
 </tr>
 <tr>
 <td><a href="mcp/server/">Server</a></td>
-<td>Server configuration</td>
+<td><code>RobotLab::MCP::Server &lt; RubyLLM::MCP</code> with <code>description</code> and <code>connected?</code></td>
 </tr>
 <tr>
-<td><a href="mcp/transports/">Transports</a></td>
-<td>Connection transports</td>
+<td><a href="mcp/registry/">Registry</a></td>
+<td>A robot's servers by name, reused across runs</td>
 </tr>
 </tbody>
 </table>

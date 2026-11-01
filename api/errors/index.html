@@ -2186,14 +2186,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/client/" class="md-nav__link">
+      <a href="../mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2242,14 +2242,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/transports/" class="md-nav__link">
+      <a href="../mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -2964,14 +2964,32 @@ logs the message at <code>:warn</code> and skips compaction, and
 <p>Raised when a tool name is referenced but cannot be found in the <code>ToolManifest</code>.</p>
 <hr />
 <h2 id="robotlabmcperror">RobotLab::MCPError<a class="headerlink" href="#robotlabmcperror" title="Permanent link">&para;</a></h2>
-<p>Raised when MCP server communication fails (connection refused, timeout, protocol error).</p>
+<p>Raised for MCP configuration and run-level problems:</p>
+<ul>
+<li>a server spec that cannot be built: no <code>name</code>, no <code>command</code>/<code>url</code>, an
+  unknown transport type, an unsupported one (<code>sse</code>, <code>ws</code>, <code>websocket</code>), or a
+  class that is not a <code>RubyLLM::MCP</code> subclass — raised by <code>RobotLab::MCP.build</code>,
+  and therefore by <code>connect_mcp!</code>, <code>with_mcp</code>, or the first <code>run</code> that selects
+  the spec;</li>
+<li>two tools sharing one name across local tools and MCP servers (the message
+  suggests <code>prefix:</code>);</li>
+<li>a long-running MCP task not finishing within
+  <code>Robot::ToolCallGating::MCP_TASK_TIMEOUT</code> (300 s) — raised with <code>retryable: true</code>.</li>
+</ul>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">begin</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"hello"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCPError</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"MCP failed: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"MCP configuration problem: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">end</span>
 </span></code></pre></div>
-<p><code>MCPError.new(message, retryable: true)</code> marks a specific instance as safe to retry (see <a href="#retryable-errors">Retryable Errors</a> below). The connection-lost and timeout errors raised internally by <code>MCP::ConnectionPoller</code> are always constructed with <code>retryable: true</code>.</p>
+<p><strong>Connection failures are not <code>MCPError</code>s and are not raised</strong> from a robot
+run. A server that cannot be reached while listing tools (any of
+<code>RobotLab::MCP::CONNECT_ERRORS</code>) is logged at <code>warn</code>, recorded in
+<code>robot.mcp_failures</code>, skipped for that run, and retried on the next run that
+selects it. A <code>RubyLLM::MCP::Error</code> raised while a tool call is executing is
+turned into an <code>{ error: }</code> tool result so the model can recover. Direct calls
+on a server (<code>robot.mcp[:name].tools</code>, <code>.call</code>) raise ruby_llm's own errors.</p>
+<p><code>MCPError.new(message, retryable: true)</code> marks a specific instance as safe to retry (see <a href="#retryable-errors">Retryable Errors</a> below).</p>
 <hr />
 <h2 id="robotlabbuserror">RobotLab::BusError<a class="headerlink" href="#robotlabbuserror" title="Permanent link">&para;</a></h2>
 <p>Raised when message bus communication fails (no bus configured, channel not found).</p>
@@ -3098,6 +3116,30 @@ to the logger. See <a href="../core/tool/#call">Tool#call</a>.</p>
 <tr>
 <td><code>MCPError</code> / <code>ToolError</code></td>
 <td>Only when raised with <code>retryable: true</code> at the raise site</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
+</tr>
+<tr>
+<td><code>RubyLLM::MCP::Error</code></td>
+<td>When <code>code</code> is <code>nil</code> (the transport failed: timeout, closed pipe). A JSON-RPC error code means the server answered and rejected the request — never</td>
 </tr>
 <tr>
 <td>Everything else (<code>ConfigurationError</code>, <code>ToolNotFoundError</code>, <code>DependencyError</code>, <code>RactorBoundaryError</code>, <code>BusError</code>, <code>BudgetExceeded</code>, <code>AwaitTimeout</code>, <code>DelegationTimeout</code>, non-RobotLab errors)</td>

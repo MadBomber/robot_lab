@@ -2165,14 +2165,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2221,14 +2221,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -2833,8 +2833,8 @@
 </thead>
 <tbody>
 <tr>
-<td><code>ruby_llm</code> (~&gt; 2.0.0.rc3)</td>
-<td>LLM provider integrations (Anthropic, OpenAI, Gemini, etc.)</td>
+<td><code>ruby_llm</code> (&gt;= 2.1.1, &lt; 3)</td>
+<td>LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) and the built-in <code>RubyLLM::MCP</code> client</td>
 </tr>
 <tr>
 <td><code>prompt_manager</code> (~&gt; 1.0)</td>
@@ -2857,14 +2857,6 @@
 <td>Fiber-based concurrency</td>
 </tr>
 <tr>
-<td><code>async-http</code> (~&gt; 0.60)</td>
-<td>MCP SSE and streamable-HTTP transports</td>
-</tr>
-<tr>
-<td><code>async-websocket</code> (~&gt; 0.30)</td>
-<td>MCP WebSocket transport</td>
-</tr>
-<tr>
 <td><code>typed_bus</code> (~&gt; 0.0.1)</td>
 <td>Typed message bus for robot-to-robot messaging</td>
 </tr>
@@ -2874,11 +2866,6 @@
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p>[!NOTE]
-<code>async-http</code> and <code>async-websocket</code> are hard runtime dependencies, not optional
-extras — they install with the gem whether or not you use MCP.</p>
-</blockquote>
 <h3 id="optional-dependencies">Optional Dependencies<a class="headerlink" href="#optional-dependencies" title="Permanent link">&para;</a></h3>
 <p>Several features are gated behind gems the core gem does <strong>not</strong> install. Add
 whichever you need to your own <code>Gemfile</code>:</p>

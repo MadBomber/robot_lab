@@ -2437,14 +2437,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/client/" class="md-nav__link">
+      <a href="../mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2493,14 +2493,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../mcp/transports/" class="md-nav__link">
+      <a href="../mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3764,7 +3764,7 @@ built per run. Use a class-level accessor on the handler for cross-run state.</p
 <tr>
 <td><code>request</code></td>
 <td>rw</td>
-<td>The user message. <strong>Writable</strong> — assign in <code>before_run</code> to rewrite the prompt</td>
+<td>The user message — a <code>String</code>, or a <code>RubyLLM::MCP::Prompt</code> when the run was given one. <strong>Writable</strong> — assign in <code>before_run</code> to rewrite the prompt</td>
 </tr>
 <tr>
 <td><code>response</code></td>
@@ -3813,6 +3813,16 @@ name comes from the hook method names, not from <code>event</code>.</p>
 <td>Owning robot, or <code>nil</code></td>
 </tr>
 <tr>
+<td><code>mcp_server</code></td>
+<td></td>
+<td>The <code>RubyLLM::MCP</code> that owns <code>tool</code> when it is an MCP tool; <code>nil</code> for local tools</td>
+</tr>
+<tr>
+<td><code>mcp?</code></td>
+<td></td>
+<td><code>!mcp_server.nil?</code></td>
+</tr>
+<tr>
 <td><code>tool_result</code></td>
 <td>rw</td>
 <td>The result. Assign it in <code>around_tool_call</code> <strong>without</strong> calling the block to block a tool</td>
@@ -3820,7 +3830,7 @@ name comes from the hook method names, not from <code>event</code>.</p>
 <tr>
 <td><code>tool_error</code></td>
 <td>rw</td>
-<td>Set by <code>Tool#call</code> when <code>execute</code> raised</td>
+<td>Set by <code>Tool#call</code> when <code>execute</code> raised, or by the robot's tool-call bridge when a <code>RubyLLM::MCP::Error</code> interrupted an MCP tool call (the result is then <code>{ error: }</code>)</td>
 </tr>
 </tbody>
 </table>

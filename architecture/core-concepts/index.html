@@ -2393,14 +2393,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/client/" class="md-nav__link">
+      <a href="../../api/mcp/factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2449,14 +2449,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/mcp/transports/" class="md-nav__link">
+      <a href="../../api/mcp/registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -3350,14 +3350,9 @@ that will run <strong>standalone</strong>, <code>:inherit</code> resolves agains
 <td>Locally defined tools</td>
 </tr>
 <tr>
-<td><code>mcp_clients</code></td>
-<td><code>Hash</code></td>
-<td>Connected MCP clients by server name</td>
-</tr>
-<tr>
-<td><code>mcp_tools</code></td>
-<td><code>Array</code></td>
-<td>Tools discovered from MCP servers</td>
+<td><code>mcp</code></td>
+<td><code>MCP::Registry</code></td>
+<td>The robot's MCP servers (<code>RubyLLM::MCP</code> instances) by name</td>
 </tr>
 <tr>
 <td><code>memory</code></td>
@@ -3391,9 +3386,9 @@ that will run <strong>standalone</strong>, <code>:inherit</code> resolves agains
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"What is the weather in Berlin?"</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">puts</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">last_text_content</span>
 </span></code></pre></div>
-<p><code>run</code> defaults to <code>mcp: :none, tools: :none</code>. Those defaults are <em>explicit</em> "send nothing this turn" values, not "unset" — so a plain <code>run</code> connects no MCP servers and sends the LLM zero tools even when <code>local_tools:</code>/<code>mcp:</code> were supplied at build time. Opt in per run:</p>
+<p><code>run</code> defaults to <code>mcp: :none, tools: :none</code>. Those defaults are <em>explicit</em> "send nothing this turn" values, not "unset" — so a plain <code>run</code> contacts no MCP servers and sends the LLM zero tools even when <code>local_tools:</code>/<code>mcp:</code> were supplied at build time. Opt in per run:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"..."</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span><span class="w">                 </span><span class="c1"># send the attached local tools</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"..."</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span><span class="w">  </span><span class="c1"># connect MCP servers and send their tools</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"..."</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span><span class="w">  </span><span class="c1"># select MCP servers (connecting on first use) and send their tools</span>
 </span></code></pre></div>
 <p>With other runtime overrides:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Analyze this"</span><span class="p">,</span>

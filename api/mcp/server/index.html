@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/mcp/server/">
       
       
-        <link rel="prev" href="../client/">
+        <link rel="prev" href="../factory/">
       
       
-        <link rel="next" href="../transports/">
+        <link rel="next" href="../registry/">
       
       
         
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mcp-server-configuration" class="md-skip">
+        <a href="#mcp-server" class="md-skip">
           Skip to content
         </a>
       
@@ -1963,14 +1963,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../client/" class="md-nav__link">
+      <a href="../factory/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Client
+    Factory
   
 
     
@@ -2053,10 +2053,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-robotlabmcpserver" class="md-nav__link">
+  <a href="#class-robotlabmcpserver-rubyllmmcp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class: RobotLab::MCP::Server
+        Class: RobotLab::MCP::Server &lt; RubyLLM::MCP
       
     </span>
   </a>
@@ -2064,49 +2064,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#class-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constructor
+        Class Methods
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#constants" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Constants
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Attributes">
+    <nav class="md-nav" aria-label="Class Methods">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        name
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
@@ -2119,11 +2086,28 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#transport" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        transport
+        Instance Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description
       
     </span>
   </a>
@@ -2131,10 +2115,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#timeout" class="md-nav__link">
+  <a href="#connected" class="md-nav__link">
     <span class="md-ellipsis">
       
-        timeout
+        connected?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
       
     </span>
   </a>
@@ -2147,141 +2153,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
+  <a href="#the-ruby_llm-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Methods
+        The ruby_llm Surface
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#transport_type" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        transport_type
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_h" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_h
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transport-configuration-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Transport Configuration Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Transport Configuration Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#stdio-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stdio Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#websocket-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        WebSocket Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sse-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        SSE Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#streamable-http-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Streamable HTTP Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#multiple-server-configurations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple Server Configurations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-a-client-from-a-server" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating a Client from a Server
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2312,14 +2190,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../transports/" class="md-nav__link">
+      <a href="../registry/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Transports
+    Registry
   
 
     
@@ -2702,10 +2580,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-robotlabmcpserver" class="md-nav__link">
+  <a href="#class-robotlabmcpserver-rubyllmmcp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class: RobotLab::MCP::Server
+        Class: RobotLab::MCP::Server &lt; RubyLLM::MCP
       
     </span>
   </a>
@@ -2713,49 +2591,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#constructor" class="md-nav__link">
+  <a href="#class-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constructor
+        Class Methods
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#constants" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Constants
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attributes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Attributes">
+    <nav class="md-nav" aria-label="Class Methods">
       <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        name
-      
-    </span>
-  </a>
-  
-</li>
         
           <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
@@ -2768,11 +2613,28 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#transport" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        transport
+        Instance Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description
       
     </span>
   </a>
@@ -2780,10 +2642,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#timeout" class="md-nav__link">
+  <a href="#connected" class="md-nav__link">
     <span class="md-ellipsis">
       
-        timeout
+        connected?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
       
     </span>
   </a>
@@ -2796,141 +2680,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
+  <a href="#the-ruby_llm-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Methods
+        The ruby_llm Surface
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#transport_type" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        transport_type
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#to_h" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_h
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transport-configuration-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Transport Configuration Options
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Transport Configuration Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#stdio-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stdio Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#websocket-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        WebSocket Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sse-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        SSE Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#streamable-http-transport" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Streamable HTTP Transport
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#multiple-server-configurations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple Server Configurations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-a-client-from-a-server" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating a Client from a Server
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3027,317 +2783,118 @@
   
 
 
-<h1 id="mcp-server-configuration">MCP Server Configuration<a class="headerlink" href="#mcp-server-configuration" title="Permanent link">&para;</a></h1>
-<p>Data structure for MCP server connection configuration.</p>
-<h2 id="class-robotlabmcpserver">Class: <code>RobotLab::MCP::Server</code><a class="headerlink" href="#class-robotlabmcpserver" title="Permanent link">&para;</a></h2>
-<p><code>Server</code> is a configuration object that defines how to connect to an MCP server. It holds the server name and transport settings, and validates the configuration on construction.</p>
-<p>This is <strong>not</strong> an MCP server implementation -- it is the configuration used by <code>MCP::Client</code> to establish a connection to an external MCP server.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">"Read, write, and search local files and directories"</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcp-server-filesystem"</span><span class="p">,</span><span class="w"> </span><span class="ss">args</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">"--root"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/data"</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># With custom timeout</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"slow_server"</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">"heavy-mcp-server"</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+<h1 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">&para;</a></h1>
+<p>The <code>RubyLLM::MCP</code> subclass that <code>RobotLab::MCP.build</code> creates from a config Hash.</p>
+<h2 id="class-robotlabmcpserver-rubyllmmcp">Class: <code>RobotLab::MCP::Server &lt; RubyLLM::MCP</code><a class="headerlink" href="#class-robotlabmcpserver-rubyllmmcp" title="Permanent link">&para;</a></h2>
+<p>Everything a server can do comes from ruby_llm: <code>tools</code>, <code>call</code>, <code>resources</code>,
+<code>resource</code>, <code>resource_templates</code>, <code>prompts</code>, <code>prompt</code>, <code>instructions</code>,
+<code>version</code>, <code>listen</code>, <code>close</code>, the OAuth flow, and the class-level DSL
+(<code>command</code>, <code>url</code>, <code>transport</code>, <code>env</code>, <code>directory</code>, <code>header</code>, <code>bearer_token</code>,
+<code>oauth</code>, <code>timeout</code>, <code>only</code>, <code>except</code>, <code>prefix</code>, <code>tool</code>, <code>requires_approval</code>,
+<code>defer</code>, <code>input_requests</code>, <code>before_input_request</code>, <code>extension</code>, <code>log_level</code>).
+This subclass adds only:</p>
+<ul>
+<li>a class-level <code>description</code>, used by <code>MCP::ServerDiscovery</code> to pick servers
+  relevant to a message;</li>
+<li><code>connected?</code>, true once the server has answered a <code>tools</code> request and false
+  again after <code>close</code>.</li>
+</ul>
+<p><code>RobotLab::MCP.define(config)</code> returns an anonymous subclass of this class;
+<code>RobotLab::MCP.build(config)</code> returns an instance of one. Subclass it directly
+when you want the description macro:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Brew</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Install, update, and manage macOS packages via Homebrew"</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="n">command</span><span class="w"> </span><span class="s2">"mcp-server-brew"</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">end</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"ops"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">Brew</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp_discovery</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">name</span><span class="p">:,</span><span class="w"> </span><span class="ss">transport</span><span class="p">:,</span><span class="w"> </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">_extra</span><span class="p">)</span>
+<p>A plain <code>RubyLLM::MCP</code> subclass works everywhere a <code>Server</code> does; it just has
+no description for discovery to score.</p>
+<h2 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h2>
+<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">description</span><span class="w">            </span><span class="c1"># =&gt; String or nil</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="no">Server</span><span class="o">.</span><span class="n">description</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span><span class="w">    </span><span class="c1"># =&gt; "text"</span>
 </span></code></pre></div>
-<p><strong>Parameters:</strong></p>
+<p>Sets or reads a short description of what the server offers. Inherited by
+subclasses (a subclass may override it).</p>
+<h2 id="instance-methods">Instance Methods<a class="headerlink" href="#instance-methods" title="Permanent link">&para;</a></h2>
+<h3 id="description_1">description<a class="headerlink" href="#description_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">server</span><span class="o">.</span><span class="n">description</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+</span></code></pre></div>
+<p>The class-level description, or <code>""</code> when none was set.</p>
+<h3 id="connected">connected?<a class="headerlink" href="#connected" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">server</span><span class="o">.</span><span class="n">connected?</span><span class="w">  </span><span class="c1"># =&gt; Boolean</span>
+</span></code></pre></div>
+<p>Whether the server has answered a <code>tools</code> request since the last <code>close</code>. A
+freshly built server is not connected; <code>tools</code> (directly, through
+<code>robot.connect_mcp!</code>, or through a run that selects the server) connects it;
+<code>close</code> (directly or through <code>robot.disconnect</code>) resets it. The next request
+after a <code>close</code> reconnects.</p>
+<h3 id="tools">tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">server</span><span class="o">.</span><span class="n">tools</span><span class="w">  </span><span class="c1"># =&gt; Array&lt;RubyLLM::MCP::Tool&gt;</span>
+</span></code></pre></div>
+<p>ruby_llm's <code>tools</code>, connecting on the first call and marking the server
+connected. The list is shaped by <code>only</code>, <code>except</code>, <code>prefix</code> and <code>tool</code>
+declarations, cached, and refreshed when the server announces a change.</p>
+<h3 id="close">close<a class="headerlink" href="#close" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">server</span><span class="o">.</span><span class="n">close</span>
+</span></code></pre></div>
+<p>ruby_llm's <code>close</code> (stops a stdio server's process, ends a Streamable HTTP
+session, stops listening), after clearing the connected flag.</p>
+<h2 id="the-ruby_llm-surface">The ruby_llm Surface<a class="headerlink" href="#the-ruby_llm-surface" title="Permanent link">&para;</a></h2>
+<p>For reference, the instance methods you will reach through <code>robot.mcp[:name]</code>.
+See ruby_llm's own documentation for details.</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
+<th>Method</th>
+<th>Returns</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>name</code></td>
-<td><code>String</code></td>
-<td><strong>required</strong></td>
-<td>Unique server identifier</td>
+<td><code>String</code> — the registry key</td>
 </tr>
 <tr>
-<td><code>transport</code></td>
-<td><code>Hash</code></td>
-<td><strong>required</strong></td>
-<td>Transport configuration (must include <code>type</code>)</td>
+<td><code>tools</code></td>
+<td><code>Array&lt;RubyLLM::MCP::Tool&gt;</code> (<code>name</code>, <code>server_name</code>, <code>description</code>, <code>requires_approval?</code>, <code>read_only?</code>, <code>destructive?</code>, ...)</td>
 </tr>
 <tr>
-<td><code>timeout</code></td>
-<td><code>Numeric</code>, <code>nil</code></td>
-<td><code>15</code></td>
-<td>Request timeout in seconds. Values &gt;= 1000 are auto-converted from milliseconds. Minimum 1 second</td>
+<td><code>call(name, **args)</code></td>
+<td><code>RubyLLM::MCP::Result</code> (<code>text</code>, <code>structured</code>, <code>attachments</code>, <code>error?</code>, <code>content</code>)</td>
 </tr>
 <tr>
-<td><code>description</code></td>
-<td><code>String</code>, <code>nil</code></td>
-<td><code>""</code></td>
-<td>Human-readable summary of what the server does; scored by <code>MCP::ServerDiscovery</code></td>
+<td><code>resources</code> / <code>resource(uri, **vars)</code> / <code>resource_templates</code></td>
+<td><code>RubyLLM::MCP::Resource</code> objects</td>
+</tr>
+<tr>
+<td><code>prompts</code> / <code>prompt(name, **args)</code></td>
+<td><code>RubyLLM::MCP::Prompt</code>; pass a prompt to <code>robot.run</code></td>
+</tr>
+<tr>
+<td><code>instructions</code> / <code>version</code></td>
+<td>the server's usage notes / reported version, or <code>nil</code></td>
+</tr>
+<tr>
+<td><code>authorized?</code> / <code>authorization_url(redirect_uri:)</code> / <code>authorize(params)</code> / <code>deauthorize</code></td>
+<td>OAuth flow, for servers declared with <code>oauth</code></td>
+</tr>
+<tr>
+<td><code>listen(resources:, tasks:)</code></td>
+<td>subscribe to changes in a background thread until <code>close</code></td>
 </tr>
 </tbody>
 </table>
-<p>Any other keyword is absorbed by <code>**_extra</code> and silently discarded, so a
-misspelled key raises nothing.</p>
-<p><strong>Raises:</strong> <code>ArgumentError</code> if:
-- The transport type is not one of the valid types
-- A stdio transport is missing the <code>:command</code> key
-- A network transport (ws, websocket, sse, streamable-http, http) is missing the <code>:url</code> key</p>
-<h2 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h2>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span><span class="o">::</span><span class="no">VALID_TRANSPORT_TYPES</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># =&gt; ["stdio", "sse", "ws", "websocket", "streamable-http", "http"]</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span><span class="o">::</span><span class="no">DEFAULT_TIMEOUT</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># =&gt; 15  (seconds)</span>
-</span></code></pre></div>
-<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
-<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">server</span><span class="o">.</span><span class="n">name</span><span class="w">  </span><span class="c1"># =&gt; String</span>
-</span></code></pre></div>
-<p>The server identifier string.</p>
-<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">server</span><span class="o">.</span><span class="n">description</span><span class="w">  </span><span class="c1"># =&gt; String</span>
-</span></code></pre></div>
-<p>Human-readable summary of the server's capabilities. Always a String — a <code>nil</code>
-or omitted <code>description:</code> becomes <code>""</code>. Used by <code>MCP::ServerDiscovery</code>, which
-scores <code>"#{name} #{description}"</code> against the user's message when a robot is
-built with <code>mcp_discovery: true</code>. Discovery falls back to the full server list
-when no server in the list has a non-empty description.</p>
-<h3 id="transport">transport<a class="headerlink" href="#transport" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">server</span><span class="o">.</span><span class="n">transport</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
-</span></code></pre></div>
-<p>The normalized transport configuration hash (keys are symbols, type is downcased).</p>
-<h3 id="timeout">timeout<a class="headerlink" href="#timeout" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">server</span><span class="o">.</span><span class="n">timeout</span><span class="w">  </span><span class="c1"># =&gt; Numeric</span>
-</span></code></pre></div>
-<p>Request timeout in seconds. Defaults to <code>DEFAULT_TIMEOUT</code> (15). Values &gt;= 1000 passed to the constructor are auto-converted from milliseconds to seconds. The minimum is 1 second.</p>
-<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
-<h3 id="transport_type">transport_type<a class="headerlink" href="#transport_type" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">server</span><span class="o">.</span><span class="n">transport_type</span><span class="w">  </span><span class="c1"># =&gt; String</span>
-</span></code></pre></div>
-<p>Returns the transport type string (e.g., <code>"stdio"</code>, <code>"ws"</code>, <code>"sse"</code>).</p>
-<h3 id="to_h">to_h<a class="headerlink" href="#to_h" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">server</span><span class="o">.</span><span class="n">to_h</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># =&gt; { name: "y", description: "", transport: { type: "sse", url: "http://x" }, timeout: 30.0 }</span>
-</span></code></pre></div>
-<p>Converts the server configuration to a hash representation. The hash is <strong>not</strong>
-compacted — all four keys are always present, and <code>description</code> is <code>""</code> when it
-was never set. Note that <code>timeout</code> is normalized to a Float unless it defaulted
-(<code>DEFAULT_TIMEOUT</code> is the Integer <code>15</code>).</p>
-<h2 id="transport-configuration-options">Transport Configuration Options<a class="headerlink" href="#transport-configuration-options" title="Permanent link">&para;</a></h2>
-<h3 id="stdio-transport">Stdio Transport<a class="headerlink" href="#stdio-transport" title="Permanent link">&para;</a></h3>
-<p>For local MCP servers running as subprocesses:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcp-server-filesystem"</span><span class="p">,</span><span class="w">  </span><span class="c1"># Required</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="ss">args</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">"--root"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/data"</span><span class="o">]</span><span class="p">,</span><span class="w">          </span><span class="c1"># Optional</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="ss">env</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"DEBUG"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">"true"</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1"># Optional</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">)</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Type</th>
-<th>Required</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>Must be <code>"stdio"</code></td>
-</tr>
-<tr>
-<td><code>command</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>Executable command</td>
-</tr>
-<tr>
-<td><code>args</code></td>
-<td><code>Array&lt;String&gt;</code></td>
-<td>No</td>
-<td>Command arguments</td>
-</tr>
-<tr>
-<td><code>env</code></td>
-<td><code>Hash</code></td>
-<td>No</td>
-<td>Environment variables</td>
-</tr>
-</tbody>
-</table>
-<h3 id="websocket-transport">WebSocket Transport<a class="headerlink" href="#websocket-transport" title="Permanent link">&para;</a></h3>
-<p>For bidirectional real-time communication:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"neon"</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws"</span><span class="p">,</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws://localhost:8080"</span><span class="w">  </span><span class="c1"># Required</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="p">)</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Type</th>
-<th>Required</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td><code>"ws"</code> or <code>"websocket"</code></td>
-</tr>
-<tr>
-<td><code>url</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>WebSocket endpoint URL</td>
-</tr>
-</tbody>
-</table>
-<h3 id="sse-transport">SSE Transport<a class="headerlink" href="#sse-transport" title="Permanent link">&para;</a></h3>
-<p>For server-sent events streaming:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"streaming"</span><span class="p">,</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"sse"</span><span class="p">,</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://localhost:8080/sse"</span><span class="w">  </span><span class="c1"># Required</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">)</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Type</th>
-<th>Required</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>Must be <code>"sse"</code></td>
-</tr>
-<tr>
-<td><code>url</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>SSE endpoint URL</td>
-</tr>
-</tbody>
-</table>
-<h3 id="streamable-http-transport">Streamable HTTP Transport<a class="headerlink" href="#streamable-http-transport" title="Permanent link">&para;</a></h3>
-<p>For HTTP-based communication with session management:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="p">,</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"streamable-http"</span><span class="p">,</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://server.smithery.ai/neon/mcp"</span><span class="p">,</span><span class="w">  </span><span class="c1"># Required</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="ss">session_id</span><span class="p">:</span><span class="w"> </span><span class="s2">"abc123"</span><span class="p">,</span><span class="w">                         </span><span class="c1"># Optional</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="ss">auth_provider</span><span class="p">:</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"Bearer </span><span class="si">#{</span><span class="n">token</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="p">}</span><span class="w">       </span><span class="c1"># Optional</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="p">)</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Type</th>
-<th>Required</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td><code>"streamable-http"</code> or <code>"http"</code></td>
-</tr>
-<tr>
-<td><code>url</code></td>
-<td><code>String</code></td>
-<td>Yes</td>
-<td>HTTP endpoint URL</td>
-</tr>
-<tr>
-<td><code>session_id</code></td>
-<td><code>String</code></td>
-<td>No</td>
-<td>Session identifier</td>
-</tr>
-<tr>
-<td><code>auth_provider</code></td>
-<td><code>Proc</code></td>
-<td>No</td>
-<td>Authentication callback returning auth header value</td>
-</tr>
-</tbody>
-</table>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="multiple-server-configurations">Multiple Server Configurations<a class="headerlink" href="#multiple-server-configurations" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">servers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"filesystem"</span><span class="p">,</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcp-server-filesystem"</span><span class="p">,</span><span class="w"> </span><span class="ss">args</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">"/data"</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"github"</span><span class="p">,</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span><span class="w"> </span><span class="ss">command</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcp-server-github"</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"database"</span><span class="p">,</span>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws"</span><span class="p">,</span><span class="w"> </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws://localhost:9090"</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="o">]</span>
-</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>
-</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="c1"># Pass directly to a robot</span>
-</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Robot</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev_assistant"</span><span class="p">,</span>
-</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"You help with development tasks."</span><span class="p">,</span>
-</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="n">servers</span>
-</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="p">)</span>
-</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>
-</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="c1"># `run` defaults to `mcp: :none, tools: :none` — opt in per run</span>
-</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"What changed in the repo?"</span><span class="p">,</span><span class="w"> </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="creating-a-client-from-a-server">Creating a Client from a Server<a class="headerlink" href="#creating-a-client-from-a-server" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Server</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"tools"</span><span class="p">,</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="ss">transport</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws"</span><span class="p">,</span><span class="w"> </span><span class="ss">url</span><span class="p">:</span><span class="w"> </span><span class="s2">"ws://localhost:8080"</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">)</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">MCP</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">server</span><span class="p">)</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">client</span><span class="o">.</span><span class="n">connect</span>
-</span></code></pre></div>
+<p>Direct calls raise ruby_llm's errors (<code>RubyLLM::MCP::Error</code>, <code>Errno::*</code>, ...)
+to the caller. Only inside a robot run are connection failures rescued and
+recorded.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../">MCP Overview</a></li>
-<li><a href="../client/">MCP Client</a></li>
-<li><a href="../transports/">Transports</a></li>
+<li><a href="../factory/">Factory</a> - the config Hash to DSL mapping</li>
+<li><a href="../registry/">Registry</a></li>
 </ul>
 
 
@@ -3428,7 +2985,7 @@ was never set. Note that <code>timeout</code> is normalized to a Float unless it
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../client/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Client">
+          <a href="../factory/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Factory">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3438,20 +2995,20 @@ was never set. Note that <code>timeout</code> is normalized to a Float unless it
                 Previous
               </span>
               <div class="md-ellipsis">
-                Client
+                Factory
               </div>
             </div>
           </a>
         
         
           
-          <a href="../transports/" class="md-footer__link md-footer__link--next" aria-label="Next: Transports">
+          <a href="../registry/" class="md-footer__link md-footer__link--next" aria-label="Next: Registry">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Transports
+                Registry
               </div>
             </div>
             <div class="md-footer__button md-icon">
