@@ -83,16 +83,21 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     assert_instance_of RobotLab::RobotResult, reader_result
     assert_equal "writer", writer_result.robot_name
     assert_equal "reader", reader_result.robot_name
+
+    # The reader ran after the writer and was handed the writer's output
+    assert_equal "wrote it", received_message
   end
 
-  def test_pipeline_passes_network_config
+  # A network config propagates only mcp and tools to its robots; LLM fields
+  # such as temperature stay with each robot's own configuration.
+  def test_pipeline_network_config_does_not_set_robot_llm_fields
     config = RobotLab::RunConfig.new(temperature: 0.5)
 
     robot1 = build_robot(name: "configured", system_prompt: "You are configured")
 
     applied_temp = nil
     stub_robot_ask(robot1) do |_msg|
-      # Check that config was applied to the chat
+      # Capture what the chat was configured with when the robot ran
       applied_temp = robot1.instance_variable_get(:@chat).instance_variable_get(:@temperature)
       "configured response"
     end
@@ -103,6 +108,7 @@ class RobotLab::NetworkPipelineTest < Minitest::Test
     result = network.run(message: "test config")
 
     assert_equal "configured response", result.value.reply
+    assert_nil applied_temp
   end
 
   def test_pipeline_second_robot_receives_first_robots_output_as_message

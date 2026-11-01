@@ -2140,6 +2140,9 @@ class RobotLab::RobotTest < Minitest::Test
 
     robot.run("test", company_name: "Acme Corp")
 
+    # The user message reaches the chat unchanged
+    assert_equal "test", received_message
+
     # The template should be re-rendered with the provided context
     instructions = system_instructions(robot)
     assert_includes instructions, "Acme Corp"
