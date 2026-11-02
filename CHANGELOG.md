@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **MCP server classes by constant name.** `RobotLab::MCP.build`, `name_of`, `Registry#add` and a robot's per-turn server selection accept a String naming a `RubyLLM::MCP` subclass. Template front matter can now list `mcp: ["SharedTools::MCP::GitHub"]` in the same way `tools:` lists tool classes. The new `RobotLab::MCP.resolve` does the lookup and raises `MCPError` for an undefined constant or a class that is not a `RubyLLM::MCP`.
-- **Class-level descriptions in `mcp_discovery`.** `ServerDiscovery.description_for` now falls back to a server's class when the instance has no `description`. Plain `RubyLLM::MCP` subclasses that declare a description at class level, such as the shared_tools 0.7 clients, are scored instead of looking blank.
+- **Class-level descriptions in `mcp_discovery`.** `ServerDiscovery.description_for` now falls back to a server's class when the instance has no `description`. Plain `RubyLLM::MCP` subclasses that declare a description at class level, such as the shared_tools 0.7.1 MCP clients, are scored instead of looking blank.
 
 ## [0.5.1] - 2026-11-01
 
