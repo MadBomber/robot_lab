@@ -156,6 +156,24 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
     assert_equal "", MCP::ServerDiscovery.send(:description_for, s)
   end
 
+  # A plain RubyLLM::MCP subclass that keeps its description at class level
+  # only, as SharedTools::MCP clients may.
+  class ClassDescribedServer < RubyLLM::MCP
+    command "echo"
+
+    def self.description = "class-level desc"
+  end
+
+  def test_description_for_instance_falls_back_to_its_class
+    assert_equal "class-level desc", MCP::ServerDiscovery.send(:description_for, ClassDescribedServer.new)
+  end
+
+  def test_description_for_plain_ruby_llm_mcp_instance_is_empty
+    plain = Class.new(RubyLLM::MCP) { command "echo" }
+    plain.default_name = "plain"
+    assert_equal "", MCP::ServerDiscovery.send(:description_for, plain.new)
+  end
+
   # ── classes and string-keyed hashes ──────────────────────────────────────
 
   def test_topic_text_for_server_class

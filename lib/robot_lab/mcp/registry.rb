@@ -24,9 +24,10 @@ module RobotLab
 
       # Register a server (or return the one already registered for +spec+).
       #
-      # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
+      # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>, String]
       # @return [RubyLLM::MCP]
       def add(spec)
+        spec     = MCP.resolve(spec)
         key      = MCP.name_of(spec).to_sym
         existing = @servers[key]
         return existing if existing && same_spec?(key, spec, existing)

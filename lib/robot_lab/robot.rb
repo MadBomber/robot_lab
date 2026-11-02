@@ -565,7 +565,7 @@ module RobotLab
       @system_prompt = system_prompt
       @build_context = context
       @description = description
-      @local_tools = Array(local_tools)
+      @local_tools = Array(local_tools).map { ToolConfig.instantiate(it) }
       @skills = skills ? Array(skills).map(&:to_sym) : nil
       @expanded_skills = nil
       @pending_agent_skills = []

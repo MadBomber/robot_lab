@@ -296,6 +296,37 @@ class RobotLab::MCPTest < Minitest::Test
     assert_raises(RobotLab::MCPError) { MCP.name_of({}) }
   end
 
+  # ── String specs (constant names, as template front matter gives) ────────
+
+  class EchoServer < RubyLLM::MCP
+    command 'echo'
+  end
+
+  def test_resolve_turns_a_constant_name_into_the_class
+    assert_same EchoServer, MCP.resolve('RobotLab::MCPTest::EchoServer')
+  end
+
+  def test_resolve_passes_other_specs_through
+    spec = stdio
+    assert_same spec, MCP.resolve(spec)
+    assert_same EchoServer, MCP.resolve(EchoServer)
+  end
+
+  def test_resolve_rejects_an_undefined_constant
+    error = assert_raises(RobotLab::MCPError) { MCP.resolve('No::Such::Server') }
+    assert_match(/'No::Such::Server' is not defined/, error.message)
+  end
+
+  def test_resolve_rejects_a_constant_that_is_not_an_mcp_class
+    error = assert_raises(RobotLab::MCPError) { MCP.resolve('String') }
+    assert_match(/String is not a RubyLLM::MCP subclass/, error.message)
+  end
+
+  def test_build_and_name_of_accept_a_constant_name
+    assert_instance_of EchoServer, MCP.build('RobotLab::MCPTest::EchoServer')
+    assert_equal 'echo_server', MCP.name_of('RobotLab::MCPTest::EchoServer')
+  end
+
   def test_seconds
     assert_in_delta 5.0,  MCP.seconds(5)
     assert_in_delta 5.0,  MCP.seconds(5000)

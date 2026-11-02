@@ -70,6 +70,22 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 1, robot.local_tools.size
   end
 
+  # A tool named apart from its Ruby class, like shared_tools' tools.
+  class ClockTool < RubyLLM::Tool
+    def self.tool_name = 'clock'
+
+    description 'Tells the time'
+
+    def execute = 'noon'
+  end
+
+  def test_initialization_instantiates_tool_classes
+    robot = RobotLab::Robot.new(name: 'helper', template: :assistant, local_tools: [ClockTool])
+
+    assert_instance_of ClockTool, robot.local_tools.first
+    assert_equal ['clock'], robot.local_tools.map(&:name)
+  end
+
   def test_initialization_with_custom_model
     robot = RobotLab::Robot.new(
       name: 'helper',

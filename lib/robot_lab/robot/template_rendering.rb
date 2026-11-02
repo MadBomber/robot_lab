@@ -323,8 +323,7 @@ module RobotLab
           case name
           when String
             begin
-              const = Object.const_get(name)
-              const.is_a?(Class) && const < RubyLLM::Tool ? const.new : const
+              ToolConfig.instantiate(Object.const_get(name))
             rescue NameError
               RobotLab.config.logger.warn("Robot '#{@name}': tool '#{name}' not found, skipping")
               nil

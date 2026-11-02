@@ -54,12 +54,14 @@ module RobotLab
     module_function
 
     # Build a server from a config Hash, or pass through an instance or class.
+    # A String names a +RubyLLM::MCP+ subclass constant, the form template
+    # front matter uses (+mcp: ["SharedTools::MCP::GitHub"]+).
     #
-    # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
+    # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>, String]
     # @return [RubyLLM::MCP]
     # @raise [MCPError] for an unusable spec
     def build(spec)
-      case spec
+      case (spec = resolve(spec))
       when RubyLLM::MCP then spec
       when Class
         raise MCPError, "#{spec} is not a RubyLLM::MCP subclass" unless spec <= RubyLLM::MCP
@@ -68,8 +70,27 @@ module RobotLab
       when Hash then define(spec).new
       else
         raise MCPError, "Cannot build an MCP server from #{spec.class}; " \
-                        'pass a Hash, a RubyLLM::MCP, or a RubyLLM::MCP subclass'
+                        'pass a Hash, a RubyLLM::MCP, a RubyLLM::MCP subclass, or its constant name'
       end
+    end
+
+    # Turn a String spec into the +RubyLLM::MCP+ subclass it names; any other
+    # spec is returned unchanged.
+    #
+    # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>, String]
+    # @return [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
+    # @raise [MCPError] when the String does not name a RubyLLM::MCP subclass
+    def resolve(spec)
+      return spec unless spec.is_a?(String)
+
+      klass = begin
+        Object.const_get(spec)
+      rescue NameError
+        raise MCPError, "MCP server class '#{spec}' is not defined; require the file that defines it"
+      end
+      raise MCPError, "#{spec} is not a RubyLLM::MCP subclass" unless klass.is_a?(Class) && klass <= RubyLLM::MCP
+
+      klass
     end
 
     # Turn a config Hash into an anonymous {Server} subclass with ruby_llm's
@@ -88,11 +109,11 @@ module RobotLab
 
     # The name a spec will be registered under.
     #
-    # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
+    # @param spec [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>, String]
     # @return [String]
     # @raise [MCPError] when the spec has no name
     def name_of(spec)
-      name = case spec
+      name = case (spec = resolve(spec))
              when Hash then spec[:name] || spec['name']
              when Class then spec.default_name
              when RubyLLM::MCP then spec.name

@@ -142,6 +142,40 @@ class RobotLab::ToolConfigTest < Minitest::Test
     assert_equal [], result
   end
 
+  # A RubyLLM::Tool whose LLM-facing name differs from its Ruby class name,
+  # as shared_tools' tools do (def self.tool_name = 'current_date_time').
+  class ClockTool < RubyLLM::Tool
+    def self.tool_name = 'clock'
+
+    description 'Tells the time'
+
+    def execute = 'noon'
+  end
+
+  def test_instantiate_turns_a_tool_class_into_an_instance
+    assert_instance_of ClockTool, RobotLab::ToolConfig.instantiate(ClockTool)
+  end
+
+  def test_instantiate_passes_instances_and_other_objects_through
+    tool = ClockTool.new
+    assert_same tool, RobotLab::ToolConfig.instantiate(tool)
+    assert_equal 'name', RobotLab::ToolConfig.instantiate('name')
+    assert_same String, RobotLab::ToolConfig.instantiate(String)
+  end
+
+  def test_tool_name_of_a_tool_class_is_its_tool_name
+    assert_equal 'clock', RobotLab::ToolConfig.tool_name(ClockTool)
+    assert_equal 'clock', RobotLab::ToolConfig.tool_name(ClockTool.new)
+  end
+
+  def test_tool_name_of_a_plain_class_is_its_constant_name
+    assert_equal 'String', RobotLab::ToolConfig.tool_name(String)
+  end
+
+  def test_filter_tools_matches_a_tool_class_by_tool_name
+    assert_equal [ClockTool], RobotLab::ToolConfig.filter_tools([ClockTool], allowed_names: %w[clock])
+  end
+
   class MockTool
     attr_reader :name
 

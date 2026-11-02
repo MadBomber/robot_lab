@@ -136,7 +136,7 @@ module RobotLab
       # @param message [String, RubyLLM::MCP::Prompt, nil] this run's request
       # @return [Array<RubyLLM::MCP>]
       def servers_for(resolved, message: nil)
-        specs = Array(resolved)
+        specs = Array(resolved).map { MCP.resolve(it) }
         specs = MCP::ServerDiscovery.select(discovery_query(message), from: specs) if @mcp_discovery && message
         specs.map { |spec| @mcp_registry.add(spec) }
       end

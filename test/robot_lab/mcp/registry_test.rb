@@ -27,6 +27,18 @@ class RobotLab::MCP::RegistryTest < Minitest::Test
     assert_equal ['fs'], @registry.names
   end
 
+  class EchoServer < RubyLLM::MCP
+    command 'echo'
+  end
+
+  def test_add_constant_name_registers_the_class_once
+    server = @registry.add('RobotLab::MCP::RegistryTest::EchoServer')
+    assert_instance_of EchoServer, server
+    assert_equal ['echo_server'], @registry.names
+    assert_same server, @registry.add('RobotLab::MCP::RegistryTest::EchoServer')
+    assert_same server, @registry.add(EchoServer)
+  end
+
   def test_add_same_hash_again_returns_the_existing_server
     first  = @registry.add(spec)
     second = @registry.add(spec)

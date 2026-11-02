@@ -101,12 +101,18 @@ module RobotLab
         name.to_s.strip
       end
 
+      # An instance without its own +description+ falls back to its class's,
+      # so plain +RubyLLM::MCP+ subclasses that declare one at class level
+      # (SharedTools::MCP::GitHub, ...) are scored too.
+      #
       # @param server [Hash, RubyLLM::MCP, Class<RubyLLM::MCP>]
       # @return [String] description or empty string
       def self.description_for(server)
         desc = case server
                when Hash then server[:description] || server['description']
-               else           (server.description if server.respond_to?(:description))
+               else
+                 owner = [server, server.class].find { it.respond_to?(:description) }
+                 owner&.description
                end
         desc.to_s.strip
       end
