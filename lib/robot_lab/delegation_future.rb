@@ -56,8 +56,15 @@ module RobotLab
     # @raise [StandardError] re-raises any error thrown by the delegated task
     def value(timeout: nil)
       @mutex.synchronize do
-        unless @resolved
-          @cv.wait(@mutex, timeout)
+        if timeout
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+          until @resolved
+            remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            break if remaining <= 0
+            @cv.wait(@mutex, remaining)
+          end
+        else
+          @cv.wait(@mutex) until @resolved
         end
 
         unless @resolved
