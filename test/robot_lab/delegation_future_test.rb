@@ -53,6 +53,27 @@ class RobotLab::DelegationFutureTest < Minitest::Test
     end
 
     assert_match(/slowpoke/, error.message)
+    assert_match(/timed out after 0.01s/, error.message)
+  end
+
+  # Regression test for issue #33: a spurious wakeup (here forced with
+  # Thread#wakeup, which makes ConditionVariable#wait return early) must not
+  # be mistaken for a timeout. With a nil timeout the loop keeps waiting until
+  # the future is actually resolved.
+  def test_spurious_wakeup_does_not_raise_timeout
+    future = build_future
+
+    thread = Thread.new { future.value }
+
+    wait_until { thread.status == "sleep" }
+    thread.wakeup                    # force an early return from @cv.wait
+    sleep 0.02
+
+    assert_equal "sleep", thread.status, "spurious wakeup must not end the wait"
+
+    future.resolve!("eventually")
+
+    assert_equal "eventually", thread.value
   end
 
   def test_timeout_error_is_a_robot_lab_error
