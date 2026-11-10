@@ -16,3 +16,6 @@ examples/27_incident_response/output/
 _notes/
 site/
 *_output.txt
+
+# Claude Code per-user local settings
+.claude/settings.local.json
