@@ -53,16 +53,14 @@ module RobotLab
       if content.start_with?("---\n")
         parts = content.split(/^---\s*$/, 3)
         if parts.length >= 3
-          begin
-            fm = YAML.safe_load(parts[1])
-          rescue Psych::Exception => e
-            raise ConfigurationError, "SKILL.md at #{skill_md_path} has invalid front matter (#{e.message})"
-          end
+          fm = YAML.safe_load(parts[1])
           front_matter = fm.is_a?(Hash) ? fm : {}
           return [front_matter, parts[2]]
         end
       end
       [{}, content]
+    rescue Psych::Exception => e
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} has invalid front matter (#{e.message})"
     end
   end
 end
