@@ -42,6 +42,18 @@ class RobotLab::AgentSkillCatalogTest < Minitest::Test
     assert_nil skill
   end
 
+  def test_skill_with_unsafe_front_matter_is_skipped_and_siblings_load
+    Dir.mktmpdir do |root|
+      { "dated" => "created: 2025-01-01", "good" => "version: 1" }.each do |name, extra|
+        Dir.mkdir(File.join(root, name))
+        File.write(File.join(root, name, "SKILL.md"), "---\nname: #{name}\ndescription: d\n#{extra}\n---\nBody\n")
+      end
+
+      catalog = RobotLab::AgentSkillCatalog.new(root)
+      assert_equal ["good"], catalog.all.map(&:name)
+    end
+  end
+
   def test_instance_returns_same_object
     first  = RobotLab::AgentSkillCatalog.instance
     second = RobotLab::AgentSkillCatalog.instance
