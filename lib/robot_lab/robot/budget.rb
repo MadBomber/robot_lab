@@ -55,11 +55,24 @@ module RobotLab
       def reserve_budget!
         return {} unless @budget_ledger
 
-        @budget_ledger.limits.each_key.with_object({}) do |dimension, reservation|
+        reservation = {}
+        @budget_ledger.limits.each_key do |dimension|
           amount = @budget_ledger.remaining(dimension)
           @budget_ledger.reserve!(dimension, amount)
           reservation[dimension] = amount
         end
+        reservation
+      rescue BudgetExceeded
+        release_budget!(reservation)
+        raise
+      end
+
+      # Drops a reservation from reserve_budget! without recording any
+      # consumption, for a call that failed before reconcile_budget!.
+      #
+      # @param reservation [Hash{Symbol=>Numeric}] the value returned by reserve_budget!
+      def release_budget!(reservation)
+        reservation.each_pair { |dimension, amount| @budget_ledger.release!(dimension, amount) }
       end
 
       # Replaces a reservation from reserve_budget! with the actual usage
