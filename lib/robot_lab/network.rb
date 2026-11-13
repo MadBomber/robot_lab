@@ -152,13 +152,14 @@ module RobotLab
     #
     # @param name [Symbol, nil] optional name for the parallel group
     # @param depends_on [Symbol, Array] dependencies for this group
-    # @yield Block containing task definitions
+    # @yield Block containing step definitions. The block is evaluated by
+    #   SimpleFlow's ParallelBlock, which supports +step+ (not +task+).
     # @return [self]
     #
     # @example Named parallel group
     #   parallel :fetch_data, depends_on: :validate do
-    #     task :fetch_orders, orders_robot
-    #     task :fetch_products, products_robot
+    #     step :fetch_orders, orders_robot
+    #     step :fetch_products, products_robot
     #   end
     #   task :process, processor, depends_on: :fetch_data
     #
