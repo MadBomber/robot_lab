@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
+  `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
+  `ArgumentError` and anonymous per-run hooks run.
 - `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
   concurrent sends and poller-thread reply correlation can't clobber each other.
 - `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
