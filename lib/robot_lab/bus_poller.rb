@@ -113,12 +113,11 @@ module RobotLab
     private
 
     # Process one delivery, then drain any queued deliveries for the robot.
+    # A BusError on any delivery is logged and the drain carries on, so one
+    # failed message never strands the ones queued behind it.
     def process_and_drain(robot, delivery)
-      robot.send(:process_delivery, delivery)
+      process_one(robot, delivery)
       drain_queued_deliveries(robot)
-    rescue BusError => e
-      release_robot(robot)
-      RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
     rescue => e
       release_robot(robot)
       RobotLab.config.logger.warn("BusPoller: unexpected error: #{e.message}")
@@ -141,12 +140,15 @@ module RobotLab
 
         break unless next_delivery
 
-        begin
-          robot.send(:process_delivery, next_delivery)
-        rescue BusError => e
-          RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
-        end
+        process_one(robot, next_delivery)
       end
+    end
+
+    # Deliver one message, logging (not raising) a BusError.
+    def process_one(robot, delivery)
+      robot.send(:process_delivery, delivery)
+    rescue BusError => e
+      RobotLab.config.logger.warn("BusPoller: delivery error: #{e.message}")
     end
 
     def release_robot(robot)
