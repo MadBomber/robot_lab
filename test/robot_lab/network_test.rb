@@ -200,6 +200,19 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_match(/already exists/, error.message)
   end
 
+  def test_task_raises_if_name_exists
+    network = RobotLab::Network.new(name: "test")
+    network.task(:x, @robot1, depends_on: :none)
+
+    error = assert_raises(ArgumentError) do
+      network.task(:x, @robot2, depends_on: :none)
+    end
+
+    assert_equal "Task 'x' already exists in network 'test'", error.message
+    assert_same @robot1, network.robots["x"]
+    assert_equal ["x"], network.to_h[:tasks]
+  end
+
   # Serialization tests
   def test_to_h_exports_network_config
     robot1 = @robot1

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `Network#task` raises `ArgumentError` for a task name already in the network,
+  matching `add_robot`, instead of silently dropping the earlier task.
 - `Network` with `parallel_mode: :ractor` now shuts the Ractor scheduler down
   when `run_pipeline` raises, instead of leaking its worker pool on every failed
   run.

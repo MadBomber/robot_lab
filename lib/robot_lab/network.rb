@@ -112,6 +112,7 @@ module RobotLab
     # @param memory [Memory, Hash, nil] task-specific memory
     # @param depends_on [Symbol, Array<Symbol>] dependencies (:none, :optional, or task names)
     # @return [self]
+    # @raise [ArgumentError] if a task with this name already exists in the network
     #
     # @example Entry point task
     #   task :classifier, classifier_robot, depends_on: :none
@@ -127,6 +128,8 @@ module RobotLab
     #
     def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none,
              poller_group: :default)
+      raise ArgumentError, "Task '#{name}' already exists in network '#{@name}'" if @tasks.key?(name.to_s)
+
       task_wrapper = Task.new(
         name: name,
         robot: robot,
