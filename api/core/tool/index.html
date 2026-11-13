@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://madbomber.github.io/robot_lab/api/core/tool/">
       
       
-        <link rel="prev" href="../network/">
+        <link rel="prev" href="../state/">
       
       
         <link rel="next" href="../memory/">
@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -1262,14 +1262,6 @@
       
         
       
-        
-      
-        
-      
-        
-      
-        
-      
     
     
     
@@ -1338,8 +1330,6 @@
       
         
           
-        
-      
         
       
         
@@ -1439,14 +1429,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/" class="md-nav__link">
+      <a href="../network/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    RobotResult
+    Network
   
 
     
@@ -1467,14 +1457,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../network/" class="md-nav__link">
+      <a href="../state/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Network
+    State
   
 
     
@@ -1607,17 +1597,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#constants" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Constants
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#class-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1634,17 +1613,6 @@
     <span class="md-ellipsis">
       
         raise_on_error / raise_on_error?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ractor_safe-ractor_safe" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ractor_safe / ractor_safe?
       
     </span>
   </a>
@@ -1762,6 +1730,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mcp
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1784,6 +1763,17 @@
     <span class="md-ellipsis">
       
         name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mcp?
       
     </span>
   </a>
@@ -2086,149 +2076,9 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../state/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    StateProxy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../hooks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Hooks
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../skills/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Skills
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../support/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Support Classes
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../errors/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Errors
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -2266,7 +2116,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2288,14 +2138,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2457,7 +2307,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2479,14 +2329,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_8">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2505,14 +2355,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../mcp/factory/" class="md-nav__link">
+      <a href="../../mcp/client/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Factory
+    Client
   
 
     
@@ -2561,14 +2411,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../mcp/registry/" class="md-nav__link">
+      <a href="../../mcp/transports/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Registry
+    Transports
   
 
     
@@ -2618,7 +2468,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2640,14 +2490,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5_9" id="__nav_5_9_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3001,17 +2851,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#constants" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Constants
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#class-methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3028,17 +2867,6 @@
     <span class="md-ellipsis">
       
         raise_on_error / raise_on_error?
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ractor_safe-ractor_safe" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ractor_safe / ractor_safe?
       
     </span>
   </a>
@@ -3156,6 +2984,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mcp
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3178,6 +3017,17 @@
     <span class="md-ellipsis">
       
         name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mcp?
       
     </span>
   </a>
@@ -3574,81 +3424,22 @@
 </tr>
 </tbody>
 </table>
-<h2 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Constant</th>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>RobotLab::Robot::DEFAULT_MAX_TOOLS</code></td>
-<td><code>128</code></td>
-<td>Ceiling on the number of tools a robot hands the provider per turn. Override per robot with <code>RunConfig#max_tools</code>; a nil, zero, or negative value falls back to 128, so the cap cannot be disabled</td>
-</tr>
-</tbody>
-</table>
 <h2 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h2>
 <h3 id="raise_on_error-raise_on_error">raise_on_error / raise_on_error?<a class="headerlink" href="#raise_on_error-raise_on_error" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">MyTool</span><span class="o">.</span><span class="n">raise_on_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="no">MyTool</span><span class="o">.</span><span class="n">raise_on_error?</span><span class="w">  </span><span class="c1"># =&gt; true</span>
 </span></code></pre></div>
-<p>Per-class flag controlling whether <code>call</code> propagates exceptions from <code>execute</code> instead of catching them. Defaults to <code>false</code>.</p>
-<div class="admonition warning">
-<p class="admonition-title"><code>raise_on_error</code> does not walk the inheritance chain</p>
-<p>The reader is <code>defined?(@raise_on_error) ? @raise_on_error : false</code> — it
-inspects only the receiving class's own instance variable. A subclass of a
-class that set <code>self.raise_on_error = true</code> silently reverts to <code>false</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Critical</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="p">;</span><span class="w"> </span><span class="nb">self</span><span class="o">.</span><span class="n">raise_on_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Derived</span><span class="w">  </span><span class="o">&lt;</span><span class="w"> </span><span class="no">Critical</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="no">Critical</span><span class="o">.</span><span class="n">raise_on_error?</span><span class="w">  </span><span class="c1"># =&gt; true</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="no">Derived</span><span class="o">.</span><span class="n">raise_on_error?</span><span class="w">   </span><span class="c1"># =&gt; false   &lt;-- errors are swallowed again</span>
-</span></code></pre></div>
-<p>Set the flag explicitly on every subclass that needs it. Contrast
-<a href="#ractor_safe-ractor_safe"><code>ractor_safe</code></a>, which <em>does</em> walk the chain.</p>
-</div>
-<h3 id="ractor_safe-ractor_safe">ractor_safe / ractor_safe?<a class="headerlink" href="#ractor_safe-ractor_safe" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Pure</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="n">ractor_safe</span><span class="w"> </span><span class="kp">true</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">end</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="no">Pure</span><span class="o">.</span><span class="n">ractor_safe?</span><span class="w">  </span><span class="c1"># =&gt; true</span>
-</span></code></pre></div>
-<p>Declares that the tool class is safe to run inside a Ractor. With no argument it
-acts as a getter; with a Boolean it sets the value. <code>ractor_safe?</code> is an alias
-for <code>ractor_safe</code>.</p>
-<p>Unlike <code>raise_on_error</code>, the getter <strong>does</strong> walk the inheritance chain: if the
-class has no <code>@ractor_safe</code> of its own it asks its superclass, terminating at
-<code>false</code>.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Pure</span><span class="w">    </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="p">;</span><span class="w"> </span><span class="n">ractor_safe</span><span class="w"> </span><span class="kp">true</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Derived</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">Pure</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="no">Derived</span><span class="o">.</span><span class="n">ractor_safe?</span><span class="w">   </span><span class="c1"># =&gt; true — inherited</span>
-</span></code></pre></div>
-<p><strong>Ractor pool dispatch.</strong> <code>Tool#call</code> routes through the Ractor worker pool
-(<code>RobotLab.ractor_pool.submit(self.class.name, args)</code>) only when <strong>all three</strong>
-hold:</p>
-<ol>
-<li><code>self.class.ractor_safe?</code> is true</li>
-<li><code>self.class.name</code> is not <code>nil</code> (an anonymous class — including everything from
-   <code>Tool.create</code> — always falls through to the inline path)</li>
-<li><code>RobotLab.extension_loaded?(:ractor)</code> — i.e. the <code>robot_lab-ractor</code> gem is loaded</li>
-</ol>
-<p>Otherwise <code>execute</code> runs inline on the calling thread. Ractor-safe tools must be
-stateless: they are instantiated fresh inside the worker for each call.</p>
+<p>Per-class flag controlling whether <code>call</code> propagates exceptions from <code>execute</code> instead of catching them. Defaults to <code>false</code>. Does not affect other tool classes.</p>
 <h3 id="toolcreate">Tool.create<a class="headerlink" href="#toolcreate" title="Permanent link">&para;</a></h3>
-<p>Factory for dynamic, inline tools.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:,</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="o">&amp;</span><span class="n">handler</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">)</span>
+<p>Factory for dynamic tools (MCP wrappers, inline tools).</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="no">Tool</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="ss">parameters</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="o">&amp;</span><span class="n">handler</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -3676,6 +3467,11 @@ stateless: they are instantiated fresh inside the worker for each call.</p>
 <td>JSON Schema parameter definition</td>
 </tr>
 <tr>
+<td><code>mcp</code></td>
+<td><code>String</code></td>
+<td>MCP server name</td>
+</tr>
+<tr>
 <td><code>robot</code></td>
 <td><code>Robot</code></td>
 <td>Owning robot instance</td>
@@ -3683,251 +3479,141 @@ stateless: they are instantiated fresh inside the worker for each call.</p>
 <tr>
 <td><code>&amp;handler</code></td>
 <td><code>Block</code></td>
-<td>Receives the <code>args</code> hash, returns the result</td>
+<td>Receives <code>args</code> hash, returns result</td>
 </tr>
 </tbody>
 </table>
-<p><code>create</code> builds an <strong>anonymous</strong> subclass (<code>Class.new(self)</code>) and stashes the
-explicit name on the instance. Two consequences:</p>
-<ul>
-<li><code>parameters</code> is read with <strong>symbol</strong> keys (<code>params_hash[:properties]</code>,
-  <code>pdef[:type]</code>, <code>pdef[:description]</code>, <code>params_hash[:required]</code>). A string-keyed
-  schema is silently ignored and the tool ends up with no parameters.</li>
-<li>Because <code>self.class.name</code> is <code>nil</code>, a <code>create</code>d tool never dispatches to the
-  Ractor pool even if you set <code>ractor_safe</code>.</li>
-</ul>
 <h2 id="inherited-dsl-from-rubyllmtool">Inherited DSL (from RubyLLM::Tool)<a class="headerlink" href="#inherited-dsl-from-rubyllmtool" title="Permanent link">&para;</a></h2>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"What this tool does"</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"What this tool does"</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="param">param<a class="headerlink" href="#param" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's name"</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:age</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's age"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's name"</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:age</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's age"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">end</span>
 </span></code></pre></div>
-<p><code>param</code> accepts exactly four options — anything else raises
-<code>ArgumentError: unknown keyword</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>type</code></td>
-<td><code>String</code></td>
-<td><code>"string"</code></td>
-<td>JSON Schema type (<code>"string"</code>, <code>"integer"</code>, <code>"number"</code>, <code>"boolean"</code>, <code>"array"</code>, <code>"object"</code>)</td>
-</tr>
-<tr>
-<td><code>desc</code></td>
-<td><code>String</code></td>
-<td><code>nil</code></td>
-<td>Description shown to the LLM</td>
-</tr>
-<tr>
-<td><code>description</code></td>
-<td><code>String</code></td>
-<td><code>nil</code></td>
-<td>Synonym for <code>desc</code></td>
-</tr>
-<tr>
-<td><code>required</code></td>
-<td><code>Boolean</code></td>
-<td><code>true</code></td>
-<td>Whether the LLM must supply the parameter</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition warning">
-<p class="admonition-title">There is no <code>enum:</code> option</p>
-<p><code>param :unit, type: "string", enum: %w[c f]</code> raises
-<code>ArgumentError: unknown keyword: :enum</code>. Constrain the value in the
-description and validate it inside <code>execute</code>, or supply a full JSON Schema
-through <a href="#toolcreate"><code>Tool.create(parameters:)</code></a>.</p>
-</div>
 <h3 id="execute">execute<a class="headerlink" href="#execute" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">name</span><span class="p">:,</span><span class="w"> </span><span class="ss">age</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="c1"># Implementation</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">name</span><span class="p">:,</span><span class="w"> </span><span class="ss">age</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="c1"># Implementation</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="halt">halt<a class="headerlink" href="#halt" title="Permanent link">&para;</a></h3>
 <p>Stop the tool use loop from within execute:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="p">)</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">halt</span><span class="p">(</span><span class="s2">"Done processing"</span><span class="p">)</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">halt</span><span class="p">(</span><span class="s2">"Done processing"</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="with_params">with_params<a class="headerlink" href="#with_params" title="Permanent link">&para;</a></h3>
 <p>Set provider-specific parameters:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="n">with_params</span><span class="p">(</span><span class="ss">strict</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">with_params</span><span class="p">(</span><span class="ss">strict</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">end</span>
 </span></code></pre></div>
 <h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
 <h3 id="robot">robot<a class="headerlink" href="#robot" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">robot</span><span class="w">  </span><span class="c1"># =&gt; Robot or nil</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">tool</span><span class="o">.</span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">some_robot</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">robot</span><span class="w">  </span><span class="c1"># =&gt; Robot or nil</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">tool</span><span class="o">.</span><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">some_robot</span>
 </span></code></pre></div>
 <p>Read/write accessor for the owning robot. Set via constructor or assigned later.</p>
-<blockquote>
-<p>[!NOTE]
-MCP tools are not <code>RobotLab::Tool</code>s. Since 0.4 they are <code>RubyLLM::MCP::Tool</code>
-instances owned by a <code>RubyLLM::MCP</code> server; <code>Tool.create(mcp:)</code>, <code>Tool#mcp</code>
-and <code>Tool#mcp?</code> no longer exist. Ask <code>robot.mcp_server_for(tool)</code> or
-<code>ToolCallHookContext#mcp_server</code> / <code>#mcp?</code> instead.</p>
-</blockquote>
+<h3 id="mcp">mcp<a class="headerlink" href="#mcp" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">mcp</span><span class="w">  </span><span class="c1"># =&gt; String or nil</span>
+</span></code></pre></div>
+<p>The MCP server name, set via <code>Tool.create(mcp: "server_name")</code>.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="w">  </span><span class="c1"># =&gt; String</span>
 </span></code></pre></div>
-<p>Returns the tool name. For <code>create</code>d tools, the explicit <code>name:</code> you passed. For
-subclasses, ruby_llm derives it from the class name — <strong>including the namespace</strong>,
-with <code>::</code> rendered as <code>--</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">name</span><span class="w">   </span><span class="c1"># =&gt; "robot_lab--ask_user"</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Sub1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span><span class="p">;</span><span class="w"> </span><span class="k">end</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="no">Sub1</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">name</span><span class="w">                </span><span class="c1"># =&gt; "sub1"   (top-level class, no namespace)</span>
+<p>Returns the tool name. For subclasses, derived from the class name (CamelCase to snake_case). For <code>create</code>d tools, returns the explicit name.</p>
+<h3 id="mcp_1">mcp?<a class="headerlink" href="#mcp_1" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">mcp?</span><span class="w">  </span><span class="c1"># =&gt; Boolean</span>
 </span></code></pre></div>
-<p>This matters when writing a <code>tools:</code> name allowlist: the allowlist must contain
-the fully-derived name (<code>"robot_lab--ask_user"</code>), not the short one.</p>
+<p>Whether this is an MCP-provided tool.</p>
 <h3 id="call">call<a class="headerlink" href="#call" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">args_hash</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">args_hash</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Overrides <code>RubyLLM::Tool#call</code>. The whole invocation is wrapped in the
-<code>:tool_call</code> hook family, then dispatched either to the Ractor pool or inline
-(see <a href="#ractor_safe-ractor_safe"><code>ractor_safe</code></a>); ruby_llm's <code>call</code> converts
-string keys to symbols and invokes <code>execute(**args)</code>.</p>
-<p>Errors are caught and returned to the LLM as a plain-text string it can reason
-about. There are two distinct paths:</p>
-<table>
-<thead>
-<tr>
-<th>Raised</th>
-<th>Returned text</th>
-<th>Logged?</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>RobotLab::ToolError</code></td>
-<td><code>Error (&lt;name&gt;): &lt;message&gt;</code> — plus <code>" (retryable)"</code> when <code>RobotLab::Errors.retryable?</code> is true</td>
-<td><strong>No</strong></td>
-</tr>
-<tr>
-<td>any other <code>StandardError</code></td>
-<td><code>Error (&lt;name&gt;): &lt;message&gt;</code></td>
-<td>Yes — <code>RobotLab.config.logger.warn("Tool '&lt;name&gt;' error: &lt;Class&gt;: &lt;message&gt;")</code></td>
-</tr>
-</tbody>
-</table>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">T2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"t"</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">raise</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolError</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"nope"</span><span class="p">,</span><span class="w"> </span><span class="ss">retryable</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="k">end</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="no">T2</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">({})</span><span class="w">   </span><span class="c1"># =&gt; "Error (t2): nope (retryable)"   -- nothing logged</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">T3</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"t"</span>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">raise</span><span class="w"> </span><span class="no">ArgumentError</span><span class="p">,</span><span class="w"> </span><span class="s2">"bad"</span>
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="k">end</span>
-</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="no">T3</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">({})</span><span class="w">   </span><span class="c1"># =&gt; "Error (t3): bad"                -- WARN logged</span>
+<p>Overrides <code>RubyLLM::Tool#call</code> with graceful error handling. Converts string keys to symbols and calls <code>execute(**args)</code>. If <code>execute</code> raises a <code>StandardError</code>, the error is caught and returned as a plain-text string the LLM can reason about:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Error (tool_name): exception message
 </span></code></pre></div>
-<p><code>" (retryable)"</code> is appended only for <code>ToolError</code>/<code>MCPError</code> instances
-constructed with <code>retryable: true</code> — see <a href="../../errors/#retryable-errors">Retryable Errors</a>.</p>
+<p>The error is also logged via <code>RobotLab.config.logger</code> at <code>:warn</code> level.</p>
 <p>To propagate exceptions instead of catching them (for critical tools), set <code>raise_on_error</code> on the class:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CriticalTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nb">self</span><span class="o">.</span><span class="n">raise_on_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="c1"># ...</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CriticalTool</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nb">self</span><span class="o">.</span><span class="n">raise_on_error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="c1"># ...</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="k">end</span>
 </span></code></pre></div>
-<p><code>raise_on_error</code> applies to <strong>both</strong> paths, is per-class, defaults to <code>false</code>, and
-<a href="#raise_on_error-raise_on_error">is not inherited by subclasses</a>.</p>
+<p><code>raise_on_error</code> is per-class (defaults to <code>false</code>) and does not affect other tool classes.</p>
 <h3 id="params_schema">params_schema<a class="headerlink" href="#params_schema" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">params_schema</span><span class="w">  </span><span class="c1"># =&gt; Hash or nil</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">params_schema</span><span class="w">  </span><span class="c1"># =&gt; Hash or nil</span>
 </span></code></pre></div>
 <p>Inherited. Returns the JSON Schema for tool parameters.</p>
 <h3 id="provider_params">provider_params<a class="headerlink" href="#provider_params" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">provider_params</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">provider_params</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
 </span></code></pre></div>
 <p>Inherited. Returns provider-specific parameters (e.g., <code>{ strict: true }</code>).</p>
 <h3 id="to_h">to_h<a class="headerlink" href="#to_h" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_h</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_h</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
 </span></code></pre></div>
-<p>Hash representation with <code>:name</code> and <code>:description</code> — <code>.compact</code>ed, so
-<code>:description</code> is absent when nil:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">T4</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"t"</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="o">**</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">nil</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="k">end</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="no">T4</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">to_h</span><span class="w">   </span><span class="c1"># =&gt; { name: "t4", description: "t" }</span>
-</span></code></pre></div>
+<p>Hash representation with <code>:name</code>, <code>:description</code>, <code>:mcp</code>.</p>
 <h3 id="to_json">to_json<a class="headerlink" href="#to_json" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_json</span><span class="w">  </span><span class="c1"># =&gt; String</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_json</span><span class="w">  </span><span class="c1"># =&gt; String</span>
 </span></code></pre></div>
 <p>JSON representation.</p>
 <h3 id="to_json_schema">to_json_schema<a class="headerlink" href="#to_json_schema" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_json_schema</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">tool</span><span class="o">.</span><span class="n">to_json_schema</span><span class="w">  </span><span class="c1"># =&gt; Hash</span>
 </span></code></pre></div>
 <p>JSON Schema representation for LLM function calling. Returns <code>{ name:, description:, parameters: }</code>.</p>
 <h2 id="robot-aware-tools">Robot-Aware Tools<a class="headerlink" href="#robot-aware-tools" title="Permanent link">&para;</a></h2>
 <p>Tools that modify their owning robot use the <code>robot</code> accessor:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">AdjustTemperature</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Adjust the robot's creativity level"</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:level</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Temperature from 0.0 to 1.0"</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">level</span><span class="p">:)</span>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">    </span><span class="s2">"Temperature adjusted to </span><span class="si">#{</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="k">end</span>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>
-</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="c1"># The robot must exist before the tool can reference it, so attach afterwards</span>
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"creative_bot"</span><span class="p">,</span><span class="w"> </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"You are creative."</span><span class="p">)</span>
-</span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="n">robot</span><span class="o">.</span><span class="n">local_tools</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="no">AdjustTemperature</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="n">robot</span><span class="p">)</span>
-</span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a>
-</span><span id="__span-25-16"><a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Be more creative."</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">AdjustTemperature</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Adjust the robot's creativity level"</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:level</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Temperature from 0.0 to 1.0"</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">level</span><span class="p">:)</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="w">    </span><span class="n">robot</span><span class="o">.</span><span class="n">with_temperature</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="w">    </span><span class="s2">"Temperature adjusted to </span><span class="si">#{</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="k">end</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="c1"># Pass robot: self when constructing</span>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"creative_bot"</span><span class="p">,</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"You are creative."</span><span class="p">,</span>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">AdjustTemperature</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="nb">self</span><span class="p">)</span><span class="o">]</span>
+</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>Passing the bare <strong>class</strong> (<code>local_tools: [AdjustTemperature]</code>) leaves
-<code>tool.robot</code> as <code>nil</code> — ruby_llm instantiates it with no arguments — and
-<code>robot.with_temperature</code> then raises <code>NoMethodError</code> on nil. Instantiate with
-<code>robot:</code> whenever the tool needs its owner.</p>
 <h2 id="parameter-types">Parameter Types<a class="headerlink" href="#parameter-types" title="Permanent link">&para;</a></h2>
 <h3 id="string">String<a class="headerlink" href="#string" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's full name"</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"User's full name"</span>
 </span></code></pre></div>
 <h3 id="integer">Integer<a class="headerlink" href="#integer" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:count</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Number of results"</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:count</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Number of results"</span>
 </span></code></pre></div>
 <h3 id="number-float">Number (Float)<a class="headerlink" href="#number-float" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:price</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Price in dollars"</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:price</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Price in dollars"</span>
 </span></code></pre></div>
 <h3 id="boolean">Boolean<a class="headerlink" href="#boolean" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:active</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether the user is active"</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:active</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether the user is active"</span>
 </span></code></pre></div>
 <h3 id="required-vs-optional">Required vs Optional<a class="headerlink" href="#required-vs-optional" title="Permanent link">&para;</a></h3>
 <p>Parameters are required by default. Mark optional with <code>required: false</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:query</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search query"</span><span class="w">                    </span><span class="c1"># required</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="n">param</span><span class="w"> </span><span class="ss">:limit</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Max results"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="w">   </span><span class="c1"># optional</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">param</span><span class="w"> </span><span class="ss">:query</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search query"</span><span class="w">                    </span><span class="c1"># required</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">param</span><span class="w"> </span><span class="ss">:limit</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Max results"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="w">   </span><span class="c1"># optional</span>
 </span></code></pre></div>
 <h2 id="built-in-askuser">Built-in: AskUser<a class="headerlink" href="#built-in-askuser" title="Permanent link">&para;</a></h2>
 <p><code>RobotLab::AskUser</code> is a built-in tool that lets a robot ask the user a question via the terminal. The LLM decides when human input is needed and calls this tool.</p>
 <h3 id="class-robotlabaskuser-robotlabtool">Class: <code>RobotLab::AskUser &lt; RobotLab::Tool</code><a class="headerlink" href="#class-robotlabaskuser-robotlabtool" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Ask the user a question and wait for their typed response"</span>
-</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:question</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">  </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"The question to ask the user"</span>
-</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:choices</span><span class="p">,</span><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">   </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Optional list of choices to present"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
-</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:default</span><span class="p">,</span><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">  </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default value if user presses Enter"</span><span class="p">,</span><span class="w">  </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
-</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Ask the user a question and wait for their typed response"</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:question</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">  </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"The question to ask the user"</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:choices</span><span class="p">,</span><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">   </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Optional list of choices to present"</span><span class="p">,</span><span class="w"> </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:default</span><span class="p">,</span><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">  </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default value if user presses Enter"</span><span class="p">,</span><span class="w">  </span><span class="ss">required</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
 <table>
@@ -3960,47 +3646,35 @@ constructed with <code>retryable: true</code> — see <a href="../../errors/#ret
 </tr>
 </tbody>
 </table>
-<p>Its LLM-facing name is <strong><code>robot_lab--ask_user</code></strong> (namespace included), not <code>ask_user</code>.</p>
 <h3 id="io-resolution">IO Resolution<a class="headerlink" href="#io-resolution" title="Permanent link">&para;</a></h3>
 <p>The tool reads input and writes output using the owning robot's <code>input</code>/<code>output</code> accessors:</p>
 <ol>
 <li><code>robot.input</code> / <code>robot.output</code> if set</li>
 <li>Falls back to <code>$stdin</code> / <code>$stdout</code></li>
 </ol>
-<p>The prompt label is <code>robot&amp;.name || "Robot"</code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Attach an instance, not the class</p>
-<p><code>local_tools: [RobotLab::AskUser]</code> gives ruby_llm a bare class, which it
-instantiates with no arguments — so <code>tool.robot</code> is <code>nil</code>, IO falls back to
-<code>$stdin</code>/<code>$stdout</code>, and every prompt is labelled <code>[Robot]</code>. Pass
-<code>RobotLab::AskUser.new(robot: robot)</code> to get the robot's own name and streams.</p>
-</div>
 <h3 id="terminal-output">Terminal Output<a class="headerlink" href="#terminal-output" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>[interviewer] What programming language do you want to learn?
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>  1. Ruby
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>  2. Python
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>  3. Go
-</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>&gt; [Ruby]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>[robot_name] What programming language do you want to learn?
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>  1. Ruby
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>  2. Python
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>  3. Go
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>&gt; [Ruby]
 </span></code></pre></div>
 <h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"interviewer"</span><span class="p">,</span>
-</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"Interview the user about their project needs. "</span><span class="w"> </span><span class="p">\</span>
-</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">                 </span><span class="s2">"Use robot_lab--ask_user to gather information."</span>
-</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="p">)</span>
-</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a><span class="n">robot</span><span class="o">.</span><span class="n">local_tools</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="n">robot</span><span class="p">)</span>
-</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>
-</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a><span class="c1"># run() defaults to tools: :none — :inherit is required for the tool to be sent</span>
-</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Find out what the user wants to build"</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"interviewer"</span><span class="p">,</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"Interview the user about their project needs. Use ask_user to gather information."</span><span class="p">,</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="o">]</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="p">)</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"Find out what the user wants to build"</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="testing-with-stringio">Testing with StringIO<a class="headerlink" href="#testing-with-stringio" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"bot"</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:assistant</span><span class="p">)</span>
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">input</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"Ruby</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span>
-</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>
-</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="n">robot</span><span class="p">)</span>
-</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">"question"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">"Pick a language:"</span><span class="p">,</span><span class="w"> </span><span class="s2">"choices"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">[</span><span class="s2">"Ruby"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Python"</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="c1"># =&gt; "Ruby"</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Robot</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"bot"</span><span class="p">,</span><span class="w"> </span><span class="ss">template</span><span class="p">:</span><span class="w"> </span><span class="ss">:assistant</span><span class="p">)</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="n">robot</span><span class="o">.</span><span class="n">input</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"Ruby</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="n">robot</span><span class="o">.</span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">StringIO</span><span class="o">.</span><span class="n">new</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="n">tool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">AskUser</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot</span><span class="p">:</span><span class="w"> </span><span class="n">robot</span><span class="p">)</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">"question"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">"Pick a language:"</span><span class="p">,</span><span class="w"> </span><span class="s2">"choices"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">[</span><span class="s2">"Ruby"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Python"</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="c1"># =&gt; "Ruby"</span>
 </span></code></pre></div>
 <h3 id="choice-mapping">Choice Mapping<a class="headerlink" href="#choice-mapping" title="Permanent link">&para;</a></h3>
 <p>When <code>choices</code> are provided, the user can type either:</p>
@@ -4104,7 +3778,7 @@ instantiates with no arguments — so <code>tool.robot</code> is <code>nil</code
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../network/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Network">
+          <a href="../state/" class="md-footer__link md-footer__link--prev" aria-label="Previous: State">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4114,7 +3788,7 @@ instantiates with no arguments — so <code>tool.robot</code> is <code>nil</code
                 Previous
               </span>
               <div class="md-ellipsis">
-                Network
+                State
               </div>
             </div>
           </a>
@@ -4192,7 +3866,7 @@ instantiates with no arguments — so <code>tool.robot</code> is <code>nil</code
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>
