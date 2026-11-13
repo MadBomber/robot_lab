@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- Removed the duplicate `Robot#hook_registries` from `robot.rb`; the `Hooking`
+  concern now owns the only definition, so changes there take effect.
 - A budget reservation is now released when a run is cut off by an exception
   outside `StandardError` (`Timeout.timeout` around `robot.run`, `Interrupt`),
   so later runs are no longer refused as over budget.
