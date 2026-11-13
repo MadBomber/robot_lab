@@ -431,4 +431,13 @@ class RobotLab::RobotResultTest < Minitest::Test
     assert_equal 1, result.history.size
     assert_equal "History", result.history.first.content
   end
+
+  def test_from_hash_restores_duration_and_delegated_by
+    restored = RobotLab::RobotResult.from_hash(
+      "robot_name" => "worker", "output" => [], "duration" => 1.25, "delegated_by" => "manager"
+    )
+
+    assert_equal 1.25, restored.duration
+    assert_equal "manager", restored.delegated_by
+  end
 end
