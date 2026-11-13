@@ -390,7 +390,7 @@ module RobotLab
       self
     end
 
-    # Compress conversation history using TF-IDF relevance scoring.
+    # Compress conversation history using term-frequency cosine similarity.
     #
     # Old turns are tiered against the most recent context:
     # - High relevance (score >= keep_threshold)          → kept verbatim
@@ -802,10 +802,6 @@ module RobotLab
         streaming  = effective_streaming_block(block)
         ask(effective_message, **ask_kwargs, &streaming)
       end
-    end
-
-    def hook_registries(network = nil)
-      [RobotLab.hooks, network&.hooks, @hooks]
     end
 
     # Extract run context from SimpleFlow::Result
