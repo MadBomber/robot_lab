@@ -20,6 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `BusPoller` keeps draining a robot's queued deliveries after one delivery
   raises `BusError`, instead of stranding them until a later message arrived and
   then running them out of order.
+- `DotState` (`ctx.local` in hooks) supports `[]` and `[]=`; `ctx.local[:k] = v`
+  used to store the key name under `:[]` and drop the value.
+- `HookContext#to_h` now includes inherited readers (such as `event`, and
+  `robot`/`request` on `LlmGenerationHookContext`) and no longer raises
+  `ArgumentError` on the base class.
+- Removed the duplicate `Robot#hook_registries` from `robot.rb`; the `Hooking`
+  concern now owns the only definition, so changes there take effect.
+- A budget reservation is now released when a run is cut off by an exception
+  outside `StandardError` (`Timeout.timeout` around `robot.run`, `Interrupt`),
+  so later runs are no longer refused as over budget.
+- Examples: `examples/common.rb` sets RobotLab's `ruby_llm.model` and `provider`
+  to the examples' default, so a robot built without `model:` (the bare robot in
+  `09_chaining.rb`) no longer falls back to `claude-sonnet-4`.
+- Docs and doc comments now describe `HistoryCompressor` and `Convergence` as
+  term-frequency cosine similarity (not TF-IDF) and quote the real
+  `ToolLoopError` message.
 - `RobotResult.from_hash` now restores `duration` and `delegated_by`.
 - `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
   `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"

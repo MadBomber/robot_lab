@@ -675,7 +675,7 @@ robot = RobotLab.build(
 begin
   robot.run("Run all steps.")
 rescue RobotLab::ToolLoopError => e
-  puts e.message  # "Tool call limit of 10 exceeded"
+  puts e.message  # "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
 end
 ```
 
@@ -783,7 +783,7 @@ reviewer.learn("new fact")  # deduplicates before storing
 
 ## Context Window Compression
 
-`robot.compress_history` prunes old conversation turns using TF-IDF cosine similarity, keeping only turns that are relevant to the most recent context. System messages and tool call/result pairs are always preserved.
+`robot.compress_history` prunes old conversation turns using term-frequency cosine similarity, keeping only turns that are relevant to the most recent context. System messages and tool call/result pairs are always preserved.
 
 ```ruby
 # Basic compression: protect the 3 most recent turns, drop unrelated old turns
@@ -811,7 +811,7 @@ gem "classifier", "~> 2.3"
 
 ## Convergence Detection
 
-`RobotLab::Convergence` detects when two independent agents have reached the same conclusion using TF-IDF cosine similarity. Use it as a router fast-path to skip an expensive reconciler LLM call when verifiers already agree.
+`RobotLab::Convergence` detects when two independent agents have reached the same conclusion using term-frequency cosine similarity. Use it as a router fast-path to skip an expensive reconciler LLM call when verifiers already agree.
 
 ```ruby
 # Check similarity directly

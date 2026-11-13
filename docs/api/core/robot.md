@@ -1070,7 +1070,7 @@ After a `ToolLoopError`, the chat contains a dangling `tool_use` block with no m
 begin
   robot.run("Execute all steps.")
 rescue RobotLab::ToolLoopError => e
-  puts "Circuit breaker fired: #{e.message}"
+  puts e.message  # "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
 end
 
 # Flush the corrupted chat (system prompt is kept)
