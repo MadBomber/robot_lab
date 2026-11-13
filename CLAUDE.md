@@ -119,7 +119,7 @@ Router receives `Router::Args` with: `context`, `network`, `stack`, `call_count`
 
 ## Dependencies
 
-Core: zeitwerk, ruby_llm (~> 1.12), ruby_llm-mcp, prompt_manager, ruby_llm-schema, ruby_llm-semantic_cache, async, simple_flow, state_machines
+Core: myway_config, zeitwerk, ruby_llm (~> 1.12), ruby_llm-mcp, prompt_manager, ruby_llm-schema, ruby_llm-semantic_cache, async, async-http, async-websocket, typed_bus, simple_flow, ractor_queue
 
 ### Templates
 

@@ -269,12 +269,12 @@ module RobotLab
     # @param result [SimpleFlow::Result] incoming result from previous step
     # @return [SimpleFlow::Result] result with robot output
     def call(result)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       run_context = extract_run_context(result)
 
       # Extract the message from run context
       message = run_context.delete(:message)
 
-      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       robot_result = run(message, **run_context)
       robot_result.duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
@@ -1027,11 +1027,7 @@ module RobotLab
         else
           case compact
           when :context_window
-            begin
-              compress_history
-            rescue DependencyError => e
-              RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-            end
+            compact_context_window
           when Proc
             compact.call(self)
           end
@@ -1053,14 +1049,10 @@ module RobotLab
       estimated_tok >= window * threshold
     end
 
-    def compact_if_over_context_window
-      return unless over_compact_threshold?
-
-      begin
-        compress_history
-      rescue DependencyError => e
-        RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-      end
+    def compact_context_window
+      compress_history
+    rescue DependencyError => e
+      RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
     end
 
     # Install a per-run circuit breaker on the chat's on_tool_call hook.

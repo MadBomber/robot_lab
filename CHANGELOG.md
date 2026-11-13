@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `RobotResult.from_hash` now restores `duration` and `delegated_by`.
+- `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
+  `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
+  `ArgumentError` and anonymous per-run hooks run.
 - `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
   concurrent sends and poller-thread reply correlation can't clobber each other.
 - `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task

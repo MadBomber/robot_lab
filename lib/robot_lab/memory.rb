@@ -707,7 +707,9 @@ module RobotLab
     def create_redis_backend
       return nil unless redis_available?
 
-      RedisBackend.new
+      # Redis.new connects lazily, so ping to surface an unreachable server
+      # here and fall back to the Hash backend instead of failing later.
+      RedisBackend.new.tap(&:ping)
     rescue StandardError
       nil
     end
@@ -792,17 +794,17 @@ module RobotLab
     end
 
     def wait_for_key(key, timeout:)
-      waiter = Waiter.new
+      waiter = nil
 
       @waiter_mutex.synchronize do
         # Double-check - value might have arrived while setting up
         @mutex.synchronize { return @backend[key] if @backend.key?(key) }
 
+        waiter = Waiter.new
         @waiters[key] << waiter
       end
 
       result = waiter.wait(timeout: timeout)
-      waiter.close
 
       if result == :timeout
         # Clean up the waiter
@@ -811,6 +813,8 @@ module RobotLab
       end
 
       result
+    ensure
+      waiter&.close
     end
 
     def wake_waiters(key, value)
@@ -941,6 +945,13 @@ module RobotLab
 
     def clear
       keys.each { |k| delete(k) }
+    end
+
+    # Verifies the server is reachable.
+    #
+    # @raise [Redis::BaseConnectionError] if it is not
+    def ping
+      @redis.ping
     end
 
     private

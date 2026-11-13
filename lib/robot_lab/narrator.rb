@@ -32,12 +32,14 @@ module RobotLab
       end
 
       # Register the narrator globally and set its output.
+      # Calling it again only changes the output; the narrator is
+      # registered once.
       #
       # @param output [IO]
       # @return [Class] self
       def enable!(output: $stderr)
         self.output = output
-        RobotLab.on(self)
+        RobotLab.on(self) unless RobotLab.hooks.registrations.any? { |reg| reg.handler_class == self }
         self
       end
 

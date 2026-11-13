@@ -850,6 +850,28 @@ class RobotLab::MemoryTest < Minitest::Test
     assert(history.any? { |m| m.content.include?("formatted: bot") })
   end
 
+  def test_auto_backend_falls_back_to_hash_when_redis_server_unreachable
+    skip "a real Redis client is loaded" if defined?(::Redis)
+
+    # Like the redis gem, connects lazily and fails only on first command.
+    unreachable_redis = Class.new do
+      def initialize(**) = nil
+      def ping = raise(IOError, "Connection refused")
+    end
+    Object.const_set(:Redis, unreachable_redis)
+    original_url = ENV.fetch("REDIS_URL", nil)
+    ENV["REDIS_URL"] = "redis://127.0.0.1:1/0"
+
+    mem = RobotLab::Memory.new
+
+    refute mem.redis?
+    mem.set(:k, "v")
+    assert_equal "v", mem.get(:k)
+  ensure
+    Object.send(:remove_const, :Redis) if unreachable_redis && Object.const_get(:Redis, false) == unreachable_redis
+    ENV["REDIS_URL"] = original_url
+  end
+
   def test_hash_backend_does_not_respond_as_redis
     mem = RobotLab::Memory.new(backend: :hash)
     refute mem.redis?
@@ -1074,6 +1096,20 @@ class RobotLab::MemoryTest < Minitest::Test
 
     wait_until(timeout: 3) { mu.synchronize { received.size } == n }
     assert_equal(n, mu.synchronize { received.size })
+  end
+
+  def test_wait_for_key_on_present_key_does_not_leak_file_descriptors
+    @memory.set(:ready, 1)
+    fd_count = -> { Dir.children("/dev/fd").size }
+
+    GC.disable
+    before = fd_count.call
+    20.times { @memory.send(:wait_for_key, :ready, timeout: 1) }
+    after = fd_count.call
+
+    assert_equal before, after
+  ensure
+    GC.enable
   end
 
   private

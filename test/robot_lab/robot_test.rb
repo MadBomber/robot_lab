@@ -1551,6 +1551,22 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.budget_ledger.consumed[:tokens]
   end
 
+  def test_token_budget_overrun_is_flagged_after_reset_token_totals
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    tokens = RubyLLM::Tokens.new(input: 400, output: 200)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("first")
+    robot.reset_token_totals
+
+    error = assert_raises(RobotLab::InferenceError) { robot.run("second") }
+    assert_match(/Token budget exceeded: 1200 tokens used, budget is 1000/, error.message)
+  end
+
   def test_result_includes_per_run_tokens
     robot = build_robot(name: "bot", system_prompt: "test")
     tokens = RubyLLM::Tokens.new(input: 75, output: 30)
@@ -1994,6 +2010,19 @@ class RobotLab::RobotTest < Minitest::Test
     result = ::SimpleFlow::Result.new(42, context: {})
     context = robot.send(:extract_run_context, result)
     assert_equal "42", context[:message]
+  end
+
+  def test_call_returns_error_result_when_run_context_extraction_fails
+    robot = build_robot(name: "bot", template: :assistant)
+    result = ::SimpleFlow::Result.new({ 1 => "x" }, context: {})
+
+    step_result = robot.call(result)
+
+    assert step_result.continue?
+    error_result = step_result.value
+    assert_kind_of RobotLab::RobotResult, error_result
+    assert_match(/NoMethodError/, error_result.output.first.content)
+    assert_kind_of Float, error_result.duration
   end
 
   def test_build_result_with_no_content_returns_empty_output
@@ -2734,7 +2763,7 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 2, call_count
   end
 
-  def test_compact_if_over_context_window_triggers_compress_when_over_threshold
+  def test_maybe_compact_context_window_triggers_compress_when_over_threshold
     called = false
     robot  = build_robot(name: "bot", system_prompt: "hi",
                          config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
@@ -2742,22 +2771,22 @@ class RobotLab::RobotTest < Minitest::Test
     # threshold=0.0 means any non-negative token count triggers compaction
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
     assert called
   end
 
-  def test_compact_if_over_context_window_skips_when_under_threshold
+  def test_maybe_compact_context_window_skips_when_under_threshold
     called = false
     robot  = build_robot(name: "bot", system_prompt: "hi",
                          config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.99))
     robot.define_singleton_method(:compress_history) { called = true }
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
     refute called
   end
 
-  def test_compact_if_over_context_window_logs_and_skips_on_dependency_error
+  def test_maybe_compact_context_window_logs_and_skips_on_dependency_error
     log_output = StringIO.new
     RobotLab.config.logger = Logger.new(log_output)
 
@@ -2767,7 +2796,7 @@ class RobotLab::RobotTest < Minitest::Test
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
 
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
 
     RobotLab.config.logger = Logger.new(nil)
     assert_match(/auto_compact/, log_output.string)

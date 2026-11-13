@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/MadBomber/robot_lab"
   spec.metadata["changelog_uri"] = "https://github.com/MadBomber/robot_lab/blob/main/CHANGELOG.md"
-  spec.metadata["documentation_uri"] = "https://github.com/MadBomber/robot_lab#readme"
+  spec.metadata["documentation_uri"] = "https://madbomber.github.io/robot_lab"
   spec.metadata["bug_tracker_uri"] = "https://github.com/MadBomber/robot_lab/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
@@ -54,6 +54,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus", "~> 0.0.1"
   spec.add_dependency "simple_flow", "~> 0.4"
+  # simple_flow requires tsort without declaring it; Ruby 4.1 moves tsort
+  # from the default gems to the bundled gems.
+  spec.add_dependency "tsort", ">= 0.2"
   # Required by Network's BusPoller (lib/robot_lab/bus_poller.rb requires it).
   spec.add_dependency "ractor_queue", "~> 0.2"
   # Optional MCP transport dependencies (loaded on demand)
