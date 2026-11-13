@@ -26,6 +26,11 @@ end
 
 RobotLab.configure do |c|
   c.logger = Logger.new(File::NULL)
+  # Robot#initialize falls back to RobotLab's own ruby_llm.model (not
+  # RubyLLM.default_model) when a robot is built without model:, so point
+  # it at the examples' default too.
+  c.ruby_llm.provider = LLM[:default].provider.to_sym
+  c.ruby_llm.model    = LLM[:default].model
 end
 
 # ── Example Output Helpers ─────────────────────────────────────────────────────

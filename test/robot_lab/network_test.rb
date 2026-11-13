@@ -409,6 +409,29 @@ class RobotLab::NetworkTest < Minitest::Test
     assert_equal :ractor, network.parallel_mode
   end
 
+  def test_ractor_scheduler_is_shut_down_when_run_pipeline_raises
+    scheduler = fake_ractor_scheduler { raise RobotLab::Error, "Robot 'a' failed in Ractor: boom" }
+    network = RobotLab::Network.new(name: "ractor_net", parallel_mode: :ractor) {}
+
+    with_fake_ractor_extension(scheduler) do
+      error = assert_raises(RobotLab::Error) { network.run(message: "hi") }
+      assert_match(/boom/, error.message)
+    end
+
+    assert_equal [:shutdown], scheduler.calls
+  end
+
+  def test_ractor_scheduler_is_shut_down_after_a_successful_run
+    scheduler = fake_ractor_scheduler { :results }
+    network = RobotLab::Network.new(name: "ractor_net", parallel_mode: :ractor) {}
+
+    with_fake_ractor_extension(scheduler) do
+      assert_equal :results, network.run(message: "hi")
+    end
+
+    assert_equal [:shutdown], scheduler.calls
+  end
+
   def test_parallel_mode_async_is_default
     network = RobotLab::Network.new(name: "async_net") {}
     assert_equal :async, network.parallel_mode
@@ -441,5 +464,29 @@ class RobotLab::NetworkTest < Minitest::Test
 
     network.run(message: "hello")
     assert_nil captured_max_concurrent
+  end
+
+  private
+
+  # Scheduler double: run_pipeline evaluates the block; every call is recorded.
+  def fake_ractor_scheduler(&run_pipeline)
+    calls = []
+    scheduler = Object.new
+    scheduler.define_singleton_method(:calls) { calls }
+    scheduler.define_singleton_method(:run_pipeline) { |*_args, **_kw| run_pipeline.call }
+    scheduler.define_singleton_method(:shutdown) { calls << :shutdown }
+    scheduler
+  end
+
+  # Pretends robot_lab-ractor is loaded and makes RactorNetworkScheduler.new
+  # return +scheduler+, restoring both afterwards.
+  def with_fake_ractor_extension(scheduler)
+    scheduler_class = Class.new { define_singleton_method(:new) { |**| scheduler } }
+    RobotLab.const_set(:RactorNetworkScheduler, scheduler_class)
+    RobotLab.register_extension(:ractor, scheduler_class)
+    yield
+  ensure
+    RobotLab.instance_variable_get(:@extensions).delete(:ractor)
+    RobotLab.send(:remove_const, :RactorNetworkScheduler)
   end
 end
