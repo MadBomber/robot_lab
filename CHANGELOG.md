@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- Examples: `examples/common.rb` sets RobotLab's `ruby_llm.model` and `provider`
+  to the examples' default, so a robot built without `model:` (the bare robot in
+  `09_chaining.rb`) no longer falls back to `claude-sonnet-4`.
 - `RobotResult.from_hash` now restores `duration` and `delegated_by`.
 - `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
   `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
