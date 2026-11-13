@@ -14,7 +14,7 @@ class RobotLabThread < ApplicationRecord
   end
 
   def last_result
-    results.order(sequence_number: :desc).first
+    results.reorder(sequence_number: :desc).first
   end
 
   def message_count
