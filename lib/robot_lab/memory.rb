@@ -707,7 +707,9 @@ module RobotLab
     def create_redis_backend
       return nil unless redis_available?
 
-      RedisBackend.new
+      # Redis.new connects lazily, so ping to surface an unreachable server
+      # here and fall back to the Hash backend instead of failing later.
+      RedisBackend.new.tap(&:ping)
     rescue StandardError
       nil
     end
@@ -941,6 +943,13 @@ module RobotLab
 
     def clear
       keys.each { |k| delete(k) }
+    end
+
+    # Verifies the server is reachable.
+    #
+    # @raise [Redis::BaseConnectionError] if it is not
+    def ping
+      @redis.ping
     end
 
     private
