@@ -86,4 +86,11 @@ class RobotLab::Budget::LedgerTest < Minitest::Test
     assert_equal 0, ledger.remaining(:tokens)
     assert_equal 1.0, ledger.remaining(:cost)
   end
+
+  def test_reserving_exactly_the_remaining_float_budget_succeeds
+    ledger = RobotLab::Budget::Ledger.new(limits: { cost: 0.3 }, consumed: { cost: 0.033 })
+    ledger.reserve!(:cost, ledger.remaining(:cost))
+
+    assert_equal 0, ledger.remaining(:cost)
+  end
 end
