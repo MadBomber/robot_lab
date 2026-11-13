@@ -27,12 +27,16 @@ module RobotLab
         RobotLab::Budget::Ledger.new(limits: limits)
       end
 
+      # Reads the ledger rather than the robot's token totals, which
+      # reset_token_totals can zero without touching the budget.
       def enforce_token_budget!
         budget = @config.token_budget
-        return unless budget && @total_input_tokens + @total_output_tokens > budget
+        return unless budget && @budget_ledger
 
-        raise InferenceError,
-              "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
+        consumed = @budget_ledger.consumed[:tokens]
+        return unless consumed > budget
+
+        raise InferenceError, "Token budget exceeded: #{consumed} tokens used, budget is #{budget}"
       end
 
       def enforce_cost_budget!
