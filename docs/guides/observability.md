@@ -147,8 +147,8 @@ robot = RobotLab.build(
 begin
   robot.run("Run all steps.")
 rescue RobotLab::ToolLoopError => e
-  puts "Circuit breaker fired: #{e.message}"
-  # => "Circuit breaker fired: Tool call limit of 10 exceeded"
+  puts e.message
+  # => "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
 end
 ```
 
