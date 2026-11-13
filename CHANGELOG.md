@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `BusPoller` keeps draining a robot's queued deliveries after one delivery
+  raises `BusError`, instead of stranding them until a later message arrived and
+  then running them out of order.
 - `RobotResult.from_hash` now restores `duration` and `delegated_by`.
 - `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
   `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
