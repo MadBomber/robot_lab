@@ -23,7 +23,11 @@ ENV['ROBOT_LAB_TEMPLATE_PATH'] ||= File.expand_path('../examples/prompts', __dir
 
 require 'robot_lab'
 require 'simple_flow'   # ensure SimpleFlow is loaded regardless of test order
-require 'robot_lab/document_store' rescue LoadError  # optional extension gem
+begin
+  require 'robot_lab/document_store'  # optional extension gem
+rescue LoadError
+  nil
+end
 
 # Minimal in-memory store that satisfies the DocumentStore interface used by
 # AgentSkillMatching without requiring the extension gem or fastembed.
