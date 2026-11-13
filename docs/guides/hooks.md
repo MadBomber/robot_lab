@@ -732,7 +732,7 @@ robot.on(LearningPromotionHook)
 
 ### Custom Compaction Strategy
 
-Replace the built-in TF-IDF compressor with a domain-specific algorithm using `on_compaction`:
+Replace the built-in term-frequency compressor with a domain-specific algorithm using `on_compaction`:
 
 ```ruby
 class SummarizerCompactor < RobotLab::Hook
