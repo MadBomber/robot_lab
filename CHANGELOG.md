@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `DotState` (`ctx.local` in hooks) supports `[]` and `[]=`; `ctx.local[:k] = v`
+  used to store the key name under `:[]` and drop the value.
 - `RobotResult.from_hash` now restores `duration` and `delegated_by`.
 - `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
   `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"

@@ -173,6 +173,16 @@ module RobotLab
       self
     end
 
+    # Hash-style read; shares storage with dot access (+state[:k]+ == +state.k+).
+    def [](key)
+      @data[key.to_sym]
+    end
+
+    # Hash-style write; shares storage with dot access.
+    def []=(key, value)
+      @data[key.to_sym] = value
+    end
+
     def method_missing(name, *args)
       key = name.to_s.delete_suffix('=').to_sym
 
