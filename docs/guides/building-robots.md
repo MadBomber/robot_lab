@@ -776,7 +776,7 @@ bot.with_bus(existing_bus)  # now connected and can send/receive messages
 
 ## Context Window Compression
 
-Long-running robots accumulate conversation history that can grow to fill the context window. `compress_history` prunes old turns using TF-IDF cosine similarity against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.
+Long-running robots accumulate conversation history that can grow to fill the context window. `compress_history` prunes old turns using term-frequency cosine similarity against the most recent context, keeping turns that are still relevant and discarding or summarizing those that aren't.
 
 ```ruby
 # Default settings: protect 3 most-recent turn pairs, drop anything below 0.2
@@ -813,7 +813,7 @@ gem "classifier", "~> 2.3"
 
 ## Convergence Detection
 
-`RobotLab::Convergence` uses TF-IDF cosine similarity to detect when two independent agents have reached the same conclusion. The primary use case is a network router that skips an expensive reconciler robot when two verifiers already agree.
+`RobotLab::Convergence` uses term-frequency cosine similarity to detect when two independent agents have reached the same conclusion. The primary use case is a network router that skips an expensive reconciler robot when two verifiers already agree.
 
 ```ruby
 # Check the similarity score directly (returns Float 0.0..1.0)

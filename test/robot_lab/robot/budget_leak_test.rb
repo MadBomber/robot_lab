@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "timeout"
 
 class RobotLab::Robot::BudgetLeakTest < Minitest::Test
   FakeResponse = Data.define(:content, :tool_calls, :stop_reason, :tokens)
@@ -19,6 +20,28 @@ class RobotLab::Robot::BudgetLeakTest < Minitest::Test
     assert_equal 980, robot.budget_ledger.remaining(:tokens)
   end
 
+  def test_call_interrupted_by_timeout_releases_its_budget_reservation
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    stub_ask(robot, failures: 0, first_call_delay: 1)
+
+    assert_raises(Timeout::Error) { Timeout.timeout(0.05) { robot.run("slow") } }
+    assert_equal 1_000, robot.budget_ledger.remaining(:tokens)
+
+    robot.run("one")
+    robot.run("two")
+
+    assert_equal 20, robot.budget_ledger.consumed[:tokens]
+    assert_equal 980, robot.budget_ledger.remaining(:tokens)
+  end
+
+  def test_call_interrupted_by_a_non_standard_error_releases_its_budget_reservation
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    robot.instance_variable_get(:@chat).define_singleton_method(:ask) { |*_args, **_kw, &_b| raise Interrupt }
+
+    assert_raises(Interrupt) { robot.run("interrupted") }
+    assert_equal 1_000, robot.budget_ledger.remaining(:tokens)
+  end
+
   def test_reserve_budget_releases_earlier_dimensions_when_a_later_one_is_exhausted
     robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000, cost_budget: 0.5)
     ledger = robot.budget_ledger
@@ -30,13 +53,15 @@ class RobotLab::Robot::BudgetLeakTest < Minitest::Test
 
   private
 
-  def stub_ask(robot, failures:)
+  def stub_ask(robot, failures:, first_call_delay: nil)
     response = FakeResponse.new(content: "ok", tool_calls: nil, stop_reason: "end_turn",
                                 tokens: RubyLLM::Tokens.new(input: 6, output: 4))
     remaining_failures = failures
+    delay = first_call_delay
     robot.instance_variable_get(:@chat).define_singleton_method(:ask) do |_msg = nil, **_kw, &_b|
       raise "transient 503" if (remaining_failures -= 1) >= 0
 
+      sleep(delay.tap { delay = nil }) if delay
       response
     end
   end
