@@ -269,12 +269,12 @@ module RobotLab
     # @param result [SimpleFlow::Result] incoming result from previous step
     # @return [SimpleFlow::Result] result with robot output
     def call(result)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       run_context = extract_run_context(result)
 
       # Extract the message from run context
       message = run_context.delete(:message)
 
-      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       robot_result = run(message, **run_context)
       robot_result.duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 

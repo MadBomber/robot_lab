@@ -1996,6 +1996,19 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal "42", context[:message]
   end
 
+  def test_call_returns_error_result_when_run_context_extraction_fails
+    robot = build_robot(name: "bot", template: :assistant)
+    result = ::SimpleFlow::Result.new({ 1 => "x" }, context: {})
+
+    step_result = robot.call(result)
+
+    assert step_result.continue?
+    error_result = step_result.value
+    assert_kind_of RobotLab::RobotResult, error_result
+    assert_match(/NoMethodError/, error_result.output.first.content)
+    assert_kind_of Float, error_result.duration
+  end
+
   def test_build_result_with_no_content_returns_empty_output
     robot = build_robot(name: "bot", template: :assistant)
     # Response with nil content should produce empty output
