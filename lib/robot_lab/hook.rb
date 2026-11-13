@@ -38,12 +38,13 @@ module RobotLab
       attr_writer :namespace
 
       # Returns the hook's namespace symbol, derived from the class name by
-      # default. Returns nil for the base Hook class itself.
+      # default. Returns nil for the base Hook class itself and for anonymous
+      # subclasses that have not set one.
       #
       # @return [Symbol, nil]
       def namespace
         return @namespace if @namespace
-        return nil if self == Hook
+        return nil if self == Hook || !name
 
         name.split('::').last
             .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
