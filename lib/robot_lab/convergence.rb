@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # TF-IDF cosine similarity utilities for detecting semantic convergence
+  # Term-frequency cosine similarity utilities for detecting semantic convergence
   # between two texts.
   #
   # Common use cases:
@@ -23,7 +23,7 @@ module RobotLab
     # Default cosine similarity threshold above which texts are convergent.
     DEFAULT_THRESHOLD = 0.85
 
-    # Minimum text length (characters) for meaningful TF-IDF scoring.
+    # Minimum text length (characters) for meaningful term-frequency scoring.
     # Texts shorter than this always return 0.0 similarity.
     MIN_TEXT_LENGTH = 30
 

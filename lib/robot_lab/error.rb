@@ -59,7 +59,7 @@ module RobotLab
   # Raised when a robot's tool call loop exceeds the configured limit.
   #
   # @example
-  #   raise ToolLoopError, "Circuit breaker: 26 tool calls exceeded max_tool_rounds (25)"
+  #   raise ToolLoopError, "Circuit breaker triggered: 26 tool calls exceeded max_tool_rounds (25)"
   class ToolLoopError < InferenceError; end
 
   # Raised when a required optional gem dependency is not installed.
