@@ -415,9 +415,12 @@ module RobotLab
       end
 
       scheduler = RactorNetworkScheduler.new(memory: @memory)
-      results   = scheduler.run_pipeline(specs_with_deps, message: message)
-      scheduler.shutdown
-      results
+      begin
+        scheduler.run_pipeline(specs_with_deps, message: message)
+      ensure
+        # run_pipeline raises when a robot fails; always release the worker Ractors.
+        scheduler.shutdown
+      end
     end
 
     def build_robot_spec(task_wrapper)
