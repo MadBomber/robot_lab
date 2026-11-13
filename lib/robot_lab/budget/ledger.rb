@@ -18,9 +18,10 @@ module RobotLab
     #
     # @example
     #   ledger = RobotLab::Budget::Ledger.new(limits: { tokens: 10_000, cost: 0.50 })
-    #   ledger.reserve!(:tokens, ledger.remaining(:tokens))
+    #   held = ledger.remaining(:tokens)
+    #   ledger.reserve!(:tokens, held)
     #   # ... do the billable work ...
-    #   ledger.reconcile!(:tokens, ledger.remaining(:tokens), actual_tokens_used)
+    #   ledger.reconcile!(:tokens, held, actual_tokens_used)
     class Ledger
       # @!attribute [r] limits
       #   @return [Hash{Symbol=>Numeric}] per-dimension ceilings
@@ -51,9 +52,9 @@ module RobotLab
           limit = @limits[key]
           next unless limit
 
-          committed = @consumed[key] + @reserved[key]
-          if committed + amount > limit
-            raise BudgetExceeded, "budget exceeded for #{key}: #{committed + amount} > #{limit}"
+          if amount > headroom(key, limit)
+            raise BudgetExceeded,
+                  "budget exceeded for #{key}: #{@consumed[key] + @reserved[key] + amount} > #{limit}"
           end
 
           @reserved[key] += amount
@@ -90,9 +91,21 @@ module RobotLab
           limit = @limits[key]
           next Float::INFINITY unless limit
 
-          [limit - @consumed[key] - @reserved[key], 0].max
+          [headroom(key, limit), 0].max
         end
       end
+
+      private
+
+      # Unfloored budget left for +key+ (negative after an overrun). Shared by
+      # #reserve! and #remaining so that, while headroom is non-negative, reserving
+      # exactly what #remaining reports can't trip on Float rounding.
+      # Caller must hold @mutex.
+      #
+      # @param key [Symbol] the budget dimension
+      # @param limit [Numeric] the configured limit for +key+
+      # @return [Numeric]
+      def headroom(key, limit) = limit - @consumed[key] - @reserved[key]
     end
   end
 end
