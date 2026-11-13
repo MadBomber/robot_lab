@@ -7,6 +7,17 @@ class RobotLab::DoomLoopDetectorTest < Minitest::Test
     @detector = RobotLab::DoomLoopDetector.new(threshold: 3)
   end
 
+  # --- Threshold validation ---
+
+  def test_zero_threshold_is_rejected
+    error = assert_raises(ArgumentError) { RobotLab::DoomLoopDetector.new(threshold: 0) }
+    assert_match(/doom_loop_threshold/, error.message)
+  end
+
+  def test_negative_threshold_is_rejected
+    assert_raises(ArgumentError) { RobotLab::DoomLoopDetector.new(threshold: -1) }
+  end
+
   # --- Basic tracking ---
 
   def test_fresh_detector_is_not_in_doom_loop
