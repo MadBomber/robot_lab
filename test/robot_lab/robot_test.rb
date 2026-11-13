@@ -2763,7 +2763,7 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 2, call_count
   end
 
-  def test_compact_if_over_context_window_triggers_compress_when_over_threshold
+  def test_maybe_compact_context_window_triggers_compress_when_over_threshold
     called = false
     robot  = build_robot(name: "bot", system_prompt: "hi",
                          config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.0))
@@ -2771,22 +2771,22 @@ class RobotLab::RobotTest < Minitest::Test
     # threshold=0.0 means any non-negative token count triggers compaction
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
     assert called
   end
 
-  def test_compact_if_over_context_window_skips_when_under_threshold
+  def test_maybe_compact_context_window_skips_when_under_threshold
     called = false
     robot  = build_robot(name: "bot", system_prompt: "hi",
                          config: RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.99))
     robot.define_singleton_method(:compress_history) { called = true }
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
     refute called
   end
 
-  def test_compact_if_over_context_window_logs_and_skips_on_dependency_error
+  def test_maybe_compact_context_window_logs_and_skips_on_dependency_error
     log_output = StringIO.new
     RobotLab.config.logger = Logger.new(log_output)
 
@@ -2796,7 +2796,7 @@ class RobotLab::RobotTest < Minitest::Test
     fake_msg = Struct.new(:content).new("x")
     robot.instance_variable_get(:@chat).instance_variable_set(:@messages, [fake_msg])
 
-    robot.send(:compact_if_over_context_window)
+    robot.send(:maybe_compact)
 
     RobotLab.config.logger = Logger.new(nil)
     assert_match(/auto_compact/, log_output.string)

@@ -1027,11 +1027,7 @@ module RobotLab
         else
           case compact
           when :context_window
-            begin
-              compress_history
-            rescue DependencyError => e
-              RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-            end
+            compact_context_window
           when Proc
             compact.call(self)
           end
@@ -1053,14 +1049,10 @@ module RobotLab
       estimated_tok >= window * threshold
     end
 
-    def compact_if_over_context_window
-      return unless over_compact_threshold?
-
-      begin
-        compress_history
-      rescue DependencyError => e
-        RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-      end
+    def compact_context_window
+      compress_history
+    rescue DependencyError => e
+      RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
     end
 
     # Install a per-run circuit breaker on the chat's on_tool_call hook.
