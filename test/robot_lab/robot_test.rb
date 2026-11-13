@@ -1551,6 +1551,22 @@ class RobotLab::RobotTest < Minitest::Test
     assert_equal 100, robot.budget_ledger.consumed[:tokens]
   end
 
+  def test_token_budget_overrun_is_flagged_after_reset_token_totals
+    robot = build_robot(name: "bot", system_prompt: "test", token_budget: 1_000)
+    tokens = RubyLLM::Tokens.new(input: 400, output: 200)
+    fake_response = Data.define(:content, :tool_calls, :stop_reason, :tokens).new(
+      content: "hello", tool_calls: nil, stop_reason: "end_turn", tokens: tokens
+    )
+    chat = robot.instance_variable_get(:@chat)
+    chat.define_singleton_method(:ask) { |_msg = nil, **_kw, &_b| fake_response }
+
+    robot.run("first")
+    robot.reset_token_totals
+
+    error = assert_raises(RobotLab::InferenceError) { robot.run("second") }
+    assert_match(/Token budget exceeded: 1200 tokens used, budget is 1000/, error.message)
+  end
+
   def test_result_includes_per_run_tokens
     robot = build_robot(name: "bot", system_prompt: "test")
     tokens = RubyLLM::Tokens.new(input: 75, output: 30)
