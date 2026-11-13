@@ -804,10 +804,6 @@ module RobotLab
       end
     end
 
-    def hook_registries(network = nil)
-      [RobotLab.hooks, network&.hooks, @hooks]
-    end
-
     # Extract run context from SimpleFlow::Result
     def extract_run_context(result)
       run_params = (result.context[:run_params] || {}).dup
