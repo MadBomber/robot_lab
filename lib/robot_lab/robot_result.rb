@@ -193,7 +193,10 @@ module RobotLab
         stop_reason: hash[:stop_reason],
         input_tokens: hash[:input_tokens] || 0,
         output_tokens: hash[:output_tokens] || 0
-      )
+      ).tap do |result|
+        result.duration = hash[:duration]
+        result.delegated_by = hash[:delegated_by]
+      end
     end
 
     private
