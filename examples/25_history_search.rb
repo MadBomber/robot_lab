@@ -13,8 +13,8 @@
 # Usage:
 #   ruby examples/25_history_search.rb
 
-require "json"
 require_relative "common"
+require "json"
 
 CONVERSATION_TURNS = File.readlines(
   File.join(__dir__, "25_history_search", "conversation.jsonl"), chomp: true
