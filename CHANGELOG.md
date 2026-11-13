@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- A budget reservation is now released when a run is cut off by an exception
+  outside `StandardError` (`Timeout.timeout` around `robot.run`, `Interrupt`),
+  so later runs are no longer refused as over budget.
 - Examples: `examples/common.rb` sets RobotLab's `ruby_llm.model` and `provider`
   to the examples' default, so a robot built without `model:` (the bare robot in
   `09_chaining.rb`) no longer falls back to `claude-sonnet-4`.
