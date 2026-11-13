@@ -31,14 +31,28 @@ module RobotLab
       public_snapshot.merge(metadata: metadata.to_h)
     end
 
+    # Readers excluded from #to_h: +local+ raises outside a hook namespace.
+    SNAPSHOT_EXCLUDED = %i[to_h local].freeze
+
+    # Names of the zero-argument public readers #to_h snapshots: those
+    # declared on this class and each ancestor up to and including
+    # HookContext, minus setters and SNAPSHOT_EXCLUDED.
+    #
+    # @api private
+    # @return [Array<Symbol>] sorted reader names
+    def self.snapshot_readers
+      ancestors.take(ancestors.index(HookContext) + 1)
+               .flat_map { |mod| mod.public_instance_methods(false) }
+               .uniq
+               .reject { |name| name.end_with?("=") || SNAPSHOT_EXCLUDED.include?(name) }
+               .select { |name| instance_method(name).arity.zero? }
+               .sort
+    end
+
     private
 
     def public_snapshot
-      public_methods(false)
-        .grep_v(/=\z/)
-        .reject { |name| %i[to_h local].include?(name) }
-        .sort
-        .to_h { |name| [name, public_send(name)] }
+      self.class.snapshot_readers.to_h { |name| [name, public_send(name)] }
     end
   end
 
