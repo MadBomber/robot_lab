@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RobotLab
-  # Compresses a robot's conversation history using TF-IDF relevance scoring.
+  # Compresses a robot's conversation history using term-frequency cosine similarity.
   #
   # Old conversation turns are tiered against the most recent context:
   # - High relevance (score >= keep_threshold)  → kept verbatim
