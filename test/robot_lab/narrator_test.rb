@@ -73,4 +73,17 @@ class RobotLab::NarratorTest < Minitest::Test
   ensure
     RobotLab.clear_hooks!
   end
+
+  def test_enable_twice_registers_once_and_switches_output
+    RobotLab.clear_hooks!
+    other = StringIO.new
+    RobotLab::Narrator.enable!(output: @io)
+    RobotLab::Narrator.enable!(output: other)
+
+    count = RobotLab.hooks.registrations.count { |reg| reg.handler_class == RobotLab::Narrator }
+    assert_equal 1, count
+    assert_equal other, RobotLab::Narrator.output
+  ensure
+    RobotLab.clear_hooks!
+  end
 end
