@@ -792,17 +792,17 @@ module RobotLab
     end
 
     def wait_for_key(key, timeout:)
-      waiter = Waiter.new
+      waiter = nil
 
       @waiter_mutex.synchronize do
         # Double-check - value might have arrived while setting up
         @mutex.synchronize { return @backend[key] if @backend.key?(key) }
 
+        waiter = Waiter.new
         @waiters[key] << waiter
       end
 
       result = waiter.wait(timeout: timeout)
-      waiter.close
 
       if result == :timeout
         # Clean up the waiter
@@ -811,6 +811,8 @@ module RobotLab
       end
 
       result
+    ensure
+      waiter&.close
     end
 
     def wake_waiters(key, value)

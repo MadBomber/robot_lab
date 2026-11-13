@@ -1076,6 +1076,20 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal(n, mu.synchronize { received.size })
   end
 
+  def test_wait_for_key_on_present_key_does_not_leak_file_descriptors
+    @memory.set(:ready, 1)
+    fd_count = -> { Dir.children("/dev/fd").size }
+
+    GC.disable
+    before = fd_count.call
+    20.times { @memory.send(:wait_for_key, :ready, timeout: 1) }
+    after = fd_count.call
+
+    assert_equal before, after
+  ensure
+    GC.enable
+  end
+
   private
 
   def mock_robot_result(robot_name)
