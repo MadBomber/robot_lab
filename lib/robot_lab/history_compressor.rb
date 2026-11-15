@@ -163,6 +163,10 @@ module RobotLab
       return true if role == :system
       return true if %i[tool tool_result].include?(role)
 
+      # Any assistant message that dispatches tool calls, even with text:
+      # dropping it would orphan the tool results that answer it.
+      return true if msg.respond_to?(:tool_calls) && msg.tool_calls && !msg.tool_calls.empty?
+
       # Assistant tool-call dispatcher: content is nil or blank
       if role == :assistant
         text = extract_text(msg)
