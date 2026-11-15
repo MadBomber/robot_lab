@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
+  raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
+  `future.value` re-raises it at once instead of timing out or blocking forever.
 - Examples 09, 10 and 11 load `amazing_print` before `common.rb` so they no longer crash at startup.
 - `Network#task` raises `ArgumentError` for a task name already in the network,
   matching `add_robot`, instead of silently dropping the earlier task.
