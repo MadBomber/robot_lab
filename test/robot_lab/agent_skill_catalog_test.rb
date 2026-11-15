@@ -54,6 +54,18 @@ class RobotLab::AgentSkillCatalogTest < Minitest::Test
     end
   end
 
+  def test_find_by_folder_name_when_name_differs
+    Dir.mktmpdir do |root|
+      Dir.mkdir(File.join(root, "check_style"))
+      File.write(File.join(root, "check_style", "SKILL.md"), "---\nname: Check Style\ndescription: d\n---\nBody\n")
+
+      catalog = RobotLab::AgentSkillCatalog.new(root)
+      assert_equal "Check Style", catalog.find(:check_style)&.name
+      assert_same catalog.find(:check_style), catalog.find(:"Check Style")
+      assert_equal ["Check Style"], catalog.all.map(&:name)
+    end
+  end
+
   def test_instance_returns_same_object
     first  = RobotLab::AgentSkillCatalog.instance
     second = RobotLab::AgentSkillCatalog.instance

@@ -31,7 +31,7 @@ module RobotLab
 
     # Return the AgentSkill for the given ID, or nil if not found.
     #
-    # @param id [Symbol, String] skill folder name
+    # @param id [Symbol, String] skill folder name or front-matter name
     # @return [AgentSkill, nil]
     def find(id)
       load!
@@ -43,7 +43,7 @@ module RobotLab
     # @return [Array<AgentSkill>]
     def all
       load!
-      @skills.values
+      @skills.values.uniq
     end
 
     private
@@ -65,6 +65,7 @@ module RobotLab
         begin
           skill = AgentSkill.new(skill_file)
           @skills[skill.name.to_sym] = skill
+          @skills[dir.basename.to_s.to_sym] ||= skill
         rescue ConfigurationError, Psych::SyntaxError => e
           RobotLab.config.logger.warn("AgentSkillCatalog: #{e.message}, skipping #{dir.basename}")
         end
