@@ -459,7 +459,8 @@ module RobotLab
           result.duration     = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           result.delegated_by = delegator_name
           future.resolve!(result)
-        rescue => e
+        rescue Exception => e # rubocop:disable Lint/RescueException
+          # Settle the future on any error, or value blocks until timeout.
           future.reject!(e)
         end
 
