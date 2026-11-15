@@ -743,6 +743,18 @@ class RobotLab::RobotTest < Minitest::Test
     assert bus2.channel?(:bot)
   end
 
+  def test_with_bus_keeps_network_assigned_poller
+    bot = RobotLab::Robot.new(name: 'worker', template: :assistant, bus: TypedBus::MessageBus.new)
+    poller = RobotLab::BusPoller.new
+    bot.assign_bus_poller(poller, group: :net)
+
+    bot.with_bus(TypedBus::MessageBus.new)
+
+    assert_same poller, bot.instance_variable_get(:@bus_poller)
+    assert_equal :net, bot.instance_variable_get(:@bus_poller_group)
+    assert_nil bot.instance_variable_get(:@private_bus_poller)
+  end
+
   def test_with_bus_enables_messaging
     bot1 = RobotLab::Robot.new(name: 'alice', template: :assistant)
     bot2 = RobotLab::Robot.new(name: 'bob', template: :assistant)
