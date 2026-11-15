@@ -3,15 +3,6 @@
 require "test_helper"
 
 class RobotLab::Robot::DelegateFatalTest < Minitest::Test
-  def setup
-    @report_on_exception = Thread.report_on_exception
-    Thread.report_on_exception = false
-  end
-
-  def teardown
-    Thread.report_on_exception = @report_on_exception
-  end
-
   def test_async_delegate_rejects_future_when_worker_raises_non_standard_error
     delegator = build_robot(name: "boss", system_prompt: "x")
     worker    = build_robot(name: "worker", system_prompt: "x")
