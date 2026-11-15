@@ -157,6 +157,27 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
     refute_includes result, msgs[2], "irrelevant ocean answer should be dropped"
   end
 
+  def test_irrelevant_tool_call_with_text_kept_with_its_result
+    setup_classifier_or_skip
+
+    dispatcher = FakeMsg.new(:assistant, "Let me check the ocean tide tables for coral reefs", { "call_1" => :tc })
+    msgs = [
+      system_msg,
+      user_msg(OCEAN_TURN),
+      dispatcher,
+      tool_result_msg,
+      user_msg(RECENT_RAILS),
+      assistant_msg("Rails routing maps URLs to controller actions via routes.rb"),
+      user_msg(RECENT_RAILS2),
+      assistant_msg("Convention over configuration means sensible defaults")
+    ]
+
+    result = compressor(messages: msgs, recent_turns: 2, keep: 0.5, drop: 0.1).call
+
+    assert_includes result, dispatcher, "dropping the tool call would orphan its tool result"
+    assert_includes result, tool_result_msg
+  end
+
   def test_summarizer_called_for_medium_tier
     setup_classifier_or_skip
     calls = []
