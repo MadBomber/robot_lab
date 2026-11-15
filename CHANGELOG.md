@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
   raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
   `future.value` re-raises it at once instead of timing out or blocking forever.
+- `Memory#get(:a, :b, wait: N)` now treats `N` as one deadline for the whole
+  call instead of waiting up to `N` seconds per missing key (#92).
 - Examples 09, 10 and 11 load `amazing_print` before `common.rb` so they no longer crash at startup.
 - `HistoryCompressor` keeps an assistant message that has both text and tool calls, so its tool result is never orphaned.
 - `Network#task` raises `ArgumentError` for a task name already in the network,

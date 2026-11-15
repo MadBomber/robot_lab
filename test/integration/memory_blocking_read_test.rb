@@ -23,6 +23,23 @@ class MemoryBlockingReadIntegrationTest < Minitest::Test
     end
   end
 
+  def test_multi_key_get_wait_is_a_total_deadline
+    memory = RobotLab::Memory.new
+    writer = Thread.new do
+      sleep 0.5
+      memory[:a] = 1
+      sleep 0.4
+      memory[:b] = 2
+    end
+
+    # :b arrives at ~0.9s, past the 0.7s budget for the whole call
+    assert_raises(RobotLab::AwaitTimeout) do
+      memory.get(:a, :b, wait: 0.7)
+    end
+  ensure
+    writer&.join
+  end
+
   def test_multiple_waiters_all_unblock_on_write
     memory = RobotLab::Memory.new
     results = []
