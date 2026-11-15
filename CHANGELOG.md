@@ -76,6 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the server is unreachable, instead of raising.
 - `Budget::Ledger#reserve!` can reserve exactly what `remaining` reports; Float
   rounding no longer raises `BudgetExceeded` with budget left.
+- Examples: `25_history_search.rb` requires `common` before `json`, so it no
+  longer raises `Gem::LoadError` when the bundle locks an older json.
 
 ### Changed
 - `test/test_helper.rb`: test output redirected to `test_output.txt` via `$stdout` reassignment; `TerminalSummaryReporter` prints a single PASS/FAIL summary line to the terminal
