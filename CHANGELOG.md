@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `Memory#get(key, wait: N)` returns a stored value of `:timeout` instead of
+  mistaking it for a wait timeout and raising `AwaitTimeout` (#100).
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
   raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
   `future.value` re-raises it at once instead of timing out or blocking forever.
