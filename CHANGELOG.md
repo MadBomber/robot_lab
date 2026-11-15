@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Examples 09, 10 and 11 load `amazing_print` before `common.rb` so they no longer crash at startup.
+- `HistoryCompressor` keeps an assistant message that has both text and tool calls, so its tool result is never orphaned.
 - `Network#task` raises `ArgumentError` for a task name already in the network,
   matching `add_robot`, instead of silently dropping the earlier task.
 - `Network` with `parallel_mode: :ractor` now shuts the Ractor scheduler down
