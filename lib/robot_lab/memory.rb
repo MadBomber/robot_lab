@@ -784,9 +784,10 @@ module RobotLab
 
       return results if missing.empty? || !wait
 
-      # Wait for missing keys
-      timeout = wait == true ? nil : wait
+      # Wait for missing keys; a numeric wait is one deadline for the whole call
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + wait unless wait == true
       missing.each do |key|
+        timeout = deadline && [deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), 0].max
         results[key] = wait_for_key(key, timeout: timeout)
       end
 

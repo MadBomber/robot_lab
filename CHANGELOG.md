@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `Memory#get(:a, :b, wait: N)` now treats `N` as one deadline for the whole
+  call instead of waiting up to `N` seconds per missing key (#92).
 - Examples 09, 10 and 11 load `amazing_print` before `common.rb` so they no longer crash at startup.
 - `Network#task` raises `ArgumentError` for a task name already in the network,
   matching `add_robot`, instead of silently dropping the earlier task.
