@@ -51,10 +51,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
 - `flay` gem added to development dependencies
 - `test_output.txt`, `flay_output.txt`, `flog_output.txt`, and `rubocop_output.txt` added to `.gitignore`
+- `DelegationFuture#value` keeps waiting after a spurious wakeup instead of
+  raising `DelegationTimeout` before the delegated task resolves.
+- `ToolManifest#count` is now `Enumerable#count`, so it honours a block and an
+  argument; with neither it still returns the size.
+- A `SKILL.md` whose front matter YAML can't be safely loaded (such as an
+  unquoted date) raises `ConfigurationError`, so `AgentSkillCatalog` skips it and
+  still loads the other skills.
+- A budget reservation is now released when a run fails with a `StandardError`,
+  so later runs are no longer refused as over budget.
+- A `doom_loop_threshold` below 1 or not an Integer raises `ArgumentError` instead
+  of `ZeroDivisionError` or "negative array size" mid-run.
+- `Memory#wait_for_key` closes its waiter pipe on every exit path, so an early
+  return or a raise no longer leaks two file descriptors.
+- `Robot#call` reports an error raised while extracting the run context instead
+  of masking it with a `TypeError`.
+- `token_budget` is checked against the budget ledger, so a call that overruns
+  the budget after `reset_token_totals` is now flagged.
+- `Narrator.enable!` registers the narrator once; calling it again only changes
+  the output instead of narrating every event twice.
+- `tsort` is now a runtime dependency, so robot_lab loads under Bundler on Ruby
+  4.1, where `tsort` is no longer a default gem.
+- `Memory` with the `:auto` backend pings Redis and falls back to a Hash when
+  the server is unreachable, instead of raising.
+- `Budget::Ledger#reserve!` can reserve exactly what `remaining` reports; Float
+  rounding no longer raises `BudgetExceeded` with budget left.
+- Examples: `25_history_search.rb` requires `common` before `json`, so it no
+  longer raises `Gem::LoadError` when the bundle locks an older json.
 
 ### Changed
 - `test/test_helper.rb`: test output redirected to `test_output.txt` via `$stdout` reassignment; `TerminalSummaryReporter` prints a single PASS/FAIL summary line to the terminal
 - `Rakefile`: `rubocop` and `rubocop_fix` tasks removed (now owned by Asgard); `flay_check` integrated into the `quality` gate
+- Gemspec `documentation_uri` now points at the docs site
+  (https://madbomber.github.io/robot_lab) instead of the README.
+- CI: a GitHub Actions `Test` workflow runs `bundle exec rake test` on Ruby 4.0
+  for pushes to `main`/`develop` and for pull requests.
 
 ## [0.2.6] - 2026-05-23
 
