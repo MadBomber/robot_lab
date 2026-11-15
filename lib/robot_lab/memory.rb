@@ -898,11 +898,10 @@ module RobotLab
     end
 
     def pattern_to_regex(pattern)
-      # Convert glob pattern to regex
-      regex_str = pattern
-                  .gsub(".", "\\.")
-                  .gsub("*", ".*")
-                  .gsub("?", ".")
+      # Convert glob pattern to regex; only * and ? are wildcards
+      regex_str = Regexp.escape(pattern)
+                        .gsub("\\*", ".*")
+                        .gsub("\\?", ".")
 
       Regexp.new("\\A#{regex_str}\\z")
     end

@@ -601,6 +601,23 @@ class RobotLab::MemoryTest < Minitest::Test
     refute_includes matched, :step10
   end
 
+  def test_subscribe_pattern_treats_regex_metacharacters_literally
+    matched = []
+
+    @memory.subscribe_pattern("price(usd):*") { |change| matched << change.key }
+    @memory.subscribe_pattern("a+b") { |change| matched << change.key }
+
+    assert @memory.subscribed?("price(usd):x")
+
+    @memory.set(:aab, 3)
+    @memory.set(:'price(usd):today', 1)
+    @memory.set(:'a+b', 2)
+
+    wait_until { matched.size >= 2 }
+
+    assert_equal %i[a+b price(usd):today], matched.sort
+  end
+
   # MemoryChange object
   def test_memory_change_created
     change = RobotLab::MemoryChange.new(
