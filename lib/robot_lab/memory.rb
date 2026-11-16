@@ -252,6 +252,8 @@ module RobotLab
     #
     def set(key, value)
       key = key.to_sym
+      return self[key] = value if RESERVED_KEYS.include?(key)
+
       old_value = nil
 
       # Store the value

@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `check_style/SKILL.md` (#104).
 - `Memory#get(key, wait: N)` returns a stored value of `:timeout` instead of
   mistaking it for a wait timeout and raising `AwaitTimeout` (#100).
+- `Memory#set` applies the same reserved-key handling as `Memory#[]=`, so
+  `set(:cache, x)` raises and `set(:data, h)` resets the `data` proxy (#99).
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
   raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
   `future.value` re-raises it at once instead of timing out or blocking forever.

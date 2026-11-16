@@ -743,6 +743,17 @@ class RobotLab::MemoryTest < Minitest::Test
     end
   end
 
+  def test_set_cache_key_raises_argument_error_like_assignment
+    assert_raises(ArgumentError) { @memory.set(:cache, nil) }
+  end
+
+  def test_set_data_key_resets_data_proxy
+    memory = RobotLab::Memory.new(data: { a: 1 })
+    memory.data
+    memory.set(:data, { b: 2 })
+    assert_equal({ b: 2 }, memory.data.to_h)
+  end
+
   def test_subscribe_pattern_requires_block
     assert_raises(ArgumentError) do
       @memory.subscribe_pattern("*")
