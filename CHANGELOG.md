@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
+  `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
+  and leaving the catalog empty (#102).
 - `AgentSkillCatalog#find` also resolves a skill by its folder name when the
   front-matter `name` differs, so `skills: [:check_style]` finds
   `check_style/SKILL.md` (#104).
