@@ -808,6 +808,9 @@ module RobotLab
       result = waiter.wait(timeout: timeout)
 
       if result == :timeout
+        # A stored value of :timeout looks like Waiter's timeout result
+        return @mutex.synchronize { @backend[key] } if waiter.signaled?
+
         # Clean up the waiter
         @waiter_mutex.synchronize { @waiters[key].delete(waiter) }
         raise AwaitTimeout, "Timeout waiting for :#{key} after #{timeout} seconds"
