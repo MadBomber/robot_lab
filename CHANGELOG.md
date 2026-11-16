@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
+  `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
+  and leaving the catalog empty (#102).
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
   raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
   `future.value` re-raises it at once instead of timing out or blocking forever.
