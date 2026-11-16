@@ -429,6 +429,17 @@ class RobotLab::MemoryTest < Minitest::Test
     end
   end
 
+  def test_get_with_wait_returns_stored_timeout_symbol
+    writer = Thread.new do
+      sleep 0.05
+      @memory.set(:status, :timeout)
+    end
+
+    assert_equal :timeout, @memory.get(:status, wait: 2)
+  ensure
+    writer&.join(1)
+  end
+
   def test_get_multiple_with_wait_waits_for_all
     results = nil
 

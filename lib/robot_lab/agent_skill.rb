@@ -22,6 +22,7 @@ module RobotLab
       @capabilities = Capabilities.from_front_matter(front_matter)
 
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'name'"        if @name.to_s.strip.empty?
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} 'name' must be a String" unless @name.is_a?(String)
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'description'" if @description.to_s.strip.empty?
     end
 
