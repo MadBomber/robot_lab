@@ -980,6 +980,15 @@ class RobotLab::MemoryTest < Minitest::Test
     assert_equal [42], b
   end
 
+  def test_raising_subscriber_does_not_block_later_subscribers
+    seen = []
+    @memory.subscribe(:k) { |_| raise "boom" }
+    @memory.subscribe(:k) { |change| seen << change.value }
+    @memory.set(:k, 1)
+    wait_until(timeout: 1) { seen.size == 1 }
+    assert_equal [1], seen
+  end
+
   def test_rapid_writes_all_notifications_delivered
     received = []
     @memory.subscribe(:counter) { |change| received << change.value }

@@ -881,7 +881,11 @@ module RobotLab
         break if batch.empty?
 
         batch.each do |item|
-          item[:callbacks].each { |cb| cb.call(item[:change]) }
+          item[:callbacks].each do |cb|
+            cb.call(item[:change])
+          rescue StandardError => e
+            RobotLab.config.logger.error("Memory subscriber error for :#{item[:change].key}: #{e.class}: #{e.message}")
+          end
         end
       end
     ensure
