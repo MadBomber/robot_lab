@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
 
 ### Fixed
+- `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
+  `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
+  and leaving the catalog empty (#102).
+- `AgentSkillCatalog#find` also resolves a skill by its folder name when the
+  front-matter `name` differs, so `skills: [:check_style]` finds
+  `check_style/SKILL.md` (#104).
+- `Memory#get(key, wait: N)` returns a stored value of `:timeout` instead of
+  mistaking it for a wait timeout and raising `AwaitTimeout` (#100).
+- `Memory#set` applies the same reserved-key handling as `Memory#[]=`, so
+  `set(:cache, x)` raises and `set(:data, h)` resets the `data` proxy (#99).
 - A `Memory` subscriber that raises no longer stops later subscribers in the
   same batch from being notified; the error is logged and delivery continues (#98).
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
