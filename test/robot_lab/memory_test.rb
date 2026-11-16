@@ -429,6 +429,17 @@ class RobotLab::MemoryTest < Minitest::Test
     end
   end
 
+  def test_get_with_wait_returns_stored_timeout_symbol
+    writer = Thread.new do
+      sleep 0.05
+      @memory.set(:status, :timeout)
+    end
+
+    assert_equal :timeout, @memory.get(:status, wait: 2)
+  ensure
+    writer&.join(1)
+  end
+
   def test_get_multiple_with_wait_waits_for_all
     results = nil
 
@@ -732,6 +743,17 @@ class RobotLab::MemoryTest < Minitest::Test
     end
   end
 
+  def test_set_cache_key_raises_argument_error_like_assignment
+    assert_raises(ArgumentError) { @memory.set(:cache, nil) }
+  end
+
+  def test_set_data_key_resets_data_proxy
+    memory = RobotLab::Memory.new(data: { a: 1 })
+    memory.data
+    memory.set(:data, { b: 2 })
+    assert_equal({ b: 2 }, memory.data.to_h)
+  end
+
   def test_subscribe_pattern_requires_block
     assert_raises(ArgumentError) do
       @memory.subscribe_pattern("*")
@@ -956,6 +978,15 @@ class RobotLab::MemoryTest < Minitest::Test
     wait_until(timeout: 1) { a.size == 1 && b.size == 1 }
     assert_equal [42], a
     assert_equal [42], b
+  end
+
+  def test_raising_subscriber_does_not_block_later_subscribers
+    seen = []
+    @memory.subscribe(:k) { |_| raise "boom" }
+    @memory.subscribe(:k) { |change| seen << change.value }
+    @memory.set(:k, 1)
+    wait_until(timeout: 1) { seen.size == 1 }
+    assert_equal [1], seen
   end
 
   def test_rapid_writes_all_notifications_delivered

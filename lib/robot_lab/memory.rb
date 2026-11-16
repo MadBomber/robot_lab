@@ -252,6 +252,8 @@ module RobotLab
     #
     def set(key, value)
       key = key.to_sym
+      return self[key] = value if RESERVED_KEYS.include?(key)
+
       old_value = nil
 
       # Store the value
@@ -808,6 +810,9 @@ module RobotLab
       result = waiter.wait(timeout: timeout)
 
       if result == :timeout
+        # A stored value of :timeout looks like Waiter's timeout result
+        return @mutex.synchronize { @backend[key] } if waiter.signaled?
+
         # Clean up the waiter
         @waiter_mutex.synchronize { @waiters[key].delete(waiter) }
         raise AwaitTimeout, "Timeout waiting for :#{key} after #{timeout} seconds"
@@ -876,7 +881,11 @@ module RobotLab
         break if batch.empty?
 
         batch.each do |item|
-          item[:callbacks].each { |cb| cb.call(item[:change]) }
+          item[:callbacks].each do |cb|
+            cb.call(item[:change])
+          rescue StandardError => e
+            RobotLab.config.logger.error("Memory subscriber error for :#{item[:change].key}: #{e.class}: #{e.message}")
+          end
         end
       end
     ensure
