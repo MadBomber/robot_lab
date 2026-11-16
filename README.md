@@ -54,7 +54,7 @@ gem install robot_lab
 
 ### Requirements
 
-- Ruby >= 3.2
+- Ruby >= 4.0
 - [One or more API Keys for LLM providers supported by RubyLLM](https://rubyllm.com/configuration/#provider-configuration)
 
 For comprehensive guides and API documentation, visit **[https://madbomber.github.io/robot_lab](https://madbomber.github.io/robot_lab)**
