@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `set(:cache, x)` raises and `set(:data, h)` resets the `data` proxy (#99).
 - A `Memory` subscriber that raises no longer stops later subscribers in the
   same batch from being notified; the error is logged and delivery continues (#98).
+- `Robot#with_bus` on a robot in a `Network` keeps the network's shared
+  `BusPoller` and group instead of starting a private poller (#103).
 - Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
   raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
   `future.value` re-raises it at once instead of timing out or blocking forever.
