@@ -93,6 +93,43 @@ class RobotLab::BusPollerTest < Minitest::Test
     refute @poller.instance_variable_get(:@robot_busy)["bot"]
   end
 
+  def test_bus_error_on_first_delivery_still_drains_queued_deliveries_in_order
+    processed = []
+    poller = @poller
+    robot = stub_robot("bot") do |d|
+      processed << d
+      if d == 1
+        poller.enqueue(robot: robot, delivery: 2) # arrives while busy -> queued
+        raise RobotLab::BusError, "boom on 1"
+      end
+    end
+
+    @poller.enqueue(robot: robot, delivery: 1)
+    assert_equal [1, 2], processed
+    refute @poller.instance_variable_get(:@robot_busy)["bot"]
+
+    @poller.enqueue(robot: robot, delivery: 3)
+    assert_equal [1, 2, 3], processed
+  end
+
+  def test_bus_error_on_a_queued_delivery_does_not_stop_the_drain
+    processed = []
+    poller = @poller
+    robot = stub_robot("bot") do |d|
+      processed << d
+      if d == 1
+        poller.enqueue(robot: robot, delivery: 2)
+        poller.enqueue(robot: robot, delivery: 3)
+      end
+      raise RobotLab::BusError, "boom on 2" if d == 2
+    end
+
+    @poller.enqueue(robot: robot, delivery: 1)
+
+    assert_equal [1, 2, 3], processed
+    refute @poller.instance_variable_get(:@robot_busy)["bot"]
+  end
+
   def test_enqueue_clears_busy_flag_on_unexpected_error
     robot = stub_robot("bot") { |_d| raise "unexpected" }
 

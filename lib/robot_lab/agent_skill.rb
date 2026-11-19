@@ -11,17 +11,18 @@ module RobotLab
     attr_reader :name, :description, :path, :capabilities
 
     # @param skill_md_path [String, Pathname] path to the SKILL.md file
-    # @raise [ConfigurationError] if name or description is missing
+    # @raise [ConfigurationError] if name or description is missing, or the front matter is invalid YAML
     def initialize(skill_md_path)
       @path = Pathname.new(skill_md_path).dirname
       content = File.read(skill_md_path)
-      front_matter, @_body = parse_skill_md(content)
+      front_matter, @_body = parse_skill_md(content, skill_md_path)
 
       @name         = front_matter["name"]
       @description  = front_matter["description"]
       @capabilities = Capabilities.from_front_matter(front_matter)
 
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'name'"        if @name.to_s.strip.empty?
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} 'name' must be a String" unless @name.is_a?(String)
       raise ConfigurationError, "SKILL.md at #{skill_md_path} missing 'description'" if @description.to_s.strip.empty?
     end
 
@@ -49,16 +50,23 @@ module RobotLab
     private
 
     # Split SKILL.md content into front matter Hash and body String.
-    def parse_skill_md(content)
-      if content.start_with?("---\n")
-        parts = content.split(/^---\s*$/, 3)
-        if parts.length >= 3
-          fm = YAML.safe_load(parts[1])
-          front_matter = fm.is_a?(Hash) ? fm : {}
-          return [front_matter, parts[2]]
-        end
-      end
-      [{}, content]
+    def parse_skill_md(content, skill_md_path)
+      yaml_text, body = split_front_matter(content)
+      return [{}, content] unless body
+
+      front_matter = YAML.safe_load(yaml_text)
+      [front_matter.is_a?(Hash) ? front_matter : {}, body]
+    rescue Psych::Exception => e
+      raise ConfigurationError, "SKILL.md at #{skill_md_path} has invalid front matter (#{e.message})"
+    end
+
+    # Pure: [front matter text, body] when +content+ opens with a "---"
+    # block, or nil when it has none.
+    def split_front_matter(content)
+      return unless content.start_with?("---\n")
+
+      _, yaml_text, body = content.split(/^---\s*$/, 3)
+      [yaml_text, body] if body
     end
   end
 end

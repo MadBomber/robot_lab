@@ -167,8 +167,16 @@ class RobotLab::ToolManifestTest < Minitest::Test
     assert_equal 2, @manifest.size
   end
 
-  def test_count_alias
+  def test_count_without_arguments_returns_size
     assert_equal 2, @manifest.count
+  end
+
+  def test_count_with_block_counts_matches
+    assert_equal(1, @manifest.count { |tool| tool.name == "calculate" })
+  end
+
+  def test_count_with_argument_counts_equal_tools
+    assert_equal 1, @manifest.count(@tool1)
   end
 
   def test_length_alias

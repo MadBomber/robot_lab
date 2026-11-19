@@ -6,7 +6,6 @@ source "https://rubygems.org"
 
 gemspec
 
-# rubocop:disable-next Metrics/BlockLength -- a dependency list, not logic
 group :development, :test do
   gem 'aigcm'
   gem 'amazing_print'
@@ -18,7 +17,6 @@ group :development, :test do
   gem "flay"
   gem "flog"
   gem 'hashdiff'
-  gem "lumberjack"
   gem "minitest"
   gem "minitest-reporters"
   gem 'ractor_queue'
@@ -42,7 +40,4 @@ group :test do
   gem "railties", ">= 7.0"
   gem "simplecov", require: false
   gem "sqlite3"
-  gem "state_machines"
-  gem "state_machines-activemodel"
-  gem "state_machines-activerecord"
 end

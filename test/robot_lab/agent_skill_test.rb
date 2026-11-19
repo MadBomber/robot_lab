@@ -33,6 +33,16 @@ class RobotLab::AgentSkillTest < Minitest::Test
     end
   end
 
+  def test_raises_configuration_error_when_front_matter_has_a_date
+    Dir.mktmpdir do |dir|
+      skill_md = File.join(dir, "SKILL.md")
+      File.write(skill_md, "---\nname: dated\ndescription: d\ncreated: 2025-01-01\n---\nBody\n")
+
+      error = assert_raises(RobotLab::ConfigurationError) { RobotLab::AgentSkill.new(skill_md) }
+      assert_includes error.message, "invalid front matter"
+    end
+  end
+
   def test_scripts_returns_empty_when_no_scripts_directory
     skill = RobotLab::AgentSkill.new(FIXTURES.join("test_skill", "SKILL.md"))
     assert_equal [], skill.scripts

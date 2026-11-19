@@ -30,8 +30,16 @@ module RobotLab
                             network: network, network_config: network_config)
               rerender_template(run_context) if @template && run_context.any?
               reservation = reserve_budget!
-              response = invoke_ask(context: context, kwargs: kwargs, hooks: hooks, block: block)
-              result = build_result(response, run_memory)
+              completed = false
+              begin
+                response = invoke_ask(context: context, kwargs: kwargs, hooks: hooks, block: block)
+                result = build_result(response, run_memory)
+                completed = true
+              ensure
+                # ensure, not rescue StandardError: Timeout and Interrupt
+                # must release the reservation too.
+                release_budget!(reservation) unless completed
+              end
               reconcile_budget!(reservation, response: response, result: result)
               enforce_token_budget!
               enforce_cost_budget!

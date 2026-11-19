@@ -293,12 +293,12 @@ module RobotLab
     # :reek:TooManyStatements -- SimpleFlow step: timing, run, and error-shielding belong together.
     # :reek:DuplicateMethodCall -- each clock_gettime samples a different instant (start/stop/rescue); a local would be wrong.
     def call(result)
+      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       run_context = extract_run_context(result)
 
       # Extract the message from run context
       message = run_context.delete(:message)
 
-      start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       robot_result = run(message, **run_context)
       robot_result.duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
@@ -372,7 +372,7 @@ module RobotLab
       self
     end
 
-    # Compress conversation history using TF-IDF relevance scoring.
+    # Compress conversation history using term-frequency cosine similarity.
     #
     # Old turns are tiered against the most recent context:
     # - High relevance (score >= keep_threshold)          → kept verbatim
@@ -445,7 +445,8 @@ module RobotLab
           result.duration     = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           result.delegated_by = delegator_name
           future.resolve!(result)
-        rescue => e
+        rescue Exception => e # rubocop:disable Lint/RescueException
+          # Settle the future on any error, or value blocks until timeout.
           future.reject!(e)
         end
 
@@ -847,10 +848,6 @@ module RobotLab
       end
     end
 
-    def hook_registries(network = nil)
-      [RobotLab.hooks, network&.hooks, @hooks]
-    end
-
     # Extract run context from SimpleFlow::Result
     # :reek:TooManyStatements -- one delete/re-add per robot-specific run param; a loop would hide which keys are special.
     def extract_run_context(result)
@@ -1003,11 +1000,7 @@ module RobotLab
         else
           case compact
           when :context_window
-            begin
-              compress_history
-            rescue DependencyError => e
-              RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-            end
+            compact_context_window
           when Proc
             compact.call(self)
           end
@@ -1029,14 +1022,10 @@ module RobotLab
       estimated_tok >= window * threshold
     end
 
-    def compact_if_over_context_window
-      return unless over_compact_threshold?
-
-      begin
-        compress_history
-      rescue DependencyError => e
-        RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
-      end
+    def compact_context_window
+      compress_history
+    rescue DependencyError => e
+      RobotLab.config.logger.warn("[#{@name}] auto_compact: #{e.message}; skipping compaction")
     end
   end
 end

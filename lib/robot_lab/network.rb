@@ -113,6 +113,7 @@ module RobotLab
     # @param memory [Memory, Hash, nil] task-specific memory
     # @param depends_on [Symbol, Array<Symbol>] dependencies (:none, :optional, or task names)
     # @return [self]
+    # @raise [ArgumentError] if a task with this name already exists in the network
     #
     # @example Entry point task
     #   task :classifier, classifier_robot, depends_on: :none
@@ -129,6 +130,8 @@ module RobotLab
     # :reek:LongParameterList -- one keyword per documented per-task option.
     def task(name, robot, context: {}, mcp: :none, tools: :none, memory: nil, config: nil, depends_on: :none,
              poller_group: :default)
+      raise ArgumentError, "Task '#{name}' already exists in network '#{@name}'" if @tasks.key?(name.to_s)
+
       task_wrapper = Task.new(
         name: name,
         robot: robot,
@@ -154,13 +157,14 @@ module RobotLab
     #
     # @param name [Symbol, nil] optional name for the parallel group
     # @param depends_on [Symbol, Array] dependencies for this group
-    # @yield Block containing task definitions
+    # @yield Block containing step definitions. The block is evaluated by
+    #   SimpleFlow's ParallelBlock, which supports +step+ (not +task+).
     # @return [self]
     #
     # @example Named parallel group
     #   parallel :fetch_data, depends_on: :validate do
-    #     task :fetch_orders, orders_robot
-    #     task :fetch_products, products_robot
+    #     step :fetch_orders, orders_robot
+    #     step :fetch_products, products_robot
     #   end
     #   task :process, processor, depends_on: :fetch_data
     #
@@ -420,9 +424,12 @@ module RobotLab
       end
 
       scheduler = RactorNetworkScheduler.new(memory: @memory)
-      results   = scheduler.run_pipeline(specs_with_deps, message: message)
-      scheduler.shutdown
-      results
+      begin
+        scheduler.run_pipeline(specs_with_deps, message: message)
+      ensure
+        # run_pipeline raises when a robot fails; always release the worker Ractors.
+        scheduler.shutdown
+      end
     end
 
     # :reek:FeatureEnvy -- snapshotting a robot's identity fields into a Ractor-shareable spec is this method's job.

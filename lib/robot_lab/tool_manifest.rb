@@ -120,11 +120,6 @@ module RobotLab
       @tools.size
     end
 
-    # @!method count
-    #   Alias for {#size}.
-    #   @return [Integer]
-    alias count size
-
     # @!method length
     #   Alias for {#size}.
     #   @return [Integer]

@@ -24,7 +24,13 @@ module RobotLab
 
     attr_reader :sequence
 
+    # @param threshold [Integer] repetitions that count as a loop (must be >= 1)
+    # @raise [ArgumentError] if threshold is not a positive Integer
     def initialize(threshold: DEFAULT_THRESHOLD)
+      unless threshold.is_a?(Integer) && threshold >= 1
+        raise ArgumentError, "doom_loop_threshold must be an Integer >= 1, got #{threshold.inspect}"
+      end
+
       @threshold = threshold
       @sequence  = []
     end

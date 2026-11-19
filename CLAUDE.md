@@ -131,9 +131,9 @@ result = network.run(message: "Hello")
 
 ## Dependencies
 
-Core: zeitwerk, ruby_llm (>= 2.1.1, < 3 — its built-in `RubyLLM::MCP` is the MCP client), prompt_manager, async, simple_flow, state_machines
+Core: myway_config, zeitwerk, ruby_llm (>= 2.1.1, < 3 — its built-in `RubyLLM::MCP` is the MCP client), ruby_llm-providers-apfel, ruby_llm-providers-lms (local LM Studio provider used by the examples: qwen/qwen3.8-27b for complex work, openai/gpt-oss-20b for simple demos), prompt_manager, async, typed_bus, simple_flow, tsort, ractor_queue
 
-Optional: ruby_llm-semantic_cache (Memory#cache; no ruby_llm 2.0-compatible release yet — Memory runs with caching disabled when absent), classifier (compress_history), ruby_llm-providers-lms (local LM Studio provider used by the examples: qwen/qwen3.8-27b for complex work, openai/gpt-oss-20b for simple demos)
+Optional: ruby_llm-semantic_cache (Memory#cache; no ruby_llm 2.0-compatible release yet — Memory runs with caching disabled when absent), classifier (compress_history)
 
 ### Templates
 

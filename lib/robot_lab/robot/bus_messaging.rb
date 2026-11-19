@@ -212,12 +212,15 @@ module RobotLab
       end
 
       # Unsubscribe from the bus channel and stop the private poller if any.
+      # A poller assigned by a Network is kept, along with its group.
       def teardown_bus_channel
         channel_name = @name.to_sym
         @bus.unsubscribe(channel_name, @bus_subscriber_id) if @bus_subscriber_id
         @bus_subscriber_id = nil
 
-        @private_bus_poller&.stop
+        return unless @private_bus_poller
+
+        @private_bus_poller.stop
         @private_bus_poller = nil
         @bus_poller         = nil
         @bus_poller_group   = :default

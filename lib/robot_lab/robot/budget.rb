@@ -27,12 +27,16 @@ module RobotLab
         RobotLab::Budget::Ledger.new(limits: limits)
       end
 
+      # Reads the ledger rather than the robot's token totals, which
+      # reset_token_totals can zero without touching the budget.
       def enforce_token_budget!
         budget = @config.token_budget
-        return unless budget && @total_input_tokens + @total_output_tokens > budget
+        return unless budget && @budget_ledger
 
-        raise InferenceError,
-              "Token budget exceeded: #{@total_input_tokens + @total_output_tokens} tokens used, budget is #{budget}"
+        consumed = @budget_ledger.consumed[:tokens]
+        return unless consumed > budget
+
+        raise InferenceError, "Token budget exceeded: #{consumed} tokens used, budget is #{budget}"
       end
 
       def enforce_cost_budget!
@@ -55,11 +59,28 @@ module RobotLab
       def reserve_budget!
         return {} unless @budget_ledger
 
-        @budget_ledger.limits.each_key.with_object({}) do |dimension, reservation|
-          amount = @budget_ledger.remaining(dimension)
-          @budget_ledger.reserve!(dimension, amount)
-          reservation[dimension] = amount
-        end
+        reservation = {}
+        @budget_ledger.limits.each_key { |dimension| reserve_remaining!(dimension, reservation) }
+        reservation
+      rescue BudgetExceeded
+        release_budget!(reservation)
+        raise
+      end
+
+      # Reserves what remains of +dimension+ and records it in +reservation+,
+      # which reserve_budget! releases if a later dimension is exhausted.
+      def reserve_remaining!(dimension, reservation)
+        amount = @budget_ledger.remaining(dimension)
+        @budget_ledger.reserve!(dimension, amount)
+        reservation[dimension] = amount
+      end
+
+      # Drops a reservation from reserve_budget! without recording any
+      # consumption, for a call that failed before reconcile_budget!.
+      #
+      # @param reservation [Hash{Symbol=>Numeric}] the value returned by reserve_budget!
+      def release_budget!(reservation)
+        reservation.each_pair { |dimension, amount| @budget_ledger.release!(dimension, amount) }
       end
 
       # Replaces a reservation from reserve_budget! with the actual usage

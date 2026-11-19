@@ -18,9 +18,10 @@
 # Usage:
 #   bundle exec ruby examples/10_memory.rb
 
+# Before common: its partial ActiveSupport load breaks amazing_print.
+require "amazing_print"
 require_relative "common"
 require "json"
-require "amazing_print"
 require "hashdiff"
 
 banner "Advanced Memory Operations"

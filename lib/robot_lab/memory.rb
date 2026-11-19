@@ -266,6 +266,8 @@ module RobotLab
     #
     def set(key, value)
       key = key.to_sym
+      return self[key] = value if RESERVED_KEYS.include?(key)
+
       old_value = nil
 
       # Store the value
@@ -727,7 +729,9 @@ module RobotLab
     def create_redis_backend
       return nil unless redis_available?
 
-      RedisBackend.new
+      # Redis.new connects lazily, so ping to surface an unreachable server
+      # here and fall back to the Hash backend instead of failing later.
+      RedisBackend.new.tap(&:ping)
     rescue StandardError
       nil
     end
@@ -803,9 +807,10 @@ module RobotLab
 
       return results if missing.empty? || !wait
 
-      # Wait for missing keys
-      timeout = wait == true ? nil : wait
+      # Wait for missing keys; a numeric wait is one deadline for the whole call
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + wait unless wait == true
       missing.each do |key|
+        timeout = deadline && [deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), 0].max
         results[key] = wait_for_key(key, timeout: timeout)
       end
 
@@ -814,25 +819,30 @@ module RobotLab
 
     # :reek:TooManyStatements -- double-check locking plus timeout cleanup must stay together for correctness.
     def wait_for_key(key, timeout:)
-      waiter = Waiter.new
+      waiter = nil
 
       @waiter_mutex.synchronize do
         # Double-check - value might have arrived while setting up
         @mutex.synchronize { return @backend[key] if @backend.key?(key) }
 
+        waiter = Waiter.new
         @waiters[key] << waiter
       end
 
       result = waiter.wait(timeout: timeout)
-      waiter.close
 
       if result == :timeout
+        # A stored value of :timeout looks like Waiter's timeout result
+        return @mutex.synchronize { @backend[key] } if waiter.signaled?
+
         # Clean up the waiter
         @waiter_mutex.synchronize { @waiters[key].delete(waiter) }
         raise AwaitTimeout, "Timeout waiting for :#{key} after #{timeout} seconds"
       end
 
       result
+    ensure
+      waiter&.close
     end
 
     # :reek:UncommunicativeVariableName -- single-char block vars are accepted style here (RuboCop allows them).
@@ -897,7 +907,11 @@ module RobotLab
         break if batch.empty?
 
         batch.each do |item|
-          item[:callbacks].each { |cb| cb.call(item[:change]) }
+          item[:callbacks].each do |cb|
+            cb.call(item[:change])
+          rescue StandardError => e
+            RobotLab.config.logger.error("Memory subscriber error for :#{item[:change].key}: #{e.class}: #{e.message}")
+          end
         end
       end
     ensure
@@ -920,11 +934,10 @@ module RobotLab
     end
 
     def pattern_to_regex(pattern)
-      # Convert glob pattern to regex
-      regex_str = pattern
-                  .gsub(".", "\\.")
-                  .gsub("*", ".*")
-                  .gsub("?", ".")
+      # Convert glob pattern to regex; only * and ? are wildcards
+      regex_str = Regexp.escape(pattern)
+                        .gsub("\\*", ".*")
+                        .gsub("\\?", ".")
 
       Regexp.new("\\A#{regex_str}\\z")
     end
@@ -967,6 +980,13 @@ module RobotLab
 
     def clear
       keys.each { |k| delete(k) }
+    end
+
+    # Verifies the server is reachable.
+    #
+    # @raise [Redis::BaseConnectionError] if it is not
+    def ping
+      @redis.ping
     end
 
     private

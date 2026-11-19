@@ -1,0 +1,23 @@
+# Fasterer speedups disabled for this repo, with reasons. Readability beats
+# micro-optimization here (same policy as the rubocop metric thresholds).
+speedups:
+  # Rewriting each_with_index as a bare while loop hurts readability for a
+  # negligible gain (ask_user, history_compressor, history_search).
+  each_with_index_vs_while: false
+
+  # Flagged blocks are captured procs invoked from another closure or fiber
+  # (Hook#call passthrough, bus_messaging responder, utils dispatch_async);
+  # an implicit yield there would be obscure or wrong.
+  proc_call_vs_yield: false
+
+  # Memory#keys is this class's own method (non-reserved keys), not Hash#keys,
+  # and Memory#clear deletes while iterating, which each_key forbids.
+  keys_each_vs_each_key: false
+
+  # ENV.fetch(var, nil) is the Style/FetchEnvVar-preferred form; the defaults
+  # are literals, so the block form buys nothing.
+  fetch_with_argument_vs_block: false
+
+  # pattern_to_regex replaces one character with two ("." -> "\\."), which
+  # String#tr cannot express.
+  gsub_vs_tr: false

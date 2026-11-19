@@ -17,8 +17,9 @@
 # Usage:
 #   bundle exec ruby examples/09_chaining.rb
 
-require_relative "common"
+# Before common: its partial ActiveSupport load breaks amazing_print.
 require "amazing_print"
+require_relative "common"
 require "hashdiff"
 require "stringio"
 

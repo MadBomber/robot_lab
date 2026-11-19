@@ -8,6 +8,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-18
+
+### Fixed
+
+- `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
+  `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
+  and leaving the catalog empty (#102).
+- `AgentSkillCatalog#find` also resolves a skill by its folder name when the
+  front-matter `name` differs, so `skills: [:check_style]` finds
+  `check_style/SKILL.md` (#104).
+- `Memory#get(key, wait: N)` returns a stored value of `:timeout` instead of
+  mistaking it for a wait timeout and raising `AwaitTimeout` (#100).
+- `Memory#set` applies the same reserved-key handling as `Memory#[]=`, so
+  `set(:cache, x)` raises and `set(:data, h)` resets the `data` proxy (#99).
+- A `Memory` subscriber that raises no longer stops later subscribers in the
+  same batch from being notified; the error is logged and delivery continues (#98).
+- `Robot#with_bus` on a robot in a `Network` keeps the network's shared
+  `BusPoller` and group instead of starting a private poller (#103).
+- Async `Robot#delegate` rejects its `DelegationFuture` when the delegated run
+  raises an exception outside `StandardError` (e.g. `NotImplementedError`), so
+  `future.value` re-raises it at once instead of timing out or blocking forever.
+- `Memory#get(:a, :b, wait: N)` now treats `N` as one deadline for the whole
+  call instead of waiting up to `N` seconds per missing key (#92).
+- Examples 09, 10 and 11 load `amazing_print` before `common.rb` so they no longer crash at startup.
+- `HistoryCompressor` keeps an assistant message that has both text and tool calls, so its tool result is never orphaned.
+- `Network#task` raises `ArgumentError` for a task name already in the network,
+  matching `add_robot`, instead of silently dropping the earlier task.
+- `Network` with `parallel_mode: :ractor` now shuts the Ractor scheduler down
+  when `run_pipeline` raises, instead of leaking its worker pool on every failed
+  run.
+- `BusPoller` keeps draining a robot's queued deliveries after one delivery
+  raises `BusError`, instead of stranding them until a later message arrived and
+  then running them out of order.
+- `DotState` (`ctx.local` in hooks) supports `[]` and `[]=`; `ctx.local[:k] = v`
+  used to store the key name under `:[]` and drop the value.
+- `HookContext#to_h` now includes inherited readers (such as `event`, and
+  `robot`/`request` on `LlmGenerationHookContext`) and no longer raises
+  `ArgumentError` on the base class.
+- Removed the duplicate `Robot#hook_registries` from `robot.rb`; the `Hooking`
+  concern now owns the only definition, so changes there take effect.
+- A budget reservation is now released when a run is cut off by an exception
+  outside `StandardError` (`Timeout.timeout` around `robot.run`, `Interrupt`),
+  so later runs are no longer refused as over budget.
+- Examples: `examples/common.rb` sets RobotLab's `ruby_llm.model` and `provider`
+  to the examples' default, so a robot built without `model:` (the bare robot in
+  `09_chaining.rb`) no longer falls back to `claude-sonnet-4`.
+- Docs and doc comments now describe `HistoryCompressor` and `Convergence` as
+  term-frequency cosine similarity (not TF-IDF) and quote the real
+  `ToolLoopError` message.
+- `RobotResult.from_hash` now restores `duration` and `delegated_by`.
+- `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
+  `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
+  `ArgumentError` and anonymous per-run hooks run.
+- `DelegationFuture#value` keeps waiting after a spurious wakeup instead of
+  raising `DelegationTimeout` before the delegated task resolves.
+- `ToolManifest#count` is now `Enumerable#count`, so it honours a block and an
+  argument; with neither it still returns the size.
+- A `SKILL.md` whose front matter YAML can't be safely loaded (such as an
+  unquoted date) raises `ConfigurationError`, so `AgentSkillCatalog` skips it and
+  still loads the other skills.
+- A budget reservation is now released when a run fails with a `StandardError`,
+  so later runs are no longer refused as over budget.
+- A `doom_loop_threshold` below 1 or not an Integer raises `ArgumentError` instead
+  of `ZeroDivisionError` or "negative array size" mid-run.
+- `Memory#wait_for_key` closes its waiter pipe on every exit path, so an early
+  return or a raise no longer leaks two file descriptors.
+- `Robot#call` reports an error raised while extracting the run context instead
+  of masking it with a `TypeError`.
+- `token_budget` is checked against the budget ledger, so a call that overruns
+  the budget after `reset_token_totals` is now flagged.
+- `Narrator.enable!` registers the narrator once; calling it again only changes
+  the output instead of narrating every event twice.
+- `tsort` is now a runtime dependency, so robot_lab loads under Bundler on Ruby
+  4.1, where `tsort` is no longer a default gem.
+- `Memory` with the `:auto` backend pings Redis and falls back to a Hash when
+  the server is unreachable, instead of raising.
+- `Budget::Ledger#reserve!` can reserve exactly what `remaining` reports; Float
+  rounding no longer raises `BudgetExceeded` with budget left.
+- Examples: `25_history_search.rb` requires `common` before `json`, so it no
+  longer raises `Gem::LoadError` when the bundle locks an older json.
+- `Memory#subscribe_pattern` escapes every regex metacharacter in the glob, so
+  only `*` and `?` are wildcards: `"price(usd):*"` now matches
+  `price(usd):today`, and `"a+b"` matches `a+b` instead of `aab` (#91).
+
+### Changed
+
+- Gemspec `documentation_uri` now points at the docs site
+  (https://madbomber.github.io/robot_lab) instead of the README.
+- CI: a GitHub Actions `Test` workflow runs `bundle exec rake test` on Ruby 4.0
+  for pushes to `main`/`develop` and for pull requests.
+
+## [0.6.0] - 2026-11-02
+
 ### Fixed
 
 - **Tool classes in `local_tools:`.** A `RubyLLM::Tool` subclass passed as a class (`local_tools: [SharedTools::Tools::DnsTool]`) reached the chat as `dns`, but robot_lab's own checks used the Ruby class name `"SharedTools::Tools::DnsTool"`. As a result, a `tools: %w[dns]` allowlist dropped the tool without an error. The robot now instantiates tool classes on construction, so every check uses the tool's name. The new `ToolConfig.instantiate` does this here and for template `tools:` front matter, and `ToolConfig.tool_name` (now public) reads `tool_name` from a tool class.

@@ -19,8 +19,9 @@
 # Usage:
 #   bundle exec ruby examples/11_network_introspection.rb
 
-require_relative "common"
+# Before common: its partial ActiveSupport load breaks amazing_print.
 require "amazing_print"
+require_relative "common"
 require "tempfile"
 
 # On macOS + iTerm2, render DOT as a PNG and display inline via imgcat.
