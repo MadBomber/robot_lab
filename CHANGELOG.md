@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-18
+
 ### Fixed
 
-- **Tool classes in `local_tools:`.** A `RubyLLM::Tool` subclass passed as a class (`local_tools: [SharedTools::Tools::DnsTool]`) reached the chat as `dns`, but robot_lab's own checks used the Ruby class name `"SharedTools::Tools::DnsTool"`. As a result, a `tools: %w[dns]` allowlist dropped the tool without an error. The robot now instantiates tool classes on construction, so every check uses the tool's name. The new `ToolConfig.instantiate` does this here and for template `tools:` front matter, and `ToolConfig.tool_name` (now public) reads `tool_name` from a tool class.
 - `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
   `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
   and leaving the catalog empty (#102).
@@ -91,17 +92,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only `*` and `?` are wildcards: `"price(usd):*"` now matches
   `price(usd):today`, and `"a+b"` matches `a+b` instead of `aab` (#91).
 
-### Added
-
-- **MCP server classes by constant name.** `RobotLab::MCP.build`, `name_of`, `Registry#add` and a robot's per-turn server selection accept a String naming a `RubyLLM::MCP` subclass. Template front matter can now list `mcp: ["SharedTools::MCP::GitHub"]` in the same way `tools:` lists tool classes. The new `RobotLab::MCP.resolve` does the lookup and raises `MCPError` for an undefined constant or a class that is not a `RubyLLM::MCP`.
-- **Class-level descriptions in `mcp_discovery`.** `ServerDiscovery.description_for` now falls back to a server's class when the instance has no `description`. Plain `RubyLLM::MCP` subclasses that declare a description at class level, such as the shared_tools 0.7.1 MCP clients, are scored instead of looking blank.
-
 ### Changed
 
 - Gemspec `documentation_uri` now points at the docs site
   (https://madbomber.github.io/robot_lab) instead of the README.
 - CI: a GitHub Actions `Test` workflow runs `bundle exec rake test` on Ruby 4.0
   for pushes to `main`/`develop` and for pull requests.
+
+## [0.6.0] - 2026-11-02
+
+### Fixed
+
+- **Tool classes in `local_tools:`.** A `RubyLLM::Tool` subclass passed as a class (`local_tools: [SharedTools::Tools::DnsTool]`) reached the chat as `dns`, but robot_lab's own checks used the Ruby class name `"SharedTools::Tools::DnsTool"`. As a result, a `tools: %w[dns]` allowlist dropped the tool without an error. The robot now instantiates tool classes on construction, so every check uses the tool's name. The new `ToolConfig.instantiate` does this here and for template `tools:` front matter, and `ToolConfig.tool_name` (now public) reads `tool_name` from a tool class.
+
+### Added
+
+- **MCP server classes by constant name.** `RobotLab::MCP.build`, `name_of`, `Registry#add` and a robot's per-turn server selection accept a String naming a `RubyLLM::MCP` subclass. Template front matter can now list `mcp: ["SharedTools::MCP::GitHub"]` in the same way `tools:` lists tool classes. The new `RobotLab::MCP.resolve` does the lookup and raises `MCPError` for an undefined constant or a class that is not a `RubyLLM::MCP`.
+- **Class-level descriptions in `mcp_discovery`.** `ServerDiscovery.description_for` now falls back to a server's class when the instance has no `description`. Plain `RubyLLM::MCP` subclasses that declare a description at class level, such as the shared_tools 0.7.1 MCP clients, are scored instead of looking blank.
 
 ## [0.5.1] - 2026-11-01
 
