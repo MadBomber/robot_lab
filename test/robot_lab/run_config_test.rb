@@ -12,27 +12,27 @@ class RobotLab::RunConfigTest < Minitest::Test
   end
 
   def test_keyword_construction
-    config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.7)
-    assert_equal "claude-sonnet-4", config.model
+    config = RobotLab::RunConfig.new(model: "claude-sonnet-4-6", temperature: 0.7)
+    assert_equal "claude-sonnet-4-6", config.model
     assert_in_delta 0.7, config.temperature
   end
 
   def test_block_construction
     config = RobotLab::RunConfig.new do |c|
-      c.model "claude-sonnet-4"
+      c.model "claude-sonnet-4-6"
       c.temperature 0.7
     end
 
-    assert_equal "claude-sonnet-4", config.model
+    assert_equal "claude-sonnet-4-6", config.model
     assert_in_delta 0.7, config.temperature
   end
 
   def test_combined_keyword_and_block
-    config = RobotLab::RunConfig.new(model: "claude-sonnet-4") do |c|
+    config = RobotLab::RunConfig.new(model: "claude-sonnet-4-6") do |c|
       c.temperature 0.9
     end
 
-    assert_equal "claude-sonnet-4", config.model
+    assert_equal "claude-sonnet-4-6", config.model
     assert_in_delta 0.9, config.temperature
   end
 
@@ -59,23 +59,23 @@ class RobotLab::RunConfigTest < Minitest::Test
 
   def test_setter_returns_self_for_chaining
     config = RobotLab::RunConfig.new
-    result = config.model("claude-sonnet-4")
+    result = config.model("claude-sonnet-4-6")
     assert_same config, result
   end
 
   def test_chaining_multiple_setters
     config = RobotLab::RunConfig.new
-                                .model("claude-sonnet-4")
+                                .model("claude-sonnet-4-6")
                                 .temperature(0.7)
                                 .max_tokens(1000)
 
-    assert_equal "claude-sonnet-4", config.model
+    assert_equal "claude-sonnet-4-6", config.model
     assert_in_delta 0.7, config.temperature
     assert_equal 1000, config.max_tokens
   end
 
   def test_nil_removes_field
-    config = RobotLab::RunConfig.new(model: "claude-sonnet-4")
+    config = RobotLab::RunConfig.new(model: "claude-sonnet-4-6")
     config.model(nil)
     assert_nil config.model
     refute config.key?(:model)
@@ -458,5 +458,32 @@ class RobotLab::RunConfigTest < Minitest::Test
     override = RobotLab::RunConfig.new(auto_compact: :context_window)
     merged   = base.merge(override)
     assert_equal :context_window, merged.auto_compact
+  end
+
+  # --- MCP approval / input fields (0.4) ---
+
+  def test_tool_approval_is_an_infra_field
+    assert_includes RobotLab::RunConfig::INFRA_FIELDS, :tool_approval
+    config = RobotLab::RunConfig.new(tool_approval: :approve)
+    assert_equal :approve, config.tool_approval
+    assert_equal({ tool_approval: :approve }, config.to_h)
+  end
+
+  def test_tool_approval_defaults_to_nil_and_merges
+    assert_nil RobotLab::RunConfig.new.tool_approval
+    merged = RobotLab::RunConfig.new(tool_approval: :deny).merge(RobotLab::RunConfig.new(tool_approval: :approve))
+    assert_equal :approve, merged.tool_approval
+  end
+
+  def test_on_tool_approval_and_on_input_request_are_callback_fields
+    assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_tool_approval
+    assert_includes RobotLab::RunConfig::CALLBACK_FIELDS, :on_input_request
+    approve = ->(_call) { true }
+    answer  = ->(_req) { {} }
+    config  = RobotLab::RunConfig.new(on_tool_approval: approve, on_input_request: answer)
+    assert_same approve, config.on_tool_approval
+    assert_same answer,  config.on_input_request
+    assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_tool_approval
+    assert_includes RobotLab::RunConfig::NON_SERIALIZABLE_FIELDS, :on_input_request
   end
 end

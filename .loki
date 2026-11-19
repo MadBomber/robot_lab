@@ -18,6 +18,11 @@ class Tasks
     sh "ruby -Ilib:test \"#{path}\""
   end
 
+  desc "Check architecture boundaries with ArchSpec"
+  def archspec
+    sh "bundle exec archspec check"
+  end
+
   class DocsCommands < Tasks
     desc "Build YARD + MkDocs documentation"
     def build

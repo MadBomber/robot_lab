@@ -1,0 +1,8 @@
+# Revision 3
+
+**Choosing an Operating System for a Home AI Research Lab**
+
+A home AI research lab is no longer a single-purpose machine; it is usually a mixed environment for LLM inference, fine-tuning, embeddings, RAG pipelines, image generation, and long-running experiments. That makes the operating-system decision less about ideology and more about where the workload, hardware, and maintenance burden intersect. macOS, Windows, and Linux/BSD are all credible choices, but they optimize for different strengths: Apple Silicon efficiency and unified memory, Windows breadth and NVIDIA compatibility, or Linux control, containerization, and reproducibility.
+
+**macOS: the efficient, low-maintenance local-inference platform**  
+macOS is strongest when the home lab prioritizes quiet operation, low power draw, and a polished developer environment. Apple Silicon’s unified memory architecture is the key advantage: a 64GB Mac can run 7B, 13B, and many 30B-class quantized models comfortably, and can handle 70B-class Q4/Q5 models with reduced context or partial offload, while a 128GB machine becomes a much more practical platform for larger local inference work. The software stack has also matured: PyTorch MPS, MLX, MLX-LM, llama.cpp, Ollama, LM Studio, Hugging Face Transformers, and parameter-efficient fine-tuning tools give Apple a credible path into LLM experimentation, while Stable Diffusion, SDXL, and local image-generation workflows are increasingly usable through Metal, Core ML, and MLX backends. The tradeoffs are cost and hardware flexibility. A 64GB Apple Silicon machine may cost roughly $2,000–$4,500 depending on chassis, and 128GB configurations can reach $5,500–$8

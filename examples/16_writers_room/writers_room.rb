@@ -125,6 +125,8 @@ FileUtils.mkdir_p(OUTPUT_DIR)
 
 display = Display.new(log_path: log_path)
 
+# RunConfig has no `provider` field, so the writers get provider+model via
+# **llm_opts and inherit the rest of their operational defaults from here.
 shared_config = RobotLab::RunConfig.new(
   model: LLM[:default].model,
   temperature: 0.7

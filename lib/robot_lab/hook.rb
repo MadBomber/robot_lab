@@ -31,6 +31,7 @@ module RobotLab
   #   robot.on(AuditHook)
   #   network.on(AuditHook)
   #
+  # :reek:InstanceVariableAssumption -- @namespace is a class-level ivar, initialized here and reset in .inherited; there is no #initialize.
   class Hook
     @namespace = nil
 

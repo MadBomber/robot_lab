@@ -35,6 +35,7 @@ module RobotLab
       # Apply a prompt_manager template to the persistent chat.
       # If required parameters are missing, applies front matter config but
       # defers rendering until run time when all values are available.
+      # :reek:TooManyStatements -- linear parse/merge/apply/render sequence with a documented deferred-render rescue.
       def apply_template_to_chat(context)
         parsed = PM.parse(@template)
 
@@ -64,6 +65,11 @@ module RobotLab
 
       # Re-render the template with run-time context merged into build-time context.
       # prompt_manager parameters may be required (null) and only available at run time.
+      #
+      # Re-rendering replaces the system message, so the inline system_prompt must be
+      # re-appended here exactly as apply_system_prompt does at construction --
+      # otherwise it would be silently dropped on any run that supplies context.
+      # :reek:TooManyStatements -- must rebuild skills + template + inline prompt in one pass (see comment above).
       def rerender_template(run_context)
         merged = (@build_context || {}).merge(run_context)
         resolved_ctx = resolve_context(merged, network: nil)
@@ -81,13 +87,22 @@ module RobotLab
             bodies << body if body
           end
 
-          combined = bodies.join("\n\n")
-          @chat.with_instructions(combined)
+          @chat.with_instructions(with_system_prompt_appended(bodies.join("\n\n")))
         else
           parsed = PM.parse(@template)
           rendered = parsed.to_s(**resolved_ctx)
-          @chat.with_instructions(rendered)
+          @chat.with_instructions(with_system_prompt_appended(rendered))
         end
+      end
+
+      # Append the inline system_prompt to freshly rendered template text.
+      #
+      # @param rendered [String] newly rendered template body
+      # @return [String] rendered text with system_prompt appended, if one is set
+      def with_system_prompt_appended(rendered)
+        return rendered unless @system_prompt
+
+        [rendered, @system_prompt].reject { |s| s.to_s.empty? }.join("\n\n")
       end
 
       # Orchestrate skill expansion and template application.
@@ -103,6 +118,7 @@ module RobotLab
       # Pure computation — reads ivars but does not mutate @chat.
       #
       # @return [Array(Array<String>, RunConfig, Hash)] bodies, merged config, extras hash
+      # :reek:TooManyStatements -- accumulates bodies/config/extras across skills then the main template in one pure pass.
       def collect_prompt_content(skill_ids, context)
         visited = Set.new
         visited.add(@template) if @template
@@ -115,16 +131,18 @@ module RobotLab
 
         @expanded_skills.each do |skill_id|
           parsed = PM.parse(skill_id)
-          accumulate_extras(parsed.metadata, extras)
-          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
+          metadata = parsed.metadata
+          accumulate_extras(metadata, extras)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
 
         if @template
           parsed = PM.parse(@template)
-          accumulate_extras(parsed.metadata, extras)
-          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(parsed.metadata))
+          metadata = parsed.metadata
+          accumulate_extras(metadata, extras)
+          accumulated_config = accumulated_config.merge(RunConfig.from_front_matter(metadata))
           body = render_body(parsed, resolved_ctx)
           bodies << body if body
         end
@@ -168,6 +186,7 @@ module RobotLab
       # @param visited [Set<Symbol>] already-visited IDs for cycle detection
       # @param catalog [AgentSkillCatalog] catalog to check first
       # @return [Array<Symbol>] flat ordered list of PM-based skill IDs
+      # :reek:TooManyStatements -- depth-first skill expansion with cycle guard and catalog-vs-PM branching.
       def expand_skills_with_catalog(skill_ids, visited, catalog)
         result = []
 
@@ -213,6 +232,7 @@ module RobotLab
       #
       # @param metadata [PM::Metadata] front matter metadata
       # @return [Array<Symbol>]
+      # :reek:FeatureEnvy -- reading the metadata argument's skills list is the extraction itself.
       def extract_skills_from_metadata(metadata)
         return [] unless metadata.respond_to?(:skills) && metadata.skills
 
@@ -263,6 +283,7 @@ module RobotLab
 
       # Extract identity and capability keys from front matter metadata.
       # Constructor-provided values take precedence over frontmatter.
+      # :reek:FeatureEnvy -- copying front-matter metadata fields into this robot's ivars is the method's purpose.
       def apply_front_matter_extras(metadata)
         if metadata.respond_to?(:robot_name) && metadata.robot_name && !@name_from_constructor
           @name = metadata.robot_name.to_s
@@ -296,13 +317,13 @@ module RobotLab
       # Resolve string tool names from frontmatter to Ruby constants.
       # Tool subclasses are instantiated; instances are used as-is.
       # Unresolvable names are skipped with a warning.
+      # :reek:FeatureEnvy -- inspecting each resolved constant to decide instantiate-vs-use-as-is.
       def resolve_frontmatter_tools(tool_names)
         tool_names.filter_map do |name|
           case name
           when String
             begin
-              const = Object.const_get(name)
-              const.is_a?(Class) && const < RubyLLM::Tool ? const.new : const
+              ToolConfig.instantiate(Object.const_get(name))
             rescue NameError
               RobotLab.config.logger.warn("Robot '#{@name}': tool '#{name}' not found, skipping")
               nil

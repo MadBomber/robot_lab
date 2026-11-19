@@ -8,15 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `BusMessaging#respond_to_tasks` and `#serve` — a member auto-answers inbound
-  (non-reply) bus tasks and replies to the sender. `serve` runs each task through
-  `#run`; `respond_to_tasks { |m| ... }` is the generic form. Makes a Robot a
-  first-class bus responder (symmetric with how a Cyborg answers its human)
-  without hand-wiring `on_message`.
-- `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
-
 ### Fixed
+
+- **Tool classes in `local_tools:`.** A `RubyLLM::Tool` subclass passed as a class (`local_tools: [SharedTools::Tools::DnsTool]`) reached the chat as `dns`, but robot_lab's own checks used the Ruby class name `"SharedTools::Tools::DnsTool"`. As a result, a `tools: %w[dns]` allowlist dropped the tool without an error. The robot now instantiates tool classes on construction, so every check uses the tool's name. The new `ToolConfig.instantiate` does this here and for template `tools:` front matter, and `ToolConfig.tool_name` (now public) reads `tool_name` from a tool class.
 - `AgentSkill` rejects a SKILL.md whose front-matter `name` is not a String, so
   `AgentSkillCatalog` skips it with a warning instead of raising `NoMethodError`
   and leaving the catalog empty (#102).
@@ -66,11 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Hook.namespace` returns nil for an anonymous `Hook` subclass instead of raising
   `NoMethodError`, so `HookRegistry#on` raises its intended "has no namespace"
   `ArgumentError` and anonymous per-run hooks run.
-- `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
-  concurrent sends and poller-thread reply correlation can't clobber each other.
-- `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
-- `flay` gem added to development dependencies
-- `test_output.txt`, `flay_output.txt`, `flog_output.txt`, and `rubocop_output.txt` added to `.gitignore`
 - `DelegationFuture#value` keeps waiting after a spurious wakeup instead of
   raising `DelegationTimeout` before the delegated task resolves.
 - `ToolManifest#count` is now `Enumerable#count`, so it honours a block and an
@@ -102,13 +91,173 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only `*` and `?` are wildcards: `"price(usd):*"` now matches
   `price(usd):today`, and `"a+b"` matches `a+b` instead of `aab` (#91).
 
+### Added
+
+- **MCP server classes by constant name.** `RobotLab::MCP.build`, `name_of`, `Registry#add` and a robot's per-turn server selection accept a String naming a `RubyLLM::MCP` subclass. Template front matter can now list `mcp: ["SharedTools::MCP::GitHub"]` in the same way `tools:` lists tool classes. The new `RobotLab::MCP.resolve` does the lookup and raises `MCPError` for an undefined constant or a class that is not a `RubyLLM::MCP`.
+- **Class-level descriptions in `mcp_discovery`.** `ServerDiscovery.description_for` now falls back to a server's class when the instance has no `description`. Plain `RubyLLM::MCP` subclasses that declare a description at class level, such as the shared_tools 0.7.1 MCP clients, are scored instead of looking blank.
+
 ### Changed
-- `test/test_helper.rb`: test output redirected to `test_output.txt` via `$stdout` reassignment; `TerminalSummaryReporter` prints a single PASS/FAIL summary line to the terminal
-- `Rakefile`: `rubocop` and `rubocop_fix` tasks removed (now owned by Asgard); `flay_check` integrated into the `quality` gate
+
 - Gemspec `documentation_uri` now points at the docs site
   (https://madbomber.github.io/robot_lab) instead of the README.
 - CI: a GitHub Actions `Test` workflow runs `bundle exec rake test` on Ruby 4.0
   for pushes to `main`/`develop` and for pull requests.
+
+## [0.5.1] - 2026-11-01
+
+### Fixed
+
+- **OAuth `grant:` from YAML.** An MCP server config such as `oauth: { grant: client_credentials }` raised `ArgumentError: Unknown OAuth grant`, because ruby_llm accepts the grant only as a Symbol. `RobotLab::MCP.define` now converts a String grant to a Symbol.
+
+## [0.5.0] - 2026-11-01
+
+robot_lab 0.4.0: MCP (Model Context Protocol) now runs on ruby_llm 2.1's
+built-in client. robot_lab's own JSON-RPC client, four transports and
+connection poller are gone; a robot's MCP servers are `RubyLLM::MCP`
+objects with the whole protocol surface (tools, resources, prompts, OAuth,
+input requests, long-running tasks, deferred tools), not just tools. This
+is a deliberate breaking release with no legacy API; see "Migrating from
+0.3" in `docs/guides/mcp-integration.md`.
+
+### Changed (BREAKING)
+
+- **ruby_llm 2.1.1 or newer is required** (`ruby_llm ">= 2.1.1", "< 3"`). The `async-http` and `async-websocket` dependencies are dropped.
+- **MCP servers are `RubyLLM::MCP` objects.** `mcp:` (constructor, `RunConfig`, template front matter, `Network#task`) takes an Array mixing config Hashes, `RubyLLM::MCP` instances and `RubyLLM::MCP` subclasses. Hashes become anonymous `RobotLab::MCP::Server` subclasses via `RobotLab::MCP.define`. The `mcp_servers:` constructor keyword is removed; use `mcp:`.
+- **`Robot#mcp` is the robot's `RobotLab::MCP::Registry`** (keyed by server name) and `Robot#with_mcp(*servers)` registers servers on the robot; neither delegates to the chat any more. `robot.mcp[:github]` is the `RubyLLM::MCP` instance: `.tools .call .resources .resource(uri) .prompts .prompt(name, **args) .instructions .close` and the OAuth flow.
+- **MCP tools are `RubyLLM::MCP::Tool` instances**, attached to the chat per run with `with_tools` beside local tools. The per-run `tools:` allowlist, `max_tools` cap and `:none` apply to them exactly as to local tools, and `mcp: :none` on a later run detaches the MCP tools that an earlier run attached while the servers stay registered and connected. Two tools with one name now raise `MCPError` (the message suggests `prefix:`) instead of silently shadowing each other.
+- **Tool calls that require approval fail closed.** A tool a server (or `RubyLLM::Tool.requires_approval`) marks as needing approval is denied with a warning unless the robot has `tool_approval: :approve` or an `on_tool_approval:` Proc.
+- **Only stdio and Streamable HTTP transports exist.** `type: "sse"`, `"ws"` and `"websocket"` raise `MCPError` at build time with guidance; Streamable HTTP must be `https` except on loopback. A `transport:` object that responds to `request`/`notify`/`cancel`/`close` is installed directly.
+- **Timeouts.** `timeout:` is seconds and defaults to ruby_llm's `request_timeout` (was a 15 s default). Values of 1000 or more are still read as milliseconds.
+- **`connect_mcp!` registers and connects the build-time servers**; failures land in `Robot#mcp_failures` / `#failed_mcp_server_names` instead of raising, and a failed server is retried on the next run that selects it.
+- `Robot#to_h` no longer has `mcp_tools` (it would force connections); `mcp_servers` lists registered names and `mcp_failed` appears when any server failed.
+- `RobotLab::Tool.create` no longer takes `mcp:`; `Tool#mcp`, `Tool#mcp?` and the `:mcp` key of `Tool#to_h` are removed.
+- `MCP::ServerDiscovery` runs on every message (not only the first run) and accepts Hashes with symbol or string keys, `RubyLLM::MCP` instances and subclasses.
+
+### Added
+
+- `RobotLab::MCP.build(spec)`, `.define(config)`, `.name_of(spec)`, `.seconds(timeout)` and the `HTTP_TYPES`, `UNSUPPORTED_TYPES`, `IGNORED_KEYS`, `TRANSPORT_KEYS`, `SETTING_KEYS`, `CONNECT_ERRORS` constants. Config keys map onto ruby_llm's DSL: `command`/`args`/`env`/`directory` (or `cwd`), `url`/`headers`/`bearer_token`/`oauth`, `timeout`, `prefix`, `only`, `except`, `requires_approval`, `defer`, `log_level`, `input_requests`, `extensions`, `description`. The flat shape (`transport: stdio` with sibling `command:`/`args:`), which 0.3 front matter used and which failed silently, now works.
+- `RobotLab::MCP::Server < RubyLLM::MCP` with a `description` class macro (used by `ServerDiscovery`) and `#connected?`.
+- `RobotLab::MCP::Registry` — one connection (and one stdio process) per server per robot across runs; re-adding the same Hash, instance or class returns the existing server.
+- `tool_approval`, `on_tool_approval` and `on_input_request` as constructor keywords and `RunConfig` fields. Runs settle approvals, answer or decline MCP input requests (elicitation) and wait on MCP tasks (up to `MCP_TASK_TIMEOUT`, then `MCPError(retryable: true)`) before returning.
+- `Robot#run` accepts a `RubyLLM::MCP::Prompt` (`robot.run(robot.mcp[:github].prompt("code_review", code: diff))`).
+- `:tool_call` hooks now run for MCP tools and plain `RubyLLM::Tool` instances (the chat's `execute_tool` is bridged), with `ToolCallHookContext#mcp_server` and `#mcp?`. A `RubyLLM::MCP::Error` raised mid-call becomes an `{ error: }` tool result instead of aborting the run.
+- `Robot#mcp_failures`, `#mcp_tools(servers)`, `#mcp_server_for(tool)`; servers' deferred tools (`defer:`) are attached with `defer: true`.
+- `RobotLab::Errors.retryable?` treats a `RubyLLM::MCP::Error` without a JSON-RPC code (transport failure) as retryable and one with a code as not.
+- `test/support/fake_mcp_transport.rb`: an in-process MCP transport (not shipped in the gem) that drives the whole stack without a server process.
+
+### Removed
+
+- `RobotLab::MCP::Client`, `RobotLab::MCP::ConnectionPoller`, `RobotLab::MCP::Transports::{Base,Stdio,SSE,WebSocket,StreamableHTTP}` and their tests.
+- `Robot#mcp_clients`, `Robot#mcp_client(name)`, `Robot#inject_mcp!`, the `mcp_servers:` keyword, `MCP::Server::VALID_TRANSPORT_TYPES`, `MCP::Server::DEFAULT_TIMEOUT`.
+
+### Fixed
+
+- JSON-RPC error responses from a server are no longer silently ignored.
+- Servers added after a robot's first run are now connected (the old client only initialized once).
+- Remote servers no longer report `connected?` before the handshake completes.
+- Template front matter in the flat `transport: stdio` form no longer fails silently.
+
+## [0.3.1] - 2026-11-01
+
+### Changed
+
+- **Minimum Ruby raised to 4.0.9.** `required_ruby_version` is now `>= 4.0.9` (was `>= 3.2.0`), and a `.ruby-version` file pins development to 4.0.9.
+- **Slimmer gem.** The gemspec now whitelists what ships in the `.gem`: `lib/`, `sig/`, `exe/`, README, CHANGELOG, and LICENSE. Previous releases packaged everything tracked by git — the docs site, examples with generated output, tooling config, and local design notes — which made 0.3.0 a 1.1 MB gem of 300+ files. 0.3.1 is ~130 KB and 65 files; the docs and examples remain on GitHub.
+- Verified against ruby_llm 2.1.1 (the newest release the `~> 2.0` constraint admits) in addition to 2.0.0; the full suite passes on both.
+
+### Fixed
+
+- `MCP::Transports::StreamableHTTP#connect` no longer raises inside its Async task when the initialize handshake returns no result; the session id is simply left unset.
+
+## [0.3.0] - 2026-09-18
+
+The ruby_llm 2.0 release. Core moves from ruby_llm 1.x to the official 2.0.0
+release; every `robot_lab-*` extension gem releases in lockstep at 0.3.0 and
+now requires `robot_lab ~> 0.3.0`.
+
+### Changed (BREAKING)
+- **ruby_llm 1.x → 2.0.** The gemspec now requires `ruby_llm "~> 2.0"`
+  (official release). Robot tools written with the 1.x DSL must migrate:
+  `param` → `parameter`, `desc:` → `description:`; `halt` is gone (the caller
+  controls the loop). Token counts moved to `response.tokens.input/.output`,
+  and `finish_reason` (Symbol) replaces `stop_reason`. The `claude-sonnet-4`
+  registry alias no longer resolves; the default models are now
+  `claude-sonnet-4-6` (production) and `claude-haiku-4-5` (test).
+- **Dropped hard dependencies** on `ruby_llm-mcp`, `ruby_llm-schema`, and
+  `ruby_llm-semantic_cache`. Semantic caching is now optional: `Memory#cache`
+  returns `nil` when `ruby_llm-semantic_cache` is not installed and Memory
+  runs with caching disabled. (Its released versions still pin ruby_llm 1.x,
+  so it cannot co-resolve with 2.0 yet.)
+
+### Added
+- `ruby_llm-providers-apfel` and `ruby_llm-providers-lms` (`~> 0.2.1`) as
+  runtime dependencies, consumed as released gems — the local `path:`
+  overrides for sibling checkouts are gone from the Gemfiles.
+- `Robot::ResultBuilding` — extracted module that adapts a ruby_llm response
+  into a `RobotResult` (token accounting, stop-reason normalization, message
+  coercion).
+- `examples/run_all.rb` — runs every executable `NN_*.rb` demo serially with
+  a banner between each; works from any cwd, and Ctrl-C terminates only the
+  demo currently running (the runner notes it and moves on).
+- READMEs for the subdirectory demos: `15_memory_network_and_bus`,
+  `26_document_store` (corpus), and `27_incident_response`.
+- Fasterer quality gate now actually runs: `fasterer` added to the
+  development group, with a `.fasterer.yml` documenting the disabled
+  speed-over-readability checks.
+
+### Changed
+- Robot, Tool, RunConfig, and the hook system adapted to the ruby_llm 2.0
+  API; docs and examples synced to match.
+- Examples run against a local LM Studio server through the `:lms` provider;
+  `examples/common.rb` anchors `BUNDLE_GEMFILE` to the gem root so demos run
+  from any directory, and `examples/README.md` notes that demo speed and
+  answer quality depend on the provider/model in use.
+- `.envrc` no longer exports `BUNDLE_GEMFILE`; it is inherited from the
+  project root (`asgard dev` / `asgard prod`).
+
+### Fixed
+- amazing_print 3.0 crash at demo startup (`undefined method 'try' for
+  module ActiveSupport`): robot_lab's dependencies load parts of
+  ActiveSupport, which tricked amazing_print into loading its Rails
+  extension; `examples/common.rb` now preloads
+  `active_support/core_ext/object/try` and `active_support/log_subscriber`.
+
+## [0.2.8] - 2026-09-09
+
+### Added
+- `BusMessaging#respond_to_tasks` and `#serve` — a member auto-answers inbound
+  (non-reply) bus tasks and replies to the sender. `serve` runs each task through
+  `#run`; `respond_to_tasks { |m| ... }` is the generic form. Makes a Robot a
+  first-class bus responder (symmetric with how a Cyborg answers its human)
+  without hand-wiring `on_message`.
+- `.loki` Asgard task file: `test`, `rubocop`, `rubocop_fix`, `flog`, `flay`, `quality`, `build`, `install`, `release`, `integration`, `docs`, and `examples` tasks via the Asgard task runner
+
+### Changed (BREAKING)
+- **Sandboxing extracted to `robot_lab-sandbox`.** `RobotLab::Sandbox`,
+  `RobotLab::Sandbox::Seatbelt`, and `RobotLab::Sandbox::Null` no longer live
+  in core; they moved verbatim to the new `robot_lab-sandbox` gem. Core has no
+  execution limitations of its own: `ScriptTool.execute` now delegates to an
+  optional `ScriptTool.executor` (`nil` by default, in which case it runs the
+  unconfined `Open3.capture2e` path with no timeout exactly as before).
+  Applications that want confined skill-script execution must add
+  `gem "robot_lab-sandbox"` and `require "robot_lab/sandbox"`, which installs
+  itself as the executor; `config.sandbox.*` behavior is unchanged from there.
+  `RobotLab::Capabilities` (the declarative fs_read/fs_write/network/timeout/
+  trust manifest parsed from `SKILL.md`) stays in core since `AgentSkill` needs
+  it regardless of whether sandboxing is enforced.
+- `ScriptTool.run_with_timeout` and `ScriptTool.terminate` moved to
+  `RobotLab::Sandbox::Executor` in `robot_lab-sandbox`.
+
+### Fixed
+- `BusMessaging` now synchronizes its message counter and outbox with a mutex, so
+  concurrent sends and poller-thread reply correlation can't clobber each other.
+- `flay_check` Rake task: structural code duplication gate (mass threshold 50); integrated into the `quality` Rake task
+- `flay` gem added to development dependencies
+- `test_output.txt`, `flay_output.txt`, `flog_output.txt`, and `rubocop_output.txt` added to `.gitignore`
+
+### Changed
+- `test/test_helper.rb`: test output redirected to `test_output.txt` via `$stdout` reassignment; `TerminalSummaryReporter` prints a single PASS/FAIL summary line to the terminal
+- `Rakefile`: `rubocop` and `rubocop_fix` tasks removed (now owned by Asgard); `flay_check` integrated into the `quality` gate
 
 ## [0.2.6] - 2026-05-23
 

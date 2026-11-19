@@ -7,12 +7,14 @@
 # upfront is wasteful — some servers may be irrelevant to a particular query.
 #
 # MCP Server Discovery uses TF cosine similarity to select only the servers
-# semantically relevant to the user's query, then connects only those.
+# semantically relevant to the user's query, then connects only those. The
+# selection is made on every run, so one robot can talk to different servers
+# on different messages while every server stays registered and connected.
 #
 # == Key config
 #
 #   robot = RobotLab.build(
-#     model: "gpt-5.4",
+#     provider: "lms", model: "qwen/qwen3.8-27b",
 #     mcp_discovery: true,    # ← enables semantic filtering
 #     mcp: [ ... ]            # ← candidate servers, each with :description
 #   )
@@ -55,8 +57,9 @@ def show_query(label, query)
   selected = RobotLab::MCP::ServerDiscovery.select(query, from: SERVERS)
   names    = selected.map { |s| s[:name] }
 
-  puts "  Query : #{query.inspect}"
-  puts "  Match : #{names.inspect}"
+  puts "  #{label}"
+  puts "    Query : #{query.inspect}"
+  puts "    Match : #{names.inspect}"
   puts
 end
 
@@ -91,19 +94,24 @@ puts "  High threshold  : returns all (#{result.size} servers) — no match abov
 
 puts
 section "mcp_discovery: true on a Robot"
-puts <<~NOTE
-  RobotLab.build(
-  model: "gpt-5.4",
-    name: "assistant",
+show_code <<~RUBY
+  robot = RobotLab.build(
+    name:          "assistant",
+    provider:      "lms",
+    model:         "qwen3.6:latest",
     mcp_discovery: true,
     mcp: [
-      { name: "filesystem", description: "Read, write...", transport: { ... } },
-      { name: "github",     description: "GitHub repos...", transport: { ... } },
-      { name: "brew",       description: "Install packages...", transport: { ... } }
+      { name: "filesystem", description: "Read, write...",         transport: { } },
+      { name: "github",     description: "GitHub repos...",        transport: { } },
+      { name: "brew",       description: "Install packages...",    transport: { } }
     ]
   )
 
-  # Only the :brew server is connected for this message:
-  robot.run("install imagemagick")
-NOTE
+  # Only the :brew server's tools are offered for this message; the others
+  # stay registered (robot.mcp.names) and are picked when a message fits.
+  # mcp: :inherit and tools: :inherit are both required — run() defaults
+  # both to :none, which selects no servers and sends no tools.
+  robot.run("install imagemagick", mcp: :inherit, tools: :inherit)
+  robot.run("read my config file", mcp: :inherit, tools: :inherit)  # -> :filesystem
+RUBY
 hr

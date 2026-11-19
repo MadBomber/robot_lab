@@ -98,12 +98,28 @@ module RobotLab
         tools.select { |tool| allowed_set.include?(tool_name(tool)) }
       end
 
-      private
+      # Turn a RubyLLM::Tool subclass into an instance; anything else is
+      # returned unchanged. Robots hold tool instances so every name check
+      # sees the tool's name (+current_date_time+), not its Ruby class name
+      # (+SharedTools::Tools::CurrentDateTimeTool+).
+      #
+      # @param tool [Class<RubyLLM::Tool>, RubyLLM::Tool, Object]
+      # @return [Object]
+      #
+      def instantiate(tool)
+        tool.is_a?(Class) && tool < RubyLLM::Tool ? tool.new : tool
+      end
 
+      # The name a tool is offered to the LLM under.
+      #
+      # @param tool [String, Symbol, Class<RubyLLM::Tool>, #name]
+      # @return [String]
+      #
       def tool_name(tool)
         case tool
         when String then tool
         when Symbol then tool.to_s
+        when Class  then (tool.respond_to?(:tool_name) ? tool.tool_name : tool.name).to_s
         else tool.respond_to?(:name) ? tool.name.to_s : tool.to_s
         end
       end

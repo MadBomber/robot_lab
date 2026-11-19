@@ -11,8 +11,9 @@
 # own jokes using the comedian as the punch line.
 #
 # Subscribes to the :room channel to hear performances.
-# Room deliveries are routed through the core processing guard,
-# which serializes run() calls to prevent Async fiber interleaving.
+# Room deliveries are handed to the robot's BusPoller via
+# enqueue_delivery, which serializes run() calls so Async fiber
+# interleaving can't corrupt chat history.
 # Sends feedback directly to the comic's personal channel.
 #
 class Heckler < RobotLab::Robot
@@ -23,7 +24,7 @@ class Heckler < RobotLab::Robot
     @won_over = false
     @display  = display
 
-    super(name: "heckler", model: LLM[:default].model, template: :open_mic_heckler, bus: bus)
+    super(name: "heckler", **llm_opts, template: :open_mic_heckler, bus: bus)
 
     # Handle incoming messages — the core processing guard
     # serializes all deliveries, preventing concurrent run()
@@ -54,10 +55,11 @@ class Heckler < RobotLab::Robot
       send_reply(to: message.from.to_sym, content: verdict, in_reply_to: message.key) if @rounds < MAX_ROUNDS
     end
 
-    # Listen to the room for the comic's performances.
-    # Route through the core processing guard.
+    # Listen to the room for the comic's performances. Deliveries go to
+    # the robot's own BusPoller, which serializes them behind any run()
+    # already in flight before handing them to the on_message handler.
     @bus.subscribe(:room) do |delivery|
-      handle_incoming_delivery(delivery)
+      enqueue_delivery(delivery)
     end
   end
 end

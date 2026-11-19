@@ -27,21 +27,44 @@ Message (base)
 ├── ToolCallMessage     - role + Array<ToolMessage>
 └── ToolResultMessage   - tool + result content
 
-UserMessage             - Standalone (not a Message subclass)
-ToolMessage             - Standalone (not a Message subclass)
+UserMessage             - Standalone PORO (superclass Object)
+ToolMessage             - Standalone PORO (superclass Object)
 ```
+
+`UserMessage` and `ToolMessage` are plain objects — their superclass is `Object`,
+not `Message`. They do not respond to `type`, `role`, or any of the predicates
+below.
 
 ## Common Interface
 
 All Message subclasses implement:
 
 ```ruby
-message.role       # => String ("user", "assistant", "tool_result")
+message.role       # => String ("system", "user", "assistant", "tool_result")
 message.content    # => String or structured data
 message.type       # => String ("text", "tool_call", "tool_result")
 message.to_h       # => Hash representation
 message.to_json    # => JSON string
 ```
+
+Valid values are fixed by constants on `Message`, and the constructor raises
+`ArgumentError` for anything else:
+
+```ruby
+RobotLab::Message::VALID_TYPES         # => ["text", "tool_call", "tool_result"]
+RobotLab::Message::VALID_ROLES         # => ["system", "user", "assistant", "tool_result"]
+RobotLab::Message::VALID_STOP_REASONS  # => ["tool", "stop"]
+```
+
+### Nil keys and `to_h`
+
+`Message#to_h` — used as-is by `TextMessage` — ends in `.compact`, so any key
+whose value is `nil` is **absent** from the hash, not present with a `nil` value.
+A `TextMessage` built without a `stop_reason` produces a three-key hash. The same
+applies to `UserMessage#to_h`.
+
+`ToolCallMessage`, `ToolResultMessage`, and `ToolMessage` override `to_h` without
+compacting, so their keys are always present.
 
 Type and role predicates:
 

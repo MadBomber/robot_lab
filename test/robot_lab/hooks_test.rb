@@ -246,7 +246,7 @@ class RobotLab::HooksTest < Minitest::Test
 
     RobotLab.on(ShortCircuitToolHook)
 
-    assert_equal "short", tool.call({ "value" => 1 })
+    assert_equal "short", tool.call(**{ "value" => 1 })
     assert_equal [[tool.name, { "value" => 1 }]], events
   end
 
@@ -263,7 +263,7 @@ class RobotLab::HooksTest < Minitest::Test
     tool.robot = robot
 
     RobotLab.with_hook_scope([RobotLab.hooks, robot.hooks], [PerRunToolHook]) do
-      assert_equal "short", tool.call({})
+      assert_equal "short", tool.call
     end
 
     assert_equal [tool.name], events

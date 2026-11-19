@@ -9,7 +9,7 @@ module RobotLab
   #
   #   class GetWeather < RobotLab::Tool
   #     description "Get weather for a location"
-  #     param :location, type: "string", desc: "City name"
+  #     parameter :location, type: "string", description: "City name"
   #
   #     def execute(location:)
   #       WeatherService.fetch(location)
@@ -27,14 +27,12 @@ module RobotLab
   # enabling tools that modify their robot's state (temperature,
   # system prompt, spawning, etc.).
   #
+  # :reek:InstanceVariableAssumption -- @custom_name is set by Tool.create via instance_variable_set,
+  #   @raise_on_error/@ractor_safe are class-level DSL ivars; every read is defined?-guarded.
   class Tool < RubyLLM::Tool
     # @!attribute [rw] robot
     #   @return [Robot, nil] the robot that owns this tool
     attr_accessor :robot
-
-    # @!attribute [r] mcp
-    #   @return [String, nil] the MCP server name if this is an MCP-provided tool
-    attr_reader :mcp
 
     class << self
       # When true, exceptions from #execute propagate instead of being caught.
@@ -91,9 +89,11 @@ module RobotLab
     #
     # For non-Ractor-safe tools: runs execute directly in the calling thread.
     #
+    # @param tool_call [RubyLLM::ToolCall, nil] the originating tool call (supplied by the chat)
     # @param args [Hash] the tool arguments from the LLM
     # @return [Object] the tool result or an error string
-    def call(args)
+    # :reek:TooManyStatements -- hook-wrapped dispatch with per-error-class handling; the rescue clauses are the method.
+    def call(tool_call: nil, **args)
       context = ToolCallHookContext.new(tool: self, tool_args: args, robot: @robot)
 
       RobotLab::Hooks.run(:tool_call, context, **tool_hook_options) do
@@ -107,26 +107,18 @@ module RobotLab
       context.tool_result
     end
 
-    # Override name to support explicit names for dynamic/MCP tools.
+    # Override name to support explicit names for dynamic tools.
     #
     # @return [String] the tool name
     def name
       defined?(@custom_name) && @custom_name ? @custom_name : super
     end
 
-    # Check if this is an MCP-provided tool.
-    #
-    # @return [Boolean]
-    def mcp?
-      !@mcp.nil?
-    end
-
-    # Factory for dynamic tools (MCP wrappers, inline tools).
+    # Factory for dynamic (inline) tools.
     #
     # @param name [String, Symbol] the tool name
     # @param description [String, nil] what the tool does
     # @param parameters [Hash, nil] JSON Schema parameter definition
-    # @param mcp [String, nil] MCP server name
     # @param robot [Robot, nil] the owning robot
     # @yield [args] block that executes the tool logic
     # @return [Tool] a new tool instance
@@ -137,15 +129,15 @@ module RobotLab
     #     description: "Get the current time"
     #   ) { |args| Time.now.to_s }
     #
-    # @example MCP tool wrapper
+    # @example With a parameter schema
     #   tool = RobotLab::Tool.create(
     #     name: "search",
     #     description: "Search the web",
-    #     parameters: { type: "object", properties: { q: { type: "string" } }, required: ["q"] },
-    #     mcp: "brave_search"
-    #   ) { |args| mcp_client.call_tool("search", args) }
+    #     parameters: { type: "object", properties: { q: { type: "string" } }, required: ["q"] }
+    #   ) { |args| WebSearch.run(args[:q]) }
     #
-    def self.create(name:, description: nil, parameters: nil, mcp: nil, robot: nil, &handler)
+    # :reek:TooManyStatements -- anonymous-class factory: DSL application and instance wiring form one linear build.
+    def self.create(name:, description: nil, parameters: nil, robot: nil, &handler)
       desc_text = description
       params_hash = parameters
       block = handler
@@ -153,15 +145,9 @@ module RobotLab
       tool_class = Class.new(self) do
         description(desc_text) if desc_text
 
-        if params_hash.is_a?(Hash) && params_hash[:properties]
-          required_list = Array(params_hash[:required]).map(&:to_s)
-          params_hash[:properties].each do |pname, pdef|
-            param pname.to_sym,
-                  type: pdef[:type] || "string",
-                  desc: pdef[:description],
-                  required: required_list.include?(pname.to_s)
-          end
-        end
+        # ruby_llm 2.0's parameters() accepts a raw JSON Schema hash, so the
+        # full schema (including nested items/objects) survives verbatim.
+        parameters(params_hash) if params_hash.is_a?(Hash) && params_hash[:properties]
 
         define_method(:execute) do |**args|
           block.call(args)
@@ -170,7 +156,6 @@ module RobotLab
 
       instance = tool_class.new(robot: robot)
       instance.instance_variable_set(:@custom_name, name.to_s)
-      instance.instance_variable_set(:@mcp, mcp)
       instance
     end
 
@@ -179,7 +164,7 @@ module RobotLab
     #
     # @return [Hash] JSON Schema representation
     def to_json_schema
-      schema = params_schema || { "type" => "object", "properties" => {}, "required" => [] }
+      schema = parameters_schema || { "type" => "object", "properties" => {}, "required" => [] }
       {
         name: name,
         description: description,
@@ -193,8 +178,7 @@ module RobotLab
     def to_h
       {
         name: name,
-        description: description,
-        mcp: mcp
+        description: description
       }.compact
     end
 

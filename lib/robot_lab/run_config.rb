@@ -12,21 +12,22 @@ module RobotLab
   # config's non-nil values win over the less-specific config.
   #
   # @example Keyword construction
-  #   config = RunConfig.new(model: "claude-sonnet-4", temperature: 0.7)
+  #   config = RunConfig.new(model: "claude-sonnet-4-6", temperature: 0.7)
   #
   # @example Block DSL
   #   config = RunConfig.new do |c|
-  #     c.model "claude-sonnet-4"
+  #     c.model "claude-sonnet-4-6"
   #     c.temperature 0.7
   #   end
   #
   # @example Merge (more-specific wins)
-  #   network_config = RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+  #   network_config = RunConfig.new(model: "claude-sonnet-4-6", temperature: 0.5)
   #   robot_config   = RunConfig.new(temperature: 0.9)
   #   effective       = network_config.merge(robot_config)
   #   effective.temperature  #=> 0.9
-  #   effective.model        #=> "claude-sonnet-4"
+  #   effective.model        #=> "claude-sonnet-4-6"
   #
+  # :reek:RepeatedConditional -- `if value` guards in independent field loops; each skips unset fields.
   class RunConfig
     # LLM configuration fields (applied to chat via with_* methods)
     LLM_FIELDS = %i[
@@ -38,11 +39,12 @@ module RobotLab
     TOOL_FIELDS = %i[mcp tools].freeze
 
     # Callback fields (Procs)
-    CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content].freeze
+    CALLBACK_FIELDS = %i[on_tool_call on_tool_result on_content on_tool_approval on_input_request].freeze
 
     # Infrastructure fields
     INFRA_FIELDS = %i[bus enable_cache max_tool_rounds token_budget cost_budget ractor_pool_size
-                      max_concurrent_robots doom_loop_threshold auto_compact compact_threshold max_tools].freeze
+                      max_concurrent_robots doom_loop_threshold auto_compact compact_threshold max_tools
+                      tool_approval].freeze
 
     # All recognized fields
     FIELDS = (LLM_FIELDS + TOOL_FIELDS + CALLBACK_FIELDS + INFRA_FIELDS).freeze
@@ -105,6 +107,10 @@ module RobotLab
       self.class.new(**merged)
     end
 
+    # Fields that ruby_llm 2.0 accepts only through with_provider_options
+    # (merged into the request payload in the provider's own vocabulary).
+    PROVIDER_OPTION_FIELDS = %i[top_p top_k presence_penalty frequency_penalty stop].freeze
+
     # Applies LLM fields to a chat object via its with_* methods.
     #
     # +provider+/+assume_model_exists+ are threaded through to +with_model+
@@ -116,31 +122,33 @@ module RobotLab
     # raises ModelNotFoundError for any local-provider model (Ollama, etc.)
     # not in RubyLLM's bundled registry.
     #
+    # ruby_llm 2.0 mapping: +max_tokens+ applies via with_max_output_tokens,
+    # and the sampling knobs (top_p, top_k, penalties, stop) go through
+    # with_provider_options, merged with any options the chat already has.
+    #
     # @param chat [Object] a RubyLLM::Chat (or similar) that responds to with_model, with_temperature, etc.
     # @param provider [String, Symbol, nil] passed through to chat.with_model's provider: kwarg
-    # @param assume_model_exists [Boolean] passed through to chat.with_model's assume_exists: kwarg
+    # @param assume_model_exists [Boolean] passed through to chat.with_model's assume_model_exists: kwarg
+    # :reek:BooleanParameter -- assume_model_exists is a pass-through to RubyLLM's with_model kwarg.
+    # :reek:FeatureEnvy -- configuring the chat object handed in is exactly what apply_to is for.
+    # :reek:TooManyStatements -- one guarded application per LLM field group.
     def apply_to(chat, provider: nil, assume_model_exists: false)
-      LLM_FIELDS.each do |field|
-        value = @fields[field]
-        next unless value
+      apply_model_to(chat, provider: provider, assume_model_exists: assume_model_exists)
 
-        if field == :model && provider
-          # Only take the provider-aware path when a provider was actually
-          # given -- preserves the original single-arg call (and thus
-          # compatibility with any chat-like object exposing only
-          # `with_model(value)`) for the common case.
-          chat.with_model(value, provider:, assume_exists: assume_model_exists) if chat.respond_to?(:with_model)
-        else
-          method = :"with_#{field}"
-          chat.public_send(method, value) if chat.respond_to?(method)
-        end
-      end
+      temperature = @fields[:temperature]
+      chat.with_temperature(temperature) if temperature && chat.respond_to?(:with_temperature)
+
+      max_tokens = @fields[:max_tokens]
+      chat.with_max_output_tokens(max_tokens) if max_tokens && chat.respond_to?(:with_max_output_tokens)
+
+      apply_provider_options_to(chat)
     end
 
     # Build a RunConfig from prompt_manager front matter metadata.
     #
     # @param metadata [Object] a PM::Metadata object (responds to field names)
     # @return [RunConfig]
+    # :reek:TooManyStatements -- linear duck-typed extraction of LLM then tool fields from front matter.
     def self.from_front_matter(metadata)
       fields = {}
 
@@ -171,6 +179,7 @@ module RobotLab
 
     # @param other [RunConfig] the other RunConfig to compare
     # @return [Boolean]
+    # :reek:FeatureEnvy -- equality naturally reads the other operand.
     def ==(other)
       other.is_a?(RunConfig) && to_h == other.to_h
     end
@@ -181,6 +190,35 @@ module RobotLab
     end
 
     private
+
+    # Apply the model field, threading provider/assume_model_exists through
+    # only when a provider was actually given -- preserves the original
+    # single-arg call (and thus compatibility with any chat-like object
+    # exposing only `with_model(value)`) for the common case.
+    # :reek:BooleanParameter -- pass-through to RubyLLM's with_model kwarg.
+    # :reek:FeatureEnvy -- configuring the chat handed in is exactly what apply_to delegates here.
+    def apply_model_to(chat, provider:, assume_model_exists:)
+      model = @fields[:model]
+      return unless model && chat.respond_to?(:with_model)
+
+      if provider
+        chat.with_model(model, provider: provider, assume_model_exists: assume_model_exists)
+      else
+        chat.with_model(model)
+      end
+    end
+
+    # Merge the sampling knobs into the chat's provider options.
+    # with_provider_options replaces prior options wholesale, so merge with
+    # the chat's current set to keep options applied earlier.
+    # :reek:FeatureEnvy -- configuring the chat handed in is exactly what apply_to delegates here.
+    def apply_provider_options_to(chat)
+      options = @fields.slice(*PROVIDER_OPTION_FIELDS)
+      return if options.empty? || !chat.respond_to?(:with_provider_options)
+
+      current = chat.respond_to?(:provider_options) ? chat.provider_options.to_h : {}
+      chat.with_provider_options(current.merge(options))
+    end
 
     # Validates and stores a field value. Nil removes the key.
     def set(field, value)

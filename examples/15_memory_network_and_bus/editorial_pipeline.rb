@@ -57,7 +57,7 @@ bus = TypedBus::MessageBus.new
 
 mac_writer = OsWriter.new(
   name: "mac_writer",
-  model: LLM[:default].model,
+  **llm_opts,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -69,7 +69,7 @@ mac_writer = OsWriter.new(
 
 win_writer = OsWriter.new(
   name: "win_writer",
-  model: LLM[:default].model,
+  **llm_opts,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -81,7 +81,7 @@ win_writer = OsWriter.new(
 
 linux_writer = LinuxWriter.new(
   name: "linux_writer",
-  model: LLM[:default].model,
+  **llm_opts,
   template: :os_advocate,
   local_tools: [RobotLab::AskUser],
   context: {
@@ -94,7 +94,7 @@ linux_writer = LinuxWriter.new(
 
 editor = OsEditor.new(
   name: "editor",
-  model: LLM[:default].model,
+  **llm_opts,
   template: :os_editor,
   bus: bus
 )
@@ -103,7 +103,7 @@ editor = OsEditor.new(
 revision_count = 0
 editor.on_message do |message|
   revised = editor.run(message.content).reply.strip
-  editor.instance_variable_set(:@article, revised)
+  editor.article = revised
 
   revision_count += 1
   path = File.join(OUTPUT_DIR, "revision_#{revision_count}.md")
@@ -116,16 +116,20 @@ end
 
 chief = EditorInChief.new(
   name: "chief",
-  model: LLM[:default].model,
+  **llm_opts,
   template: :os_chief,
   bus: bus
 )
 
-# Network orchestrates the writing pipeline
+# Network orchestrates the writing pipeline.
+#
+# tools: :inherit on the writer tasks — Task forwards it to robot.run, which
+# defaults to :none and would otherwise hand the provider an empty tool list,
+# leaving each writer's AskUser tool attached but never offered to the model.
 network = RobotLab.create_network(name: "os_editorial") do
-  task :mac_writer,   mac_writer,   depends_on: :none
-  task :win_writer,   win_writer,   depends_on: :none
-  task :linux_writer, linux_writer, depends_on: :none
+  task :mac_writer,   mac_writer,   depends_on: :none, tools: :inherit
+  task :win_writer,   win_writer,   depends_on: :none, tools: :inherit
+  task :linux_writer, linux_writer, depends_on: :none, tools: :inherit
   task :editor,       editor,       depends_on: [:mac_writer, :win_writer, :linux_writer]
 end
 

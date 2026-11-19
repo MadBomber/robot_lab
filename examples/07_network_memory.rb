@@ -39,7 +39,7 @@
 #   └─────────────────────────────────────────────────────────────┘
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/07_network_memory.rb
+#   ruby examples/07_network_memory.rb
 
 require_relative "common"
 require "json"
@@ -147,27 +147,27 @@ sentiment_robot = AnalysisRobot.new(
   name: "sentiment_analyzer",
   template: :sentiment_analyzer,
   memory_key: :sentiment,
-  model: LLM[:default].model
+  **llm_opts
 )
 
 entity_robot = AnalysisRobot.new(
   name: "entity_extractor",
   template: :entity_extractor,
   memory_key: :entities,
-  model: LLM[:default].model
+  **llm_opts
 )
 
 keyword_robot = AnalysisRobot.new(
   name: "keyword_extractor",
   template: :keyword_extractor,
   memory_key: :keywords,
-  model: LLM[:default].model
+  **llm_opts
 )
 
 synthesizer = SynthesizerRobot.new(
   name: "synthesizer",
   template: :synthesizer,
-  model: LLM[:default].model
+  **llm_opts
 )
 
 # -----------------------------------------------------------------------------

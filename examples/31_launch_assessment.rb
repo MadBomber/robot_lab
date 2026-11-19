@@ -45,7 +45,7 @@
 #   RunConfig.new(max_concurrent_robots: 4)
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/31_launch_assessment.rb
+#   ruby examples/31_launch_assessment.rb
 
 require_relative "common"
 
@@ -61,7 +61,7 @@ class AnalystRobot < RobotLab::Robot
   def initialize(name:, memory_key:, role:)
     super(
       name:          name,
-      model:         LLM[:default].model,
+      **llm_opts,
       system_prompt: "You are a #{role}. " \
                      "Review the product brief in 2-3 crisp sentences from your area of expertise. " \
                      "Close with a one-word verdict: READY or NOT-READY."
@@ -111,12 +111,7 @@ class LaunchDirector < RobotLab::Robot
 
   def call(result)
     puts "  [#{name}] reading all findings from shared memory..."
-    findings = @shared_memory.get(*FINDING_KEYS, wait: 120)
-
-    if findings.values.any? { |v| v == :timeout }
-      timed_out = findings.select { |_, v| v == :timeout }.keys
-      puts "  [#{name}] WARNING: timed out waiting for: #{timed_out.join(", ")}"
-    end
+    findings = collect_findings
 
     prompt = <<~PROMPT
       Six specialist analysts have reviewed our product launch readiness.
@@ -138,6 +133,22 @@ class LaunchDirector < RobotLab::Robot
     puts "  [#{name}] recommendation ready"
 
     result.with_context(:recommendation, recommendation).continue(recommendation)
+  end
+
+  private
+
+  # Memory#get(wait:) RAISES RobotLab::AwaitTimeout on expiry — it never
+  # returns a :timeout sentinel. Rescue it and re-read without wait:, which
+  # never blocks and omits keys that were never written, so a stalled analyst
+  # degrades the recommendation instead of killing the director.
+  def collect_findings
+    @shared_memory.get(*FINDING_KEYS, wait: 120)
+  rescue RobotLab::AwaitTimeout => e
+    puts "  [#{name}] WARNING: #{e.message}"
+    partial = @shared_memory.get(*FINDING_KEYS)
+    missing = FINDING_KEYS - partial.keys
+    puts "  [#{name}] Proceeding without: #{missing.join(', ')}" if missing.any?
+    partial
   end
 end
 
@@ -169,7 +180,7 @@ end
 
 director = LaunchDirector.new(
   name:          "launch_director",
-  model:         LLM[:default].model,
+  **llm_opts,
   system_prompt: "You are the VP of Product making the final launch call."
 )
 

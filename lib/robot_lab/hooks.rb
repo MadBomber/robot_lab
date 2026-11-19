@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 module RobotLab
+  # :reek:DataClump -- stateless module_function dispatchers; registries/per_run_hooks flow through every call by design.
   module Hooks
     module_function
 
+    # :reek:TooManyStatements -- the before/around/after/error hook lifecycle in one linear sequence.
     def run(family, context, registries:, per_run_hooks: nil, &)
       before = registrations(:"before_#{family}", registries, per_run_hooks)
       around = registrations(:"around_#{family}", registries, per_run_hooks)
@@ -53,9 +55,10 @@ module RobotLab
     end
 
     def call_registration(registration, hook_name, context, &)
-      context.with_namespace(registration.namespace) do
-        if registration.context && registration.namespace
-          context.ext(registration.namespace).merge_defaults(registration.context)
+      namespace = registration.namespace
+      context.with_namespace(namespace) do
+        if registration.context && namespace
+          context.ext(namespace).merge_defaults(registration.context)
         end
         registration.handler_class.call(hook_name, context, &)
       end

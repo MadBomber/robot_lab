@@ -12,9 +12,15 @@ module RobotLab
     # == Delivery Serialization
     #
     # TypedBus delivers messages in concurrent Async fibers. Robots
-    # enqueue deliveries into a BusPoller rather than handling them
-    # inline. The BusPoller drains each group's queue sequentially on
-    # a dedicated OS thread, so robot.run() calls never interleave.
+    # enqueue deliveries into a shared BusPoller rather than dispatching
+    # them straight to the handler. Despite the name, BusPoller runs no
+    # background thread: `enqueue` processes the delivery inline in the
+    # caller's own execution context (Async fiber or OS thread) when the
+    # robot is idle, and otherwise queues it behind the delivery already
+    # in flight and drains it once that one returns. A mutex therefore
+    # serializes deliveries per robot, so a robot's run() calls never
+    # interleave — but nothing makes progress while the calling fiber is
+    # parked.
     #
     # Owns:    @bus, @bus_poller, @private_bus_poller, @bus_poller_group, @bus_subscriber_id, @message_counter, @outbox, @message_handler
     # Reads:   @name
@@ -78,12 +84,14 @@ module RobotLab
       # counterpart to how a Cyborg answers its human — one call makes any bus
       # member a first-class responder instead of hand-wiring {#on_message}.
       #
-      # The responder runs on the poller drain thread, so deliveries to this member
-      # are handled one at a time (a long turn delays the next inbound message).
+      # The responder runs inline in the caller's execution context (BusPoller has
+      # no drain thread), and deliveries to this member are serialized, so a long
+      # turn blocks both the sender and the next inbound message.
       #
       # @param auto_reply [Boolean] send the responder's result back to the sender
       # @yield [message] the inbound task; return the reply content (nil => no reply)
       # @return [self]
+      # :reek:BooleanParameter :reek:ControlParameter -- auto_reply is a documented public API toggle for reply behavior.
       def respond_to_tasks(auto_reply: true, &responder)
         on_message do |message|
           next if message.reply?
@@ -100,6 +108,7 @@ module RobotLab
       #
       # @param auto_reply [Boolean]
       # @return [self]
+      # :reek:BooleanParameter -- auto_reply is a documented public API toggle, forwarded to respond_to_tasks.
       def serve(auto_reply: true)
         respond_to_tasks(auto_reply: auto_reply) { |message| run(bus_task_content(message)).reply }
       end
@@ -154,6 +163,7 @@ module RobotLab
       # @param bus [TypedBus::MessageBus, nil] bus to join (creates one if nil)
       # @return [self]
       #
+      # :reek:ControlParameter -- `bus || @bus || new` implements the documented join-or-create semantics.
       def with_bus(bus = nil)
         return self if bus && @bus == bus
 
@@ -165,8 +175,9 @@ module RobotLab
 
       # Assign a shared BusPoller from a Network.
       #
-      # Stops any private poller this robot auto-created, then adopts
-      # the network's shared poller for the given group.
+      # Drops any private poller this robot auto-created, then adopts
+      # the network's shared poller for the given group. Called by
+      # Network#task; groups are informational labels only.
       #
       # @param poller [BusPoller] the network's shared poller
       # @param group  [Symbol]    poller group for this robot (default: :default)
@@ -226,7 +237,7 @@ module RobotLab
         @bus_poller.enqueue(robot: self, delivery: delivery, group: @bus_poller_group)
       end
 
-      # Process a single delivery (called by BusPoller drain thread).
+      # Process a single delivery (called by BusPoller during its inline drain).
       def process_delivery(delivery)
         message = delivery.message
         correlate_reply(message) if message.reply?

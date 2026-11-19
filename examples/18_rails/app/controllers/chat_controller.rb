@@ -24,10 +24,14 @@ class ChatController < ApplicationController
       checksum:        Digest::SHA256.hexdigest(message)
     )
 
+    # tools: :inherit is forwarded by the job straight through to robot.run.
+    # Without it run() defaults to tools: :none and TimeTool is never offered
+    # to the model, so "What time is it?" gets a guess instead of a tool call.
     RobotRunJob.perform_later(
       robot_class: "ChatRobot",
       message:     message,
-      thread_id:   thread_id
+      thread_id:   thread_id,
+      tools:       :inherit
     )
 
     respond_to do |format|

@@ -2,114 +2,93 @@
 
 Stream LLM responses in real-time for better user experience.
 
-## Streaming via Callbacks
+RobotLab has exactly two ways to receive streaming content, and both hand you a
+`RubyLLM::Chunk`:
 
-RobotLab robots support streaming through callback methods inherited from RubyLLM::Agent. Register callbacks before calling `run`:
+1. **`on_content:`** — a callback wired at build time (or through `RunConfig`) that fires on *every* `run`
+2. **A block passed to `run`** — `robot.run(msg) { |chunk| ... }`, for one-off streaming
+
+> [!IMPORTANT]
+> Read the content off the chunk with **`chunk.content`**. `RubyLLM::Chunk`
+> has no `#text` method — `chunk.text` raises `NoMethodError`.
+
+## Streaming via `on_content:`
+
+Wire the callback once at build time; it fires on every subsequent `run`:
 
 ```ruby
 robot = RobotLab.build(
   name: "storyteller",
-  system_prompt: "You are a creative storyteller."
+  system_prompt: "You are a creative storyteller.",
+  on_content: ->(chunk) { print chunk.content }
 )
-
-# Register streaming callback
-robot.on_new_message do |message|
-  print message.content if message.content
-end
 
 result = robot.run("Tell me a story about a brave robot")
+puts
+puts result.last_text_content
 ```
 
-## Available Callbacks
+## Streaming via a Block on `run`
 
-### on_new_message
-
-Called when the assistant starts generating a new message, with streaming chunks:
-
-```ruby
-robot.on_new_message do |message|
-  print message.content if message.content
-end
-```
-
-### on_end_message
-
-Called when the assistant finishes a message:
-
-```ruby
-robot.on_end_message do |message|
-  puts "\n--- Response complete ---"
-  puts "Content length: #{message.content&.length}"
-end
-```
-
-### on_tool_call
-
-Called when the LLM invokes a tool:
-
-```ruby
-robot.on_tool_call do |tool_call|
-  puts "Calling tool: #{tool_call.name}"
-end
-```
-
-### on_tool_result
-
-Called when a tool returns its result:
-
-```ruby
-robot.on_tool_result do |tool_call, result|
-  puts "Tool #{tool_call.name} returned: #{result}"
-end
-```
-
-## Comprehensive Callback Setup
-
-Register all callbacks for full visibility:
+For one-off streaming, pass a block straight to `run`:
 
 ```ruby
 robot = RobotLab.build(
-  name: "assistant",
-  system_prompt: "You are helpful.",
-  local_tools: [WeatherTool]
+  name: "factbot",
+  system_prompt: "You are concise. Answer in one sentence."
 )
 
-robot.on_new_message do |message|
-  print message.content if message.content
-end
-
-robot.on_end_message do |_message|
-  puts "\n--- Done ---"
-end
-
-robot.on_tool_call do |tool_call|
-  puts "\n[Tool] Calling: #{tool_call.name}"
-end
-
-robot.on_tool_result do |tool_call, result|
-  puts "[Tool] #{tool_call.name} returned: #{result}"
-end
-
-result = robot.run("What's the weather in Tokyo?")
+robot.run("What year was Ruby created?") { |chunk| print chunk.content }
 ```
 
-## Streaming via Chat Block
+The block goes to the same place `on_content:` does — no need to reach for
+`robot.chat.ask` to get streaming, and reaching for it skips memory resolution,
+tool resolution, hooks, and budget accounting.
 
-For more control, pass a block directly to `chat.ask` (the underlying RubyLLM method):
+## Using Both Together
+
+When a robot has a stored `on_content:` *and* a block is passed to `run`, both
+fire for every chunk. The **stored callback fires first**, then the block:
 
 ```ruby
+stored_log = []
+block_log  = []
+
 robot = RobotLab.build(
-  name: "chat_bot",
-  system_prompt: "You are a helpful assistant."
+  name: "combo",
+  system_prompt: "You are concise.",
+  on_content: ->(chunk) { stored_log << chunk.content }
 )
 
-# Use the underlying chat directly with a streaming block
-robot.chat.ask("Tell me a story") do |chunk|
-  print chunk.content if chunk.content
-end
+robot.run("What is Matz's full name?") { |chunk| block_log << chunk.content }
+
+stored_log == block_log   # => true — both saw the same chunks
 ```
 
-Note: Using `chat.ask` directly bypasses Robot's memory resolution and tool hierarchy. Use callbacks with `robot.run` when you need those features.
+## Streaming via RunConfig
+
+`on_content` is a `RunConfig` field, so it participates in the config cascade:
+
+```ruby
+config = RobotLab::RunConfig.new(
+  model: "claude-sonnet-4",
+  on_content: ->(chunk) { print chunk.content }
+)
+
+robot = RobotLab.build(
+  name: "config_bot",
+  system_prompt: "You are concise.",
+  config: config
+)
+
+robot.run("Who designed the Ruby programming language?")
+```
+
+> [!WARNING]
+> `on_content` is read from the **robot's own** config when the robot is
+> constructed. A network-level `config:` propagates only `mcp` and `tools` to
+> member robots — it will **not** supply `on_content` to them. Put the callback
+> on each robot (or on the `config:` you pass to that robot).
 
 ## Web Integration
 
@@ -120,18 +99,14 @@ class ChatChannel < ApplicationCable::Channel
   def receive(data)
     robot = RobotLab.build(
       name: "chat_bot",
-      system_prompt: "You are a helpful chat assistant."
+      system_prompt: "You are a helpful chat assistant.",
+      on_content: ->(chunk) {
+        transmit({ event: "text.delta", content: chunk.content })
+      }
     )
 
-    robot.on_new_message do |message|
-      transmit({ event: "text.delta", content: message.content }) if message.content
-    end
-
-    robot.on_end_message do |_message|
-      transmit({ event: "run.completed" })
-    end
-
     robot.run(data["message"])
+    transmit({ event: "run.completed" })
   end
 end
 ```
@@ -150,15 +125,11 @@ class StreamController < ApplicationController
       system_prompt: "You are helpful."
     )
 
-    robot.on_new_message do |message|
-      response.stream.write("data: #{message.content}\n\n") if message.content
+    robot.run(params[:message]) do |chunk|
+      response.stream.write("data: #{chunk.content}\n\n")
     end
 
-    robot.on_end_message do |_message|
-      response.stream.write("data: [DONE]\n\n")
-    end
-
-    robot.run(params[:message])
+    response.stream.write("data: [DONE]\n\n")
   ensure
     response.stream.close
   end
@@ -170,95 +141,183 @@ end
 ```ruby
 # Using Faye WebSocket
 ws.on :message do |msg|
-  robot.on_new_message do |message|
-    ws.send(message.content) if message.content
-  end
-
-  robot.run(msg.data)
+  robot.run(msg.data) { |chunk| ws.send(chunk.content) }
 end
 ```
 
 ## Progress Tracking
 
-Track streaming progress with callbacks:
+Chunk callbacks are the right place to count characters. Tool activity is
+tracked separately, through the robot's `on_tool_call:` / `on_tool_result:`
+callbacks:
 
 ```ruby
 class StreamProgress
+  attr_reader :chars, :tools
+
   def initialize
     @chars = 0
     @tools = 0
   end
 
-  attr_reader :chars, :tools
-
-  def attach(robot)
-    robot.on_new_message do |message|
-      @chars += message.content.length if message.content
+  # Returns the streaming block to hand to run().
+  def content_callback
+    ->(chunk) {
+      @chars += chunk.content.to_s.length
       print "\rReceived #{@chars} characters..."
-    end
+    }
+  end
 
-    robot.on_tool_call do |tool_call|
+  def tool_callback
+    ->(tool_call) {
       @tools += 1
       puts "\nTool call ##{@tools}: #{tool_call.name}"
-    end
+    }
   end
 end
 
 progress = StreamProgress.new
-progress.attach(robot)
 
-result = robot.run("Process this complex request")
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  local_tools: [WeatherTool],
+  on_content:   progress.content_callback,
+  on_tool_call: progress.tool_callback
+)
+
+robot.run("Process this complex request", tools: :inherit)
 puts "\nTotal: #{progress.chars} chars, #{progress.tools} tool calls"
 ```
 
+> [!NOTE]
+> `chunk.content` can be `nil` on chunks that carry only metadata (tool-call
+> deltas, usage). Guard with `to_s` when accumulating, as above.
+
+> [!WARNING]
+> `run` defaults to `tools: :none`, so the tool callback above never fires
+> unless you pass `tools: :inherit` (or an explicit allowlist). See
+> [Using Tools](using-tools.md#runtime-tool-filtering).
+
 ## Without Streaming
 
-When streaming is not needed, simply call `run` without registering callbacks:
+When streaming is not needed, call `run` with no `on_content:` and no block:
 
 ```ruby
-# No streaming - returns RobotResult directly
 result = robot.run("Hello!")
 puts result.last_text_content
 ```
 
+## Tool Callbacks
+
+`on_tool_call:` and `on_tool_result:` are constructor/`RunConfig` callbacks
+alongside `on_content:`. Each receives **one** argument:
+
+```ruby
+robot = RobotLab.build(
+  name: "assistant",
+  system_prompt: "You are helpful.",
+  local_tools: [WeatherTool],
+  on_tool_call:   ->(tool_call) { puts "\n[Tool] Calling: #{tool_call.name}" },
+  on_tool_result: ->(result)    { puts "[Tool] returned: #{result}" }
+)
+
+robot.run("What's the weather in Tokyo?", tools: :inherit)
+```
+
+Note that `on_tool_result` does **not** receive the originating tool call —
+only the result. If you need to correlate the two, record the call in
+`on_tool_call` and pair them up yourself.
+
+> [!NOTE]
+> RobotLab installs these two callbacks on the underlying chat's
+> `on_tool_call` / `on_tool_result` hooks, which RubyLLM 1.16 has deprecated.
+> Building a robot with either callback therefore prints a RubyLLM deprecation
+> warning. The callbacks themselves work; the warning comes from the layer
+> below.
+
+## Legacy RubyLLM Chat Callbacks
+
+`Robot` also exposes RubyLLM's chat-level callbacks
+(`on_new_message`, `on_end_message`, `on_tool_call`, `on_tool_result`).
+
+> [!CAUTION]
+> All four are **deprecated in RubyLLM 1.16** and slated for removal in
+> RubyLLM 2.0. Registering one emits a deprecation warning naming its
+> replacement: `before_message`, `after_message`, `before_tool_call`, and
+> `after_tool_result`. Prefer RobotLab's `on_content:` /
+> `on_tool_call:` / `on_tool_result:` constructor callbacks instead.
+
+Their arities are not what you might expect:
+
+| Callback | Replacement | Arguments received |
+|----------|-------------|--------------------|
+| `on_new_message` | `before_message` | **none** |
+| `on_end_message` | `after_message` | the completed `RubyLLM::Message` |
+| `on_tool_call` | `before_tool_call` | the `ToolCall` |
+| `on_tool_result` | `after_tool_result` | the **result only** |
+
+> [!WARNING]
+> `on_new_message` is **not** a streaming hook. It fires once when a message
+> begins and is invoked with **zero arguments** — a block written as
+> `do |message| ... end` receives `nil`, so `message.content` raises
+> `NoMethodError: undefined method 'content' for nil`. Use `on_content:` or a
+> `run` block for content.
+
+```ruby
+# Correct usage of the legacy hooks (still deprecated):
+robot.chat.on_new_message { puts "--- message starting ---" }   # no argument
+robot.chat.on_end_message { |message| puts "Length: #{message.content&.length}" }
+robot.chat.on_tool_result { |result| puts "Tool returned: #{result}" }
+```
+
 ## Best Practices
 
-### 1. Register Callbacks Before Run
+### 1. Wire streaming before the run
+
+`on_content:` belongs in the constructor (or the `config:` you pass it); a
+`run` block belongs on the call itself. There is no "register then run" step.
+
+### 2. Handle errors inside the callback
+
+An exception raised in a streaming callback propagates out of `run` and aborts
+the turn. Swallow client-side failures you can survive:
 
 ```ruby
-# Correct: register first, then run
-robot.on_new_message { |msg| print msg.content if msg.content }
-robot.run("Hello")
-```
-
-### 2. Handle Errors in Callbacks
-
-```ruby
-robot.on_new_message do |message|
-  begin
-    broadcast(message.content) if message.content
+robot = RobotLab.build(
+  name: "broadcaster",
+  system_prompt: "You are helpful.",
+  on_content: ->(chunk) do
+    broadcast(chunk.content)
   rescue BroadcastError => e
-    # Client disconnected, but continue processing
-    logger.warn "Broadcast failed: #{e.message}"
+    # Client disconnected, but let the run finish.
+    RobotLab.config.logger.warn("Broadcast failed: #{e.message}")
   end
-end
+)
 ```
 
-### 3. Clean Up Resources
+### 3. Clean up resources
 
 ```ruby
 begin
-  robot.on_new_message do |message|
-    stream_to_client(message.content) if message.content
-  end
-  robot.run("Hello")
+  robot.run("Hello") { |chunk| stream_to_client(chunk.content) }
 ensure
   close_stream_connection
 end
 ```
 
+## What About `RobotLab::Streaming`?
+
+`RobotLab::Streaming::Context`, `Streaming::Events`, and
+`Streaming::SequenceCounter` exist in the codebase and are documented in the
+[API reference](../api/streaming/index.md), but **nothing in `Robot` or
+`Network` constructs or publishes to them**. They are a standalone event-object
+toolkit you would have to drive yourself — not the path that `run` takes. For
+actual token streaming, use `on_content:` or a `run` block as shown above.
+
 ## Next Steps
 
 - [Building Robots](building-robots.md) - Robot creation
 - [Creating Networks](creating-networks.md) - Network patterns
-- [API Reference: Streaming](../api/streaming/index.md) - Complete API
+- [examples/05_streaming.rb](https://github.com/MadBomber/robot_lab/blob/main/examples/05_streaming.rb) - Runnable streaming example
+- [API Reference: Streaming](../api/streaming/index.md) - The standalone `Streaming::*` event objects

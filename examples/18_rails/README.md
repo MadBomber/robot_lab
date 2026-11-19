@@ -11,7 +11,15 @@ Minimal Rails 8 app that demonstrates RobotLab's full Rails integration:
 ## Prerequisites
 
 - Ruby 3.2+
-- An LLM API key (e.g. `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in your env)
+- [Ollama](https://ollama.com) running locally with the demo model pulled:
+
+  ```bash
+  ollama serve
+  ollama pull qwen3.6
+  ```
+
+No API keys. Override the model with `ROBOT_LAB_PROVIDER` / `ROBOT_LAB_MODEL`,
+and the endpoint with `OLLAMA_API_BASE`.
 
 ## Setup
 
@@ -32,6 +40,17 @@ bin/dev
 1. Type "What time is it?" — the robot will call TimeTool and stream the response
 2. Refresh the page — conversation history is preserved
 3. Check `db/development.sqlite3` to see persisted threads and results
+
+## Two things worth copying
+
+**`RobotLab::RailsIntegration::Job` is the real superclass.** There is no
+`RobotLab::Job` alias, so `class RobotRunJob < RobotLab::Job` raises `NameError`
+at boot.
+
+**`tools: :inherit` has to reach `run`.** `Robot#run` defaults to `tools: :none`,
+which hands the provider an empty tool list. The job splats any extra keywords
+into `robot.run`, so the controller passes `tools: :inherit` at enqueue time —
+without it TimeTool is never offered and the model just guesses the time.
 
 ## Architecture
 

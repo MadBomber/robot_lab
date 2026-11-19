@@ -16,7 +16,7 @@
 #   - ToolError         — propagated when a tool raises inside a Ractor
 #   - Parallel batch    — many threads submitting concurrently vs sequentially
 #
-# Usage (no LLM API key required):
+# Usage (no LLM traffic — pure CPU work):
 #   bundle exec ruby examples/29_ractor_tools.rb
 #
 # Good to know:
@@ -46,7 +46,7 @@ end
 class WordStatsTool < TextTool
   description "Count words, sentences, and average word length"
 
-  param :text, type: :string, desc: "Text to analyze"
+  parameter :text, type: :string, description: "Text to analyze"
 
   def execute(text:)
     words     = text.scan(/\b\w+\b/)
@@ -61,7 +61,7 @@ end
 class ReadabilityTool < TextTool
   description "Estimate words-per-sentence and long-word density"
 
-  param :text, type: :string, desc: "Text to analyze"
+  parameter :text, type: :string, description: "Text to analyze"
 
   def execute(text:)
     words      = text.scan(/\b\w+\b/)
@@ -86,7 +86,7 @@ class HeavyDigestTool < TextTool
 
   ROUNDS = 500_000
 
-  param :text, type: :string, desc: "Seed text"
+  parameter :text, type: :string, description: "Seed text"
 
   def execute(text:)
     digest = text
@@ -102,7 +102,7 @@ class RequestCounterTool < RobotLab::Tool
 
   @@hits = 0   # mutable class variable — Ractor workers cannot access this
 
-  param :text, type: :string, desc: "Text to count"
+  parameter :text, type: :string, description: "Text to count"
 
   def execute(text:)
     @@hits += 1
@@ -157,7 +157,9 @@ puts "    Inner :tags array frozen?   #{frozen[:tags].frozen?}"
 puts "    Inner :meta hash frozen?    #{frozen[:meta].frozen?}"
 puts
 
-# A Proc cannot cross a Ractor boundary — freeze_deep raises immediately.
+# Non-shareable objects (IO handles, Procs, ...) cannot cross a Ractor
+# boundary — freeze_deep rejects them immediately rather than failing later
+# inside a worker.
 require "stringio"
 begin
   RobotLab::RactorBoundary.freeze_deep(StringIO.new("I cannot be frozen"))

@@ -3,6 +3,9 @@
 module RobotLab
   class Robot < RubyLLM::Agent
     module Hooking
+      # :reek:LongParameterList -- the documented Robot#run public API: each keyword is a distinct run-scoped override.
+      # :reek:TooManyStatements -- the run lifecycle (memory writer swap, hook wrap, budget, cleanup) is one
+      #   deliberate orchestrator; flog gates its complexity.
       def run(message = nil, network: nil, task: nil, network_memory: nil, network_config: nil,
               memory: nil, mcp: :none, tools: :none, hooks: nil, **kwargs, &block)
         run_memory = resolve_run_memory(memory, network: network, network_memory: network_memory)
@@ -58,6 +61,32 @@ module RobotLab
 
       def hook_registries(network = nil)
         [RobotLab.hooks, network&.hooks, @hooks]
+      end
+
+      # Arm the per-run circuit breaker checked by the chat's before_tool_call
+      # dispatcher (see Robot#register_chat_callbacks). Raises ToolLoopError
+      # once tool calls exceed @config.max_tool_rounds. ruby_llm 2.0 callbacks
+      # are additive and cannot be removed, so the breaker toggles a flag the
+      # permanent dispatcher consults instead of swapping callbacks per run.
+      def install_circuit_breaker
+        @circuit_breaker_call_count = 0
+        @circuit_breaker_armed = true
+      end
+
+      # Disarm the circuit breaker after a run.
+      def restore_tool_call_callback
+        @circuit_breaker_armed = false
+      end
+
+      # Count a tool call against max_tool_rounds and raise once exceeded.
+      def enforce_circuit_breaker!
+        max = @config.max_tool_rounds
+        @circuit_breaker_call_count += 1
+        return if @circuit_breaker_call_count <= max
+
+        raise ToolLoopError,
+              "Circuit breaker triggered: #{@circuit_breaker_call_count} tool calls exceeded " \
+              "max_tool_rounds (#{max})"
       end
     end
   end

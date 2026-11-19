@@ -23,8 +23,8 @@ class BroadcastTool < RobotLab::Tool
               "Use for discussion, proposals, questions, or announcements. " \
               "Don't broadcast trivially — only when you have something substantive."
 
-  param :message, type: "string",
-        desc: "What to say to the room", required: true
+  parameter :message, type: "string",
+        description: "What to say to the room", required: true
 
   def execute(message:)
     log&.info("#{robot.name} TOOL broadcast (#{message.length} chars)")
@@ -42,10 +42,10 @@ class DirectMessageTool < RobotLab::Tool
               "Use for feedback on their chapter, coordination on handoffs, " \
               "or questions that don't concern the whole room."
 
-  param :to, type: "string",
-        desc: "Name of the writer to message", required: true
-  param :message, type: "string",
-        desc: "What to say", required: true
+  parameter :to, type: "string",
+        description: "Name of the writer to message", required: true
+  parameter :message, type: "string",
+        description: "What to say", required: true
 
   def execute(to:, message:)
     log&.info("#{robot.name} TOOL direct_message -> #{to} (#{message.length} chars)")
@@ -63,8 +63,8 @@ class ReadMemoryTool < RobotLab::Tool
               "Use to check the story bible, outline, chapter claims, " \
               "or read another writer's chapter draft."
 
-  param :key, type: "string",
-        desc: "Memory key to read (e.g. story_bible, outline, claims, chapter_3)", required: true
+  parameter :key, type: "string",
+        description: "Memory key to read (e.g. story_bible, outline, claims, chapter_3)", required: true
 
   def execute(key:)
     value = robot.shared_memory.get(key.to_sym)
@@ -86,10 +86,10 @@ class WriteMemoryTool < RobotLab::Tool
               "Use to store the story bible, outline, claim a chapter, " \
               "or submit a finished chapter draft."
 
-  param :key, type: "string",
-        desc: "Memory key (e.g. story_bible, outline, claims, chapter_1)", required: true
-  param :value, type: "string",
-        desc: "Content to store", required: true
+  parameter :key, type: "string",
+        description: "Memory key (e.g. story_bible, outline, claims, chapter_1)", required: true
+  parameter :value, type: "string",
+        description: "Content to store", required: true
 
   def execute(key:, value:)
     log&.info("#{robot.name} TOOL write_memory :#{key} (#{value.length} chars)")
@@ -124,8 +124,8 @@ class SpawnWriterTool < RobotLab::Tool
   description "Bring a new writer into the room to help with the workload. " \
               "Use when there are more unclaimed chapters than active writers."
 
-  param :name, type: "string",
-        desc: "Name for the new writer (e.g. writer_4)", required: true
+  parameter :name, type: "string",
+        description: "Name for the new writer (e.g. writer_4)", required: true
 
   def execute(name:)
     log&.info("#{robot.name} TOOL spawn_writer '#{name}'")

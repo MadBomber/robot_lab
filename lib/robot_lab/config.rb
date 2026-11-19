@@ -8,12 +8,13 @@ module RobotLab
   # Provides:
   # - Nested configuration with a dedicated `ruby_llm:` section
   # - Environment-specific settings (development, test, production)
-  # - XDG config file loading (~/.config/robot_lab/config.yml)
+  # - XDG config file loading (~/.config/robot_lab/robot_lab.yml — the filename
+  #   repeats the `config_name`; `config.yml` is never read)
   # - Environment variable overrides (ROBOT_LAB_*)
   # - Automatic RubyLLM configuration application
   #
   # @example Access configuration values
-  #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+  #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
   #   RobotLab.config.ruby_llm.request_timeout  #=> 120
   #   RobotLab.config.development?              #=> true
   #
@@ -21,10 +22,14 @@ module RobotLab
   #   # ROBOT_LAB_RUBY_LLM__MODEL=gpt-4
   #   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
   #
-  # @example User config file (~/.config/robot_lab/config.yml)
-  #   defaults:
-  #     ruby_llm:
-  #       anthropic_api_key: <%= ENV['ANTHROPIC_API_KEY'] %>
+  # @example User config file (~/.config/robot_lab/robot_lab.yml)
+  #   # Flat keys, or a section named for the current environment. A `defaults:`
+  #   # wrapper is IGNORED here — it applies only to the gem's bundled
+  #   # defaults.yml. This file is NOT run through ERB, so keep secrets in
+  #   # environment variables or in ./config/robot_lab.yml (which is).
+  #   ruby_llm:
+  #     model: claude-sonnet-4-6
+  #     request_timeout: 120
   #
   class Config < MywayConfig::Base
     config_name :robot_lab
@@ -73,6 +78,8 @@ module RobotLab
 
     private
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here (RuboCop allows it).
+    # :reek:TooManyStatements -- one set_if_present line per supported provider credential; a loop would obscure the env-var mapping.
     def apply_provider_api_keys(c)
       # Fall back to standard provider env vars when not set in config.
       # This lets users set ANTHROPIC_API_KEY (etc.) directly without
@@ -98,6 +105,7 @@ module RobotLab
       set_if_present(c, :vertexai_location, :vertexai_location, 'GOOGLE_CLOUD_LOCATION')
     end
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def apply_provider_endpoints(c)
       c.openai_api_base = ruby_llm.openai_api_base if ruby_llm.openai_api_base
       c.gemini_api_base = ruby_llm.gemini_api_base if ruby_llm.gemini_api_base
@@ -106,12 +114,14 @@ module RobotLab
       c.xai_api_base = ruby_llm.xai_api_base if ruby_llm.xai_api_base
     end
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def apply_openai_options(c)
       c.openai_organization_id = ruby_llm.openai_organization_id if ruby_llm.openai_organization_id
       c.openai_project_id = ruby_llm.openai_project_id if ruby_llm.openai_project_id
       c.openai_use_system_role = ruby_llm.openai_use_system_role unless ruby_llm.openai_use_system_role.nil?
     end
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def apply_default_models(c)
       c.default_model = ruby_llm.default_model if ruby_llm.default_model
       c.default_embedding_model = ruby_llm.default_embedding_model if ruby_llm.default_embedding_model
@@ -119,6 +129,7 @@ module RobotLab
       c.default_moderation_model = ruby_llm.default_moderation_model if ruby_llm.default_moderation_model
     end
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def apply_connection_settings(c)
       c.request_timeout = ruby_llm.request_timeout if ruby_llm.request_timeout
       c.max_retries = ruby_llm.max_retries if ruby_llm.max_retries
@@ -128,6 +139,7 @@ module RobotLab
       c.http_proxy = ruby_llm.http_proxy if ruby_llm.http_proxy
     end
 
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def apply_logging_options(c)
       c.log_file = ruby_llm.log_file if ruby_llm.log_file
       c.log_level = ruby_llm.log_level if ruby_llm.log_level
@@ -145,6 +157,7 @@ module RobotLab
 
     # Set a RubyLLM config attribute from config value or standard env var.
     # Only sets when a non-nil value is found, to avoid overwriting defaults.
+    # :reek:UncommunicativeParameterName -- `c` is the RubyLLM config being configured; conventional here.
     def set_if_present(c, setter, config_key, env_var)
       value = ruby_llm.public_send(config_key) || ENV.fetch(env_var, nil)
       c.public_send(:"#{setter}=", value) if value

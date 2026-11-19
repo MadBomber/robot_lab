@@ -6,7 +6,7 @@
 # Demonstrates creating a robot with custom tools using RubyLLM::Tool.
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/02_tools.rb
+#   ruby examples/02_tools.rb
 
 require_relative "common"
 
@@ -14,17 +14,17 @@ require_relative "common"
 class Calculator < RubyLLM::Tool
   description "Performs basic arithmetic operations"
 
-  param :operation,
+  parameter :operation,
         type: "string",
-        desc: "The operation to perform (add, subtract, multiply, divide)"
+        description: "The operation to perform (add, subtract, multiply, divide)"
 
-  param :a,
+  parameter :a,
         type: "number",
-        desc: "First operand"
+        description: "First operand"
 
-  param :b,
+  parameter :b,
         type: "number",
-        desc: "Second operand"
+        description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation
@@ -40,9 +40,9 @@ end
 class FortuneCookie < RubyLLM::Tool
   description "Get a fortune cookie message with wisdom and lucky numbers"
 
-  param :category,
+  parameter :category,
         type: "string",
-        desc: "The category of fortune (wisdom, love, career, adventure)"
+        description: "The category of fortune (wisdom, love, career, adventure)"
 
   FORTUNES = {
     "wisdom" => [
@@ -78,7 +78,7 @@ end
 
 # Create robot with tools
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "assistant",
   template: :assistant,
   local_tools: [Calculator, FortuneCookie]
@@ -86,11 +86,21 @@ robot = RobotLab.build(
 
 banner "Robot with Tools"
 
-# Run the robot
-result = robot.run("What is 15 multiplied by 7? Also, give me a fortune about my career.")
+# Run the robot.
+#
+# tools: :inherit is REQUIRED to actually offer the tools to the model.
+# Robot#run defaults to tools: :none, which means "send zero tools this turn"
+# — the robot still holds them in local_tools, but the provider never sees
+# them and the LLM answers from memory instead of calling Calculator.
+# :inherit means "no per-turn filter, use every attached tool".
+result = robot.run(
+  "What is 15 multiplied by 7? Also, give me a fortune about my career.",
+  tools: :inherit
+)
 
 # Display results
 puts "Robot: #{robot.name}"
+puts "Tools offered: #{robot.local_tools.map(&:name).join(', ')}"
 puts "\nOutput:"
 result.output.each do |message|
   puts "  #{message.content}" if message.respond_to?(:content)

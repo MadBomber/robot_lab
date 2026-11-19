@@ -24,9 +24,9 @@ require 'typed_bus'
 #
 # @example Creating a network of robots
 #   network = RobotLab.create_network(name: "pipeline") do
-#     step :analyzer, analyzer, depends_on: :none
-#     step :writer, writer, depends_on: [:analyzer]
-#     step :reviewer, reviewer, depends_on: [:writer]
+#     task :analyzer, analyzer, depends_on: :none
+#     task :writer, writer, depends_on: [:analyzer]
+#     task :reviewer, reviewer, depends_on: [:writer]
 #   end
 #   result = network.run(message: "Process this document")
 #
@@ -35,11 +35,11 @@ require 'typed_bus'
 #   # ROBOT_LAB_DEFAULT_MODEL=gpt-4
 #   # ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 #
-#   # Or via config files (~/.config/robot_lab/config.yml or ./config/robot_lab.yml)
+#   # Or via config files (~/.config/robot_lab/robot_lab.yml or ./config/robot_lab.yml)
 #   # See lib/robot_lab/config/defaults.yml for all options
 #
 #   # Access configuration values:
-#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+#   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
 #   RobotLab.config.ruby_llm.request_timeout  #=> 120
 #
 module RobotLab
@@ -47,15 +47,13 @@ end
 
 loader = Zeitwerk::Loader.for_gem(warn_on_extra_files: false)
 loader.ignore("#{__dir__}/robot_lab/robot")
+loader.ignore("#{__dir__}/robot_lab/names.rb")
 
 # Custom inflections for classes that don't follow Zeitwerk naming conventions
 loader.inflector.inflect(
   'robot_lab' => 'RobotLab',
   'mcp' => 'MCP',
-  'openai' => 'OpenAI',
-  'sse' => 'SSE',
-  'streamable_http' => 'StreamableHTTP',
-  'websocket' => 'WebSocket'
+  'openai' => 'OpenAI'
 )
 
 loader.setup
@@ -70,6 +68,11 @@ require_relative 'robot_lab/hook_registry'
 require_relative 'robot_lab/hooks'
 require_relative 'robot_lab/message'
 require_relative 'robot_lab/memory'
+
+# names.rb defines the NAMES data constant plus helper methods directly on
+# RobotLab, not a RobotLab::Names class/module, so Zeitwerk can't autoload it
+# by convention — ignored above and required explicitly instead.
+require_relative 'robot_lab/names'
 
 # Eager load everything in Rails or when explicitly requested.
 # Otherwise Zeitwerk's lazy autoloading keeps boot fast.
@@ -126,14 +129,15 @@ module RobotLab
     end
 
     def with_hook_scope(registries, per_run_hooks)
-      previous = Thread.current[:robot_lab_hook_scope]
-      Thread.current[:robot_lab_hook_scope] = {
+      thread = Thread.current
+      previous = thread[:robot_lab_hook_scope]
+      thread[:robot_lab_hook_scope] = {
         registries: registries,
         per_run_hooks: per_run_hooks
       }
       yield
     ensure
-      Thread.current[:robot_lab_hook_scope] = previous
+      thread[:robot_lab_hook_scope] = previous
     end
 
     def current_hook_scope
@@ -145,14 +149,14 @@ module RobotLab
     # Configuration is automatically loaded from:
     # - Bundled defaults (lib/robot_lab/config/defaults.yml)
     # - Environment-specific overrides (development, test, production)
-    # - XDG config files (~/.config/robot_lab/config.yml)
+    # - XDG config file (~/.config/robot_lab/robot_lab.yml)
     # - Project config (./config/robot_lab.yml)
     # - Environment variables (ROBOT_LAB_*)
     #
     # @return [Config] the config instance
     #
     # @example
-    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+    #   RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
     #   RobotLab.config.ruby_llm.request_timeout  #=> 120
     #   RobotLab.config.development?              #=> true
     def config
@@ -166,7 +170,7 @@ module RobotLab
     #
     # @example
     #   RobotLab.configure do |c|
-    #     c.default_model = "claude-sonnet-4"
+    #     c.default_model = "claude-sonnet-4-6"
     #   end
     def configure
       yield config
@@ -227,6 +231,7 @@ module RobotLab
     #     name: "helper",
     #     system_prompt: "You are a helpful assistant."
     #   )
+    # :reek:LongParameterList :reek:BooleanParameter -- documented factory API mirroring Robot#initialize; enable_cache is a feature toggle.
     def build(name: "robot", template: nil, system_prompt: nil, context: {}, enable_cache: true, bus: nil, skills: nil,
               config: nil, **)
       Robot.new(
@@ -246,28 +251,28 @@ module RobotLab
     #
     # @param name [String] the unique identifier for the network
     # @param concurrency [Symbol] concurrency model (:auto, :threads, :async)
-    # @yield Block for defining pipeline steps
+    # @yield Block for defining pipeline tasks (the DSL method is `task`)
     # @return [Network] a new Network instance
     #
     # @example Sequential pipeline
     #   network = RobotLab.create_network(name: "pipeline") do
-    #     step :first, robot1, depends_on: :none
-    #     step :second, robot2, depends_on: [:first]
+    #     task :first, robot1, depends_on: :none
+    #     task :second, robot2, depends_on: [:first]
     #   end
     #
     # @example With optional routing
     #   network = RobotLab.create_network(name: "support") do
-    #     step :classifier, classifier, depends_on: :none
-    #     step :billing, billing_robot, depends_on: :optional
-    #     step :technical, technical_robot, depends_on: :optional
+    #     task :classifier, classifier, depends_on: :none
+    #     task :billing, billing_robot, depends_on: :optional
+    #     task :technical, technical_robot, depends_on: :optional
     #   end
     #
     # @example Parallel execution
     #   network = RobotLab.create_network(name: "analysis") do
-    #     step :fetch, fetcher, depends_on: :none
-    #     step :sentiment, sentiment_bot, depends_on: [:fetch]
-    #     step :entities, entity_bot, depends_on: [:fetch]
-    #     step :merge, merger, depends_on: [:sentiment, :entities]
+    #     task :fetch, fetcher, depends_on: :none
+    #     task :sentiment, sentiment_bot, depends_on: [:fetch]
+    #     task :entities, entity_bot, depends_on: [:fetch]
+    #     task :merge, merger, depends_on: [:sentiment, :entities]
     #   end
     def create_network(name:, concurrency: :auto, config: nil, &)
       Network.new(name: name, concurrency: concurrency, config: config, &)
@@ -289,6 +294,7 @@ module RobotLab
     #
     # @example Memory with caching disabled
     #   memory = RobotLab.create_memory(data: {}, enable_cache: false)
+    # :reek:BooleanParameter -- enable_cache is a documented feature toggle forwarded to Memory.new.
     def create_memory(data: {}, enable_cache: true, **)
       Memory.new(data: data, enable_cache: enable_cache, **)
     end

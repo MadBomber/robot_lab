@@ -18,7 +18,10 @@ class OsWriter < RobotLab::Robot
   def call(result)
     message = extract_message(result)
 
-    robot_result = run(message, network_memory: @shared_memory)
+    # tools: :inherit is passed explicitly. This override bypasses
+    # extract_run_context (see the note above), so the task's tools setting
+    # never reaches run() on its own — and run() defaults to :none.
+    robot_result = run(message, network_memory: @shared_memory, tools: :inherit)
 
     if @shared_memory
       draft = robot_result.reply.to_s

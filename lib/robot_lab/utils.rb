@@ -13,6 +13,7 @@ module RobotLab
     # When already inside an Async reactor, creates a child task.
     # Otherwise, creates a temporary reactor that runs the block
     # and cleans up automatically.
+    # :reek:FeatureEnvy -- formatting the rescued exception for the log line; there is nothing else to reference.
     def dispatch_async(&block)
       Async do
         block.call
@@ -25,6 +26,7 @@ module RobotLab
     #
     # @param obj [Object] the object to duplicate
     # @return [Object] the deep copy
+    # :reek:FeatureEnvy -- pure recursive copy of its argument; it has no useful self.
     def deep_dup(obj)
       case obj
       when Hash

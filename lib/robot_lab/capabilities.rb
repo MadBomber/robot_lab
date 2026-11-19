@@ -15,6 +15,8 @@ module RobotLab
 
     attr_reader :fs_read, :fs_write, :network, :timeout, :trust
 
+    # :reek:BooleanParameter -- `network` is a declared capability value (part of the data model), not a mode switch.
+    # :reek:ControlParameter -- `network ? true : false` is boolean coercion of untrusted front-matter input, not behavior selection.
     def initialize(fs_read: [], fs_write: [], network: false, timeout: DEFAULT_TIMEOUT, trust: "external")
       @fs_read  = Array(fs_read).map(&:to_s)
       @fs_write = Array(fs_write).map(&:to_s)
@@ -24,6 +26,7 @@ module RobotLab
     end
 
     # Build from a SKILL.md front matter hash (string or symbol keys).
+    # :reek:ControlParameter -- `front_matter || {}` is a nil-safe default, not control coupling.
     def self.from_front_matter(front_matter)
       fm = front_matter || {}
       new(
@@ -72,6 +75,7 @@ module RobotLab
 
     private
 
+    # :reek:NestedIterators -- 2-deep select/any? over two small path lists is idiomatic Ruby.
     def clamp_paths(requested, allowed)
       roots = expand(allowed)
       expand(requested).select { |p| roots.any? { |r| p == r || p.start_with?("#{r}/") } }

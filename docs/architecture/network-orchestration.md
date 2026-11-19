@@ -46,6 +46,10 @@ result = network.run(message: "Analyze this quarterly data")
 Tasks can have per-task configuration that is deep-merged with network run params:
 
 ```ruby
+# The allowlist below matches because the tool was attached as a CLASS.
+billing_robot = RobotLab.build(name: "billing", system_prompt: "...",
+                               local_tools: [RefundTool])
+
 network = RobotLab.create_network(name: "support") do
   task :classifier, classifier_robot, depends_on: :none
   task :billing, billing_robot,
@@ -59,6 +63,28 @@ network = RobotLab.create_network(name: "support") do
 end
 ```
 
+!!! warning "An explicit `tools:` array must match the attachment form"
+    `ToolConfig.filter_tools` selects with `allowed_set.include?(tool_name(tool))`,
+    and `tool_name` is just `tool.name.to_s`. But `Class#name` and
+    `RubyLLM::Tool#name` return different strings, so the entry you list has to
+    match how the tool was attached:
+
+    | Attached as | Allowlist entry | Result |
+    |-------------|-----------------|--------|
+    | `local_tools: [RefundTool]` (class) | `tools: [RefundTool]` → `"RefundTool"` | matches |
+    | `local_tools: [RefundTool]` (class) | `tools: %w[refund]` | no match |
+    | `local_tools: [RefundTool.new]` (instance) | `tools: [RefundTool]` | no match |
+    | `local_tools: [RefundTool.new]` (instance) | `tools: %w[refund]` | matches |
+
+    Both forms work; mixing them silently yields an empty tool list. Pick one
+    convention per robot and keep the allowlist in the same form.
+
+    A task's `tools:` is *not* validated — it lands in `run_params` and reaches
+    the robot as a runtime value. The robot **constructor**'s `tools:` kwarg is
+    validated by `validate_tools_filter!` and raises `ArgumentError` for
+    anything that is not a String or Symbol, so the class form shown above is
+    usable only at the task/`run` level.
+
 ### Task Parameters
 
 | Parameter | Type | Description |
@@ -69,7 +95,11 @@ end
 | `mcp` | Symbol, Array | MCP server config (`:none`, `:inherit`, or array) |
 | `tools` | Symbol, Array | Tools config (`:none`, `:inherit`, or array) |
 | `memory` | Memory, Hash, nil | Task-specific memory |
+| `config` | RunConfig, nil | Per-task RunConfig, merged into the network config the robot sees (`mcp`/`tools` only in practice) |
 | `depends_on` | Symbol, Array | Dependencies (`:none`, `:optional`, or task names) |
+| `poller_group` | Symbol | Bus poller group label for this robot (default `:default`; purely organizational) |
+
+`mcp:` and `tools:` default to `:none` here. Anything other than `:none` is written into `run_params` and reaches the robot as its **runtime** value, so it is resolved against the robot's build-time config exactly as if it had been passed to `run`.
 
 ## Execution Model
 
@@ -98,28 +128,33 @@ stateDiagram-v2
 Each robot implements the SimpleFlow step interface via `call(result)`:
 
 ```ruby
-# Inside Robot (simplified)
+# Inside Robot (simplified -- timing and the rescue are elided)
 def call(result)
   run_context = extract_run_context(result)
   message = run_context.delete(:message)
 
   robot_result = run(message, **run_context)
+  robot_result.duration = ...   # monotonic elapsed seconds
 
   result
-    .with_context(@name.to_sym, robot_result)
+    .with_context(@name.to_sym, robot_result)   # keyed by the ROBOT's name
     .continue(robot_result)
 end
 ```
+
+The real method also wraps the body so that any exception — including non-`StandardError` ones — is turned into a `RobotResult` whose text is `"Error: <class>: <message>"`, so one failing robot does not crash the pipeline.
 
 ### extract_run_context
 
 The `extract_run_context` method pulls parameters from the SimpleFlow result:
 
-- Extracts `:mcp`, `:tools`, `:memory`, and `:network_memory` from `run_params`
-- Merges the current result value into the context
-- If the previous result value is a `RobotResult`, extracts its `last_text_content` as the message
+- Deletes `:mcp`, `:tools`, `:memory`, `:network_memory`, `:network_config`, `:network`, and `:task` out of `run_params`, then re-attaches them as explicit keyword arguments to `run`
+- `:mcp` and `:tools` default to `:none` when the task did not set them — matching `run`'s own defaults
+- Merges the current result value into the remaining context
+- If the previous result value is a `RobotResult`, uses its `last_text_content` as the message
 - If it is a String, uses it directly as the message
-- If it is a Hash, merges it with the run params
+- If it is a Hash, merges it into the context
+- Anything else is coerced with `to_s` and used as the message
 
 ## Task#call Interface
 
@@ -128,21 +163,35 @@ Each `Task` wraps a robot and enhances the SimpleFlow result before delegation:
 ```ruby
 # Inside Task (simplified)
 def call(result)
-  # Deep merge task context with run_params
-  run_params = deep_merge(
-    result.context[:run_params] || {},
-    @context
-  )
+  context = TaskHookContext.new(network: @network, task: self, robot: @robot,
+                               memory: @memory || @network&.memory, config: @config)
 
-  # Add task-specific config
-  run_params[:mcp] = @mcp unless @mcp == :none
-  run_params[:tools] = @tools unless @tools == :none
+  RobotLab::Hooks.run(:task, context, registries: [RobotLab.hooks, @network&.hooks]) do
+    @robot.call(enhanced_result(result))
+  end
+end
+
+def enhanced_result(result)
+  run_params = deep_merge(result.context[:run_params] || {}, @context)
+
+  run_params[:mcp]    = @mcp   unless @mcp == :none
+  run_params[:tools]  = @tools unless @tools == :none
   run_params[:memory] = @memory if @memory
 
-  enhanced_result = result.with_context(:run_params, run_params)
-  @robot.call(enhanced_result)
+  # Back-references the robot needs for hooks and config resolution
+  run_params[:task]    = self
+  run_params[:network] = @network if @network
+
+  if @config
+    network_rc = run_params[:network_config]
+    run_params[:network_config] = network_rc ? network_rc.merge(@config) : @config
+  end
+
+  result.with_context(:run_params, run_params)
 end
 ```
+
+Two things to note. The `:task` hook family is dispatched against `[RobotLab.hooks, network&.hooks]` only — a handler registered with `robot.on` never fires for task hooks. And the task's own `config:` is merged into `run_params[:network_config]`, which is the value `Robot#resolve_mcp_hierarchy` / `#resolve_tools_hierarchy` consult as the parent level.
 
 ## SimpleFlow::Result
 
@@ -151,28 +200,51 @@ The result object flows through the pipeline:
 ```ruby
 result.value      # Current task's output (RobotResult)
 result.context    # Accumulated context from all tasks
-result.halted?    # Whether execution stopped early
-result.continued? # Whether execution continues
+result.continue?  # Whether execution continues (the only status predicate)
 ```
 
 ### Result Methods
 
+This is the complete public API of `SimpleFlow::Result` (simple_flow 0.4):
+
 | Method | Description |
 |--------|-------------|
+| `value` | Current value flowing through the pipeline |
+| `context` | Accumulated context hash |
 | `continue(value)` | Continue to next tasks |
+| `continue?` | Whether the pipeline is still continuing |
 | `halt(value)` | Stop pipeline execution |
 | `with_context(key, val)` | Add data to context |
+| `with_error(key, message)` | Record an error (both arguments required) |
+| `errors` | Recorded errors |
 | `activate(task_name)` | Enable an optional task |
+| `activated_steps` | Optional tasks that have been activated |
+
+There is no `halted?`, no `continued?`, and no `with_value` — use `continue?` for status and `continue(value)` to set a new value.
 
 ### Context Structure
 
 ```ruby
 {
-  run_params: { message: "...", customer_id: 123, network_memory: memory },
-  classifier: RobotResult,  # Stored by Robot#call
+  run_params: { message: "...", customer_id: 123,
+                network_memory: memory, network: network, task: task },
+  classifier: RobotResult,  # Stored by Robot#call under the ROBOT's name
   billing: RobotResult,
-  # ... other task results
+  # ... other robot results
 }
+```
+
+`Robot#call` stores its output with `result.with_context(@name.to_sym, robot_result)` — the key is the **robot's** `name`, not the task name. The two coincide only when you name them identically:
+
+```ruby
+worker = RobotLab.build(name: "worker_bot", system_prompt: "...")
+
+net = RobotLab.create_network(name: "n") do
+  task :analysis, worker, depends_on: :none
+end
+
+res = net.run(message: "hi")
+res.context.keys      #=> [:run_params, :worker_bot]   -- not :analysis
 ```
 
 ## Optional Task Activation
@@ -236,15 +308,36 @@ All robots in a network share the network's memory during execution. The network
 
 ```ruby
 # Inside Network#run
-def run(**run_context)
+def run(message = nil, **run_context)
+  run_context[:message] = message unless message.nil?     # Runnable protocol
+
   run_context[:network_memory] = @memory
-  initial_result = SimpleFlow::Result.new(
-    run_context,
-    context: { run_params: run_context }
-  )
-  @pipeline.call_parallel(initial_result)
+  run_context[:network]        = self
+  run_context[:network_config] = @config unless @config.empty?
+
+  context = NetworkRunHookContext.new(network: self, context: run_context,
+                                      memory: @memory, config: @config)
+
+  RobotLab::Hooks.run(:network_run, context, registries: [RobotLab.hooks, @hooks]) do
+    if @parallel_mode == :ractor
+      run_with_ractor_scheduler(context.context)
+    else
+      initial_result = SimpleFlow::Result.new(
+        context.context,
+        context: { run_params: context.context }
+      )
+      @pipeline.call_parallel(initial_result, max_concurrent: @config.max_concurrent_robots)
+    end
+  end
 end
 ```
+
+Beyond injecting the shared memory, this does four things worth knowing:
+
+- It puts the network itself and (when non-empty) the network's `RunConfig` into `run_params`, which is how robots find the parent level for `mcp`/`tools` resolution.
+- The whole run is wrapped in the `:network_run` hook, dispatched against `[RobotLab.hooks, network.hooks]`.
+- `parallel_mode: :ractor` routes to `run_with_ractor_scheduler` instead of the SimpleFlow pipeline; it raises `RobotLab::DependencyError` unless the `robot_lab-ractor` gem is loaded.
+- `max_concurrent:` comes from `@config.max_concurrent_robots` — the one `RunConfig` field the network itself consumes.
 
 Robots use the shared memory for inter-robot communication:
 
@@ -278,7 +371,7 @@ network.broadcast(event: :pause, reason: "rate limit hit")
 network.broadcast(event: :phase_complete, phase: "analysis")
 ```
 
-Broadcasts are dispatched asynchronously and also written to memory at the `_network_broadcast` key, so robots can subscribe via `memory.subscribe(:_network_broadcast)`.
+Each handler is invoked inside an `Async { }` block, and the message is also written to memory at the `_network_broadcast` key (`Network::BROADCAST_KEY`), so robots can subscribe via `memory.subscribe(:_network_broadcast)`. Outside a running reactor, `Async { }` runs the block synchronously on the caller's thread. The message handed to a handler is `{ payload:, network:, timestamp: }`, which is why the examples above reach for `message[:payload][:event]`.
 
 ## Parallel Execution
 
@@ -300,17 +393,23 @@ end
 
 ### Concurrency Modes
 
+`create_network`'s `concurrency:` is passed straight to `SimpleFlow::Pipeline`:
+
 | Mode | Description |
 |------|-------------|
-| `:auto` | SimpleFlow chooses best mode |
+| `:auto` | SimpleFlow chooses best mode (default) |
 | `:threads` | Use Ruby threads |
 | `:async` | Use async/fiber |
 
+The number of tasks running at once is capped by the network config's `max_concurrent_robots`, which `Network#run` passes to `call_parallel` as `max_concurrent:`.
+
+Separately, `Network.new(parallel_mode:)` selects the execution backend. It defaults to `:async` (the SimpleFlow pipeline above). Setting `parallel_mode: :ractor` bypasses SimpleFlow entirely for a Ractor-based scheduler and requires the `robot_lab-ractor` gem — without it, `run` raises `RobotLab::DependencyError`.
+
 ## Data Flow
 
-1. **Initial Value**: `network.run(**params)` creates an initial `SimpleFlow::Result` with the run context
-2. **Run Params**: Stored in `result.context[:run_params]`
-3. **Task Results**: Each task adds its `RobotResult` to context under its task name
+1. **Initial Value**: `network.run(message, **params)` creates an initial `SimpleFlow::Result` with the run context
+2. **Run Params**: Stored in `result.context[:run_params]`, including `network_memory`, `network`, and (per task) `task`
+3. **Task Results**: Each robot adds its `RobotResult` to context under **its own `name`**
 4. **Final Value**: Last task's output becomes `result.value`
 
 ```ruby
@@ -319,11 +418,14 @@ result = network.run(
   customer_id: 123
 )
 
-result.context[:run_params]  #=> { message: "...", customer_id: 123, network_memory: ... }
-result.context[:classifier]  #=> RobotResult from classifier
-result.context[:billing]     #=> RobotResult from billing robot
+result.context[:run_params]  #=> { message: "...", customer_id: 123,
+                             #     network_memory: ..., network: ..., task: ... }
+result.context[:classifier]  #=> RobotResult from the robot NAMED "classifier"
+result.context[:billing]     #=> RobotResult from the robot NAMED "billing"
 result.value                 #=> Final RobotResult
 ```
+
+If a robot's `name:` differs from the task name it was registered under, look it up by the robot's name.
 
 ## Visualization
 
@@ -346,12 +448,13 @@ puts network.execution_plan
 ## Network Inspection
 
 ```ruby
-# Get a robot by name
+# Get a robot by its registration key
 network.robot(:classifier)   #=> Robot
 network[:classifier]          #=> Robot (alias)
 
 # List all robots
 network.available_robots      #=> [Robot, Robot, ...]
+network.crew                  #=> same array, via the Runnable protocol
 
 # Add a robot without a task
 network.add_robot(extra_robot)
@@ -362,8 +465,12 @@ network.remove_robot(:extra_robot)
 
 # Convert to hash
 network.to_h
-#=> { name: "support", robots: ["classifier", "billing"], tasks: [...], optional_tasks: [...] }
+#=> { name: "support", robots: ["classifier", "billing"],
+#     tasks: ["classifier", "billing"], optional_tasks: [],
+#     config: { ... } }   # :config present only when the network config is non-empty
 ```
+
+The `@robots` hash is keyed **by task name** for robots registered with `task`, but **by `robot.name`** for robots added with `add_robot`. So for a robot built as `name: "worker_bot"` and registered as `task :analysis, worker`, `network.robot(:analysis)` returns it and `network.robot(:worker_bot)` returns `nil` — the opposite of how `result.context` is keyed. `to_h[:robots]` therefore lists task names for task-registered robots.
 
 ## Next Steps
 

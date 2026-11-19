@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
-require "ruby_llm/semantic_cache"
+# Optional: ruby_llm-semantic_cache has not shipped a ruby_llm 2.0-compatible
+# release. When the gem is absent, Memory#cache returns nil and semantic
+# caching is silently disabled.
+begin
+  require "ruby_llm/semantic_cache"
+rescue LoadError
+  # Semantic caching unavailable; Memory runs without it.
+end
 
 module RobotLab
   # Raised when a blocking get times out
@@ -58,6 +65,9 @@ module RobotLab
   #   memory.results  # => []
   #   memory.cache  # => RubyLLM::SemanticCache instance
   #
+  # :reek:TooManyMethods -- Memory is the deliberately broad shared-state facade
+  #   (reserved keys, reactive get/subscribe, history); see CLAUDE.md.
+  # :reek:RepeatedConditional -- `@backend.key?(key)` is the check-under-mutex idiom; each site is a separate critical section.
   class Memory
     include Utils
 
@@ -89,6 +99,7 @@ module RobotLab
     #
     # @example Network-owned memory
     #   Memory.new(network_name: "support_pipeline")
+    # :reek:BooleanParameter -- enable_cache is a documented feature toggle in the public API.
     def initialize(data: {}, results: [], messages: [], session_id: nil, backend: :auto, enable_cache: true,
                    network_name: nil)
       @backend = select_backend(backend)
@@ -102,7 +113,7 @@ module RobotLab
       set_internal(:results, Array(results))
       set_internal(:messages, Array(messages).map { |m| normalize_message(m) })
       set_internal(:session_id, session_id)
-      set_internal(:cache, @enable_cache ? RubyLLM::SemanticCache : nil)
+      set_internal(:cache, @enable_cache ? create_semantic_cache : nil)
 
       # Data proxy for method-style access
       @data = nil
@@ -144,6 +155,7 @@ module RobotLab
     #
     # @see #set
     #
+    # :reek:TooManyStatements -- one case branch per reserved key; dispatch reads best as a single table.
     def []=(key, value)
       key = key.to_sym
 
@@ -210,9 +222,11 @@ module RobotLab
 
     # Get the semantic cache module
     #
-    # The cache is always active and provides semantic similarity matching
-    # for LLM responses, reducing costs and latency by returning cached
-    # responses for semantically equivalent queries.
+    # When the optional ruby_llm-semantic_cache gem is installed (and
+    # enable_cache is true), provides semantic similarity matching for LLM
+    # responses, reducing costs and latency by returning cached responses
+    # for semantically equivalent queries. Returns nil when the gem is
+    # absent or caching is disabled.
     #
     # @example Using the cache with fetch
     #   response = memory.cache.fetch("What is Ruby?") do
@@ -223,7 +237,7 @@ module RobotLab
     #   chat = memory.cache.wrap(RubyLLM.chat(model: "gpt-4"))
     #   chat.ask("What is Ruby?")  # Cached on semantic similarity
     #
-    # @return [RubyLLM::SemanticCache] the semantic cache module
+    # @return [RubyLLM::SemanticCache, nil] the semantic cache module, or nil when unavailable
     #
     def cache
       get_internal(:cache)
@@ -294,6 +308,8 @@ module RobotLab
     #   memory.get(:sentiment, :entities, :keywords, wait: 60)
     #   # => { sentiment: {...}, entities: [...], keywords: [...] }
     #
+    # :reek:BooleanParameter -- `wait` is public API: false, true (block forever) or a numeric timeout.
+    # :reek:FeatureEnvy -- normalizing this method's own varargs before dispatching on arity.
     def get(*keys, wait: false)
       keys = keys.flatten.map(&:to_sym)
 
@@ -372,6 +388,8 @@ module RobotLab
     # @param subscription_id [Object] the subscription identifier from subscribe
     # @return [Boolean] true if subscription was found and removed
     #
+    # :reek:ControlParameter -- subscription_id is matched against stored ids, not used to select behavior.
+    # :reek:NestedIterators -- 2-deep scan of the per-key subscription lists is the natural shape.
     def unsubscribe(subscription_id)
       removed = false
 
@@ -578,6 +596,7 @@ module RobotLab
     #
     # @return [self]
     #
+    # :reek:TooManyStatements -- reserved keys are re-seeded one by one inside a single mutex block.
     def reset
       cached = get_internal(:cache)  # Preserve cache instance
       @mutex.synchronize do
@@ -694,9 +713,10 @@ module RobotLab
     end
 
     def create_semantic_cache
-      RubyLLM::SemanticCache
+      defined?(RubyLLM::SemanticCache) ? RubyLLM::SemanticCache : nil
     end
 
+    # :reek:ControlParameter -- factory method; the preference symbol is exactly what selects the backend.
     def select_backend(preference)
       case preference
       when :hash
@@ -720,11 +740,11 @@ module RobotLab
       {}
     end
 
-    def redis_available?
+    def redis_available?(config = RobotLab.config)
       return false unless defined?(Redis)
 
       # Check if Redis is configured in RobotLab
-      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
+      redis_config = config.respond_to?(:redis) ? config.redis : nil
       redis_config || ENV.fetch("REDIS_URL", nil)
     end
 
@@ -770,6 +790,7 @@ module RobotLab
       wait_for_key(key, timeout: timeout)
     end
 
+    # :reek:TooManyStatements -- read-under-mutex then wait-for-missing; splitting would separate lock from wait logic.
     def get_multiple(keys, wait:)
       results = {}
       missing = []
@@ -796,6 +817,7 @@ module RobotLab
       results
     end
 
+    # :reek:TooManyStatements -- double-check locking plus timeout cleanup must stay together for correctness.
     def wait_for_key(key, timeout:)
       waiter = nil
 
@@ -823,11 +845,13 @@ module RobotLab
       waiter&.close
     end
 
+    # :reek:UncommunicativeVariableName -- single-char block vars are accepted style here (RuboCop allows them).
     def wake_waiters(key, value)
       waiters = @waiter_mutex.synchronize { @waiters.delete(key) || [] }
       waiters.each { |w| w.signal(value) }
     end
 
+    # :reek:TooManyStatements -- collect/build/coalesce steps share the change object and the scheduling flag.
     def notify_subscribers_async(key, value, old_value)
       # Collect all matching subscribers
       callbacks = []
@@ -870,6 +894,8 @@ module RobotLab
     # Drain all pending notification batches in a single fiber.
     # Loops until the queue is empty, then resets the drainer flag.
     # If new items arrive just before the flag resets, reschedules itself.
+    # :reek:TooManyStatements :reek:NestedIterators -- the drain loop and its ensure-reschedule race guard are one
+    #   atomic unit; batch-of-callbacks iteration is inherently 2-deep.
     def drain_notification_queue
       loop do
         batch = @notification_queue_mutex.synchronize do
@@ -921,8 +947,8 @@ module RobotLab
   #
   # @api private
   class RedisBackend
-    def initialize
-      @redis = create_redis_connection
+    def initialize(config = RobotLab.config)
+      @redis = create_redis_connection(config)
       @namespace = "robot_lab:memory:#{SecureRandom.uuid}"
     end
 
@@ -965,8 +991,8 @@ module RobotLab
 
     private
 
-    def create_redis_connection
-      redis_config = RobotLab.config.respond_to?(:redis) ? RobotLab.config.redis : nil
+    def create_redis_connection(config = RobotLab.config)
+      redis_config = config.respond_to?(:redis) ? config.redis : nil
 
       if redis_config.is_a?(Hash)
         Redis.new(**redis_config)

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 RobotLab is a Ruby framework for building and orchestrating multi-robot LLM workflows. It provides:
 - **Robots**: LLM agents with tools, templates, and memory
 - **Networks**: Orchestration of multiple robots with routing logic
-- **MCP Integration**: Model Context Protocol for external tool servers
+- **MCP Integration**: Model Context Protocol servers (tools, resources, prompts) through ruby_llm's built-in `RubyLLM::MCP` client
 - **Rails Integration**: Generators and ActiveRecord support for conversation history
 
 Built on top of [ruby_llm](https://rubyllm.com) and uses Zeitwerk for autoloading.
@@ -45,22 +45,28 @@ bundle exec rake examples:run[1]
 ### Core Classes
 
 - **`RobotLab`** (`lib/robot_lab.rb`): Module entry point with factory methods `build()` for robots and `create_network()` for networks
-- **`Robot`** (`lib/robot_lab/robot.rb`): Subclass of `RubyLLM::Agent` with template-based prompts, tools, MCP clients, and memory. Creates a persistent chat on initialization. Use `robot.run("...")` to interact. When standalone uses its own memory; when in a network uses shared network memory
+- **`Robot`** (`lib/robot_lab/robot.rb`): Subclass of `RubyLLM::Agent` with template-based prompts, tools, MCP servers, and memory. Creates a persistent chat on initialization. Use `robot.run("...")` to interact. When standalone uses its own memory; when in a network uses shared network memory
 - **`Network`** (`lib/robot_lab/network.rb`): Orchestrates multiple robots with routing logic. Robots execute sequentially sharing memory. Router is a lambda that returns robot names
 - **`NetworkRun`** (`lib/robot_lab/network_run.rb`): Stateful execution of a network run with isolated memory clone
 
 ### RunConfig
 
-- **`RunConfig`** (`lib/robot_lab/run_config.rb`): Shared configuration object for LLM, tools, callbacks, and infrastructure settings. Flows through the hierarchy: `RobotLab.config -> Network -> Robot -> Template front matter -> Task -> Runtime`. Supports keyword construction, block DSL, merge semantics (more-specific wins), and `apply_to(chat)` for LLM field application. Both Robot and Network accept `config:` parameter. Infrastructure fields include: `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`.
+- **`RunConfig`** (`lib/robot_lab/run_config.rb`): Shared configuration object for LLM, tools, callbacks, and infrastructure settings. Flows through the hierarchy: `RobotLab.config -> Network -> Robot -> Template front matter -> Task -> Runtime`. Supports keyword construction, block DSL, merge semantics (more-specific wins), and `apply_to(chat)` for LLM field application. Both Robot and Network accept `config:` parameter. Infrastructure fields include: `bus`, `enable_cache`, `max_tool_rounds`, `token_budget`, `ractor_pool_size`, `max_concurrent_robots`, `doom_loop_threshold`, `auto_compact`, `compact_threshold`, `tool_approval`. Callback fields: `on_tool_call`, `on_tool_result`, `on_content`, `on_tool_approval`, `on_input_request`.
 
 ### Memory System
 
-- **`Memory`** (`lib/robot_lab/memory.rb`): Key-value store with reserved keys (`:data`, `:results`, `:messages`, `:session_id`, `:cache`). Supports Redis backend. Includes semantic caching via RubyLLM::SemanticCache
+- **`Memory`** (`lib/robot_lab/memory.rb`): Key-value store with reserved keys (`:data`, `:results`, `:messages`, `:session_id`, `:cache`). Supports Redis backend. Semantic caching via RubyLLM::SemanticCache when the optional ruby_llm-semantic_cache gem is installed (`memory.cache` is nil otherwise)
 
 ### MCP (Model Context Protocol)
 
-- **`MCP::Client`** (`lib/robot_lab/mcp/client.rb`): Connects to MCP servers
-- **Transports** (`lib/robot_lab/mcp/transports/`): stdio, websocket, SSE, streamable HTTP
+The MCP client is ruby_llm 2.1's `RubyLLM::MCP` (stdio and Streamable HTTP only; no SSE/WebSocket). robot_lab adds:
+
+- **`RobotLab::MCP`** (`lib/robot_lab/mcp.rb`): `build(spec)` turns a config Hash into a `RubyLLM::MCP` instance (instances and subclasses pass through); `define(config)` returns the anonymous class; `name_of`, `seconds`. `sse`/`ws` transports raise `MCPError`
+- **`MCP::Server`** (`lib/robot_lab/mcp/server.rb`): `RubyLLM::MCP` subclass with a `description` macro and `connected?`
+- **`MCP::Registry`** (`lib/robot_lab/mcp/registry.rb`): a robot's servers by name; re-adding the same spec returns the existing server
+- **`Robot::MCPManagement`** (`lib/robot_lab/robot/mcp_management.rb`): `mcp` (Registry), `with_mcp`, `connect_mcp!`, `mcp_tools`, `mcp_failures`, `mcp_server_for`, `disconnect`. Each run attaches the selected servers' `RubyLLM::MCP::Tool`s via `with_tools`
+- **`Robot::ToolCallGating`** (`lib/robot_lab/robot/tool_call_gating.rb`): `:tool_call` hook bridge for non-`RobotLab::Tool` tools and settlement of approvals (`tool_approval:` `:deny` default / `:approve`, `on_tool_approval:`), input requests (`on_input_request:`) and MCP tasks
+- **`MCP::ServerDiscovery`** (`lib/robot_lab/mcp/server_discovery.rb`): per-message server selection when `mcp_discovery: true`
 
 ### Built-in Tools
 
@@ -72,7 +78,7 @@ Provider adapters in `lib/robot_lab/adapters/`: Anthropic, OpenAI, Gemini (for p
 
 ### Configuration Hierarchy
 
-Tools and MCP servers use hierarchical configuration: `runtime > robot > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays.
+Tools and MCP servers use hierarchical configuration: `runtime > robot > network > global config`. Values can be `:none`, `:inherit`, or explicit arrays (for `mcp:`, an array mixes config Hashes, `RubyLLM::MCP` instances and `RubyLLM::MCP` subclasses). `run()` defaults both to `:none`; pass `mcp: :inherit, tools: :inherit` to send MCP tools.
 
 ## Key Patterns
 
@@ -100,15 +106,21 @@ robot.with_temperature(0.9).with_model("claude-sonnet-4").run("Be creative!")
 
 ### Creating Networks
 
+Networks are declared with a task DSL; there is no `robots:`/`router:` form.
+`depends_on:` is `:none` (entry point), `:optional` (routed to only when a
+prior robot selects it), or a list of task names (runs after those finish;
+siblings sharing a dependency run in parallel).
+
 ```ruby
-router = ->(args) { args.call_count.zero? ? ["classifier"] : nil }
-network = RobotLab.create_network(name: "support", robots: [robot1, robot2], router: router)
+network = RobotLab.create_network(name: "support") do
+  task :classifier, classifier_robot, depends_on: :none
+  task :billing,    billing_robot,    depends_on: :optional
+  task :technical,  technical_robot,  depends_on: :optional
+end
 result = network.run(message: "Hello")
 ```
 
-### Router Args
-
-Router receives `Router::Args` with: `context`, `network`, `stack`, `call_count`, `last_result`
+`create_network` also accepts `concurrency:` (`:auto`, `:threads`, `:async`) and `config:`.
 
 ## Testing
 
@@ -119,7 +131,9 @@ Router receives `Router::Args` with: `context`, `network`, `stack`, `call_count`
 
 ## Dependencies
 
-Core: myway_config, zeitwerk, ruby_llm (~> 1.12), ruby_llm-mcp, prompt_manager, ruby_llm-schema, ruby_llm-semantic_cache, async, async-http, async-websocket, typed_bus, simple_flow, ractor_queue
+Core: myway_config, zeitwerk, ruby_llm (>= 2.1.1, < 3 — its built-in `RubyLLM::MCP` is the MCP client), ruby_llm-providers-apfel, ruby_llm-providers-lms (local LM Studio provider used by the examples: qwen/qwen3.8-27b for complex work, openai/gpt-oss-20b for simple demos), prompt_manager, async, typed_bus, simple_flow, tsort, ractor_queue
+
+Optional: ruby_llm-semantic_cache (Memory#cache; no ruby_llm 2.0-compatible release yet — Memory runs with caching disabled when absent), classifier (compress_history)
 
 ### Templates
 

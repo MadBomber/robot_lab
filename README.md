@@ -1,7 +1,7 @@
 # RobotLab
 
-> [!INFO]
-> See the [CHANGELOG](CHANGELOG.md) for the latest changes.  The [examples directory has a good cross section  of demo apps](examples/README.md) that show-off the various capabilities of the RobotLab library.
+> [!NOTE]
+> See the [CHANGELOG](CHANGELOG.md) for the latest changes.  The [examples directory has a good cross section of demo apps](examples/README.md) that show-off the various capabilities of the RobotLab library.
 
 <br>
 <table>
@@ -20,8 +20,8 @@
 - <strong>Extensible Tools</strong> - Custom capabilities with graceful error handling<br>
 - <strong>Human-in-the-Loop</strong> - AskUser tool for interactive prompting<br>
 - <strong>Content Streaming</strong> - Stored callbacks, per-call blocks, or both<br>
-- <strong>MCP Integration</strong> - Connect to external tool servers with timeouts and retry<br>
-- <strong>Local LLM Providers</strong> - Ollama, GPUStack, LM Studio via provider passthrough<br>
+- <strong>MCP Integration</strong> - Tools, resources and prompts from MCP servers through ruby_llm's built-in client<br>
+- <strong>Local LLM Providers</strong> - LM Studio (via ruby_llm-providers-lms), Ollama, and GPUStack via provider passthrough<br>
 - <strong>Shared Memory</strong> - Reactive key-value store with subscriptions<br>
 - <strong>Message Bus</strong> - Bidirectional robot communication via TypedBus<br>
 - <strong>Dynamic Spawning</strong> - Robots create new robots at runtime<br>
@@ -30,6 +30,7 @@
 - <strong>Rails Integration</strong> - Generators, background jobs, Turbo Stream broadcasting (via <a href="https://github.com/MadBomber/robot_lab-rails">robot_lab-rails</a>)<br>
 - <strong>Token &amp; Cost Tracking</strong> - Per-run and cumulative token counts on every robot<br>
 - <strong>Tool Loop Circuit Breaker</strong> - <code>max_tool_rounds:</code> guards against runaway tool call loops<br>
+- <strong>Doom Loop Detection</strong> - always-on detection of repeated or cyclic tool call patterns, tunable via <code>doom_loop_threshold:</code><br>
 - <strong>Learning Accumulation</strong> - <code>robot.learn()</code> builds up cross-run observations with deduplication<br>
 - <strong>Context Window Compression</strong> - <code>robot.compress_history()</code> prunes irrelevant old turns via TF cosine scoring<br>
 - <strong>Convergence Detection</strong> - <code>RobotLab::Convergence</code> detects when independent agents agree, enabling reconciler fast-path<br>
@@ -38,7 +39,7 @@
 </tr>
 </table>
 
-<p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) snd explore the [many examples](examples/README.md) available as working demo applications.</p>
+<p>RobotLab enables sophisticated AI applications using multiple specialized robots (LLM agents) that work together to accomplish complex tasks. Each robot has its own instructions, skills, tools, and capabilities.  Review the [full documentation website](https://madbomber.github.io/robot_lab) and explore the [many examples](examples/README.md) available as working demo applications.</p>
 
 ## Installation
 
@@ -54,7 +55,7 @@ gem install robot_lab
 
 ### Requirements
 
-- Ruby >= 4.0
+- Ruby >= 4.0.9
 - [One or more API Keys for LLM providers supported by RubyLLM](https://rubyllm.com/configuration/#provider-configuration)
 
 For comprehensive guides and API documentation, visit **[https://madbomber.github.io/robot_lab](https://madbomber.github.io/robot_lab)**
@@ -81,16 +82,20 @@ puts result.last_text_content
 
 ### Local LLM Providers
 
-For local LLM providers (Ollama, GPUStack, LM Studio, etc.), use the `provider:` parameter:
+For local LLM providers, use the `provider:` parameter. RubyLLM's provider list is the authority on valid values — `:ollama` and `:gpustack` are built in, and provider gems add more (alongside `:anthropic`, `:azure`, `:bedrock`, `:deepseek`, `:gemini`, `:mistral`, `:openai`, `:openrouter`, `:perplexity`, `:vertexai`, and `:xai`). The examples in this repo use LM Studio through the [ruby_llm-providers-lms](https://github.com/madbomber/ruby_llm-providers-lms) gem, which registers the `:lms` provider (defaults to `http://localhost:1234/v1`, no API key needed):
 
 ```ruby
+require "ruby_llm/providers/lms"
+
 robot = RobotLab.build(
   name: "local_bot",
-  model: "llama3.2",
-  provider: :ollama,
+  model: "qwen/qwen3.8-27b",   # complex work; use "openai/gpt-oss-20b" for simple chat
+  provider: :lms,
   system_prompt: "You are a helpful assistant."
 )
 ```
+
+Specifying `provider:` also sets `assume_model_exists`, so the model name is not validated against a known-model list.
 
 ### Configuration
 
@@ -98,7 +103,7 @@ RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layer
 
 1. Bundled defaults (`lib/robot_lab/config/defaults.yml`)
 2. Environment-specific overrides (development, test, production)
-3. XDG user config (`~/.config/robot_lab/config.yml`)
+3. XDG user config (`~/.config/robot_lab/robot_lab.yml` — note the filename repeats the app name)
 4. Project config (`./config/robot_lab.yml`)
 5. Environment variables (`ROBOT_LAB_*` prefix)
 
@@ -106,21 +111,20 @@ RobotLab uses [MywayConfig](https://github.com/MadBomber/myway_config) for layer
 # Set API keys via environment variables (double underscore for nesting)
 export ROBOT_LAB_RUBY_LLM__ANTHROPIC_API_KEY=sk-ant-...
 export ROBOT_LAB_RUBY_LLM__OPENAI_API_KEY=sk-...
-export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4
+export ROBOT_LAB_RUBY_LLM__MODEL=claude-sonnet-4-6
 ```
 
 ```ruby
 # Access configuration values
-RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4"
+RobotLab.config.ruby_llm.model            #=> "claude-sonnet-4-6"
 RobotLab.config.ruby_llm.request_timeout  #=> 120
-RobotLab.config.streaming_enabled         #=> true
 ```
 
 Or create a project config file at `./config/robot_lab.yml`:
 
 ```yaml
 ruby_llm:
-  model: claude-sonnet-4
+  model: claude-sonnet-4-6
   anthropic_api_key: sk-ant-...
   request_timeout: 180
 ```
@@ -192,10 +196,11 @@ tools:
   - CodeSearchTool
 mcp:
   - name: github
-    transport: stdio
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-github"]
-model: claude-sonnet-4
+    transport:
+      type: stdio
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-github"]
+model: claude-sonnet-4-6
 ---
 You are a GitHub assistant. Use available tools to help with repository tasks.
 ```
@@ -205,7 +210,10 @@ You are a GitHub assistant. Use available tools to help with repository tasks.
 robot = RobotLab.build(template: :github_assistant)
 ```
 
-Front matter supports: `description`, `robot_name`, `tools`, `mcp`, `skills`, `parameters`, and LLM config keys (`model`, `temperature`, `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, `stop`). Constructor-provided values always take precedence over front matter.
+Front matter supports: `description`, `robot_name`, `tools`, `mcp`, `skills`, `parameters`, and LLM config keys. Constructor-provided values always take precedence over front matter.
+
+> [!IMPORTANT]
+> Of the LLM config keys, only **`model`** and **`temperature`** currently take effect from front matter. `top_p`, `top_k`, `max_tokens`, `presence_penalty`, `frequency_penalty`, and `stop` are parsed but not applied — set those as constructor kwargs (or via `config:`), where they do work.
 
 ### Composable Skills
 
@@ -237,7 +245,7 @@ Skills are expanded depth-first and can reference other skills (with automatic c
 
 ### Combining Templates with System Prompts
 
-The `system_prompt` parameter can also be used alongside a template. When both are provided, the template renders first and the `system_prompt` is appended. This is particularly useful during development and testing when you want to add temporary instructions or context to an existing template:
+The `system_prompt` parameter can also be used alongside a template. When both are provided, the template renders first and the `system_prompt` is appended, producing a single combined system message. The appended text also survives template re-rendering, so it persists across `run()` calls that supply runtime context. This is particularly useful during development and testing when you want to add temporary instructions or context to an existing template:
 
 ```ruby
 robot = RobotLab.build(
@@ -250,12 +258,12 @@ robot = RobotLab.build(
 
 ### Shared Configuration with RunConfig
 
-`RunConfig` lets you define operational defaults that flow through the hierarchy: Network -> Robot -> Template -> Task -> Runtime. Use it to share LLM settings across multiple robots or an entire network.
+`RunConfig` lets you define operational defaults. For a single robot they cascade from least- to most-specific: template front matter -> `config:` -> constructor kwargs. Front matter is the *base*, not an override — constructor kwargs always win.
 
 ```ruby
 # Create a shared config
 shared = RobotLab::RunConfig.new(
-  model: "claude-sonnet-4",
+  model: "claude-sonnet-4-6",
   temperature: 0.7,
   max_tokens: 2000
 )
@@ -267,7 +275,7 @@ robot = RobotLab.build(
   config: shared
 )
 
-# Apply to an entire network (all robots inherit these defaults)
+# Apply at the network level (see the note below on what actually propagates)
 network = RobotLab.create_network(name: "pipeline", config: shared) do
   task :analyzer, analyzer_robot, depends_on: :none
   task :writer, writer_robot, depends_on: [:analyzer]
@@ -282,35 +290,48 @@ robot = RobotLab.build(
 )
 ```
 
+> [!IMPORTANT]
+> A network-level `config:` propagates only `mcp` and `tools` down to its robots, and only when the robot opts in with `mcp: :inherit` / `tools: :inherit` — `:none` at any level resolves to an empty list. LLM fields (`model`, `temperature`, `max_tokens`, …) and callbacks (`on_content`) are read from each robot's own config at construction time, so they are **not** inherited from the network. To share LLM settings, pass the same `RunConfig` to each robot via `config:`.
+>
+> `max_concurrent_robots` is the one field the network itself consumes.
+
 RunConfig supports keyword construction, block DSL, and merge semantics:
 
 ```ruby
 # Block DSL
 config = RobotLab::RunConfig.new do |c|
-  c.model "claude-sonnet-4"
+  c.model "claude-sonnet-4-6"
   c.temperature 0.7
 end
 
 # Merge (more-specific wins)
-network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4", temperature: 0.5)
+network_config = RobotLab::RunConfig.new(model: "claude-sonnet-4-6", temperature: 0.5)
 robot_config   = RobotLab::RunConfig.new(temperature: 0.9)
 effective      = network_config.merge(robot_config)
 effective.temperature  #=> 0.9
-effective.model        #=> "claude-sonnet-4"
+effective.model        #=> "claude-sonnet-4-6"
 ```
 
 ### Chaining Configuration
 
-Robots support method chaining to adjust configuration after creation:
+Robots support method chaining to adjust configuration after creation. The `with_*` methods are delegated dynamically from the underlying `RubyLLM::Chat`, so the available set is whatever that class defines — currently `with_context`, `with_headers`, `with_instructions`, `with_model`, `with_params`, `with_schema`, `with_temperature`, `with_thinking`, `with_tool`, and `with_tools`. Each returns the robot, so calls chain.
 
 ```ruby
 robot = RobotLab.build(name: "writer", system_prompt: "You are a creative writer.")
 
 result = robot
   .with_temperature(0.9)
-  .with_model("claude-sonnet-4")
-  .with_max_tokens(2000)
+  .with_model("claude-sonnet-4-6")
   .run("Write a haiku about Ruby programming")
+```
+
+There is no `with_max_tokens`. Set token limits in the constructor, or pass them through `with_params`:
+
+```ruby
+robot = RobotLab.build(name: "writer", system_prompt: "...", max_tokens: 2000)
+
+# or, after creation
+robot.with_params(max_tokens: 2000)
 ```
 
 ## Graceful Tool Error Handling
@@ -326,7 +347,7 @@ result = tool.call({})
 # => "Error (fetch_data): connection refused"
 ```
 
-This applies to all tools — subclasses, factory tools, and MCP tools. For critical tools where you want exceptions to propagate, opt out per class:
+This applies to every `RobotLab::Tool` — subclasses and factory tools. (MCP tools are `RubyLLM::MCP::Tool` instances; a `RubyLLM::MCP::Error` raised during one of their calls becomes an `{ error: }` tool result through the robot's tool-call bridge instead.) For critical tools where you want exceptions to propagate, opt out per class:
 
 ```ruby
 class CriticalTool < RobotLab::Tool
@@ -368,8 +389,21 @@ robot = RobotLab.build(
   local_tools: [Magic8Ball]
 )
 
-result = robot.run("Should I start learning Rust?")
+# NOTE the `tools: :inherit` — see the warning below
+result = robot.run("Should I start learning Rust?", tools: :inherit)
 ```
+
+> [!WARNING]
+> `run()` defaults to `tools: :none` and `mcp: :none`, and `:none` means **send zero tools this turn**. Attaching tools with `local_tools:` (or servers with `mcp:`) is therefore not enough on its own — a plain `robot.run("...")` sends the LLM no tools at all and contacts no MCP servers.
+>
+> Pass `tools: :inherit` / `mcp: :inherit` on each run to use what the robot has attached:
+>
+> ```ruby
+> robot.run("...", tools: :inherit)              # send attached tools
+> robot.run("...", mcp: :inherit, tools: :inherit)  # select MCP servers + send their tools
+> ```
+>
+> `:inherit` means "no filter, use everything attached"; an explicit array acts as a name allowlist. Note that `tools: :inherit` at *build* time behaves differently — it resolves against the parent level, so keep `:inherit` on the `run()` call.
 
 ## Orchestrating Multiple Robots
 
@@ -423,24 +457,29 @@ puts result.value.last_text_content
 
 ## Memory
 
-Both robots and networks have inherent memory that persists across runs:
+Two independent mechanisms carry state across runs, and it is worth keeping them straight:
+
+- **Chat history** — each robot owns a persistent `RubyLLM::Chat`, so conversational context carries forward automatically with no work on your part.
+- **`RobotLab::Memory`** — an explicit key-value store you read and write yourself, shared across robots when they run inside a network.
 
 ```ruby
-# Standalone robot with inherent memory
 robot = RobotLab.build(name: "assistant", system_prompt: "You are helpful.")
 
 robot.run("My name is Alice")
-robot.run("What's my name?")  # Memory persists automatically
+robot.run("What's my name?")  # answered from the persistent chat history
 
-# Access robot's memory
+# Access robot's memory (the explicit key-value store)
 robot.memory[:user_id] = 123
 robot.memory.data[:category] = "billing"
 
 # Runtime memory injection
 robot.run("Help me", memory: { session_id: "abc123", tier: "premium" })
 
-# Reset memory when needed
+# Reset the key-value store (does NOT clear chat history)
 robot.reset_memory
+
+# Clear chat history instead, keeping the system prompt
+robot.clear_messages
 ```
 
 Networks pass context through SimpleFlow::Result:
@@ -467,40 +506,53 @@ billing_result = result.context[:billing]
 puts result.value.last_text_content
 ```
 
+Results are keyed in `result.context` by the **robot's** `name`, not by the task name given to `task`. Keep the two identical unless you have a reason not to.
+
 ## MCP Integration
 
-Connect to external tool servers via Model Context Protocol:
+RobotLab uses ruby_llm's built-in MCP client (`RubyLLM::MCP`, stdio and Streamable HTTP). A server is a config Hash, a `RubyLLM::MCP` subclass, or an instance:
 
 ```ruby
-# Configure MCP server (with optional timeout)
-filesystem_server = {
+# A config Hash — the same shape works in template front matter and Network#task(mcp:)
+filesystem = {
   name: "filesystem",
   transport: {
     type: "stdio",
-    command: "mcp-server-filesystem",
-    args: ["/path/to/allowed/directory"]
+    command: "npx",
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"]
   },
-  timeout: 30  # seconds (default: 15)
+  timeout: 30  # seconds; absent means ruby_llm's request_timeout
 }
 
-# Create robot with MCP server - tools are auto-discovered
+# Or anything RubyLLM::MCP's class DSL offers
+class GitHub < RubyLLM::MCP
+  command "github-mcp-server", "stdio"
+  env GITHUB_PERSONAL_ACCESS_TOKEN: ENV["GITHUB_PERSONAL_ACCESS_TOKEN"]
+  requires_approval if: :destructive?
+end
+
 robot = RobotLab.build(
   name: "developer",
   template: :developer,
-  mcp: [filesystem_server]
+  mcp: [filesystem, GitHub],
+  tool_approval: :approve   # approval-gated tools are denied unless allowed here or via on_tool_approval:
 )
 
-# Optionally connect eagerly (default is lazy on first run)
+# Servers connect on the first run that selects them; connect_mcp! connects now
 robot.connect_mcp!
-
-# Check connection status
 puts "Failed: #{robot.failed_mcp_server_names}" if robot.failed_mcp_server_names.any?
 
-# Robot can now use filesystem tools
-result = robot.run("List the files in the current directory")
+# run() defaults to mcp: :none / tools: :none — ask for the servers and their tools per run
+result = robot.run("List the files in the current directory", mcp: :inherit, tools: :inherit)
+
+# The full ruby_llm surface is one lookup away
+robot.mcp[:filesystem].resources
+robot.run(robot.mcp[:git_hub].prompt("code_review", code: diff), mcp: :inherit)
+
+robot.disconnect   # closes every server (stopping stdio processes); they reconnect on next use
 ```
 
-MCP connections are resilient: failed servers are automatically retried on subsequent `run()` calls, and one failing server does not prevent others from connecting.
+Connection failures are logged, recorded in `robot.mcp_failures` and retried on the next run that selects the server; they are not raised, and one failing server does not stop the others. A `RubyLLM::MCP::Error` during a tool call becomes an `{ error: }` tool result rather than aborting the run. See the [MCP Integration guide](docs/guides/mcp-integration.md), including its "Migrating from 0.3" section.
 
 ## Message Bus
 
@@ -634,7 +686,7 @@ robot = RobotLab.build(
 robot.run("Tell me a story") { |chunk| stream_to_client(chunk.content) }
 ```
 
-The `on_content:` callback participates in the RunConfig cascade, so it can be set at the network or config level and inherited by robots.
+The `on_content:` callback is a `RunConfig` field, so it can also be supplied through a robot's `config:` instead of as a constructor kwarg. It is read from the robot's own config at construction time — a network-level `config:` does not supply it.
 
 ## Token & Cost Tracking
 
@@ -675,7 +727,8 @@ robot = RobotLab.build(
 begin
   robot.run("Run all steps.")
 rescue RobotLab::ToolLoopError => e
-  puts e.message  # "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
+  puts e.message
+  # "Circuit breaker triggered: 11 tool calls exceeded max_tool_rounds (10)"
 end
 ```
 
@@ -688,14 +741,16 @@ result = robot.run("Something new.")  # robot is healthy again
 
 ## Doom Loop Detection
 
-Doom loop detection catches the subtler failure mode where a robot repeats the same tool call pattern indefinitely — not hitting `max_tool_rounds`, but cycling through the same sequence over and over. Set `doom_loop_threshold:` to enable it:
+Doom loop detection catches the subtler failure mode where a robot repeats the same tool call pattern indefinitely — not hitting `max_tool_rounds`, but cycling through the same sequence over and over.
+
+Unlike the circuit breaker, doom loop detection is **always active** — it is installed on every run. `doom_loop_threshold:` tunes the sensitivity; it does not switch the feature on. The default threshold is `3`.
 
 ```ruby
 robot = RobotLab.build(
   name: "runner",
   system_prompt: "Execute steps.",
   local_tools: [StepTool],
-  doom_loop_threshold: 3   # alert after 3 identical consecutive or cyclic sequences
+  doom_loop_threshold: 5   # tolerate more repetition before warning (default: 3)
 )
 ```
 
@@ -710,27 +765,33 @@ robot  = RobotLab.build(name: "runner", system_prompt: "...", config: config)
 
 `auto_compact` triggers context window compression automatically before each `run()`, preventing context overflow without manual intervention.
 
+`auto_compact` and `compact_threshold` are `RunConfig` fields, not constructor keywords — pass them via `config:`:
+
 ```ruby
 # Built-in trigger: compact when estimated token usage exceeds 80% of context window
 robot = RobotLab.build(
   name: "analyst",
   system_prompt: "You are a research analyst.",
-  auto_compact: :context_window
+  config: RobotLab::RunConfig.new(auto_compact: :context_window)
 )
 
 # Tune the threshold (here: compact at 70%)
 robot = RobotLab.build(
   name: "analyst",
   system_prompt: "You are a research analyst.",
-  auto_compact:      :context_window,
-  compact_threshold: 0.70
+  config: RobotLab::RunConfig.new(
+    auto_compact:      :context_window,
+    compact_threshold: 0.70
+  )
 )
 
 # Application-owned compaction: full control over when and how
 robot = RobotLab.build(
   name: "analyst",
   system_prompt: "You are a research analyst.",
-  auto_compact: ->(r) { r.compress_history(recent_turns: 5) if r.chat.messages.size > 40 }
+  config: RobotLab::RunConfig.new(
+    auto_compact: ->(r) { r.compress_history(recent_turns: 5) if r.chat.messages.size > 40 }
+  )
 )
 ```
 
@@ -740,12 +801,7 @@ robot = RobotLab.build(
 | `:context_window` | Compact when estimated token usage exceeds `compact_threshold` fraction of model's context window |
 | `Proc` | Called with the robot before each `run()`; application decides when and how to compact |
 
-`compact_threshold` defaults to `0.80` (80%). Requires the `classifier` gem when using the built-in `:context_window` strategy. Via `RunConfig`:
-
-```ruby
-config = RobotLab::RunConfig.new(auto_compact: :context_window, compact_threshold: 0.75)
-robot  = RobotLab.build(name: "analyst", system_prompt: "...", config: config)
-```
+`compact_threshold` defaults to `0.80` (80%). The built-in `:context_window` strategy uses the optional `classifier` gem; if it is missing, compaction is skipped with a logged warning rather than raising.
 
 ## Learning Accumulation
 
@@ -763,18 +819,9 @@ reviewer.learn("This codebase prefers map/collect over manual array accumulation
 reviewer.run("Review snippet B")  # learning is injected automatically
 ```
 
-Pass `learn: true` in the constructor to enable automatic end-of-session learning promotion via the `robot_lab-durable` gem:
+Cross-session learning promotion is provided by the [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) gem, which hooks the `:learn` lifecycle family. See that gem's documentation for setup.
 
-```ruby
-reviewer = RobotLab.build(
-  name: "reviewer",
-  system_prompt: "You are a Ruby code reviewer.",
-  learn: true,
-  learn_domain: "ruby_review"
-)
-```
-
-Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot's `Memory` and survive a robot rebuild when the same `Memory` object is reused.
+Learnings deduplicate bidirectionally: if a broader learning is added that contains an existing narrower one, the narrower one is dropped. Learnings are persisted to the robot's `Memory` for the lifetime of that robot.
 
 ```ruby
 reviewer.learnings          # => ["This codebase prefers map/collect..."]
@@ -784,6 +831,8 @@ reviewer.learn("new fact")  # deduplicates before storing
 ## Context Window Compression
 
 `robot.compress_history` prunes old conversation turns using term-frequency cosine similarity, keeping only turns that are relevant to the most recent context. System messages and tool call/result pairs are always preserved.
+
+Scoring uses raw term frequencies without IDF weighting — on a topic-focused conversation, IDF would suppress exactly the recurring terms that signal relevance.
 
 ```ruby
 # Basic compression: protect the 3 most recent turns, drop unrelated old turns
@@ -811,7 +860,7 @@ gem "classifier", "~> 2.3"
 
 ## Convergence Detection
 
-`RobotLab::Convergence` detects when two independent agents have reached the same conclusion using term-frequency cosine similarity. Use it as a router fast-path to skip an expensive reconciler LLM call when verifiers already agree.
+`RobotLab::Convergence` detects when two independent agents have reached the same conclusion using term-frequency cosine similarity (no IDF — on a two-document comparison, IDF collapses the shared terms to zero). Use it to skip an expensive reconciler LLM call when verifiers already agree.
 
 ```ruby
 # Check similarity directly
@@ -826,18 +875,30 @@ RobotLab::Convergence.detected?(result_a.reply, result_b.reply)
 RobotLab::Convergence.detected?(text_a, text_b, threshold: 0.75)
 ```
 
-A common pattern is wiring convergence into a network router to skip reconciliation:
+`similarity` returns `0.0` if either text is blank or shorter than 30 characters (`Convergence::MIN_TEXT_LENGTH`), since term-frequency scoring is not meaningful on very short strings. Short replies like `"yes"` will therefore never register as converged.
+
+A common pattern is a gate robot that decides whether reconciliation is needed. Routing is done by overriding `call` and activating an `depends_on: :optional` task — networks have no separate router parameter:
 
 ```ruby
-router = ->(args) do
-  a = args.context[:verifier_a]&.reply.to_s
-  b = args.context[:verifier_b]&.reply.to_s
-  RobotLab::Convergence.detected?(a, b) ? nil : ["reconciler"]
+class ConvergenceGate < RobotLab::Robot
+  def call(result)
+    a = result.context[:verifier_a]&.reply.to_s
+    b = result.context[:verifier_b]&.reply.to_s
+
+    # Converged? Pass the result straight through and leave :reconciler dormant.
+    RobotLab::Convergence.detected?(a, b) ? result : result.activate(:reconciler)
+  end
 end
 
-network = RobotLab.create_network(name: "verify", router: router) do
-  # ...
+network = RobotLab.create_network(name: "verify") do
+  task :verifier_a, verifier_a, depends_on: :none
+  task :verifier_b, verifier_b, depends_on: :none
+  task :gate,       ConvergenceGate.new(name: "gate"), depends_on: [:verifier_a, :verifier_b]
+  task :reconciler, reconciler,  depends_on: :optional
 end
+
+result = network.run(message: "Audit this change")
+result.context.key?(:reconciler)  # => false when the verifiers agreed
 ```
 
 Requires the `classifier` gem (`~> 2.3`).
@@ -943,11 +1004,18 @@ RobotLab's optional capabilities are packaged as separate gems:
 
 | Gem | Description |
 |-----|-------------|
-| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | CPU parallelism via Ruby Ractors — `ractor_safe` tools and DAG-scheduled parallel networks |
+| [robot_lab-a2a](https://github.com/MadBomber/robot_lab-a2a) | Expose robots and networks as Agent2Agent (A2A) protocol services over HTTP+SSE |
+| [robot_lab-audit](https://github.com/MadBomber/robot_lab-audit) | SQLite-backed execution audit log wired through the Hook system |
+| [robot_lab-discovery](https://github.com/MadBomber/robot_lab-discovery) | Zero-configuration mDNS/DNS-SD robot discovery on local networks |
+| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | Embedding-based semantic document store for search / RAG |
+| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | HTM-backed long-term memory and cross-session knowledge persistence |
+| [robot_lab-ractor](https://github.com/MadBomber/robot_lab-ractor) | Ractor-based parallel tool execution and DAG-scheduled parallel networks |
 | [robot_lab-rails](https://github.com/MadBomber/robot_lab-rails) | Rails Engine, generators, `RobotLab::Job` ActiveJob base with Turbo Stream broadcasting |
-| [robot_lab-durable](https://github.com/MadBomber/robot_lab-durable) | Cross-session knowledge persistence via YAML-backed durable store |
-| [robot_lab-document_store](https://github.com/MadBomber/robot_lab-document_store) | In-memory vector store with fastembed embeddings for semantic search / RAG |
-| [robot_lab-acp](https://github.com/MadBomber/robot_lab-acp) | Expose robots and networks as ACP (Agent Communication Protocol) HTTP+SSE services |
+| [robot_lab-to](https://github.com/MadBomber/robot_lab-to) | Autonomous overnight agent loop — iterate a robot toward an objective |
+| [robot_lab-web](https://github.com/MadBomber/robot_lab-web) | Browser console — stream a robot's run over Server-Sent Events |
+
+> [!NOTE]
+> `robot_lab-acp` is retired; its functionality is superseded by `robot_lab-a2a`.
 
 ## Documentation
 

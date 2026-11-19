@@ -178,6 +178,7 @@ module RobotLab
     # @param id [String] the unique identifier for this tool call
     # @param name [String] the name of the tool
     # @param input [Hash, nil] the input arguments
+    # :reek:ControlParameter -- `input || {}` is a nil-safe default, not behavior selection.
     def initialize(id:, name:, input:)
       @id = id
       @name = name
@@ -238,6 +239,7 @@ module RobotLab
     # @param role [String, Symbol] the message role (usually assistant)
     # @param tools [Array<ToolMessage, Hash>] the tool calls
     # @param stop_reason [String, Symbol, nil] the stop reason (defaults to "tool")
+    # :reek:ControlParameter -- `stop_reason || "tool"` is a nil-safe default, not behavior selection.
     def initialize(role:, tools:, stop_reason: nil)
       @tools = normalize_tools(tools)
       super(type: "tool_call", role: role, content: nil, stop_reason: stop_reason || "tool")
@@ -295,6 +297,7 @@ module RobotLab
     # @param tool [ToolMessage, Hash] the tool call that was executed
     # @param content [Hash] the result content (with :data or :error key)
     # @param stop_reason [String, Symbol, nil] the stop reason (defaults to "tool")
+    # :reek:ControlParameter -- `stop_reason || "tool"` is a nil-safe default, not behavior selection.
     def initialize(tool:, content:, stop_reason: nil)
       @tool = normalize_tool(tool)
       super(type: "tool_result", role: "tool_result", content: content, stop_reason: stop_reason || "tool")

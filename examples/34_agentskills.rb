@@ -10,9 +10,10 @@
 # Usage:
 #   mkdir -p ~/.prompts/skills/code_reviewer
 #   # (create SKILL.md as shown in the example header)
-#   ANTHROPIC_API_KEY=your_key ruby examples/34_agentskills.rb
+#   ruby examples/34_agentskills.rb
 
 require_relative "common"
+require "robot_lab/document_store"
 
 require "logger"
 log_file = File.join(__dir__, "34.log")
@@ -36,13 +37,16 @@ end
 # "Review Ruby code for quality, style, and potential bugs",
 # the skill's instructions are injected into the system prompt.
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "assistant",
   system_prompt: "You are a helpful Ruby programming assistant.",
   skills: [:code_reviewer]
 )
 
-puts "Pending AgentSkills: #{robot.instance_variable_get(:@pending_agent_skills).map(&:name).inspect}"
+puts "Declared skills: #{robot.skills.inspect}"
+puts "(Folder-format skills are matched per-run by embedding similarity, so"
+puts " whether one is injected depends on the message — watch the two queries"
+puts " below.)"
 puts
 
 # Message semantically related to code review — skill should activate

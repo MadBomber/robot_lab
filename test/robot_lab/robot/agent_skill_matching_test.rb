@@ -78,6 +78,20 @@ module RobotLab
       def test_restore_restores_original_system_prompt
         robot = build_robot(name: "bot", system_prompt: "You are helpful.")
         skill = skill_for(:test_skill)
+        original = system_instructions(robot)
+
+        robot.send(:inject_agent_skills, [skill])
+
+        refute_equal original, system_instructions(robot), "skill instructions should have been injected"
+
+        robot.send(:restore_after_agent_skills)
+
+        assert_equal original, system_instructions(robot)
+      end
+
+      def test_restore_restores_original_system_prompt_without_template
+        robot = build_robot(name: "bot", template: nil, system_prompt: "You are helpful.")
+        skill = skill_for(:test_skill)
 
         robot.send(:inject_agent_skills, [skill])
         robot.send(:restore_after_agent_skills)

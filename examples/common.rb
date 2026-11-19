@@ -1,29 +1,68 @@
 # frozen_string_literal: true
 
+# The examples are runnable directly (./01_simple_robot.rb) as well as via
+# bundle exec. Without bundler/setup, bare requires let RubyGems activate the
+# newest installed json (3.x), which conflicts with ruby_llm's json (< 3) pin;
+# the lockfile pins json 2.x, so honor it in both invocation styles.
+#
+# The workspace .envrc exports BUNDLE_GEMFILE as a RELATIVE path ("Gemfile" or
+# "Gemfile.local"), which bundler resolves against the cwd — so a demo run
+# from examples/ or a subdirectory demo run from its own directory would look
+# for a Gemfile there. Anchor the basename to the gem root before bundler
+# sees it, preserving the prod/dev (Gemfile vs Gemfile.local) choice.
+ENV["BUNDLE_GEMFILE"] = File.expand_path(
+  "../#{File.basename(ENV.fetch("BUNDLE_GEMFILE", "Gemfile"))}", __dir__
+)
+require "bundler/setup"
+
 require "logger"
 
 # Fallback for when direnv has not activated examples/.envrc
 ENV["ROBOT_LAB_TEMPLATE_PATH"] ||= File.join(__dir__, "prompts")
 
 require_relative "../lib/robot_lab"
+require "ruby_llm/providers/lms"
+
+# robot_lab's dependencies load parts of ActiveSupport, so amazing_print 3.0
+# sees the constant and loads its ActiveSupport extension, which at require
+# time calls ActiveSupport.try and reads ActiveSupport::LogSubscriber —
+# neither of which those parts provide. Load both up front so any demo can
+# `require "amazing_print"` safely.
+require "active_support/core_ext/object/try"
+require "active_support/log_subscriber"
+
+# ── Local LLM Configuration ───────────────────────────────────────────────────
+#
+# Every example runs against a LOCAL model served by LM Studio through the
+# ruby_llm-providers-lms gem (provider :lms). No API keys, no network egress,
+# no per-token cost. Start the server and download the models once:
+#
+#   lms server start
+#   lms get qwen/qwen3.8-27b
+#   lms get openai/gpt-oss-20b
+#
+# Model choice: qwen/qwen3.8-27b for complex activities (tools, structured
+# output, multi-robot reasoning — it honors tool_choice and schemas), and
+# openai/gpt-oss-20b for simpler items (plain chat, streaming).
+#
+# LM Studio models are not in RubyLLM's model registry, so a `provider:` must
+# be supplied alongside `model:` — that is what makes RubyLLM skip the
+# registry lookup (see Robot#initialize, which sets assume_model_exists when
+# provider is given). Use the `llm_opts` helper below so every robot gets both.
 
 LlmConfig = Data.define(:provider, :model)
 
 LLM = {
-  default:   LlmConfig.new(provider: "openai",    model: "gpt-4.1-mini"),
-  local:     LlmConfig.new(provider: "ollama",    model: "llama3.2"),
-  anthropic: LlmConfig.new(provider: "anthropic", model: "claude-opus-4-7")
+  default: LlmConfig.new(provider: "lms", model: "qwen/qwen3.8-27b"),
+  small:   LlmConfig.new(provider: "lms", model: "openai/gpt-oss-20b"),
+  large:   LlmConfig.new(provider: "lms", model: "qwen/qwen3.8-27b")
 }.freeze
 
-RubyLLM.configure do |c|
-  c.logger                  = Logger.new(File::NULL)
-  c.default_model           = LLM[:default].model
-  c.openai_api_key          = ENV['OPENAI_API_KEY']
-  c.openai_organization_id  = ENV['OPENAI_ORGANIZATION_ID']
-  c.openai_project_id       = ENV['OPENAI_PROJECT_ID']
-  c.anthropic_api_key       = ENV['ANTHROPIC_API_KEY']
-end
+LMS_API_BASE = ENV.fetch("LMS_API_BASE", "http://localhost:1234/v1")
 
+# ORDER MATTERS. The first touch of RobotLab.config runs Config#after_load,
+# which calls RubyLLM.configure itself and would clobber anything set before
+# it. So configure RobotLab first, then RubyLLM — the later block wins.
 RobotLab.configure do |c|
   c.logger = Logger.new(File::NULL)
   # Robot#initialize falls back to RobotLab's own ruby_llm.model (not
@@ -31,6 +70,67 @@ RobotLab.configure do |c|
   # it at the examples' default too.
   c.ruby_llm.provider = LLM[:default].provider.to_sym
   c.ruby_llm.model    = LLM[:default].model
+end
+
+RubyLLM.configure do |c|
+  c.logger        = Logger.new(File::NULL)
+  c.default_model = LLM[:default].model
+  c.lms_api_base  = LMS_API_BASE
+
+  # A large local model on consumer hardware is far slower than a hosted API,
+  # and robot_lab's bundled 120s default is comfortably exceeded by a long
+  # answer from a 20B+ model — which surfaces mid-run as Net::ReadTimeout.
+  #
+  # Integer(), not the raw env string: this value reaches Net::HTTP directly,
+  # and a String raises "can't convert String into time interval". That is
+  # also why the ROBOT_LAB_RUBY_LLM__REQUEST_TIMEOUT env var is the wrong
+  # lever here — env values arrive as strings.
+  c.request_timeout = Integer(ENV.fetch("LLM_REQUEST_TIMEOUT", "900"))
+  c.max_retries     = 1
+end
+
+# Which LLM entry an unqualified llm_opts resolves to. Lets you run any
+# example against a faster model without editing it — worth knowing for the
+# multi-robot demos (14, 15, 16), which are 30+ sequential LLM calls and take
+# over half an hour on a 20B+ model:
+#
+#   LLM_PROFILE=small bundle exec ruby examples/14_rusty_circuit/open_mic.rb
+LLM_PROFILE = ENV.fetch("LLM_PROFILE", "default").to_sym
+
+unless LLM.key?(LLM_PROFILE)
+  abort "Unknown LLM_PROFILE #{LLM_PROFILE.inspect}. Choose one of: #{LLM.keys.join(', ')}"
+end
+
+# Provider + model keyword pair for RobotLab.build / Robot.new.
+#
+# Both are required for a local LM Studio model. Splat it into any robot
+# constructor:
+#
+#   RobotLab.build(name: "helper", **llm_opts)          # honors LLM_PROFILE
+#   RobotLab.build(name: "cheap",  **llm_opts(:small))  # pinned regardless
+#
+# @param key [Symbol, nil] which entry of LLM to use; defaults to LLM_PROFILE
+# @return [Hash] { provider:, model: }
+def llm_opts(key = nil)
+  cfg = LLM.fetch(key || LLM_PROFILE)
+  { provider: cfg.provider, model: cfg.model }
+end
+
+# Fail fast with an actionable message when LM Studio isn't reachable,
+# instead of letting every example die inside an HTTP adapter.
+def require_lms!
+  require "net/http"
+  uri = URI("#{LMS_API_BASE.sub(%r{/v1/?\z}, '')}/v1/models")
+  Net::HTTP.start(uri.host, uri.port, open_timeout: 2, read_timeout: 2) { |h| h.get(uri.request_uri) }
+rescue StandardError => e
+  abort <<~ERROR
+    Cannot reach LM Studio at #{LMS_API_BASE} (#{e.class}).
+
+    Start the server and download the models used by the examples:
+      lms server start
+      lms get #{LLM[:default].model}
+      lms get #{LLM[:small].model}
+  ERROR
 end
 
 # ── Example Output Helpers ─────────────────────────────────────────────────────

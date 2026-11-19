@@ -18,7 +18,7 @@
 #   - Contrast with bus messaging (fire-and-forget) and pipelines (predefined)
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/24_structured_delegation.rb
+#   ruby examples/24_structured_delegation.rb
 
 require_relative "common"
 
@@ -28,19 +28,19 @@ banner "Structured Delegation"
 # Build a manager and two specialist robots
 # ---------------------------------------------------------------------------
 manager = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name:          "manager",
   system_prompt: "You are a project manager. Delegate tasks concisely."
 )
 
 summarizer = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name:          "summarizer",
   system_prompt: "You are a concise summarizer. Produce a 1-2 sentence summary."
 )
 
 analyst = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name:          "analyst",
   system_prompt: "You are a data analyst. Identify the key metric in one sentence."
 )
@@ -89,12 +89,12 @@ section "Asynchronous (parallel fan-out)"
 
 # Fresh robots — each delegate call should start from a clean slate
 async_summarizer = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name:          "summarizer",
   system_prompt: "You are a concise summarizer. Produce a 1-2 sentence summary."
 )
 async_analyst = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name:          "analyst",
   system_prompt: "You are a data analyst. Identify the key metric in one sentence."
 )
@@ -109,8 +109,13 @@ puts "Both futures launched. Futures resolved? " \
      "summary=#{f_summary.resolved?} analysis=#{f_analysis.resolved?}"
 puts "Collecting results..."
 
-summary  = f_summary.value(timeout: 60)
-analysis = f_analysis.value(timeout: 60)
+# value(timeout:) raises DelegationFuture::DelegationTimeout if the delegatee
+# hasn't finished in time. A local model is much slower than a hosted one, so
+# budget generously — 60s is comfortably too short for a 20B+ model.
+DELEGATION_TIMEOUT = Integer(ENV.fetch("DELEGATION_TIMEOUT", "600"))
+
+summary  = f_summary.value(timeout: DELEGATION_TIMEOUT)
+analysis = f_analysis.value(timeout: DELEGATION_TIMEOUT)
 
 elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0
 

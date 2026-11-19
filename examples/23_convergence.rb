@@ -11,13 +11,14 @@
 #   - Convergence.similarity(a, b) — 0.0..1.0 cosine similarity score
 #   - Convergence.detected?(a, b) — boolean above default threshold (0.85)
 #   - Convergence.detected?(a, b, threshold: 0.6) — custom threshold
-#   - Router fast-path pattern: skip reconciler when verifiers agree
+#   - Fast-path pattern: skip the reconciler when verifiers agree, using
+#     SimpleFlow optional-task activation
 #
 # Requires:
 #   gem 'classifier', '~> 2.3'   # add to your Gemfile
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/23_convergence.rb
+#   ruby examples/23_convergence.rb   # no LLM calls — pure similarity scoring
 
 require_relative "common"
 
@@ -68,27 +69,33 @@ end
 # ---------------------------------------------------------------------------
 # Router fast-path pattern
 # ---------------------------------------------------------------------------
-section "Router Fast-Path Pattern"
+section "Reconciler Fast-Path Pattern"
+puts "Networks route with SimpleFlow's optional-task activation, not a router"
+puts "lambda: a task declared `depends_on: :optional` stays dormant until some"
+puts "earlier task activates it. A gate robot compares the two verifier replies"
+puts "and only activates the expensive reconciler when they disagree."
 show_code <<~RUBY
-  # Two verifier robots run in parallel and store their replies in shared memory.
-  # The router checks convergence before dispatching to the expensive reconciler.
+  # Two verifiers run in parallel; a gate compares their replies and decides
+  # whether the reconciler is worth an LLM call.
 
-  router = ->(args) do
-    a = args.context[:verifier_a]&.reply.to_s
-    b = args.context[:verifier_b]&.reply.to_s
+  class ConvergenceGate < RobotLab::Robot
+    def call(result)
+      a = result.context[:verifier_a]&.reply.to_s
+      b = result.context[:verifier_b]&.reply.to_s
 
-    if RobotLab::Convergence.detected?(a, b)
-      nil   # Both agree — skip reconciler, network halts here
-    else
-      ["reconciler"]
+      return result if RobotLab::Convergence.detected?(a, b)  # agree — stop here
+
+      result.activate(:reconciler)                            # disagree — escalate
     end
   end
 
-  network = RobotLab.create_network(
-    name:   "fact_check",
-    robots: [verifier_a, verifier_b, reconciler],
-    router: router
-  )
+  network = RobotLab.create_network(name: "fact_check") do
+    task :verifier_a,  verifier_a,  depends_on: :none
+    task :verifier_b,  verifier_b,  depends_on: :none
+    task :gate,        ConvergenceGate.new(name: "gate", system_prompt: "gate"),
+                       depends_on: %i[verifier_a verifier_b]
+    task :reconciler,  reconciler,  depends_on: :optional
+  end
 
   result = network.run(message: "Is this claim accurate?")
 RUBY

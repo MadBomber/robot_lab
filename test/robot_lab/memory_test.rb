@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "redis" # optional dependency; needed to exercise the RedisBackend tests below
 
 class RobotLab::MemoryTest < Minitest::Test
   def setup
@@ -82,7 +83,7 @@ class RobotLab::MemoryTest < Minitest::Test
   end
 
   def test_cache_is_semantic_cache_module
-    assert_equal RubyLLM::SemanticCache, @memory.cache
+    assert_cache_state @memory.cache
   end
 
   def test_cache_nil_when_disabled
@@ -92,13 +93,13 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_cache_enabled_by_default
     memory = RobotLab::Memory.new
-    assert_equal RubyLLM::SemanticCache, memory.cache
+    assert_cache_state memory.cache
   end
 
   def test_clone_preserves_enable_cache_true
     memory = RobotLab::Memory.new(enable_cache: true)
     cloned = memory.clone
-    assert_equal RubyLLM::SemanticCache, cloned.cache
+    assert_cache_state cloned.cache
   end
 
   def test_clone_preserves_enable_cache_false
@@ -733,7 +734,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
   def test_set_cache_key_raises_argument_error
     assert_raises(ArgumentError) do
-      @memory[:cache] = RubyLLM::SemanticCache
+      @memory[:cache] = Object.new
     end
   end
 
@@ -824,7 +825,7 @@ class RobotLab::MemoryTest < Minitest::Test
   def test_reset_restores_cache
     mem = RobotLab::Memory.new(enable_cache: true)
     mem.reset
-    assert_equal RubyLLM::SemanticCache, mem.cache
+    assert_cache_state mem.cache
   end
 
   def test_memory_change_from_hash_restores_fields
@@ -947,6 +948,36 @@ class RobotLab::MemoryTest < Minitest::Test
     refute mem.redis?
     mem[:test_key] = "value"
     assert_equal "value", mem[:test_key]
+  end
+
+  # Regression: redis_available? and RedisBackend#create_redis_connection used to
+  # read the RobotLab.config global directly, making them impossible to test in
+  # isolation. Both now accept an injectable config, matching the default-param
+  # pattern already used by Sandbox.enabled? and Capabilities.ceiling.
+  def test_redis_available_honors_injected_config_over_global
+    fake_config = Struct.new(:redis).new("redis://injected-host:6390/0")
+    mem = RobotLab::Memory.new(backend: :hash)
+
+    assert_equal "redis://injected-host:6390/0", mem.send(:redis_available?, fake_config)
+  end
+
+  def test_redis_backend_connects_using_injected_config_hash
+    fake_config = Struct.new(:redis).new({ host: "injected-host", port: 6390 })
+    backend = RobotLab::RedisBackend.new(fake_config)
+
+    assert_equal "redis://injected-host:6390", backend.instance_variable_get(:@redis).id
+  end
+
+  def test_redis_backend_falls_back_to_env_redis_url_when_config_has_no_redis_value
+    fake_config = Struct.new(:redis).new(nil)
+    original_env = ENV.fetch("REDIS_URL", nil)
+    ENV["REDIS_URL"] = "redis://url-host:6391/2"
+
+    backend = RobotLab::RedisBackend.new(fake_config)
+
+    assert_equal "redis://url-host:6391/2", backend.instance_variable_get(:@redis).id
+  ensure
+    ENV["REDIS_URL"] = original_env
   end
 
   def test_memory_change_from_hash_without_timestamp
@@ -1161,6 +1192,17 @@ class RobotLab::MemoryTest < Minitest::Test
   end
 
   private
+
+  # Semantic caching is optional under ruby_llm 2.0 (the semantic_cache gem
+  # has no 2.0-compatible release); when absent, Memory#cache is nil even
+  # with enable_cache: true.
+  def assert_cache_state(actual)
+    if defined?(RubyLLM::SemanticCache)
+      assert_equal RubyLLM::SemanticCache, actual
+    else
+      assert_nil actual
+    end
+  end
 
   def mock_robot_result(robot_name)
     RobotLab::RobotResult.new(

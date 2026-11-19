@@ -61,7 +61,7 @@ class RobotLab::AgentSkillCatalogTest < Minitest::Test
 
       catalog = RobotLab::AgentSkillCatalog.new(root)
       assert_equal "Check Style", catalog.find(:check_style)&.name
-      assert_same catalog.find(:check_style), catalog.find(:"Check Style")
+      assert_same catalog.find(:check_style), catalog.find(:'Check Style')
       assert_equal ["Check Style"], catalog.all.map(&:name)
     end
   end

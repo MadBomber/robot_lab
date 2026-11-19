@@ -1,233 +1,70 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class RobotLab::MCP::ServerTest < Minitest::Test
-  # Initialization tests
-  def test_initialization_with_stdio_transport
-    server = RobotLab::MCP::Server.new(
-      name: "filesystem",
-      transport: { type: "stdio", command: "mcp-server-filesystem" }
+  def test_is_a_ruby_llm_mcp
+    assert_operator RobotLab::MCP::Server, :<, RubyLLM::MCP
+  end
+
+  def test_description_macro_sets_and_reads
+    klass = Class.new(RobotLab::MCP::Server) { description 'Files on disk' }
+    assert_equal 'Files on disk', klass.description
+  end
+
+  def test_description_defaults_to_nil_on_class_and_empty_on_instance
+    klass = Class.new(RobotLab::MCP::Server) { command 'echo' }
+    assert_nil klass.description
+    assert_equal '', klass.new.description
+  end
+
+  def test_description_is_inherited_and_overridable
+    parent = Class.new(RobotLab::MCP::Server) { description 'parent' }
+    child  = Class.new(parent)
+    assert_equal 'parent', child.description
+    child.description 'child'
+    assert_equal 'child', child.description
+    assert_equal 'parent', parent.description
+  end
+
+  def test_ruby_llm_settings_still_inherit
+    parent = Class.new(RobotLab::MCP::Server) { command 'echo', 'hi' }
+    child  = Class.new(parent)
+    assert_equal %w[echo hi], child.command
+  end
+
+  def test_connected_flag_follows_tools_and_close
+    transport = FakeMCPTransport.new(name: 'fake', tools: [fake_tool_def('echo')])
+    server = fake_mcp_server(name: 'fake', transport: transport)
+    refute server.connected?
+    assert_equal ['echo'], server.tools.map(&:name)
+    assert server.connected?
+    server.close
+    refute server.connected?
+    assert_equal 1, transport.close_count
+  end
+
+  def test_tools_failure_leaves_server_disconnected
+    transport = FakeMCPTransport.new(name: 'fake', fail_with: RubyLLM::MCP::Error.new('boom'))
+    server = fake_mcp_server(name: 'fake', transport: transport)
+    assert_raises(RubyLLM::MCP::Error) { server.tools }
+    refute server.connected?
+  end
+
+  def test_full_ruby_llm_surface_through_the_fake
+    transport = FakeMCPTransport.new(
+      name: 'fake', instructions: 'Be careful',
+      tools: [fake_tool_def('echo', properties: { 'text' => { 'type' => 'string' } })],
+      resources: [{ 'uri' => 'file:///a.txt', 'name' => 'a' }],
+      prompts: [{ 'name' => 'greet', 'arguments' => [] }]
     )
+    server = fake_mcp_server(name: 'fake', transport: transport)
 
-    assert_equal "filesystem", server.name
-    assert_equal "stdio", server.transport_type
-    assert_equal "mcp-server-filesystem", server.transport[:command]
-  end
-
-  def test_initialization_with_websocket_transport
-    server = RobotLab::MCP::Server.new(
-      name: "neon",
-      transport: { type: "ws", url: "ws://localhost:8080" }
-    )
-
-    assert_equal "neon", server.name
-    assert_equal "ws", server.transport_type
-    assert_equal "ws://localhost:8080", server.transport[:url]
-  end
-
-  def test_initialization_with_sse_transport
-    server = RobotLab::MCP::Server.new(
-      name: "api",
-      transport: { type: "sse", url: "http://localhost:3000/sse" }
-    )
-
-    assert_equal "sse", server.transport_type
-  end
-
-  def test_initialization_with_http_transport
-    server = RobotLab::MCP::Server.new(
-      name: "http_server",
-      transport: { type: "http", url: "http://localhost:3000" }
-    )
-
-    assert_equal "http", server.transport_type
-  end
-
-  def test_initialization_with_streamable_http_transport
-    server = RobotLab::MCP::Server.new(
-      name: "stream",
-      transport: { type: "streamable-http", url: "http://localhost:3000/stream" }
-    )
-
-    assert_equal "streamable-http", server.transport_type
-  end
-
-  def test_initialization_normalizes_name_to_string
-    server = RobotLab::MCP::Server.new(
-      name: :symbol_name,
-      transport: { type: "stdio", command: "cmd" }
-    )
-
-    assert_equal "symbol_name", server.name
-  end
-
-  def test_initialization_normalizes_transport_type_to_lowercase
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { type: "STDIO", command: "cmd" }
-    )
-
-    assert_equal "stdio", server.transport_type
-  end
-
-  def test_initialization_normalizes_string_keys_to_symbols
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { "type" => "stdio", "command" => "my-cmd", "args" => ["--flag"] }
-    )
-
-    assert_equal "stdio", server.transport_type
-    assert_equal "my-cmd", server.transport[:command]
-    assert_equal ["--flag"], server.transport[:args]
-  end
-
-  # Validation tests
-  def test_raises_for_invalid_transport_type
-    error = assert_raises(ArgumentError) do
-      RobotLab::MCP::Server.new(
-        name: "test",
-        transport: { type: "invalid", url: "http://localhost" }
-      )
-    end
-
-    assert_includes error.message, "Invalid transport type: invalid"
-    assert_includes error.message, "Must be one of:"
-  end
-
-  def test_raises_for_stdio_without_command
-    error = assert_raises(ArgumentError) do
-      RobotLab::MCP::Server.new(
-        name: "test",
-        transport: { type: "stdio" }
-      )
-    end
-
-    assert_includes error.message, "StdIO transport requires :command"
-  end
-
-  def test_raises_for_websocket_without_url
-    error = assert_raises(ArgumentError) do
-      RobotLab::MCP::Server.new(
-        name: "test",
-        transport: { type: "ws" }
-      )
-    end
-
-    assert_includes error.message, "Transport requires :url"
-  end
-
-  def test_raises_for_sse_without_url
-    error = assert_raises(ArgumentError) do
-      RobotLab::MCP::Server.new(
-        name: "test",
-        transport: { type: "sse" }
-      )
-    end
-
-    assert_includes error.message, "Transport requires :url"
-  end
-
-  def test_raises_for_http_without_url
-    error = assert_raises(ArgumentError) do
-      RobotLab::MCP::Server.new(
-        name: "test",
-        transport: { type: "http" }
-      )
-    end
-
-    assert_includes error.message, "Transport requires :url"
-  end
-
-  # Valid transport types
-  def test_valid_transport_types_constant
-    expected = %w[stdio sse ws websocket streamable-http http]
-    assert_equal expected, RobotLab::MCP::Server::VALID_TRANSPORT_TYPES
-  end
-
-  def test_all_valid_transport_types_are_accepted
-    %w[stdio sse ws websocket streamable-http http].each do |type|
-      transport = if type == "stdio"
-                    { type: type, command: "test-cmd" }
-                  else
-                    { type: type, url: "http://test" }
-                  end
-
-      server = RobotLab::MCP::Server.new(name: "test", transport: transport)
-      assert_equal type, server.transport_type
-    end
-  end
-
-  # Serialization
-  def test_to_h_exports_server_config
-    server = RobotLab::MCP::Server.new(
-      name: "filesystem",
-      transport: { type: "stdio", command: "mcp-fs", args: ["--root", "/data"] }
-    )
-
-    hash = server.to_h
-
-    assert_equal "filesystem", hash[:name]
-    assert_equal "stdio", hash[:transport][:type]
-    assert_equal "mcp-fs", hash[:transport][:command]
-    assert_equal ["--root", "/data"], hash[:transport][:args]
-  end
-
-  # Transport with args
-  def test_stdio_transport_with_args
-    server = RobotLab::MCP::Server.new(
-      name: "fs",
-      transport: {
-        type: "stdio",
-        command: "mcp-server-filesystem",
-        args: ["--root", "/data", "--readonly"]
-      }
-    )
-
-    assert_equal ["--root", "/data", "--readonly"], server.transport[:args]
-  end
-
-  # Transport type accessor
-  def test_transport_type_accessor
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { type: "websocket", url: "ws://localhost" }
-    )
-
-    assert_equal "websocket", server.transport_type
-  end
-
-  # normalize_timeout tests (mcp/server.rb lines 95, 97, 98)
-  def test_normalize_timeout_with_seconds_value
-    # lines 95, 98: non-millisecond value returned as-is (clamped to min 1)
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { type: "stdio", command: "echo" },
-      timeout: 30
-    )
-    # 30 seconds < 1000, stays as 30.0
-    assert_equal 30.0, server.timeout
-  end
-
-  def test_normalize_timeout_converts_milliseconds_to_seconds
-    # lines 97: milliseconds >= 1000 are converted to seconds
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { type: "stdio", command: "echo" },
-      timeout: 5000
-    )
-    # 5000ms = 5.0 seconds
-    assert_equal 5.0, server.timeout
-  end
-
-  def test_normalize_timeout_clamps_to_minimum_one_second
-    # line 98: [seconds, 1].max ensures minimum of 1 second
-    server = RobotLab::MCP::Server.new(
-      name: "test",
-      transport: { type: "stdio", command: "echo" },
-      timeout: 0.5
-    )
-    # 0.5 seconds < 1 minimum, so result is 1.0
-    assert_equal 1.0, server.timeout
+    assert_equal 'echo ok', server.call(:echo, text: 'hi').text
+    assert_equal [['echo', { text: 'hi' }]], transport.calls
+    assert_equal ['file:///a.txt'], server.resources.map(&:uri)
+    assert_equal ['greet'], server.prompts.map(&:name)
+    assert_equal 'Be careful', server.instructions
+    assert_kind_of RubyLLM::MCP::Prompt, server.prompt('greet')
   end
 end

@@ -60,6 +60,8 @@ module RobotLab
     # @param stop_reason [String, nil] reason for stopping
     # @param input_tokens [Integer] input tokens consumed (default 0)
     # @param output_tokens [Integer] output tokens generated (default 0)
+    # :reek:LongParameterList -- serializable value object: one keyword per persisted field.
+    # :reek:ControlParameter -- `created_at || Time.now` and `id || SecureRandom.uuid` are nil-safe defaults.
     def initialize(
       robot_name:,
       output:,
@@ -178,6 +180,7 @@ module RobotLab
     # @param hash [Hash] Serialized result data
     # @return [RobotResult]
     #
+    # :reek:DuplicateMethodCall -- Message.from_hash maps four distinct message collections; there is no shared receiver to hoist.
     def self.from_hash(hash)
       hash = hash.transform_keys(&:to_sym)
 

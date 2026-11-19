@@ -21,6 +21,18 @@ results = robot.search_history(query, limit: 5)
 
 Scores every message in the robot's conversation history against `query` using stemmed term-frequency cosine similarity (via the `classifier` gem). Returns up to `limit` `HistoryResult` objects sorted by score descending.
 
+> [!NOTE]
+> **Every** message in `@chat.messages` is scored — there is no role filter.
+> Results routinely include the `:system` prompt and raw `:tool` result payloads
+> (often JSON) alongside `:user` and `:assistant` turns. Filter by role yourself
+> if you only want the conversation:
+>
+> ```ruby
+> hits = robot.search_history(query, limit: 20)
+>            .select { |r| %i[user assistant].include?(r.role) }
+>            .first(3)
+> ```
+
 ```ruby
 results = robot.search_history("quarterly revenue", limit: 3)
 
@@ -35,7 +47,7 @@ end
 | Field | Type | Description |
 |-------|------|-------------|
 | `text` | String | The message text |
-| `role` | Symbol | `:user`, `:assistant`, or `:system` |
+| `role` | Symbol | The message's role — `:user`, `:assistant`, `:system`, or `:tool` |
 | `score` | Float (0.0–1.0) | Cosine similarity with the query |
 | `index` | Integer | Position in `@chat.messages` |
 
@@ -89,7 +101,7 @@ Without it, calling `search_history` raises `RobotLab::DependencyError` with an 
 
 ### The Problem
 
-Sometimes the knowledge you need isn't in the conversation history — it's in a README, a product spec, a changelog. `store_document` / `search_documents` embed arbitrary text with `fastembed` and retrieve the most relevant chunk at query time.
+Sometimes the knowledge you need isn't in the conversation history — it's in a README, a product spec, a changelog. `store_document` / `search_documents` embed arbitrary text and retrieve the most relevant chunk at query time. Embeddings come from `fastembed` when it is installed, and from a built-in TF-IDF fallback when it is not (see [Embedding Model](#embedding-model)).
 
 ### memory.store_document / memory.search_documents
 
@@ -136,13 +148,30 @@ store.clear
 
 Default: `BAAI/bge-small-en-v1.5` (~23 MB, downloaded on first use, cached in `~/.cache/fastembed/`).
 
-Documents are embedded with a `"passage: "` prefix and queries with `"query: "` prefix — the standard retrieval convention for BGE models.
+Documents and queries are embedded asymmetrically: stored text goes through `Fastembed::TextEmbedding#passage_embed`, query text through `#query_embed`. RobotLab does **not** prepend any literal `"passage: "` / `"query: "` string of its own — it hands the raw text to the two methods and lets fastembed handle whatever instruction prefixing the model expects.
 
 Custom model:
 
 ```ruby
 store = RobotLab::DocumentStore.new(model_name: "BAAI/bge-base-en-v1.5")
 ```
+
+### TF-IDF Fallback
+
+`DocumentStore` decides once, at load time, whether `fastembed` is available
+(`RobotLab::DocumentStore::FASTEMBED_AVAILABLE`). When it is **not**, the store
+still works — it silently falls back to a stemmed, stop-word-filtered,
+L2-normalised term-frequency embedder and compares those sparse vectors by
+cosine similarity. Nothing is downloaded and everything runs offline, which
+makes it convenient for development and CI.
+
+> [!WARNING]
+> The fallback is **lexical, not semantic**. It matches shared word stems only,
+> so a query and a document that mean the same thing in different words score
+> `0.0`. There is no error, no warning, and no change to the API — only
+> noticeably worse results. Check `RobotLab::DocumentStore::FASTEMBED_AVAILABLE`
+> if you need to know which path you are on, and note that `model_name:` is
+> ignored entirely when it is `false`.
 
 ### RAG Pattern
 
@@ -177,7 +206,9 @@ The embedding-based document store requires the [`robot_lab-document_store`](htt
 gem "robot_lab-document_store"
 ```
 
-This gem bundles `fastembed` for ONNX-based embeddings. The `BAAI/bge-small-en-v1.5` model (~23 MB) is downloaded on first use and cached in `~/.cache/fastembed/`. Without `robot_lab-document_store` loaded, calling `memory.store_document` or `memory.search_documents` raises `RobotLab::DependencyError`.
+The gem uses `fastembed` for ONNX-based embeddings when it is installed: the `BAAI/bge-small-en-v1.5` model (~23 MB) is downloaded on first use and cached in `~/.cache/fastembed/`. If `fastembed` cannot be loaded, `DocumentStore` still works via the lexical [TF-IDF fallback](#tf-idf-fallback).
+
+Without `robot_lab-document_store` itself loaded, calling `memory.store_document`, `memory.search_documents`, `memory.document_keys`, or `memory.delete_document` raises `RobotLab::DependencyError`.
 
 ---
 

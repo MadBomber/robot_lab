@@ -69,6 +69,20 @@ class Display
     log("    #{text}")
   end
 
+  # ── Liveness ────────────────────────────────────────────
+  #
+  # The scout writes its notes to a file, so a scout turn produces NO
+  # terminal output at all — and a scout turn is 1-4 sequential LLM calls
+  # (observe, then any tool round-trips, then a spawned analyst's own run).
+  # On a local model that is minutes of dead-silent terminal, which reads
+  # as a hang. These lines prove the show is still moving.
+
+  def working(who, what)
+    puts Rainbow("  · #{who} #{what}…").darkgray
+    $stdout.flush
+    log("  · #{who} #{what}...")
+  end
+
   # ── Scout (file only) ───────────────────────────────────
 
   def scout(round_num, notes)

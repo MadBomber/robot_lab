@@ -24,22 +24,44 @@ ToolCallMessage.new(role:, tools:, stop_reason: nil)
 | Name | Type | Description |
 |------|------|-------------|
 | `role` | `String` | Message role (typically "assistant") |
-| `tools` | `Array<ToolMessage>` | Array of tool call objects |
+| `tools` | `Array<ToolMessage, Hash>` | Tool calls; plain Hashes are normalized via `ToolMessage.from_hash` |
 | `stop_reason` | `String`, `nil` | Stop reason (defaults to "tool") |
+
+Each entry in `tools` may be a `ToolMessage` **or** a Hash. Anything else raises
+`ArgumentError: Invalid tool: must be ToolMessage or Hash`. The `tools` reader
+always returns `ToolMessage` objects.
+
+```ruby
+ToolCallMessage.new(
+  role: "assistant",
+  tools: [{ id: "call_1", name: "get_weather", arguments: { city: "NYC" } }]
+).tools.first.input
+# => { city: "NYC" }
+```
+
+`ToolMessage.from_hash` symbolizes keys and accepts either `input:` or
+`arguments:` for the parameter hash (`input` wins), defaulting to `{}` when
+neither is present. This makes raw provider tool-call payloads usable directly.
 
 ## ToolMessage
 
-Each tool call is represented by a standalone `ToolMessage` object:
+Each tool call is represented by a standalone `ToolMessage` object. It is a plain
+Ruby object — its superclass is `Object`, **not** `Message` — so it has no
+`type`, `role`, or predicate methods:
 
 ```ruby
 ToolMessage.new(id:, name:, input:)
+ToolMessage.from_hash(hash)
 ```
 
 | Name | Type | Description |
 |------|------|-------------|
 | `id` | `String` | Unique call identifier |
 | `name` | `String` | Tool name |
-| `input` | `Hash` | Tool parameters |
+| `input` | `Hash`, `nil` | Tool parameters; `nil` becomes `{}` |
+
+`ToolMessage#to_h` returns `{ type: "tool", id:, name:, input: }`. It is not
+compacted, so every key is always present.
 
 ## Attributes
 
@@ -91,7 +113,8 @@ Defaults to `"tool"` indicating the conversation stopped for tool execution.
 message.to_h  # => Hash
 ```
 
-Hash representation.
+Hash representation. `ToolCallMessage` overrides `Message#to_h` and does **not**
+compact, so all four keys are always present (`content` is not included at all).
 
 **Returns:**
 

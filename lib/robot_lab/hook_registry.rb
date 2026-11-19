@@ -21,6 +21,7 @@ module RobotLab
     # @param handler_class [Class] a RobotLab::Hook subclass
     # @param context [Hash, nil] optional default values merged into ctx.local on each call
     # @return [Registration]
+    # :reek:FeatureEnvy -- validating the handler_class argument before registering it is this method's job.
     def on(handler_class, context: nil)
       unless handler_class.is_a?(Class) && handler_class < RobotLab::Hook
         raise ArgumentError, "#{handler_class.inspect} must be a RobotLab::Hook subclass"

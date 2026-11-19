@@ -36,6 +36,7 @@ module RobotLab
       # @param publish [Proc] callback for publishing events
       # @param parent_run_id [String, nil] parent run identifier
       # @param sequence_counter [SequenceCounter, nil] shared sequence counter
+      # :reek:ControlParameter -- `sequence_counter || SequenceCounter.new` is a nil-safe default.
       def initialize(run_id:, message_id:, scope:, publish:, parent_run_id: nil, sequence_counter: nil)
         @run_id = run_id
         @parent_run_id = parent_run_id

@@ -28,6 +28,9 @@ module RobotLab
     # @param timeout [Numeric, nil] maximum seconds to wait (nil = indefinite)
     # @return [Object, :timeout] the signaled value, or :timeout if timed out
     #
+    # :reek:TooManyStatements -- register/block/drain steps of the wake-pipe protocol are one atomic unit.
+    # :reek:DuplicateMethodCall -- the synchronize blocks are deliberately separate: the lock must be released
+    #   around the blocking wait_readable.
     def wait(timeout: nil)
       @mutex.synchronize do
         return @value if @signaled

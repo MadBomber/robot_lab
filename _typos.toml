@@ -1,0 +1,21 @@
+# False-positive suppressions for the typos quality gate (asgard).
+# Everything here was reviewed by hand — see git history for context.
+
+[files]
+extend-exclude = [
+  # Example transcripts / articles: prose quotes real names ("Damon Clark")
+  # and SQL-ish plurals ("SELECTs") that typos mis-parses.
+  "examples/ruboruby.md",
+  "examples/25_history_search/conversation.jsonl",
+]
+
+[default.extend-identifiers]
+# Robot names in lib/robot_lab/names.rb
+BATs     = "BATs"
+Damon    = "Damon"
+Mata_Nui = "Mata_Nui"
+Pris     = "Pris"
+S1MONE   = "S1MONE"
+# Test-local variable names
+ba  = "ba"   # b→a similarity (convergence_test.rb)
+thr = "thr"  # thread handle (connection_poller_test.rb)

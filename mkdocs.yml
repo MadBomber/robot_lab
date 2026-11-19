@@ -177,10 +177,15 @@ nav:
       - Core Classes:
           - api/core/index.md
           - Robot: api/core/robot.md
+          - RobotResult: api/core/result.md
           - Network: api/core/network.md
-          - State: api/core/state.md
           - Tool: api/core/tool.md
           - Memory: api/core/memory.md
+          - StateProxy: api/core/state.md
+      - Hooks: api/hooks.md
+      - Skills: api/skills.md
+      - Support Classes: api/support.md
+      - Errors: api/errors.md
       - Messages:
           - api/messages/index.md
           - UserMessage: api/messages/user-message.md
@@ -189,9 +194,9 @@ nav:
           - ToolResultMessage: api/messages/tool-result-message.md
       - MCP:
           - api/mcp/index.md
-          - Client: api/mcp/client.md
+          - Factory: api/mcp/factory.md
           - Server: api/mcp/server.md
-          - Transports: api/mcp/transports.md
+          - Registry: api/mcp/registry.md
       - Streaming:
           - api/streaming/index.md
           - Context: api/streaming/context.md

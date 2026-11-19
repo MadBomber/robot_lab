@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "robot_lab"
   spec.version = RobotLab::VERSION
   spec.authors = ["Dewayne VanHoozer"]
-  spec.email = ["dewayne@vanhoozer.me"]
+  spec.email = ["dvanhoozer@gmail.com"]
 
   spec.summary = "Ruby framework for building and orchestrating multi-robot LLM workflows"
   spec.description = <<~DESC
@@ -15,12 +15,13 @@ Gem::Specification.new do |spec|
     memory; networks for coordinating multiple robots with intelligent routing; MCP (Model
     Context Protocol) integration for external tool servers; and a memory system with Redis
     backend and semantic caching. Optional gems add Rails integration (robot_lab-rails),
-    durable learning (robot_lab-durable), Ractor concurrency (robot_lab-ractor), and
-    document storage (robot_lab-document_store).
+    durable learning (robot_lab-durable), Ractor concurrency (robot_lab-ractor), document
+    storage (robot_lab-document_store), and OS-level skill-script confinement
+    (robot_lab-sandbox). Core itself imposes no execution limitations.
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 4.0"
+  spec.required_ruby_version = ">= 4.0.9"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
@@ -30,13 +31,14 @@ Gem::Specification.new do |spec|
   spec.metadata["bug_tracker_uri"] = "https://github.com/MadBomber/robot_lab/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  gemspec = File.basename(__FILE__)
+  # Ship only what a consumer of the gem needs: the library, RBS signatures,
+  # executables, and the top-level README/CHANGELOG/LICENSE. Everything else in
+  # the repo (docs site, examples with generated output, tests, tooling config,
+  # design notes) lives on GitHub, not in the .gem.
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ Gemfile .gitignore test/])
+    ls.readlines("\x0", chomp: true).select do |f|
+      f.start_with?("lib/", "sig/", "exe/") ||
+        %w[README.md CHANGELOG.md LICENSE.txt].include?(f)
     end
   end
   spec.bindir = "exe"
@@ -46,11 +48,11 @@ Gem::Specification.new do |spec|
   # Core dependencies
   spec.add_dependency "myway_config", "~> 0.1"
   spec.add_dependency "zeitwerk", "~> 2.6"
-  spec.add_dependency "ruby_llm", "~> 1.12"
-  spec.add_dependency "ruby_llm-mcp", "~> 1.0"
+  # 2.1 ships the built-in RubyLLM::MCP client that RobotLab::MCP builds on.
+  spec.add_dependency "ruby_llm", ">= 2.1.1", "< 3"
+  spec.add_dependency "ruby_llm-providers-apfel", "~> 0.2.1"
+  spec.add_dependency "ruby_llm-providers-lms", "~> 0.2.1"
   spec.add_dependency "prompt_manager", "~> 1.0"
-  spec.add_dependency "ruby_llm-schema", "~> 0.3"
-  spec.add_dependency "ruby_llm-semantic_cache", "~> 0.1"
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "typed_bus", "~> 0.0.1"
   spec.add_dependency "simple_flow", "~> 0.4"
@@ -59,12 +61,14 @@ Gem::Specification.new do |spec|
   spec.add_dependency "tsort", ">= 0.2"
   # Required by Network's BusPoller (lib/robot_lab/bus_poller.rb requires it).
   spec.add_dependency "ractor_queue", "~> 0.2"
-  # Optional MCP transport dependencies (loaded on demand)
-  spec.add_dependency "async-http", "~> 0.60"
-  spec.add_dependency "async-websocket", "~> 0.30"
 
   # Optional text analysis dependencies.
   # Add to your application's Gemfile to enable compress_history and
   # RobotLab::Convergence:
   #   gem "classifier", "~> 2.3"
+
+  # Optional semantic caching for Memory#cache:
+  #   gem "ruby_llm-semantic_cache"
+  # Its released versions pin ruby_llm 1.x, so it cannot co-resolve with
+  # ruby_llm 2.0 yet; Memory runs with caching disabled when it is absent.
 end

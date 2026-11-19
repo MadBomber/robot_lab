@@ -23,9 +23,25 @@ ToolResultMessage.new(tool:, content:, stop_reason: nil)
 
 | Name | Type | Description |
 |------|------|-------------|
-| `tool` | `ToolMessage` | The tool call that was executed |
+| `tool` | `ToolMessage`, `Hash` | The tool call that was executed; a Hash is normalized via `ToolMessage.from_hash` |
 | `content` | `Hash` | Result with `:data` key (success) or `:error` key (failure) |
 | `stop_reason` | `String`, `nil` | Stop reason (defaults to "tool") |
+
+`tool:` accepts a plain Hash as well as a `ToolMessage`; anything else raises
+`ArgumentError: Invalid tool: must be ToolMessage or Hash`. As with
+`ToolCallMessage`, `from_hash` symbolizes keys and accepts `input:` or
+`arguments:` for the parameter hash.
+
+```ruby
+ToolResultMessage.new(
+  tool: { id: "call_1", name: "get_weather", arguments: { city: "NYC" } },
+  content: { data: { temperature: 72 } }
+).tool.input
+# => { city: "NYC" }
+```
+
+`role` is hard-coded to `"tool_result"` — the value you pass for `tool:` has no
+bearing on it.
 
 ## Attributes
 
@@ -77,7 +93,9 @@ Defaults to `"tool"`.
 message.success?  # => Boolean
 ```
 
-Returns `true` if the content contains a `:data` key.
+Returns `true` if `content` is a Hash containing the **symbol** key `:data`.
+`content` is stored verbatim — it is not symbolized — so a result built with
+`content: { "data" => ... }` reports `success? == false` and `data == nil`.
 
 ### error?
 
@@ -85,7 +103,7 @@ Returns `true` if the content contains a `:data` key.
 message.error?  # => Boolean
 ```
 
-Returns `true` if the content contains an `:error` key.
+Returns `true` if `content` is a Hash containing the **symbol** key `:error`.
 
 ### data
 
@@ -109,7 +127,8 @@ Returns the error message if there was an error, `nil` otherwise.
 message.to_h  # => Hash
 ```
 
-Hash representation.
+Hash representation. `ToolResultMessage` overrides `Message#to_h` and does
+**not** compact, so all five keys are always present.
 
 **Returns:**
 

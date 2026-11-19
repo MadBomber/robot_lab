@@ -9,7 +9,7 @@
 #   3. Both together — stored fires first, then block
 #
 # Usage:
-#   ANTHROPIC_API_KEY=your_key ruby examples/05_streaming.rb
+#   ruby examples/05_streaming.rb
 
 require_relative "common"
 
@@ -29,7 +29,7 @@ section "1. Stored Callback (on_content:)"
 
 chunks_received = 0
 robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "storyteller",
   system_prompt: "You are a concise storyteller. Keep responses under 3 sentences.",
   on_content: ->(chunk) {
@@ -52,7 +52,7 @@ section "2. Per-call Block"
 
 block_chunks = 0
 bare_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "factbot",
   system_prompt: "You are concise. Answer in one sentence."
 )
@@ -76,7 +76,7 @@ stored_log = []
 block_log  = []
 
 combo_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "combo",
   system_prompt: "You are concise. Answer in one sentence.",
   on_content: ->(chunk) { stored_log << chunk.content }
@@ -99,6 +99,9 @@ puts ""
 section "4. Via RunConfig (config cascade)"
 
 config_chunks = 0
+# RunConfig accepts only the fields in RunConfig::FIELDS — `provider` is not
+# one of them, so it stays on the robot. on_content is a first-class config
+# field and cascades normally.
 config = RobotLab::RunConfig.new(
   model: LLM[:default].model,
   on_content: ->(chunk) {
@@ -108,7 +111,7 @@ config = RobotLab::RunConfig.new(
 )
 
 config_robot = RobotLab.build(
-  model: LLM[:default].model,
+  **llm_opts,
   name: "config_bot",
   system_prompt: "You are concise. Answer in one sentence.",
   config: config

@@ -3,14 +3,17 @@
 source "https://rubygems.org"
 
 # Specify your gem's dependencies in robot_lab.gemspec
+
 gemspec
 
 group :development, :test do
   gem 'aigcm'
   gem 'amazing_print'
+  gem "archspec"
   gem 'classifier', '~> 2.3'
   gem "debug"
   gem 'debug_me'
+  gem "fasterer"
   gem "flay"
   gem "flog"
   gem 'hashdiff'
@@ -20,6 +23,8 @@ group :development, :test do
   gem 'ractor_queue'
   gem 'ractor-wrapper'
   gem "rake"
+  gem "redis"
+  gem "reek"
   gem "robot_lab-document_store" # , path: "../robot_lab-document_store"
   gem "robot_lab-durable"
   gem "robot_lab-ractor"

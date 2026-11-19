@@ -41,13 +41,13 @@ defaults:
     with_model:
       provider: null # chat-specific provider
       model: null # chat-specific model
-      assume_exists: null # assume the model exists primarily for local providers
+      assume_model_exists: null # assume the model exists primarily for local providers
     with_temperature: 0.7 # Controls randomness (0.0-2.0, null = model default)
+    with_max_output_tokens: null # Maximum tokens in response
     with_tools: null # ?? not sure about this one.
-    with_params:
+    with_provider_options: # merged into the request payload (ruby_llm 2.0)
       top_p: null # Nucleus sampling threshold (0.0-1.0)
       top_k: null # Top-k sampling (integer, provider-specific)
-      max_tokens: null # Maximum tokens in response
       presence_penalty: null # Penalize new tokens based on presence (-2.0 to 2.0)
       frequency_penalty: null # Penalize new tokens based on frequency (-2.0 to 2.0)
       stop: null # Stop sequences (string or array of strings)
@@ -55,7 +55,7 @@ defaults:
   # RubyLLM Configuration Section
   ruby_llm:
     provider: :anthropic
-    model: claude-sonnet-4
+    model: claude-sonnet-4-6
     assume_model_exists: false # (dep of assume_exists in chat section) set true for Ollama and other local LLM providers
     # Provider API Keys (null = use env vars directly)
     anthropic_api_key: null
@@ -117,7 +117,7 @@ test:
   max_iterations: 3
   streaming_enabled: false
   ruby_llm:
-    model: claude-3-haiku-20240307
+    model: claude-haiku-4-5
     request_timeout: 30
     max_retries: 1
     log_level: :warn

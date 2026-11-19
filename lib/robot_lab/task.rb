@@ -89,6 +89,7 @@ module RobotLab
 
     private
 
+    # :reek:TooManyStatements -- one guarded assignment per task-level override injected into run params.
     def enhanced_result(result)
       run_params = deep_merge(result.context[:run_params] || {}, @context)
       run_params[:mcp] = @mcp unless @mcp == :none
@@ -114,6 +115,7 @@ module RobotLab
     # @param override [Hash] the overriding hash
     # @return [Hash] the merged result
     #
+    # :reek:FeatureEnvy -- pure recursive hash merge of its two arguments; it has no useful self.
     def deep_merge(base, override)
       base = base.transform_keys(&:to_sym)
       override = override.transform_keys(&:to_sym)

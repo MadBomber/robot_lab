@@ -41,6 +41,7 @@ module RobotLab
     # @param system_prompt [String, nil] additional system prompt
     # @param metadata [Hash, nil] additional metadata
     # @param id [String, nil] unique identifier (defaults to UUID)
+    # :reek:ControlParameter -- `metadata || {}` and `id || SecureRandom.uuid` are nil-safe defaults.
     def initialize(content, session_id: nil, system_prompt: nil, metadata: nil, id: nil)
       @content = content.to_s
       @session_id = session_id
