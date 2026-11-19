@@ -60,15 +60,19 @@ module RobotLab
         return {} unless @budget_ledger
 
         reservation = {}
-        @budget_ledger.limits.each_key do |dimension|
-          amount = @budget_ledger.remaining(dimension)
-          @budget_ledger.reserve!(dimension, amount)
-          reservation[dimension] = amount
-        end
+        @budget_ledger.limits.each_key { |dimension| reserve_remaining!(dimension, reservation) }
         reservation
       rescue BudgetExceeded
         release_budget!(reservation)
         raise
+      end
+
+      # Reserves what remains of +dimension+ and records it in +reservation+,
+      # which reserve_budget! releases if a later dimension is exhausted.
+      def reserve_remaining!(dimension, reservation)
+        amount = @budget_ledger.remaining(dimension)
+        @budget_ledger.reserve!(dimension, amount)
+        reservation[dimension] = amount
       end
 
       # Drops a reservation from reserve_budget! without recording any
