@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -4324,7 +4324,7 @@ themselves before assigning.</p>
 <tr>
 <td><code>tool_error</code></td>
 <td>Exception|nil</td>
-<td>Set if the tool raised an exception (for MCP tools, a <code>RubyLLM::MCP::Error</code> mid-call, which the robot turns into an <code>{ error: }</code> result)</td>
+<td>Set if the tool raised an exception (for MCP tools, the server failing mid-call; the tool result is then an <code>{ error: }</code> Hash)</td>
 </tr>
 <tr>
 <td><code>metadata</code></td>

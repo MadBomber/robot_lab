@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -3807,7 +3807,8 @@ explicitly therefore still counts as "not named", and front matter wins.</p>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="ss">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s2">"You are a helpful assistant."</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>When <code>provider:</code> is set, <code>assume_model_exists: true</code> is automatically applied. The provider is available via <code>robot.provider</code>. This context is preserved across every re-application of the robot's config — including when a template's front matter re-renders mid-run — so a local-provider robot doesn't fall back to RubyLLM's static model registry (and raise a "model not found" error) on later turns.</p>
+<p>To use a provider for every robot, set <code>ruby_llm.provider</code> in config (or <code>ROBOT_LAB_RUBY_LLM__PROVIDER</code>); a template can name one with <code>provider:</code> front matter. The constructor argument wins over front matter, which wins over config.</p>
+<p>When a provider is set from any of these, <code>assume_model_exists: true</code> is automatically applied. The provider is available via <code>robot.provider</code>. This context is preserved across every re-application of the robot's config — including when a template's front matter re-renders mid-run — so a local-provider robot doesn't fall back to RubyLLM's static model registry (and raise a "model not found" error) on later turns.</p>
 <p>Some local models route their entire response through reasoning/thinking content instead of the normal response text (e.g. <code>qwen3</code> on Ollama). When that happens, <code>result.reply</code> falls back to the thinking text automatically — see <a href="../../api/core/robot/#robot-with-local-provider">Robot with Local Provider</a> for details.</p>
 <h3 id="system-prompt">System Prompt<a class="headerlink" href="#system-prompt" title="Permanent link">&para;</a></h3>
 <p>An inline string that defines the robot's personality and behavior:</p>
@@ -3926,6 +3927,10 @@ which route through <code>with_params</code>:</p>
 <tr>
 <td><code>robot_name</code></td>
 <td>Override the robot's name (when constructor uses the default)</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>Provider for the template's <code>model</code> (e.g. <code>ollama</code>, <code>lms</code>); overrides <code>ruby_llm.provider</code>, never a constructor <code>provider:</code></td>
 </tr>
 <tr>
 <td><code>description</code></td>

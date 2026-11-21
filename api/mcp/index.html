@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -2891,7 +2891,7 @@ returns:</p>
 <tr>
 <td><code>on_input_request:</code></td>
 <td><code>nil</code></td>
-<td>Proc receiving a <code>RubyLLM::MCP::InputRequest</code>; return a Hash of field values to answer a form request, <code>true</code> to accept a URL request, anything else declines. Without it, requests are declined</td>
+<td>Proc receiving a <code>RubyLLM::Question</code> (an MCP input request or a <code>Tool#ask</code> question); return a Hash of field values to answer a form request, <code>true</code> to accept a URL request, anything else declines. Without it, requests are declined</td>
 </tr>
 <tr>
 <td>tasks</td>
@@ -2919,8 +2919,8 @@ returns:</p>
 <td>Rescued per server inside a robot: logged at <code>warn</code>, recorded in <code>mcp_failures</code>, retried next run. Raised to you from direct calls such as <code>server.tools</code></td>
 </tr>
 <tr>
-<td><code>RubyLLM::MCP::Error</code> during a tool call</td>
-<td>Turned into an <code>{ error: "&lt;tool&gt;: &lt;message&gt;" }</code> tool result; the run continues</td>
+<td>Server fails during a tool call</td>
+<td>Turned into an <code>{ error: }</code> tool result (<code>"The &lt;server&gt; MCP server failed: &lt;message&gt;"</code>, or <code>"&lt;tool&gt;: &lt;message&gt;"</code> for an error ruby_llm re-raises); the hook context's <code>tool_error</code> is set; the run continues</td>
 </tr>
 </tbody>
 </table>

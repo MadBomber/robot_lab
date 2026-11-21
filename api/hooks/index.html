@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -3830,7 +3830,7 @@ name comes from the hook method names, not from <code>event</code>.</p>
 <tr>
 <td><code>tool_error</code></td>
 <td>rw</td>
-<td>Set by <code>Tool#call</code> when <code>execute</code> raised, or by the robot's tool-call bridge when a <code>RubyLLM::MCP::Error</code> interrupted an MCP tool call (the result is then <code>{ error: }</code>)</td>
+<td>Set by <code>Tool#call</code> when <code>execute</code> raised, or by the robot's tool-call bridge when the server failed an MCP tool call (a <code>RobotLab::MCPError</code>, or the <code>RubyLLM::MCP::Error</code> ruby_llm re-raised; the result is then <code>{ error: }</code>)</td>
 </tr>
 </tbody>
 </table>

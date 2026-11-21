@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -2986,7 +2986,7 @@ logs the message at <code>:warn</code> and skips compaction, and
 run. A server that cannot be reached while listing tools (any of
 <code>RobotLab::MCP::CONNECT_ERRORS</code>) is logged at <code>warn</code>, recorded in
 <code>robot.mcp_failures</code>, skipped for that run, and retried on the next run that
-selects it. A <code>RubyLLM::MCP::Error</code> raised while a tool call is executing is
+selects it. A server failing while a tool call is executing is
 turned into an <code>{ error: }</code> tool result so the model can recover. Direct calls
 on a server (<code>robot.mcp[:name].tools</code>, <code>.call</code>) raise ruby_llm's own errors.</p>
 <p><code>MCPError.new(message, retryable: true)</code> marks a specific instance as safe to retry (see <a href="#retryable-errors">Retryable Errors</a> below).</p>
@@ -3035,14 +3035,14 @@ LLM as text rather than propagating (unless the class sets
 another attempt is worth trying:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Fetch</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">Tool</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Fetch a record"</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"record id"</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="n">parameter</span><span class="w"> </span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">"record id"</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="nb">id</span><span class="p">:)</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="k">raise</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">::</span><span class="no">ToolError</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"upstream unavailable"</span><span class="p">,</span><span class="w"> </span><span class="ss">retryable</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="k">end</span>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">end</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="no">Fetch</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">({</span><span class="w"> </span><span class="s2">"id"</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s2">"1"</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="no">Fetch</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">)</span>
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># =&gt; "Error (fetch): upstream unavailable (retryable)"</span>
 </span></code></pre></div>
 <p>Unlike the generic <code>StandardError</code> path, the <code>ToolError</code> path writes <strong>nothing</strong>

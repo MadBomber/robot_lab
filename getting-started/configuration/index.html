@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -3477,6 +3477,11 @@ effect. They are placeholders; do not build on them.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>ruby_llm.provider</code></td>
+<td><code>null</code></td>
+<td>Default provider for robots that do not set <code>provider:</code> (and whose template names none). <code>null</code> lets RubyLLM infer the provider from the model id. Env: <code>ROBOT_LAB_RUBY_LLM__PROVIDER</code></td>
+</tr>
+<tr>
 <td><code>ruby_llm.model</code></td>
 <td><code>claude-sonnet-4</code></td>
 <td>Default model for robots that do not set <code>model:</code></td>
@@ -3500,10 +3505,11 @@ effect. They are placeholders; do not build on them.</p>
 </table>
 <blockquote>
 <p>[!NOTE]
-<code>defaults.yml</code> also carries <code>ruby_llm.provider: :anthropic</code> and
-<code>ruby_llm.assume_model_exists: false</code>, but neither is read. A robot's provider
-comes from its own <code>provider:</code> keyword argument, and <code>assume_model_exists</code> is
-derived from whether that argument was given. Model ids must be full RubyLLM
+A robot's provider comes from, in order: its <code>provider:</code> keyword argument,
+its template's <code>provider:</code> front matter, then <code>ruby_llm.provider</code>. Whichever
+supplies it, a named provider sets <code>assume_model_exists: true</code> on the chat.
+<code>defaults.yml</code> also carries <code>ruby_llm.assume_model_exists: false</code>, which is
+not read. Model ids must be full RubyLLM
 ids — an unknown id raises <code>RubyLLM::ModelNotFoundError</code> when the robot is
 constructed.</p>
 </blockquote>

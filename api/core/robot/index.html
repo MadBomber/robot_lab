@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -4673,7 +4673,7 @@ kwargs. There is no <code>memory:</code>, <code>learn:</code>, or <code>learn_do
 <td><code>on_input_request</code></td>
 <td><code>Proc</code>, <code>nil</code></td>
 <td><code>nil</code></td>
-<td>Called with each <code>RubyLLM::MCP::InputRequest</code> a server raises mid-call; return a Hash of field values (or <code>true</code> for a URL request) to answer, anything else declines</td>
+<td>Called with each <code>RubyLLM::Question</code> a tool call waits on that is not an approval (MCP input requests, <code>Tool#ask</code>); return a Hash of field values (or <code>true</code> for a URL request) to answer, anything else declines</td>
 </tr>
 <tr>
 <td><code>enable_cache</code></td>
@@ -6279,9 +6279,9 @@ into it. See <a href="../../mcp/#mcp-in-networks">MCP in Networks</a>.</p>
 <h3 id="robot-with-tools">Robot with Tools<a class="headerlink" href="#robot-with-tools" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-70-1"><a id="__codelineno-70-1" name="__codelineno-70-1" href="#__codelineno-70-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Calculator</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="no">RubyLLM</span><span class="o">::</span><span class="no">Tool</span>
 </span><span id="__span-70-2"><a id="__codelineno-70-2" name="__codelineno-70-2" href="#__codelineno-70-2"></a><span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="s2">"Performs basic arithmetic"</span>
-</span><span id="__span-70-3"><a id="__codelineno-70-3" name="__codelineno-70-3" href="#__codelineno-70-3"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:operation</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"add, subtract, multiply, divide"</span>
-</span><span id="__span-70-4"><a id="__codelineno-70-4" name="__codelineno-70-4" href="#__codelineno-70-4"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:a</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"First operand"</span>
-</span><span id="__span-70-5"><a id="__codelineno-70-5" name="__codelineno-70-5" href="#__codelineno-70-5"></a><span class="w">  </span><span class="n">param</span><span class="w"> </span><span class="ss">:b</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">desc</span><span class="p">:</span><span class="w"> </span><span class="s2">"Second operand"</span>
+</span><span id="__span-70-3"><a id="__codelineno-70-3" name="__codelineno-70-3" href="#__codelineno-70-3"></a><span class="w">  </span><span class="n">parameter</span><span class="w"> </span><span class="ss">:operation</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">"add, subtract, multiply, divide"</span>
+</span><span id="__span-70-4"><a id="__codelineno-70-4" name="__codelineno-70-4" href="#__codelineno-70-4"></a><span class="w">  </span><span class="n">parameter</span><span class="w"> </span><span class="ss">:a</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">"First operand"</span>
+</span><span id="__span-70-5"><a id="__codelineno-70-5" name="__codelineno-70-5" href="#__codelineno-70-5"></a><span class="w">  </span><span class="n">parameter</span><span class="w"> </span><span class="ss">:b</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="ss">description</span><span class="p">:</span><span class="w"> </span><span class="s2">"Second operand"</span>
 </span><span id="__span-70-6"><a id="__codelineno-70-6" name="__codelineno-70-6" href="#__codelineno-70-6"></a>
 </span><span id="__span-70-7"><a id="__codelineno-70-7" name="__codelineno-70-7" href="#__codelineno-70-7"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="ss">operation</span><span class="p">:,</span><span class="w"> </span><span class="ss">a</span><span class="p">:,</span><span class="w"> </span><span class="ss">b</span><span class="p">:)</span>
 </span><span id="__span-70-8"><a id="__codelineno-70-8" name="__codelineno-70-8" href="#__codelineno-70-8"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">operation</span>
@@ -6302,8 +6302,8 @@ into it. See <a href="../../mcp/#mcp-in-networks">MCP in Networks</a>.</p>
 </span><span id="__span-70-23"><a id="__codelineno-70-23" name="__codelineno-70-23" href="#__codelineno-70-23"></a><span class="c1"># run() defaults to tools: :none — pass :inherit to actually send Calculator</span>
 </span><span id="__span-70-24"><a id="__codelineno-70-24" name="__codelineno-70-24" href="#__codelineno-70-24"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">robot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"What is 15 * 7?"</span><span class="p">,</span><span class="w"> </span><span class="ss">tools</span><span class="p">:</span><span class="w"> </span><span class="ss">:inherit</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Note that <code>param</code> accepts only <code>type:</code>, <code>desc:</code>/<code>description:</code>, and <code>required:</code> —
-there is no <code>enum:</code> option. See <a href="../tool/#param">Tool</a>.</p>
+<p>Note that <code>parameter</code> accepts only <code>type:</code>, <code>description:</code>, and <code>required:</code> —
+there is no <code>enum:</code> option. See <a href="../tool/#parameter">Tool</a>.</p>
 <h3 id="robot-with-local-provider">Robot with Local Provider<a class="headerlink" href="#robot-with-local-provider" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-71-1"><a id="__codelineno-71-1" name="__codelineno-71-1" href="#__codelineno-71-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
 </span><span id="__span-71-2"><a id="__codelineno-71-2" name="__codelineno-71-2" href="#__codelineno-71-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_bot"</span><span class="p">,</span>

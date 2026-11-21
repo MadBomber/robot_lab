@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -3369,7 +3369,8 @@ Proc decides.</p>
 <h3 id="input-requests-elicitation">Input requests (elicitation)<a class="headerlink" href="#input-requests-elicitation" title="Permanent link">&para;</a></h3>
 <p>A server may ask for input mid-call: a <strong>form</strong> request lists <code>fields</code>, a
 <strong>URL</strong> request asks the user to visit <code>url</code>. <code>on_input_request:</code> receives the
-<code>RubyLLM::MCP::InputRequest</code>:</p>
+<code>RubyLLM::Question</code> (ruby_llm 2.2; <code>RubyLLM::MCP::InputRequest</code> is an alias for it).
+Questions a plain <code>RubyLLM::Tool</code> asks with <code>Tool#ask</code> arrive here too:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">"deployer"</span><span class="p">,</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="ss">mcp</span><span class="p">:</span><span class="w">  </span><span class="o">[</span><span class="n">deploy_server</span><span class="o">]</span><span class="p">,</span>
@@ -3465,9 +3466,14 @@ robot runs the <code>:tool_call</code> hook family around the chat's execution o
 <code>robot.mcp_server_for(tool)</code> answers the same question outside a hook. The
 <code>on_tool_call:</code> / <code>on_tool_result:</code> callbacks fire for MCP tools as for any
 other.</p>
-<p>A <code>RubyLLM::MCP::Error</code> raised mid-call (the server went away, a transport
-timeout) does not abort the run: the hook context's <code>tool_error</code> is set and the
-model receives <code>{ error: "&lt;tool name&gt;: &lt;message&gt;" }</code> as the tool result.</p>
+<p>A server failing mid-call (it went away, a transport timeout, a JSON-RPC
+error) does not abort the run. ruby_llm 2.2 catches the failure itself and the
+model receives <code>{ error: "The &lt;server&gt; MCP server failed: &lt;message&gt;" }</code> as the
+tool result; the robot still sets the hook context's <code>tool_error</code> (to a
+<code>RobotLab::MCPError</code> carrying that message). A <code>RubyLLM::MCP::Error</code> that
+ruby_llm re-raises (such as a refused request) becomes
+<code>{ error: "&lt;tool name&gt;: &lt;message&gt;" }</code>, with <code>tool_error</code> set to the original
+error.</p>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3490,8 +3496,8 @@ model receives <code>{ error: "&lt;tool name&gt;: &lt;message&gt;" }</code> as t
 <td><code>RobotLab::MCPError</code> from <code>run</code>, suggesting <code>prefix:</code></td>
 </tr>
 <tr>
-<td><code>RubyLLM::MCP::Error</code> during a tool call</td>
-<td>Becomes an <code>{ error: }</code> tool result; the run continues</td>
+<td>Server fails during a tool call</td>
+<td>Becomes an <code>{ error: }</code> tool result and sets the hook context's <code>tool_error</code>; the run continues</td>
 </tr>
 <tr>
 <td>Long-running task past 300 s</td>
@@ -3571,7 +3577,7 @@ compatibility layer.</p>
 </tr>
 <tr>
 <td><code>async-http</code>, <code>async-websocket</code> dependencies</td>
-<td>Removed. <code>ruby_llm &gt;= 2.1.1, &lt; 3</code> is required</td>
+<td>Removed. <code>ruby_llm &gt;= 2.2.0, &lt; 3</code> is required</td>
 </tr>
 </tbody>
 </table>
