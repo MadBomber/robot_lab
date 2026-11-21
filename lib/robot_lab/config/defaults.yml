@@ -54,7 +54,7 @@ defaults:
 
   # RubyLLM Configuration Section
   ruby_llm:
-    provider: :anthropic
+    provider: null # default provider for robots built without provider: (null = let RubyLLM infer it from the model)
     model: claude-sonnet-4-6
     assume_model_exists: false # (dep of assume_exists in chat section) set true for Ollama and other local LLM providers
     # Provider API Keys (null = use env vars directly)

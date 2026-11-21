@@ -367,7 +367,7 @@ name comes from the hook method names, not from `event`.
 | `mcp_server` | | The `RubyLLM::MCP` that owns `tool` when it is an MCP tool; `nil` for local tools |
 | `mcp?` | | `!mcp_server.nil?` |
 | `tool_result` | rw | The result. Assign it in `around_tool_call` **without** calling the block to block a tool |
-| `tool_error` | rw | Set by `Tool#call` when `execute` raised, or by the robot's tool-call bridge when a `RubyLLM::MCP::Error` interrupted an MCP tool call (the result is then `{ error: }`) |
+| `tool_error` | rw | Set by `Tool#call` when `execute` raised, or by the robot's tool-call bridge when the server failed an MCP tool call (a `RobotLab::MCPError`, or the `RubyLLM::MCP::Error` ruby_llm re-raised; the result is then `{ error: }`) |
 
 #### NetworkRunHookContext (`event: :network_run`)
 

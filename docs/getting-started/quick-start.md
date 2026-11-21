@@ -114,9 +114,9 @@ require "robot_lab"
 class CurrentTime < RubyLLM::Tool
   description "Get the current date and time"
 
-  param :timezone,
+  parameter :timezone,
         type: "string",
-        desc: "Timezone name (e.g., 'UTC', 'US/Eastern')",
+        description: "Timezone name (e.g., 'UTC', 'US/Eastern')",
         required: false
 
   def execute(timezone: "UTC")

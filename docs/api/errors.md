@@ -164,7 +164,7 @@ end
 run. A server that cannot be reached while listing tools (any of
 `RobotLab::MCP::CONNECT_ERRORS`) is logged at `warn`, recorded in
 `robot.mcp_failures`, skipped for that run, and retried on the next run that
-selects it. A `RubyLLM::MCP::Error` raised while a tool call is executing is
+selects it. A server failing while a tool call is executing is
 turned into an `{ error: }` tool result so the model can recover. Direct calls
 on a server (`robot.mcp[:name].tools`, `.call`) raise ruby_llm's own errors.
 
@@ -230,14 +230,14 @@ another attempt is worth trying:
 ```ruby
 class Fetch < RobotLab::Tool
   description "Fetch a record"
-  param :id, type: "string", desc: "record id"
+  parameter :id, type: "string", description: "record id"
 
   def execute(id:)
     raise RobotLab::ToolError.new("upstream unavailable", retryable: true)
   end
 end
 
-Fetch.new.call({ "id" => "1" })
+Fetch.new.call(id: "1")
 # => "Error (fetch): upstream unavailable (retryable)"
 ```
 

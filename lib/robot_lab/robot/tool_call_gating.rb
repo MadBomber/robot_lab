@@ -10,9 +10,9 @@ module RobotLab
     #   execution of such tools (RobotLab::Tool runs them itself in #call),
     #   and turns an MCP transport failure mid-call into an error result so
     #   the model can recover instead of the run aborting.
-    # - The settlement loop answers what ruby_llm pauses a run for: tool
-    #   calls that require approval, MCP input requests (elicitation), and
-    #   long-running MCP tasks. A run never returns half-finished.
+    # - The settlement loop answers what ruby_llm pauses a run for: the
+    #   questions in Chat#pending_questions (tool calls that require
+    #   approval, MCP input requests, Tool#ask) and long-running MCP tasks. A run never returns half-finished.
     #
     # Owns:    nothing (uses @chat, @tool_approval, @on_tool_approval, @on_input_request)
     # Reads:   @name
@@ -40,7 +40,8 @@ module RobotLab
       # Run :tool_call hooks around a chat-executed tool call. Yields to the
       # chat's own execution; the PAUSED sentinel it returns for approvals,
       # input requests and tasks passes through untouched.
-      # :reek:TooManyStatements -- context build, hook wrap and the MCP rescue are one guarded dispatch.
+      # :reek:TooManyStatements :reek:FeatureEnvy -- context build, hook wrap and the MCP rescue are one guarded
+      #   dispatch that fills the hook context.
       def bridge_tool_call(tool_call)
         tool = @chat.tools[tool_call.name.to_sym]
         return yield if tool.nil? || tool.is_a?(RobotLab::Tool)
@@ -52,11 +53,25 @@ module RobotLab
                             registries: scope[:registries] || hook_registries,
                             per_run_hooks: scope[:per_run_hooks]) do
           context.tool_result = yield
+          context.tool_error  = mcp_failure_error(context.tool_result)
         rescue RubyLLM::MCP::Error => e
           context.tool_error  = e
           context.tool_result = { error: "#{tool.name}: #{e.message}" }
         end
         context.tool_result
+      end
+
+      # ruby_llm (>= 2.2) catches a server failing an MCP call itself and
+      # returns the error Hash as the result, so the rescue in
+      # #bridge_tool_call never sees it. Surface it to :tool_call hooks as an
+      # MCPError all the same.
+      #
+      # @param result [Object] what the chat's tool execution returned
+      # @return [RobotLab::MCPError, nil]
+      def mcp_failure_error(result)
+        return unless result.is_a?(RubyLLM::MCP::Outages::Failure)
+
+        MCPError.new(result[:error].to_s)
       end
 
       # Keep completing the chat until nothing waits on the outside world:
@@ -67,18 +82,25 @@ module RobotLab
       def settle_pending_tool_calls(response, &)
         deadline = nil
         while @chat.waiting?
-          decide_pending_approvals
-          answer_pending_inputs
+          settle_pending_questions
           deadline = wait_for_mcp_tasks(deadline)
           response = @chat.complete(&)
         end
         response
       end
 
-      def decide_pending_approvals
-        @chat.pending_approvals.each do |tool_call|
-          approve_tool_call?(tool_call) ? @chat.approve(tool_call) : @chat.deny(tool_call)
+      # Answer every question the chat waits on: approvals go through the
+      # approval policy; the rest (MCP input requests, Tool#ask) go to
+      # on_input_request.
+      def settle_pending_questions
+        @chat.pending_questions.each do |question|
+          question.approval? ? decide_approval(question) : settle_input_request(question)
         end
+      end
+
+      # @param question [RubyLLM::Question] an approval question
+      def decide_approval(question)
+        approve_tool_call?(question.tool_call) ? @chat.approve(question) : @chat.decline(question)
       end
 
       # Approval policy: an on_tool_approval Proc decides; else tool_approval
@@ -97,14 +119,10 @@ module RobotLab
         false
       end
 
-      def answer_pending_inputs
-        @chat.pending_inputs.each { |request| settle_input_request(request) }
-      end
-
       # An on_input_request Proc answers a request with a Hash of field
       # values (or +true+ to accept a URL request); anything else declines.
       #
-      # @param request [RubyLLM::MCP::InputRequest]
+      # @param request [RubyLLM::Question] a pending question that is not an approval
       def settle_input_request(request)
         answer = @on_input_request&.call(request)
         case answer

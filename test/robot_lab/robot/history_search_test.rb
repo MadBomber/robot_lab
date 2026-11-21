@@ -46,8 +46,7 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
   def test_returns_empty_when_query_produces_no_terms
     load_history("What is Ruby?", "Ruby is a programming language.")
     # A query of only stopwords / too-short terms collapses to empty vector
-    result = @robot.search_history("a an the")
-    assert_instance_of Array, result
+    assert_equal [], @robot.search_history("a an the")
   end
 
   # -------------------------------------------------------------------------
@@ -63,11 +62,9 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
     )
 
     results = @robot.search_history("Ruby Rails web framework API", limit: 4)
-    assert results.size >= 2, "Expected at least 2 results"
 
-    top_texts = results.first(2).map(&:text)
-    assert top_texts.any? { |t| t.downcase.include?("rails") || t.downcase.include?("ruby") },
-           "Expected Rails/Ruby message in top-2"
+    # The two Rails turns rank first; the lunch turns share no terms and are left out.
+    assert_equal [0, 1], results.map(&:index)
   end
 
   def test_results_are_sorted_by_score_descending
@@ -80,7 +77,8 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
 
     results = @robot.search_history("Ruby Rails web development", limit: 4)
     scores = results.map(&:score)
-    assert_equal scores.sort.reverse, scores, "Results should be sorted by score descending"
+    assert_equal 2, scores.size, "the two Rails turns match; the weather and park turns do not"
+    assert_operator scores.first, :>, scores.last
   end
 
   # -------------------------------------------------------------------------
@@ -114,9 +112,8 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
     )
 
     results = @robot.search_history("Rails web", limit: 2)
-    results.each do |r|
-      assert_equal @fake_chat.messages[r.index].content, r.text
-    end
+    assert_equal [0, 1], results.map(&:index)
+    assert_equal @fake_chat.messages.map(&:content), results.map(&:text)
   end
 
   # -------------------------------------------------------------------------
@@ -131,8 +128,8 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
       "Ruby language has elegant syntax and powerful metaprogramming features."
     )
 
-    results = @robot.search_history("Ruby Rails framework", limit: 2)
-    assert results.size <= 2
+    # All four turns match, so the limit is what stops at two.
+    assert_equal 2, @robot.search_history("Ruby Rails framework", limit: 2).size
   end
 
   def test_default_limit_is_five
@@ -142,8 +139,8 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
     end
     @fake_chat.messages.replace(msgs)
 
-    results = @robot.search_history("Ruby on Rails development")
-    assert results.size <= 5
+    # All twenty turns match, so the default limit is what stops at five.
+    assert_equal 5, @robot.search_history("Ruby on Rails development").size
   end
 
   # -------------------------------------------------------------------------
@@ -158,10 +155,8 @@ class RobotLab::Robot::HistorySearchTest < Minitest::Test
                                 ])
 
     results = @robot.search_history("Ruby web Rails development")
-    # The two short messages should not appear (below MIN_SCORE_LENGTH)
-    results.each do |r|
-      assert r.text.length >= RobotLab::Robot::HistorySearch::MIN_SCORE_LENGTH
-    end
+    # Only the long message is scored; "Hi" and "Hello" are below MIN_SCORE_LENGTH.
+    assert_equal [2], results.map(&:index)
   end
 
   # -------------------------------------------------------------------------

@@ -345,7 +345,7 @@ that is the only supported way for tool code to read and write robot memory:
 ```ruby
 class FetchUser < RobotLab::Tool
   description "Fetch user details by ID"
-  param :user_id, type: :string, desc: "User ID"
+  parameter :user_id, type: :string, description: "User ID"
 
   def execute(user_id:)
     cache_key = :"cache:user:#{user_id}"

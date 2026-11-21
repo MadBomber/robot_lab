@@ -65,9 +65,9 @@ never `eval` a string the model produced.
 class CalculatorTool < RubyLLM::Tool
   description "Performs basic arithmetic operations"
 
-  param :operation, type: "string", desc: "add, subtract, multiply, or divide"
-  param :a,         type: "number", desc: "First operand"
-  param :b,         type: "number", desc: "Second operand"
+  parameter :operation, type: "string", description: "add, subtract, multiply, or divide"
+  parameter :a,         type: "number", description: "First operand"
+  parameter :b,         type: "number", description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation

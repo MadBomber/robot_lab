@@ -44,17 +44,17 @@ require "robot_lab"
 class Calculator < RubyLLM::Tool
   description "Performs basic arithmetic operations"
 
-  param :operation,
+  parameter :operation,
         type: "string",
-        desc: "The operation to perform (add, subtract, multiply, divide)"
+        description: "The operation to perform (add, subtract, multiply, divide)"
 
-  param :a,
+  parameter :a,
         type: "number",
-        desc: "First operand"
+        description: "First operand"
 
-  param :b,
+  parameter :b,
         type: "number",
-        desc: "Second operand"
+        description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation
@@ -70,9 +70,9 @@ end
 class FortuneCookie < RubyLLM::Tool
   description "Get a fortune cookie message with wisdom and lucky numbers"
 
-  param :category,
+  parameter :category,
         type: "string",
-        desc: "The category of fortune (wisdom, love, career, adventure)"
+        description: "The category of fortune (wisdom, love, career, adventure)"
 
   FORTUNES = {
     "wisdom" => [
@@ -165,7 +165,7 @@ The block receives a single hash of symbol-keyed arguments.
 > `RobotLab::Tool.create(parameters:)` accepts a JSON-Schema-shaped hash, but only
 > `type` and `description` are read off each property, plus the top-level `required`
 > list. Anything else (`enum`, `default`, nested `items`) is ignored — ruby_llm's
-> `param` DSL supports only `type:`, `desc:`/`description:`, and `required:`.
+> `parameter` DSL supports only `type:`, `description:`, and `required:`.
 
 ## Weather API Integration
 
@@ -180,9 +180,9 @@ require "json"
 class GetWeather < RubyLLM::Tool
   description "Get current weather for a city"
 
-  param :city,
+  parameter :city,
         type: "string",
-        desc: "City name (e.g., 'New York', 'London')"
+        description: "City name (e.g., 'New York', 'London')"
 
   def execute(city:)
     response = HTTP.get(
@@ -212,8 +212,8 @@ end
 class GetForecast < RubyLLM::Tool
   description "Get weather forecast for upcoming days"
 
-  param :city, type: "string", desc: "City name"
-  param :days, type: "integer", desc: "Number of days (default 3)"
+  parameter :city, type: "string", description: "City name"
+  parameter :days, type: "integer", description: "Number of days (default 3)"
 
   def execute(city:, days: 3)
     response = HTTP.get(
@@ -283,7 +283,7 @@ ORDERS = {
 class GetOrder < RubyLLM::Tool
   description "Look up an order by ID"
 
-  param :order_id, type: "string", desc: "The order ID to look up"
+  parameter :order_id, type: "string", description: "The order ID to look up"
 
   def execute(order_id:)
     order = ORDERS[order_id.upcase]
@@ -294,7 +294,7 @@ end
 class ListOrders < RubyLLM::Tool
   description "List recent orders"
 
-  param :limit, type: "integer", desc: "Maximum number of orders to return"
+  parameter :limit, type: "integer", description: "Maximum number of orders to return"
 
   def execute(limit: 5)
     ORDERS.values.take(limit)
@@ -304,8 +304,8 @@ end
 class CancelOrder < RubyLLM::Tool
   description "Cancel an order"
 
-  param :order_id, type: "string", desc: "The order ID to cancel"
-  param :reason, type: "string", desc: "Reason for cancellation"
+  parameter :order_id, type: "string", description: "The order ID to cancel"
+  parameter :reason, type: "string", description: "Reason for cancellation"
 
   def execute(order_id:, reason: nil)
     order = ORDERS[order_id.upcase]
@@ -450,7 +450,7 @@ collect a value before any robot is built.
 
 ## Key Concepts
 
-1. **RubyLLM::Tool subclass**: Define a class with `description`, `param`, and `execute` method
+1. **RubyLLM::Tool subclass**: Define a class with `description`, `parameter`, and `execute` method
 2. **RobotLab::Tool subclass**: Same DSL plus a `robot` accessor for robot-aware tools
 3. **RobotLab::Tool.create**: Use `RobotLab::Tool.create(name:, description:, &block)` for dynamic tools
 4. **Built-in tools**: `RobotLab::AskUser` (LLM-visible name `robot_lab--ask_user`) for interactive terminal input

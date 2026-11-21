@@ -19,6 +19,17 @@ class RobotLab::Robot::MCPIntegrationTest < Minitest::Test
     end
   end
 
+  class ErrorCapturingToolHook < RobotLab::Hook
+    self.namespace = :global
+    class << self
+      attr_accessor :errors
+
+      def after_tool_call(ctx)
+        errors << ctx.tool_error
+      end
+    end
+  end
+
   def setup
     RobotLab.clear_hooks!
     ObservingToolHook.events = []
@@ -286,10 +297,25 @@ class RobotLab::Robot::MCPIntegrationTest < Minitest::Test
     script_generation(robot, tool_call_message('echo'), text_message('done'))
     robot.connect_mcp!
     transport.fail_with = RubyLLM::MCP::Error.new('server went away')
+    ErrorCapturingToolHook.errors = []
+    RobotLab.on(ErrorCapturingToolHook)
 
-    robot.run('hi', mcp: :inherit, tools: :inherit)
+    result = robot.run('hi', mcp: :inherit, tools: :inherit)
 
-    assert_match(/echo: server went away/, tool_messages(robot).first.content.to_s)
+    assert_match(/server went away/, tool_messages(robot).first.content.to_s)
+    assert_equal 'done', result.output.last.content
+    assert_equal 1, ErrorCapturingToolHook.errors.size
+    assert_kind_of RobotLab::MCPError, ErrorCapturingToolHook.errors.first
+    assert_match(/server went away/, ErrorCapturingToolHook.errors.first.message)
+  end
+
+  def test_mcp_failure_error_ignores_ordinary_results
+    robot = build_robot(name: 'bot', template: :assistant)
+
+    assert_nil robot.send(:mcp_failure_error, 'ok')
+    assert_nil robot.send(:mcp_failure_error, { error: 'a tool-level error, not a server failure' })
+    error = robot.send(:mcp_failure_error, RubyLLM::MCP::Outages::Failure[error: 'gone'])
+    assert_equal 'gone', error.message
   end
 
   # ── approvals ────────────────────────────────────────────────────────────

@@ -12,8 +12,8 @@ RobotLab::Tool inherits from RubyLLM::Tool, adding a `robot:` constructor parame
 class GetWeather < RobotLab::Tool
   description "Get weather for a location"
 
-  param :location, type: "string", desc: "City name or zip code"
-  param :unit, type: "string", desc: "Temperature unit", required: false
+  parameter :location, type: "string", description: "City name or zip code"
+  parameter :unit, type: "string", description: "Temperature unit", required: false
 
   def execute(location:, unit: "celsius")
     WeatherService.current(location, unit: unit)
@@ -162,27 +162,26 @@ class MyTool < RobotLab::Tool
 end
 ```
 
-### param
+### parameter
 
 ```ruby
 class MyTool < RobotLab::Tool
-  param :name, type: "string", desc: "User's name"
-  param :age, type: "integer", desc: "User's age", required: false
+  parameter :name, type: "string", description: "User's name"
+  parameter :age, type: "integer", description: "User's age", required: false
 end
 ```
 
-`param` accepts exactly four options — anything else raises
+`parameter` accepts exactly three options — anything else raises
 `ArgumentError: unknown keyword`:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `type` | `String` | `"string"` | JSON Schema type (`"string"`, `"integer"`, `"number"`, `"boolean"`, `"array"`, `"object"`) |
-| `desc` | `String` | `nil` | Description shown to the LLM |
-| `description` | `String` | `nil` | Synonym for `desc` |
+| `description` | `String` | `nil` | Description shown to the LLM |
 | `required` | `Boolean` | `true` | Whether the LLM must supply the parameter |
 
 !!! warning "There is no `enum:` option"
-    `param :unit, type: "string", enum: %w[c f]` raises
+    `parameter :unit, type: "string", enum: %w[c f]` raises
     `ArgumentError: unknown keyword: :enum`. Constrain the value in the
     description and validate it inside `execute`, or supply a full JSON Schema
     through [`Tool.create(parameters:)`](#toolcreate).
@@ -280,13 +279,13 @@ class T2 < RobotLab::Tool
   description "t"
   def execute(**) = raise RobotLab::ToolError.new("nope", retryable: true)
 end
-T2.new.call({})   # => "Error (t2): nope (retryable)"   -- nothing logged
+T2.new.call   # => "Error (t2): nope (retryable)"   -- nothing logged
 
 class T3 < RobotLab::Tool
   description "t"
   def execute(**) = raise ArgumentError, "bad"
 end
-T3.new.call({})   # => "Error (t3): bad"                -- WARN logged
+T3.new.call   # => "Error (t3): bad"                -- WARN logged
 ```
 
 `" (retryable)"` is appended only for `ToolError`/`MCPError` instances
@@ -361,7 +360,7 @@ Tools that modify their owning robot use the `robot` accessor:
 class AdjustTemperature < RobotLab::Tool
   description "Adjust the robot's creativity level"
 
-  param :level, type: "number", desc: "Temperature from 0.0 to 1.0"
+  parameter :level, type: "number", description: "Temperature from 0.0 to 1.0"
 
   def execute(level:)
     robot.with_temperature(level)
@@ -386,25 +385,25 @@ Passing the bare **class** (`local_tools: [AdjustTemperature]`) leaves
 ### String
 
 ```ruby
-param :name, type: "string", desc: "User's full name"
+parameter :name, type: "string", description: "User's full name"
 ```
 
 ### Integer
 
 ```ruby
-param :count, type: "integer", desc: "Number of results"
+parameter :count, type: "integer", description: "Number of results"
 ```
 
 ### Number (Float)
 
 ```ruby
-param :price, type: "number", desc: "Price in dollars"
+parameter :price, type: "number", description: "Price in dollars"
 ```
 
 ### Boolean
 
 ```ruby
-param :active, type: "boolean", desc: "Whether the user is active"
+parameter :active, type: "boolean", description: "Whether the user is active"
 ```
 
 ### Required vs Optional
@@ -412,8 +411,8 @@ param :active, type: "boolean", desc: "Whether the user is active"
 Parameters are required by default. Mark optional with `required: false`:
 
 ```ruby
-param :query, type: "string", desc: "Search query"                    # required
-param :limit, type: "integer", desc: "Max results", required: false   # optional
+parameter :query, type: "string", description: "Search query"                    # required
+parameter :limit, type: "integer", description: "Max results", required: false   # optional
 ```
 
 ## Built-in: AskUser
@@ -425,9 +424,9 @@ param :limit, type: "integer", desc: "Max results", required: false   # optional
 ```ruby
 class RobotLab::AskUser < RobotLab::Tool
   description "Ask the user a question and wait for their typed response"
-  param :question, type: "string",  desc: "The question to ask the user"
-  param :choices,  type: "array",   desc: "Optional list of choices to present", required: false
-  param :default,  type: "string",  desc: "Default value if user presses Enter",  required: false
+  parameter :question, type: "string",  description: "The question to ask the user"
+  parameter :choices,  type: "array",   description: "Optional list of choices to present", required: false
+  parameter :default,  type: "string",  description: "Default value if user presses Enter",  required: false
 end
 ```
 

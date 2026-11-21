@@ -208,7 +208,7 @@ returns:
 |---------|---------|--------|
 | `tool_approval:` | `:deny` | `:approve` lets approval-gated tools run; `:deny` refuses them with a warning and an `{ error: }` result for the model |
 | `on_tool_approval:` | `nil` | Proc receiving a `RubyLLM::ToolCall`; truthy approves. Takes precedence over `tool_approval` |
-| `on_input_request:` | `nil` | Proc receiving a `RubyLLM::MCP::InputRequest`; return a Hash of field values to answer a form request, `true` to accept a URL request, anything else declines. Without it, requests are declined |
+| `on_input_request:` | `nil` | Proc receiving a `RubyLLM::Question` (an MCP input request or a `Tool#ask` question); return a Hash of field values to answer a form request, `true` to accept a URL request, anything else declines. Without it, requests are declined |
 | tasks | | Polled at the task's interval; `RobotLab::MCPError` (`retryable: true`) after `Robot::ToolCallGating::MCP_TASK_TIMEOUT` (300 s) |
 
 All three settings are `Robot.new` keywords and `RunConfig` fields.
@@ -219,7 +219,7 @@ All three settings are `Robot.new` keywords and `RunConfig` fields.
 |-------|------|
 | `RobotLab::MCPError` | A spec cannot be built (no name, no `command`/`url`, unsupported or unknown transport, not a `RubyLLM::MCP` class); two tools share a name (suggests `prefix:`); a task outlives the timeout |
 | Connection failures (`RobotLab::MCP::CONNECT_ERRORS`) | Rescued per server inside a robot: logged at `warn`, recorded in `mcp_failures`, retried next run. Raised to you from direct calls such as `server.tools` |
-| `RubyLLM::MCP::Error` during a tool call | Turned into an `{ error: "<tool>: <message>" }` tool result; the run continues |
+| Server fails during a tool call | Turned into an `{ error: }` tool result (`"The <server> MCP server failed: <message>"`, or `"<tool>: <message>"` for an error ruby_llm re-raises); the hook context's `tool_error` is set; the run continues |
 
 ```ruby
 robot = RobotLab.build(name: "t", system_prompt: "hi",

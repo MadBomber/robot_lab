@@ -328,7 +328,8 @@ Proc decides.
 
 A server may ask for input mid-call: a **form** request lists `fields`, a
 **URL** request asks the user to visit `url`. `on_input_request:` receives the
-`RubyLLM::MCP::InputRequest`:
+`RubyLLM::Question` (ruby_llm 2.2; `RubyLLM::MCP::InputRequest` is an alias for it).
+Questions a plain `RubyLLM::Tool` asks with `Tool#ask` arrive here too:
 
 ```ruby
 robot = RobotLab.build(
@@ -450,9 +451,14 @@ RobotLab.on(ToolAudit)
 `on_tool_call:` / `on_tool_result:` callbacks fire for MCP tools as for any
 other.
 
-A `RubyLLM::MCP::Error` raised mid-call (the server went away, a transport
-timeout) does not abort the run: the hook context's `tool_error` is set and the
-model receives `{ error: "<tool name>: <message>" }` as the tool result.
+A server failing mid-call (it went away, a transport timeout, a JSON-RPC
+error) does not abort the run. ruby_llm 2.2 catches the failure itself and the
+model receives `{ error: "The <server> MCP server failed: <message>" }` as the
+tool result; the robot still sets the hook context's `tool_error` (to a
+`RobotLab::MCPError` carrying that message). A `RubyLLM::MCP::Error` that
+ruby_llm re-raises (such as a refused request) becomes
+`{ error: "<tool name>: <message>" }`, with `tool_error` set to the original
+error.
 
 ## Error Handling
 
@@ -461,7 +467,7 @@ model receives `{ error: "<tool name>: <message>" }` as the tool result.
 | Spec with no `name`, no `command`/`url`, an unknown or unsupported (`sse`/`ws`) transport, or a non-`RubyLLM::MCP` class | `RobotLab::MCPError` raised when the server is built: at `connect_mcp!`, `with_mcp`, or the first run that selects it |
 | Server unreachable while listing tools | Rescued per server, logged at `warn`, recorded in `mcp_failures`; the run continues without it and retries next time |
 | Two tools share a name | `RobotLab::MCPError` from `run`, suggesting `prefix:` |
-| `RubyLLM::MCP::Error` during a tool call | Becomes an `{ error: }` tool result; the run continues |
+| Server fails during a tool call | Becomes an `{ error: }` tool result and sets the hook context's `tool_error`; the run continues |
 | Long-running task past 300 s | `RobotLab::MCPError` with `retryable: true` |
 | Direct calls such as `server.tools` or `server.call` | Raise ruby_llm's errors to you (`RubyLLM::MCP::Error`, `Errno::*`, ...); nothing is swallowed outside a robot run |
 
@@ -489,7 +495,7 @@ compatibility layer.
 | `VALID_TRANSPORT_TYPES`, `DEFAULT_TIMEOUT` (15 s) | Gone. Timeout defaults to ruby_llm's `request_timeout` |
 | Nested `transport:` mapping required in front matter | Flat form (`transport: stdio` plus `command:`/`args:`) now works |
 | Approval-gated tools ran | Denied unless `tool_approval: :approve` or `on_tool_approval:` is set |
-| `async-http`, `async-websocket` dependencies | Removed. `ruby_llm >= 2.1.1, < 3` is required |
+| `async-http`, `async-websocket` dependencies | Removed. `ruby_llm >= 2.2.0, < 3` is required |
 
 Unchanged: `Robot#run(mcp:, tools:)` semantics, the `:none`/`:inherit`/Array
 cascade, `connect_mcp!`, `failed_mcp_server_names`, `disconnect`,

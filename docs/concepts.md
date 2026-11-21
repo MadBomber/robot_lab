@@ -207,9 +207,9 @@ There are two patterns for defining tools:
 class Calculator < RubyLLM::Tool
   description "Performs basic arithmetic operations"
 
-  param :operation, type: "string", desc: "The operation (add, subtract, multiply, divide)"
-  param :a, type: "number", desc: "First operand"
-  param :b, type: "number", desc: "Second operand"
+  parameter :operation, type: "string", description: "The operation (add, subtract, multiply, divide)"
+  parameter :a, type: "number", description: "First operand"
+  parameter :b, type: "number", description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation
