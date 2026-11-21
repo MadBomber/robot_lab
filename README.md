@@ -343,11 +343,11 @@ tool = RobotLab::Tool.create(name: "fetch_data") do |args|
   raise IOError, "connection refused"
 end
 
-result = tool.call({})
+result = tool.call
 # => "Error (fetch_data): connection refused"
 ```
 
-This applies to every `RobotLab::Tool` — subclasses and factory tools. (MCP tools are `RubyLLM::MCP::Tool` instances; a `RubyLLM::MCP::Error` raised during one of their calls becomes an `{ error: }` tool result through the robot's tool-call bridge instead.) For critical tools where you want exceptions to propagate, opt out per class:
+This applies to every `RobotLab::Tool` — subclasses and factory tools. (MCP tools are `RubyLLM::MCP::Tool` instances; a server failing one of their calls becomes an `{ error: }` tool result instead, and `:tool_call` hooks see it as `tool_error`.) For critical tools where you want exceptions to propagate, opt out per class:
 
 ```ruby
 class CriticalTool < RobotLab::Tool
@@ -363,7 +363,7 @@ end
 class Magic8Ball < RubyLLM::Tool
   description "Consult the mystical Magic 8-Ball for guidance on yes/no questions"
 
-  param :question, type: "string", desc: "A yes/no question to ask the oracle"
+  parameter :question, type: "string", description: "A yes/no question to ask the oracle"
 
   RESPONSES = [
     { answer: "It is certain", certainty: 0.95, vibe: "positive" },
@@ -552,7 +552,7 @@ robot.run(robot.mcp[:git_hub].prompt("code_review", code: diff), mcp: :inherit)
 robot.disconnect   # closes every server (stopping stdio processes); they reconnect on next use
 ```
 
-Connection failures are logged, recorded in `robot.mcp_failures` and retried on the next run that selects the server; they are not raised, and one failing server does not stop the others. A `RubyLLM::MCP::Error` during a tool call becomes an `{ error: }` tool result rather than aborting the run. See the [MCP Integration guide](docs/guides/mcp-integration.md), including its "Migrating from 0.3" section.
+Connection failures are logged, recorded in `robot.mcp_failures` and retried on the next run that selects the server; they are not raised, and one failing server does not stop the others. A server failing during a tool call becomes an `{ error: }` tool result rather than aborting the run. See the [MCP Integration guide](docs/guides/mcp-integration.md), including its "Migrating from 0.3" section.
 
 ## Message Bus
 

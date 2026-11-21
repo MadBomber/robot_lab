@@ -5,7 +5,8 @@ module RobotLab
     # Template loading, rendering, and front-matter extraction.
     #
     # Owns:    @expanded_skills, @pending_agent_skills, @agent_skill_store
-    # Reads:   @chat, @template, @build_context, @name, @name_from_constructor, @description, @local_tools, @mcp_config, @config
+    # Reads:   @chat, @template, @build_context, @name, @name_from_constructor, @description, @local_tools, @mcp_config, @config, @provider
+    #          (front-matter provider: goes through Robot#adopt_front_matter_provider)
     # Contract: called during initialize after assign_identity_ivars and build_effective_config
     module TemplateRendering
       # Front matter keys that map to chat configuration methods
@@ -16,7 +17,7 @@ module RobotLab
 
       # Front matter keys for robot identity and capabilities.
       # Note: uses `robot_name` because PM::Metadata reserves `name` for the filename.
-      FRONT_MATTER_EXTRA_KEYS = %i[tools mcp robot_name description skills].freeze
+      FRONT_MATTER_EXTRA_KEYS = %i[tools mcp robot_name description skills provider].freeze
 
       # Apply a prompt_manager template to the robot's chat
       #
@@ -245,6 +246,8 @@ module RobotLab
       # @param metadata [PM::Metadata] front matter metadata
       # @param extras [Hash] accumulator hash
       def accumulate_extras(metadata, extras)
+        extras[:provider] = metadata.provider if metadata.respond_to?(:provider) && metadata.provider
+
         if metadata.respond_to?(:robot_name) && metadata.robot_name
           extras[:robot_name] = metadata.robot_name.to_s
         end
@@ -265,6 +268,8 @@ module RobotLab
       #
       # @param extras [Hash] accumulated extras from skills + main template
       def apply_accumulated_extras(extras)
+        adopt_front_matter_provider(extras[:provider])
+
         if extras[:robot_name] && !@name_from_constructor
           @name = extras[:robot_name]
         end
@@ -285,6 +290,8 @@ module RobotLab
       # Constructor-provided values take precedence over frontmatter.
       # :reek:FeatureEnvy -- copying front-matter metadata fields into this robot's ivars is the method's purpose.
       def apply_front_matter_extras(metadata)
+        adopt_front_matter_provider(metadata.provider) if metadata.respond_to?(:provider)
+
         if metadata.respond_to?(:robot_name) && metadata.robot_name && !@name_from_constructor
           @name = metadata.robot_name.to_s
         end

@@ -300,7 +300,7 @@ class RobotLab::MemoryTest < Minitest::Test
 
     history = memory.format_history
 
-    assert history.size >= 1  # At least the message
+    assert_equal ["Hello", "Response from robot1"], history.map(&:content)
   end
 
   # Backend check

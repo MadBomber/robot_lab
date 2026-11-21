@@ -71,7 +71,9 @@ robot = RobotLab.build(
 )
 ```
 
-When `provider:` is set, `assume_model_exists: true` is automatically applied. The provider is available via `robot.provider`. This context is preserved across every re-application of the robot's config — including when a template's front matter re-renders mid-run — so a local-provider robot doesn't fall back to RubyLLM's static model registry (and raise a "model not found" error) on later turns.
+To use a provider for every robot, set `ruby_llm.provider` in config (or `ROBOT_LAB_RUBY_LLM__PROVIDER`); a template can name one with `provider:` front matter. The constructor argument wins over front matter, which wins over config.
+
+When a provider is set from any of these, `assume_model_exists: true` is automatically applied. The provider is available via `robot.provider`. This context is preserved across every re-application of the robot's config — including when a template's front matter re-renders mid-run — so a local-provider robot doesn't fall back to RubyLLM's static model registry (and raise a "model not found" error) on later turns.
 
 Some local models route their entire response through reasoning/thinking content instead of the normal response text (e.g. `qwen3` on Ollama). When that happens, `result.reply` falls back to the thinking text automatically — see [Robot with Local Provider](../api/core/robot.md#robot-with-local-provider) for details.
 
@@ -162,6 +164,7 @@ The following YAML front matter keys are applied to the robot's chat automatical
 | Key | Description |
 |-----|-------------|
 | `robot_name` | Override the robot's name (when constructor uses the default) |
+| `provider` | Provider for the template's `model` (e.g. `ollama`, `lms`); overrides `ruby_llm.provider`, never a constructor `provider:` |
 | `description` | Human-readable description of the robot |
 | `tools` | Array of tool class names (resolved via `Object.const_get`) |
 | `mcp` | Array of MCP server specs (config Hashes; `transport:` nested or flat) |

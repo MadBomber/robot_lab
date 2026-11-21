@@ -70,24 +70,24 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
 
   def test_selects_brew_for_install_query
     result = MCP::ServerDiscovery.select("install imagemagick", from: hash_servers)
-    assert_includes result, hash_server("brew", "Install, update, and manage macOS packages via Homebrew")
+    assert_equal [hash_server("brew", "Install, update, and manage macOS packages via Homebrew")], result
   end
 
   def test_selects_github_for_pr_query
     result = MCP::ServerDiscovery.select("list open pull requests", from: hash_servers)
-    assert_includes result, hash_server("github", "GitHub repos, issues, pull requests, code search")
+    assert_equal [hash_server("github", "GitHub repos, issues, pull requests, code search")], result
   end
 
   def test_selects_filesystem_for_file_query
     result = MCP::ServerDiscovery.select("read config file", from: hash_servers)
-    assert_includes result, hash_server("filesystem", "Read, write, and search local files and directories")
+    assert_equal [hash_server("filesystem", "Read, write, and search local files and directories")], result
   end
 
   # ── normal selection (Server objects) ────────────────────────────────────
 
   def test_works_with_server_objects
     result = MCP::ServerDiscovery.select("install imagemagick", from: server_objects)
-    assert(result.any? { |s| s.name == "brew" })
+    assert_equal ["brew"], result.map(&:name)
   end
 
   def test_works_with_mixed_hash_and_server_objects
@@ -96,7 +96,7 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
       server("brew", "Install, update, and manage macOS packages via Homebrew")
     ]
     result = MCP::ServerDiscovery.select("install imagemagick", from: mixed)
-    assert(result.any? { |s| s.is_a?(Hash) ? s[:name] == "brew" : s.name == "brew" })
+    assert_equal [mixed.last], result
   end
 
   # ── fallback: nothing above threshold ────────────────────────────────────
@@ -112,11 +112,11 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
   # ── threshold parameter ───────────────────────────────────────────────────
 
   def test_custom_threshold_narrows_results
-    # Default threshold (0.05) might return multiple servers; a high threshold
-    # should return fewer (or fall back to all if none qualify — that's fine too).
-    result = MCP::ServerDiscovery.select("install brew package", from: hash_servers)
-    assert_instance_of Array, result
-    refute result.empty?
+    # "search code files" scores filesystem ~0.35, github ~0.27, brew 0.
+    names = ->(**opts) { MCP::ServerDiscovery.select("search code files", from: hash_servers, **opts).map { it[:name] } }
+
+    assert_equal %w[filesystem github], names.call
+    assert_equal %w[filesystem], names.call(threshold: 0.3)
   end
 
   # ── topic_text helper ─────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ class RobotLab::MCP::ServerDiscoveryTest < Minitest::Test
   def test_works_with_server_classes
     classes = SERVERS.map { |s| server_class(s[:name], s[:description]) }
     result  = MCP::ServerDiscovery.select("install imagemagick", from: classes)
-    assert(result.any? { |k| k.default_name == "brew" })
+    assert_equal ["brew"], result.map(&:default_name)
   end
 
   def test_name_for_plain_ruby_llm_mcp_subclass

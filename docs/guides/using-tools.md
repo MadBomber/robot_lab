@@ -12,8 +12,8 @@ For reusable tools that don't need robot access:
 class GetWeather < RubyLLM::Tool
   description "Get current weather for a location"
 
-  param :location, type: :string, desc: "City name or zip code"
-  param :unit, type: :string, desc: "Temperature unit", required: false
+  parameter :location, type: :string, description: "City name or zip code"
+  parameter :unit, type: :string, description: "Temperature unit", required: false
 
   def execute(location:, unit: "celsius")
     WeatherService.current(location, unit: unit)
@@ -29,7 +29,7 @@ For tools that need access to their owning robot (self-modification, spawning, e
 class AdjustEnergy < RobotLab::Tool
   description "Adjust the robot's creativity level"
 
-  param :level, type: "number", desc: "Temperature from 0.0 to 1.0"
+  parameter :level, type: "number", description: "Temperature from 0.0 to 1.0"
 
   def execute(level:)
     robot.with_temperature(level)
@@ -353,49 +353,49 @@ Full API reference: [robot_lab-sandbox](https://github.com/MadBomber/robot_lab-s
 
 ## Parameter Types
 
-Define parameters on `RubyLLM::Tool` subclasses using `param`:
+Define parameters on `RubyLLM::Tool` subclasses using `parameter`:
 
 ### String
 
 ```ruby
-param :name, type: :string, desc: "User's full name"
+parameter :name, type: :string, description: "User's full name"
 ```
 
 ### Integer
 
 ```ruby
-param :count, type: :integer, desc: "Number of results"
+parameter :count, type: :integer, description: "Number of results"
 ```
 
 ### Number (Float)
 
 ```ruby
-param :price, type: :number, desc: "Price in dollars"
+parameter :price, type: :number, description: "Price in dollars"
 ```
 
 ### Boolean
 
 ```ruby
-param :active, type: :boolean, desc: "Whether the user is active"
+parameter :active, type: :boolean, description: "Whether the user is active"
 ```
 
 ### Array
 
 ```ruby
-param :tags, type: :array, desc: "List of tags"
+parameter :tags, type: :array, description: "List of tags"
 ```
 
 ### Enumerated Values
 
-`param` has **no `enum:` option**. Its full signature is
-`param(name, type: "string", desc: nil, description: nil, required: true)` —
+`parameter` has **no `enum:` option**. Its full signature is
+`parameter(name, type: "string", description: nil, required: true)` —
 anything else raises `ArgumentError: unknown keyword: :enum`. Express the
 allowed values in the description instead, and validate in `execute`:
 
 ```ruby
 STATUSES = %w[pending active completed].freeze
 
-param :status, type: :string, desc: "Order status — one of: pending, active, completed"
+parameter :status, type: :string, description: "Order status — one of: pending, active, completed"
 
 def execute(status:)
   return { error: "status must be one of #{STATUSES.join(', ')}" } unless STATUSES.include?(status)
@@ -408,8 +408,8 @@ end
 Parameters are required by default. Mark optional with `required: false`:
 
 ```ruby
-param :query, type: :string, desc: "Search query"                    # required
-param :limit, type: :integer, desc: "Max results", required: false   # optional
+parameter :query, type: :string, description: "Search query"                    # required
+parameter :limit, type: :integer, description: "Max results", required: false   # optional
 ```
 
 ## Tool Patterns
@@ -420,7 +420,7 @@ param :limit, type: :integer, desc: "Max results", required: false   # optional
 class FindUser < RubyLLM::Tool
   description "Find user by email or ID"
 
-  param :identifier, type: :string, desc: "Email address or user ID"
+  parameter :identifier, type: :string, description: "Email address or user ID"
 
   def execute(identifier:)
     user = User.find_by(id: identifier) || User.find_by(email: identifier)
@@ -435,7 +435,7 @@ end
 class GetStockPrice < RubyLLM::Tool
   description "Get current stock price for a ticker symbol"
 
-  param :symbol, type: :string, desc: "Stock ticker symbol (e.g. AAPL)"
+  parameter :symbol, type: :string, description: "Stock ticker symbol (e.g. AAPL)"
 
   def execute(symbol:)
     response = HTTP.get("https://api.stocks.example/quote/#{symbol}")
@@ -452,7 +452,7 @@ end
 class ReadFile < RubyLLM::Tool
   description "Read contents of a file"
 
-  param :path, type: :string, desc: "Absolute path to the file"
+  parameter :path, type: :string, description: "Absolute path to the file"
 
   def execute(path:)
     if File.exist?(path) && File.readable?(path)
@@ -470,7 +470,7 @@ end
 class ProcessOrder < RubyLLM::Tool
   description "Validate and process a customer order"
 
-  param :order_id, type: :string, desc: "The order ID to process"
+  parameter :order_id, type: :string, description: "The order ID to process"
 
   def execute(order_id:)
     order = Order.find(order_id)
@@ -534,7 +534,7 @@ end
 ```ruby
 class FetchResource < RobotLab::Tool
   description "Fetch a resource from an external API"
-  param :id, type: :string, desc: "Resource ID"
+  parameter :id, type: :string, description: "Resource ID"
 
   def execute(id:)
     ExternalAPI.fetch(id)
@@ -542,12 +542,12 @@ class FetchResource < RobotLab::Tool
 end
 
 tool = FetchResource.new
-result = tool.call({ "id" => "missing" })
+result = tool.call(id: "missing")
 # If ExternalAPI.fetch raises, result is:
 # => "Error (fetch_resource): connection refused"
 ```
 
-This applies to all `RobotLab::Tool` variants — subclasses and `Tool.create` factory tools. MCP tools are `RubyLLM::MCP::Tool` instances, not `RobotLab::Tool`s; a `RubyLLM::MCP::Error` raised during one of their calls is turned into an `{ error: }` tool result by the robot's tool-call bridge instead (see [MCP Integration](mcp-integration.md#hooks-and-mcp-tools)).
+This applies to all `RobotLab::Tool` variants — subclasses and `Tool.create` factory tools. MCP tools are `RubyLLM::MCP::Tool` instances, not `RobotLab::Tool`s; a server failing one of their calls becomes an `{ error: }` tool result instead (ruby_llm catches it, and the robot's tool-call bridge reports it to hooks as `tool_error`) (see [MCP Integration](mcp-integration.md#hooks-and-mcp-tools)).
 
 ### RobotLab::ToolError and Retryability
 
@@ -558,14 +558,14 @@ to the text the LLM sees, hinting that another attempt may succeed:
 ```ruby
 class FetchResource < RobotLab::Tool
   description "Fetch a resource from an external API"
-  param :id, type: :string, desc: "Resource ID"
+  parameter :id, type: :string, description: "Resource ID"
 
   def execute(id:)
     raise RobotLab::ToolError.new("upstream 503", retryable: true)
   end
 end
 
-FetchResource.new.call({ "id" => "1" })
+FetchResource.new.call(id: "1")
 # => "Error (fetch_resource): upstream 503 (retryable)"
 
 # Without retryable:, no suffix is appended:
@@ -590,7 +590,7 @@ class CriticalPayment < RobotLab::Tool
   self.raise_on_error = true
 
   description "Process a payment"
-  param :amount, type: :number, desc: "Payment amount"
+  parameter :amount, type: :number, description: "Payment amount"
 
   def execute(amount:)
     PaymentGateway.charge(amount)
@@ -625,7 +625,7 @@ You can still handle specific errors inside `execute` for domain-specific respon
 ```ruby
 class FetchResource < RobotLab::Tool
   description "Fetch a resource from an external API"
-  param :id, type: :string, desc: "Resource ID"
+  parameter :id, type: :string, description: "Resource ID"
 
   def execute(id:)
     result = ExternalAPI.fetch(id)
@@ -652,7 +652,7 @@ class Fibonacci < RobotLab::Tool
   ractor_safe true
 
   description "Compute the nth Fibonacci number"
-  param :n, type: :integer, desc: "Which Fibonacci number to compute"
+  parameter :n, type: :integer, description: "Which Fibonacci number to compute"
 
   def execute(n:)
     a, b = 0, 1

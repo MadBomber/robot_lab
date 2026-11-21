@@ -88,7 +88,7 @@ Robot.new(
 | `on_content` | `Proc`, `nil` | `nil` | Stored streaming callback invoked with each content chunk (see [Streaming](#streaming)) |
 | `tool_approval` | `Symbol`, `nil` | `nil` (= `:deny`) | What to do with tool calls that require approval when no `on_tool_approval` is given: `:deny` refuses them with a warning, `:approve` lets them run |
 | `on_tool_approval` | `Proc`, `nil` | `nil` | Called with each `RubyLLM::ToolCall` that requires approval; a truthy return approves it. Takes precedence over `tool_approval` |
-| `on_input_request` | `Proc`, `nil` | `nil` | Called with each `RubyLLM::MCP::InputRequest` a server raises mid-call; return a Hash of field values (or `true` for a URL request) to answer, anything else declines |
+| `on_input_request` | `Proc`, `nil` | `nil` | Called with each `RubyLLM::Question` a tool call waits on that is not an approval (MCP input requests, `Tool#ask`); return a Hash of field values (or `true` for a URL request) to answer, anything else declines |
 | `enable_cache` | `Boolean` | `true` | Whether to enable semantic caching |
 | `bus` | `TypedBus::MessageBus`, `nil` | `nil` | Optional message bus for inter-robot communication |
 | `skills` | `Symbol`, `Array<Symbol>`, `nil` | `nil` | Skill templates to prepend (see [Skills](#skills)) |
@@ -1298,9 +1298,9 @@ result = robot.run("I need help with my order")
 ```ruby
 class Calculator < RubyLLM::Tool
   description "Performs basic arithmetic"
-  param :operation, type: "string", desc: "add, subtract, multiply, divide"
-  param :a, type: "number", desc: "First operand"
-  param :b, type: "number", desc: "Second operand"
+  parameter :operation, type: "string", description: "add, subtract, multiply, divide"
+  parameter :a, type: "number", description: "First operand"
+  parameter :b, type: "number", description: "Second operand"
 
   def execute(operation:, a:, b:)
     case operation
@@ -1322,8 +1322,8 @@ robot = RobotLab.build(
 result = robot.run("What is 15 * 7?", tools: :inherit)
 ```
 
-Note that `param` accepts only `type:`, `desc:`/`description:`, and `required:` —
-there is no `enum:` option. See [Tool](tool.md#param).
+Note that `parameter` accepts only `type:`, `description:`, and `required:` —
+there is no `enum:` option. See [Tool](tool.md#parameter).
 
 ### Robot with Local Provider
 

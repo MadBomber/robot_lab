@@ -35,7 +35,7 @@ RobotLab automatically installs these core dependencies:
 
 | Gem | Purpose |
 |-----|---------|
-| `ruby_llm` (>= 2.1.1, < 3) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) and the built-in `RubyLLM::MCP` client |
+| `ruby_llm` (>= 2.2.0, < 3) | LLM provider integrations (Anthropic, OpenAI, Gemini, etc.) and the built-in `RubyLLM::MCP` client |
 | `prompt_manager` (~> 1.0) | Template-based prompt management with YAML front matter |
 | `simple_flow` (~> 0.4) | Pipeline workflow execution for networks |
 | `myway_config` (~> 0.1) | Layered configuration (defaults, env vars, config files) |

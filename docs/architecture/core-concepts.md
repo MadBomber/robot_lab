@@ -124,8 +124,8 @@ Tools give robots the ability to interact with external systems. There are two p
 class GetWeather < RubyLLM::Tool
   description "Get current weather for a location"
 
-  param :location, type: "string", desc: "City name"
-  param :unit, type: "string", desc: "celsius or fahrenheit"
+  parameter :location, type: "string", description: "City name"
+  parameter :unit, type: "string", description: "celsius or fahrenheit"
 
   def execute(location:, unit: "celsius")
     WeatherAPI.current(location, unit: unit)

@@ -198,8 +198,9 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
     ]
 
     result = compressor(messages: msgs, recent_turns: 2, keep: 0.9, drop: 0.01, summarizer: summarizer).call
-    assert_kind_of Array, result
-    assert(result.any? { |m| m.role == :system })
+    assert_equal msgs[1..2].map(&:content), calls, "both old turns go to the summarizer"
+    assert_equal [msgs[0], *msgs[3..6]], [result[0], *result[3..6]], "system and recent turns are kept as-is"
+    assert(result[1..2].all? { it.content.start_with?("SUMMARY: ") })
   end
 
   def test_nil_summarizer_drops_medium_tier
@@ -216,8 +217,7 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
     ]
 
     result = compressor(messages: msgs, recent_turns: 2, keep: 0.9, drop: 0.01, summarizer: nil).call
-    assert_kind_of Array, result
-    assert(result.any? { |m| m.role == :system })
+    assert_equal [msgs[0], *msgs[3..6]], result, "the medium-tier old turns are dropped"
   end
 
   def test_summarizer_preserves_user_role
@@ -272,13 +272,8 @@ class RobotLab::HistoryCompressorTest < Minitest::Test
 
     result = compressor(messages: msgs, recent_turns: 2, keep: 0.9, drop: 0.01, summarizer: summarizer).call
 
-    # After system, roles must alternate user/assistant
-    non_system = result.reject { |m| m.role == :system }
-    non_system.each_with_index do |m, i|
-      expected = i.even? ? :user : :assistant
-      assert_equal expected, m.role,
-                   "expected #{expected} at position #{i}, got #{m.role}"
-    end
+    # After system, roles must alternate user/assistant (summaries keep their turn's role)
+    assert_equal %i[system user assistant user assistant user assistant], result.map(&:role)
   end
 
   # -----------------------------------------------------------------------

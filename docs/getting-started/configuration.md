@@ -216,16 +216,18 @@ All settings under the `ruby_llm:` key are applied to `RubyLLM.configure` automa
 
 | Key | Default | Description |
 |-----|---------|-------------|
+| `ruby_llm.provider` | `null` | Default provider for robots that do not set `provider:` (and whose template names none). `null` lets RubyLLM infer the provider from the model id. Env: `ROBOT_LAB_RUBY_LLM__PROVIDER` |
 | `ruby_llm.model` | `claude-sonnet-4` | Default model for robots that do not set `model:` |
 | `ruby_llm.default_model` | `null` | RubyLLM default model override |
 | `ruby_llm.default_embedding_model` | `null` | Default embedding model |
 | `ruby_llm.default_image_model` | `null` | Default image model |
 
 > [!NOTE]
-> `defaults.yml` also carries `ruby_llm.provider: :anthropic` and
-> `ruby_llm.assume_model_exists: false`, but neither is read. A robot's provider
-> comes from its own `provider:` keyword argument, and `assume_model_exists` is
-> derived from whether that argument was given. Model ids must be full RubyLLM
+> A robot's provider comes from, in order: its `provider:` keyword argument,
+> its template's `provider:` front matter, then `ruby_llm.provider`. Whichever
+> supplies it, a named provider sets `assume_model_exists: true` on the chat.
+> `defaults.yml` also carries `ruby_llm.assume_model_exists: false`, which is
+> not read. Model ids must be full RubyLLM
 > ids — an unknown id raises `RubyLLM::ModelNotFoundError` when the robot is
 > constructed.
 

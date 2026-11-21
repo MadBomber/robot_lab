@@ -155,8 +155,9 @@ module RobotLab
     #   on_tool_approval is given: :deny (default) or :approve
     # @param on_tool_approval [Proc, nil] called with each RubyLLM::ToolCall that requires approval;
     #   a truthy return approves it
-    # @param on_input_request [Proc, nil] called with each RubyLLM::MCP::InputRequest an MCP server
-    #   raises; return a Hash of field values (or true for a URL request) to answer, anything else declines
+    # @param on_input_request [Proc, nil] called with each RubyLLM::Question a tool call waits on that is
+    #   not an approval (MCP input requests, Tool#ask); return a Hash of field values (or true for a
+    #   URL request) to answer, anything else declines
     # @param mcp_discovery [Boolean] select only the MCP servers relevant to each message (see MCP::ServerDiscovery)
     # @param enable_cache [Boolean] whether to enable semantic caching
     # @param bus [TypedBus::MessageBus, nil] optional message bus for inter-robot communication
@@ -231,8 +232,12 @@ module RobotLab
       resolved_model = @config.model || lab_config.ruby_llm.model
       chat_kwargs   = { model: resolved_model }
 
-      # RubyLLM auto-sets assume_model_exists for local providers when provider is specified.
-      @provider = provider
+      # Provider precedence: constructor > template front matter (applied
+      # later, see TemplateRendering#adopt_front_matter_provider) > config.
+      # A named provider routes the model there without a registry lookup,
+      # so assume_model_exists is set for it whatever its source.
+      @provider_from_constructor = !provider.nil?
+      @provider = resolve_provider(provider, lab_config)
       if @provider
         chat_kwargs[:provider] = @provider
         chat_kwargs[:assume_model_exists] = true
@@ -554,6 +559,30 @@ module RobotLab
             "`tools:` expects tool names (String/Symbol) to allow, but received #{classes}. " \
             "To attach tool instances or classes, pass them as `local_tools:` " \
             "(e.g. RobotLab.build(local_tools: [MyTool.new]))."
+    end
+
+    # The provider a robot starts with: the constructor's, else the
+    # configured ruby_llm.provider (nil when neither names one). A configured
+    # String (e.g. from ROBOT_LAB_RUBY_LLM__PROVIDER) becomes a Symbol.
+    #
+    # @param provider [String, Symbol, nil] the constructor argument
+    # @param lab_config [RobotLab::Config]
+    # @return [String, Symbol, nil]
+    def resolve_provider(provider, lab_config)
+      return provider unless provider.nil?
+
+      configured = lab_config.ruby_llm.provider
+      configured.to_s.empty? ? nil : configured.to_sym
+    end
+
+    # A template's +provider:+ replaces the configured provider, but never
+    # one passed to the constructor.
+    #
+    # @param value [String, Symbol, nil] the front matter provider
+    def adopt_front_matter_provider(value)
+      return if @provider_from_constructor || value.to_s.empty?
+
+      @provider = value.to_sym
     end
 
     # :reek:LongParameterList :reek:TooManyStatements -- one keyword and one assignment per identity ivar;

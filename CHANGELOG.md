@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **ruby_llm 2.2.0 or newer is required** (`ruby_llm ">= 2.2.0", "< 3"`). ruby_llm 2.2
+  replaced `Chat#pending_approvals` / `#pending_inputs` / `#deny` with `#pending_questions`
+  and `#decline`; robot_lab now uses the new API (#43).
+- `on_input_request:` receives a `RubyLLM::Question` (`RubyLLM::MCP::InputRequest` is now an
+  alias for it), and also answers questions a plain `RubyLLM::Tool` asks with `Tool#ask`.
+  `on_tool_approval:` still receives the `RubyLLM::ToolCall`.
+- An MCP server failing mid-call now yields ruby_llm's own error text,
+  `{ error: "The <server> MCP server failed: <message>" }`, instead of
+  `{ error: "<tool>: <message>" }`. `:tool_call` hooks still see the failure as
+  `tool_error` (a `RobotLab::MCPError`).
+- `defaults.yml` ships `ruby_llm.provider: null` instead of `:anthropic`, so robots that name
+  no provider keep letting RubyLLM infer it from the model (#113).
+
+### Fixed
+
+- A robot built without `provider:` falls back to the configured `ruby_llm.provider`
+  (config file or `ROBOT_LAB_RUBY_LLM__PROVIDER`), the same way `model` falls back to
+  `ruby_llm.model`. Templates can name a `provider:` in front matter. Precedence:
+  constructor, then front matter, then config (#113).
+- With ruby_llm 2.2, runs that paused for a tool approval, an MCP input request or an MCP
+  task raised `NoMethodError: undefined method 'pending_approvals'` (#43).
+- README and `docs/` tool examples use ruby_llm 2.x's `parameter :x, description:` DSL
+  instead of `param :x, desc:`, and call tools with keywords (`tool.call`, not
+  `tool.call({})`) (#35).
+
 ## [0.6.1] - 2026-11-18
 
 ### Fixed

@@ -32,7 +32,7 @@ class RobotLab::ConfigTest < Minitest::Test
 
   # Default values from defaults.yml
   def test_default_provider_from_config
-    assert_equal :anthropic, RobotLab.config.ruby_llm.provider
+    assert_nil RobotLab.config.ruby_llm.provider, "no provider by default; RubyLLM infers it from the model"
   end
 
   def test_default_model_from_config
