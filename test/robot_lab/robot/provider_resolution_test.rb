@@ -8,12 +8,20 @@ class RobotLab::Robot::ProviderResolutionTest < Minitest::Test
   def setup
     @ruby_llm = RobotLab.config.ruby_llm
     @saved    = @ruby_llm.provider
-    RubyLLM.configure { |c| c.ollama_api_base = "http://localhost:11434" }
+    @saved_openai_key = RubyLLM.config.openai_api_key
+    # Building an :openai chat needs a key to exist (never used: no request is sent).
+    RubyLLM.configure do |c|
+      c.ollama_api_base = "http://localhost:11434"
+      c.openai_api_key  = "test-key"
+    end
   end
 
   def teardown
     @ruby_llm.provider = @saved
-    RubyLLM.configure { |c| c.ollama_api_base = nil }
+    RubyLLM.configure do |c|
+      c.ollama_api_base = nil
+      c.openai_api_key  = @saved_openai_key
+    end
   end
 
   def test_no_provider_anywhere_leaves_it_nil
